@@ -74,6 +74,10 @@
     Nonce: <nonce>
     Timestamp: <iso>`.
   - POST signature to `/api/auth/verify` to receive short-lived JWT (10–15 minutes) or session token stored in memory/sessionStorage.
+  - API contracts:
+    - `GET /api/auth/nonce?wallet=<address>` → Responds with `{ nonce, walletAddress, issuedAt, expiresAt, ttlSeconds, message }`; cache-control `no-store`.
+    - `POST /api/auth/verify` → Payload `{ walletAddress, nonce, signature, timestamp, signatureEncoding }`; verifies Ed25519 signature and returns `{ token, tokenType: 'session', walletAddress, issuedAt, expiresAt, ttlSeconds }`.
+    - Downstream APIs accept `Authorization: Bearer <token>` header and validate against `SESSION_KV`.
 - **Sensitive Operations** (registration, code creation, binding changes, email update)
   - Require a fresh nonce (if last signature >5 minutes old) to guard against replay.
   - For each action, sign a typed message with intent string and payload (e.g., `Bind referral code ABCD to trader <wallet> at time <timestamp>`). Submit to API alongside request body.
@@ -170,6 +174,12 @@
 - Metrics aggregation jobs: scheduled Worker cron to ingest trading volume + rebates, update trader/referrer metrics tables.
 - Leaderboard service: query composition, KV caching, pagination cursors, snapshot storage cadence.
 - Email Worker service: verification token generation, D1 persistence, Email Worker dispatch handler, verification endpoint, bounce handling.
+
+## Local Cloudflare Setup Notes
+- Run `bun install` to ensure `wrangler` and Cloudflare type packages are available.
+- Use `wrangler d1 migrations apply tessera-referral-db` to apply SQL in `migrations/` against the local D1 binding (`wrangler.toml` already defines it as `DB`).
+- Execute Pages Functions locally with `bun run cf:dev`, which reads the D1 binding from `wrangler.toml` and applies in-memory storage unless a local database file is configured.
+- For schema evolution, add new `migrations/000X_description.sql` files and re-run `wrangler d1 migrations apply`.
 ## Risks & Follow-Ups
 - Trading data availability may lag; prepare to surface "Data syncing" state instead of zeros.
 - Email Worker deliverability or rate limits may require tuning (e.g., SPF/DKIM setup); monitor bounce/error logs after launch.
