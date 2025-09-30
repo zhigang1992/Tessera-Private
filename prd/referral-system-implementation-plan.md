@@ -91,6 +91,13 @@
 - **Email Workers (Email Routing)**: Send verification and notification emails without leaving the Cloudflare platform; integrate directly with referral email flows.
 - **Durable Objects**: Optional for locking when updating referral tree (e.g., to avoid race when multiple wallets bind simultaneously). If traffic volume is low, we can rely on D1 transactions first and revisit DO later.
 
+### Cloudflare Email Worker Setup
+- Configure Email Routing DNS (SPF, DKIM, DMARC) for the referral domain (e.g., `referrals@tessera.xyz`) and route to the Workers script.
+- Worker handles `email` events: validate signed payload (HMAC using shared secret), compose localized magic-link email, and call `message.send()`.
+- Generate verification links like `https://app.tessera.xyz/referral/email/verify?token=<signed>`; persist tokens in D1 with `expires_at` and single-use flag.
+- Log send outcomes to Workers Analytics Engine / Logpush for deliverability monitoring; surface failures to Sentry.
+- Return success/error to calling API so frontend can show “Email sent” vs retry guidance.
+
 ### Data Model (D1)
 - `users` (wallet_address PK, display_name nullable, email, email_verified, email_verification_token, created_at, updated_at).
 - `referral_codes` (id, wallet_address FK, code_slug UNIQUE, status [active|inactive], active_layer, created_at, updated_at).
@@ -146,6 +153,23 @@
 10. **QA & Analytics**: Add telemetry (e.g., Sentry events, amplitude) and write integration tests for Worker APIs (including email verification path).
 11. **UAT & Launch Prep**: Populate staging data, run end-to-end flows, document admin operations for customer support.
 
+## Frontend Task Breakdown
+- Wallet auth flow: nonce retrieval, signature prompts, JWT/session persistence, auto-refresh timer.
+- Referral route shell: page-level layout, tab navigation component, guard for wallet connection, loading placeholders.
+- Trader tab: metrics cards, active referral code display/edit modal, binding mutation hook, toast notifications.
+- Affiliate tab: summary cards, referral code management modal, referral tree table, email capture + verification states.
+- Email UX: form validation, resend cooldown timer, success/error modals aligned with Cloudflare Email Worker responses.
+- Leaderboard page: data table with ranking badges, pagination or infinite scroll, share link copy button.
+- Shared utilities: React Query hooks (`useTraderReferral`, `useAffiliateReferral`, `useLeaderboard`), analytics event emitters, error boundary.
+
+## Backend Task Breakdown
+- Worker bootstrap: router, middleware (logging, auth, validation), environment configuration for D1/KV bindings.
+- Auth service: nonce issuance, signature verification, JWT/session issuance, rate limiting, audit logs.
+- Referral code service: CRUD endpoints, slug uniqueness enforcement, activation toggles, analytics events.
+- Trader binding service: mutation endpoint, referral tree recompute transaction, metrics invalidation, audit logging.
+- Metrics aggregation jobs: scheduled Worker cron to ingest trading volume + rebates, update trader/referrer metrics tables.
+- Leaderboard service: query composition, KV caching, pagination cursors, snapshot storage cadence.
+- Email Worker service: verification token generation, D1 persistence, Email Worker dispatch handler, verification endpoint, bounce handling.
 ## Risks & Follow-Ups
 - Trading data availability may lag; prepare to surface "Data syncing" state instead of zeros.
 - Email Worker deliverability or rate limits may require tuning (e.g., SPF/DKIM setup); monitor bounce/error logs after launch.
