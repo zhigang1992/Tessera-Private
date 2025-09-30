@@ -2,7 +2,7 @@
   "name": "Tessera",
   "scripts": {
     "build": "tsc -b && vite build",
-    "ci": "npm run build && npm run lint && npm run format:check",
+    "ci": "bun run build && bun run lint && bun run format:check",
     "dev": "vite",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -66,5 +66,6 @@
     "vite": "^7.1.6",
     "vite-plugin-node-polyfills": "^0.24.0",
     "vite-tsconfig-paths": "^5.1.4"
-  }
+  },
+  "packageManager": "bun@1.2.22"
 }
