@@ -1,0 +1,23 @@
+name = "tessera-referral"
+compatibility_date = "2025-03-01"
+
+pages_build_output_dir = "dist"
+
+[vars]
+APP_ENV = "development"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tessera-referral-db"
+database_id = "88a7a5ff-2c9f-468b-bc48-053489f735a7"
+
+[[kv_namespaces]]
+binding = "SESSION_KV"
+id = "7f042d440ec44368bdf4a0dc8a38c0e6"
+
+[[kv_namespaces]]
+binding = "LEADERBOARD_CACHE"
+id = "bea82344082d4078949725327c186f22"
+
+[observability.logs]
+enabled = true
