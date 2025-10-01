@@ -1,13 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useWalletUi } from '@wallet-ui/react';
-import { useWallet } from '@solana/wallet-adapter-react';
 import { apiClient } from '../lib/api-client';
 import { toast } from 'sonner';
 
 export function useReferralAuth() {
-  const { account, connected: walletUiConnected } = useWalletUi();
-  const { signMessage, connected: adapterConnected } = useWallet();
-  const connected = walletUiConnected || adapterConnected;
+  const { account, connected, wallet } = useWalletUi();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
@@ -31,7 +28,7 @@ export function useReferralAuth() {
   }, [connected]);
 
   const authenticate = useCallback(async () => {
-    console.log('authenticate called', { account, signMessage });
+    console.log('authenticate called', { account, wallet });
 
     if (!account?.address) {
       console.error('No account address');
@@ -39,7 +36,11 @@ export function useReferralAuth() {
       return false;
     }
 
-    if (!signMessage) {
+    // Get the wallet from window.solana or window.phantom
+    const standardWallet = (window as any).phantom?.solana || (window as any).solana;
+    console.log('Using window.solana for signing:', standardWallet);
+
+    if (!standardWallet || typeof standardWallet.signMessage !== 'function') {
       console.error('Wallet does not support message signing');
       toast.error('Wallet does not support message signing');
       return false;
@@ -52,10 +53,12 @@ export function useReferralAuth() {
       const nonceData = await apiClient.getNonce(account.address);
       console.log('Nonce received:', nonceData);
 
-      // Step 2: Sign the message using wallet adapter
+      // Step 2: Sign the message using window.solana
       const message = new TextEncoder().encode(nonceData.message);
-      console.log('Signing message...');
-      const signatureBytes = await signMessage(message);
+      console.log('Signing message with window.solana...');
+      const signatureResult = await standardWallet.signMessage(message, 'utf8');
+      console.log('Signature result:', signatureResult);
+      const signatureBytes = signatureResult.signature;
       console.log('Signature received');
 
       // Step 3: Verify signature and get session token
@@ -81,7 +84,7 @@ export function useReferralAuth() {
     } finally {
       setIsAuthenticating(false);
     }
-  }, [account, signMessage]);
+  }, [account, wallet]);
 
   const logout = useCallback(() => {
     apiClient.setToken(null);
