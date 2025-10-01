@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletUi } from '@wallet-ui/react';
 import { useReferralAuth } from './hooks/use-referral-auth';
 import { Button } from '@/components/ui/button';
 import { TraderView } from './ui/trader-view';
@@ -7,7 +7,7 @@ import { AffiliateView } from './ui/affiliate-view';
 import { Link } from 'react-router';
 
 export default function ReferralFeature() {
-  const { connected } = useWallet();
+  const { connected } = useWalletUi();
   const { isAuthenticated, isAuthenticating, authenticate } = useReferralAuth();
   const [activeTab, setActiveTab] = useState<'traders' | 'affiliates'>('traders');
 

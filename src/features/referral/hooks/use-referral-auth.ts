@@ -1,10 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletUi } from '@wallet-ui/react';
 import { apiClient } from '../lib/api-client';
 import { toast } from 'sonner';
 
 export function useReferralAuth() {
-  const { publicKey, signMessage, connected } = useWallet();
+  const { account, connected, signMessage } = useWalletUi();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export function useReferralAuth() {
   }, [connected]);
 
   const authenticate = useCallback(async () => {
-    if (!publicKey || !signMessage) {
+    if (!account?.address || !signMessage) {
       toast.error('Please connect your wallet first');
       return false;
     }
@@ -36,7 +36,7 @@ export function useReferralAuth() {
     setIsAuthenticating(true);
     try {
       // Step 1: Get nonce
-      const nonceData = await apiClient.getNonce(publicKey.toBase58());
+      const nonceData = await apiClient.getNonce(account.address);
 
       // Step 2: Sign the message
       const message = new TextEncoder().encode(nonceData.message);
@@ -44,7 +44,7 @@ export function useReferralAuth() {
 
       // Step 3: Verify signature and get session token
       const verifyResponse = await apiClient.verifySignature({
-        walletAddress: publicKey.toBase58(),
+        walletAddress: account.address,
         nonce: nonceData.nonce,
         signature: Buffer.from(signature).toString('base64'),
         timestamp: nonceData.issuedAt,
@@ -65,7 +65,7 @@ export function useReferralAuth() {
     } finally {
       setIsAuthenticating(false);
     }
-  }, [publicKey, signMessage]);
+  }, [account?.address, signMessage]);
 
   const logout = useCallback(() => {
     apiClient.setToken(null);
@@ -80,6 +80,6 @@ export function useReferralAuth() {
     sessionToken,
     authenticate,
     logout,
-    walletAddress: publicKey?.toBase58() || null,
+    walletAddress: account?.address || null,
   };
 }
