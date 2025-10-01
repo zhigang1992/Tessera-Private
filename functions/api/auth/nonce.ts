@@ -48,6 +48,12 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   const kv = env.SESSION_KV;
 
   try {
+    // Ensure user exists first (required for foreign key)
+    await db
+      .prepare("INSERT INTO users (wallet_address) VALUES (?) ON CONFLICT(wallet_address) DO UPDATE SET updated_at = datetime('now')")
+      .bind(rawAddress)
+      .run();
+
     await db
       .prepare("DELETE FROM auth_nonces WHERE wallet_address = ? AND used = 0 AND expires_at <= datetime('now')")
       .bind(rawAddress)
