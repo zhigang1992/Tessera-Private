@@ -1,5 +1,4 @@
 import type { D1Database, KVNamespace, PagesFunction } from '@cloudflare/workers-types';
-import { ed25519 } from '@noble/curves/ed25519';
 
 import {
   buildSignInMessage,
@@ -28,13 +27,6 @@ type NonceRow = {
   used: number;
   purpose: string;
 };
-
-const encoder = new TextEncoder();
-
-const METHOD_NOT_ALLOWED_RESPONSE = new Response('Method Not Allowed', {
-  status: 405,
-  headers: { Allow: 'POST' },
-});
 
 function parseWalletAddress(address: string | undefined): { address: string; publicKeyBytes: Uint8Array } {
   if (!address) {
@@ -120,7 +112,10 @@ function buildJsonError(status: number, error: string, detail?: string) {
 
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (request.method !== 'POST') {
-    return METHOD_NOT_ALLOWED_RESPONSE;
+    return new Response('Method Not Allowed', {
+      status: 405,
+      headers: { Allow: 'POST' },
+    });
   }
 
   let payload: VerifyRequestPayload;
@@ -204,8 +199,9 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   const message = buildSignInMessage(nonce, timestampRaw);
-  const messageBytes = encoder.encode(message);
+  const messageBytes = new TextEncoder().encode(message);
 
+  const { ed25519 } = await import('@noble/curves/ed25519');
   const isValid = ed25519.verify(signatureBytes, messageBytes, publicKeyBytes);
   if (!isValid) {
     return buildJsonError(401, 'Signature verification failed');

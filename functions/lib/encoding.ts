@@ -1,9 +1,16 @@
 const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 const BASE58_BASE = 58;
 
-const base58Map = new Uint8Array(128).fill(255);
-for (let i = 0; i < BASE58_ALPHABET.length; i += 1) {
-  base58Map[BASE58_ALPHABET.charCodeAt(i)] = i;
+let base58Map: Uint8Array | null = null;
+
+function getBase58Map(): Uint8Array {
+  if (base58Map === null) {
+    base58Map = new Uint8Array(128).fill(255);
+    for (let i = 0; i < BASE58_ALPHABET.length; i += 1) {
+      base58Map[BASE58_ALPHABET.charCodeAt(i)] = i;
+    }
+  }
+  return base58Map;
 }
 
 export function decodeBase58(value: string): Uint8Array {
@@ -14,6 +21,8 @@ export function decodeBase58(value: string): Uint8Array {
   const digits = new Uint8Array(value.length);
   let digitsLength = 0;
 
+  const map = getBase58Map();
+
   for (let i = 0; i < value.length; i += 1) {
     const codePoint = value.charCodeAt(i);
 
@@ -21,7 +30,7 @@ export function decodeBase58(value: string): Uint8Array {
       throw new Error('Invalid Base58 character');
     }
 
-    const digit = base58Map[codePoint];
+    const digit = map[codePoint];
     if (digit === 255) {
       throw new Error('Invalid Base58 character');
     }

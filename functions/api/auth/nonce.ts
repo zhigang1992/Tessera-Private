@@ -19,14 +19,12 @@ function assertValidWalletAddress(address: string): void {
   }
 }
 
-const METHOD_NOT_ALLOWED_RESPONSE = new Response('Method Not Allowed', {
-  status: 405,
-  headers: { Allow: 'GET' },
-});
-
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (request.method !== 'GET') {
-    return METHOD_NOT_ALLOWED_RESPONSE;
+    return new Response('Method Not Allowed', {
+      status: 405,
+      headers: { Allow: 'GET' },
+    });
   }
 
   const url = new URL(request.url);
