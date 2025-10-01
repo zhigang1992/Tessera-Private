@@ -71,6 +71,9 @@ export type AffiliateData = {
     l2TraderCount: number;
     l3TraderCount: number;
     totalTraderCount: number;
+    l1Traders: string[];
+    l2Traders: string[];
+    l3Traders: string[];
   };
 };
 

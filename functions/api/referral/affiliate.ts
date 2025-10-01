@@ -90,6 +90,25 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     .bind(walletAddress)
     .first<{ count: number }>();
 
+  // Fetch actual wallet addresses at each level for tree visualization
+  const l1Traders = await env.DB.prepare(
+    'SELECT DISTINCT descendant_wallet FROM referral_tree_edges WHERE ancestor_wallet = ? AND level = 1 ORDER BY descendant_wallet',
+  )
+    .bind(walletAddress)
+    .all<{ descendant_wallet: string }>();
+
+  const l2Traders = await env.DB.prepare(
+    'SELECT DISTINCT descendant_wallet FROM referral_tree_edges WHERE ancestor_wallet = ? AND level = 2 ORDER BY descendant_wallet',
+  )
+    .bind(walletAddress)
+    .all<{ descendant_wallet: string }>();
+
+  const l3Traders = await env.DB.prepare(
+    'SELECT DISTINCT descendant_wallet FROM referral_tree_edges WHERE ancestor_wallet = ? AND level = 3 ORDER BY descendant_wallet',
+  )
+    .bind(walletAddress)
+    .all<{ descendant_wallet: string }>();
+
   return Response.json({
     walletAddress,
     displayName: user?.display_name ?? null,
@@ -113,6 +132,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       l2TraderCount: l2Count?.count ?? 0,
       l3TraderCount: l3Count?.count ?? 0,
       totalTraderCount: (l1Count?.count ?? 0) + (l2Count?.count ?? 0) + (l3Count?.count ?? 0),
+      l1Traders: l1Traders.results.map((t) => t.descendant_wallet),
+      l2Traders: l2Traders.results.map((t) => t.descendant_wallet),
+      l3Traders: l3Traders.results.map((t) => t.descendant_wallet),
     },
   });
 };

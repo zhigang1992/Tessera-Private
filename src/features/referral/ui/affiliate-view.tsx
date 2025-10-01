@@ -19,6 +19,11 @@ export function AffiliateView() {
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [emailInput, setEmailInput] = useState('');
 
+  const maskWalletAddress = (address: string) => {
+    if (address.length < 10) return address;
+    return `${address.slice(0, 4)}...${address.slice(-4)}`;
+  };
+
   const handleCreateCode = async () => {
     await createCodeMutation.mutateAsync({
       codeSlug: newCodeSlug.trim() || undefined,
@@ -140,30 +145,61 @@ export function AffiliateView() {
               <div className="relative">
                 <div className="flex flex-col items-center space-y-6">
                   {/* You */}
-                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary text-primary-foreground font-bold">
+                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary text-primary-foreground font-bold text-xs">
                     You
                   </div>
 
                   {/* L1 */}
-                  <div className="flex space-x-8">
-                    <div className="w-12 h-12 rounded-full bg-slate-400 dark:bg-slate-600" />
-                    <div className="w-12 h-12 rounded-full bg-slate-400 dark:bg-slate-600" />
-                  </div>
+                  {affiliateData.tree.l1Traders.length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-2 max-w-md">
+                      {affiliateData.tree.l1Traders.map((wallet) => (
+                        <div
+                          key={wallet}
+                          className="flex items-center justify-center w-12 h-12 rounded-full bg-slate-400 dark:bg-slate-600 text-[9px] font-mono px-1 text-center leading-tight"
+                          title={wallet}
+                        >
+                          {maskWalletAddress(wallet)}
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* L2 */}
-                  <div className="flex space-x-4">
-                    <div className="w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-700" />
-                    <div className="w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-700" />
-                    <div className="w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-700" />
-                    <div className="w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-700" />
-                  </div>
+                  {affiliateData.tree.l2Traders.length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-2 max-w-md">
+                      {affiliateData.tree.l2Traders.map((wallet) => (
+                        <div
+                          key={wallet}
+                          className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-300 dark:bg-slate-700 text-[8px] font-mono px-1 text-center leading-tight"
+                          title={wallet}
+                        >
+                          {maskWalletAddress(wallet)}
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* L3 */}
-                  <div className="flex space-x-2">
-                    {[...Array(8)].map((_, i) => (
-                      <div key={i} className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800" />
-                    ))}
-                  </div>
+                  {affiliateData.tree.l3Traders.length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-1 max-w-md">
+                      {affiliateData.tree.l3Traders.map((wallet) => (
+                        <div
+                          key={wallet}
+                          className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 text-[7px] font-mono px-1 text-center leading-tight"
+                          title={wallet}
+                        >
+                          {maskWalletAddress(wallet)}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Empty State */}
+                  {affiliateData.tree.totalTraderCount === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      No referred traders yet. Share your referral code to start building your network!
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
