@@ -1,0 +1,88 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../lib/api-client';
+import { toast } from 'sonner';
+
+// Query keys
+export const referralKeys = {
+  all: ['referral'] as const,
+  trader: () => [...referralKeys.all, 'trader'] as const,
+  affiliate: () => [...referralKeys.all, 'affiliate'] as const,
+  leaderboard: (limit?: number) => [...referralKeys.all, 'leaderboard', limit] as const,
+};
+
+// Trader queries
+export function useTraderData(enabled = true) {
+  return useQuery({
+    queryKey: referralKeys.trader(),
+    queryFn: () => apiClient.getTraderData(),
+    enabled,
+    staleTime: 30000, // 30 seconds
+  });
+}
+
+// Affiliate queries
+export function useAffiliateData(enabled = true) {
+  return useQuery({
+    queryKey: referralKeys.affiliate(),
+    queryFn: () => apiClient.getAffiliateData(),
+    enabled,
+    staleTime: 30000,
+  });
+}
+
+// Leaderboard queries
+export function useLeaderboard(limit = 100) {
+  return useQuery({
+    queryKey: referralKeys.leaderboard(limit),
+    queryFn: () => apiClient.getLeaderboard(limit),
+    staleTime: 60000, // 1 minute
+  });
+}
+
+// Mutations
+export function useCreateReferralCode() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { codeSlug?: string; activeLayer?: number }) =>
+      apiClient.createReferralCode(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: referralKeys.affiliate() });
+      toast.success('Referral code created successfully!');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create referral code');
+    },
+  });
+}
+
+export function useBindReferralCode() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (referralCode: string) => apiClient.bindToReferralCode(referralCode),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: referralKeys.trader() });
+      queryClient.invalidateQueries({ queryKey: referralKeys.affiliate() });
+      toast.success('Successfully bound to referral code!');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to bind referral code');
+    },
+  });
+}
+
+export function useRequestEmailVerification() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (email: string) => apiClient.requestEmailVerification(email),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: referralKeys.affiliate() });
+      toast.success('Verification email sent!');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to send verification email');
+    },
+  });
+}
