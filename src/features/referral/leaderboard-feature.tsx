@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletUi } from '@wallet-ui/react';
 import { useLeaderboard } from './hooks/use-referral-queries';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function LeaderboardFeature() {
-  const { publicKey } = useWallet();
+  const { account } = useWalletUi();
   const [activeTab, setActiveTab] = useState<'trading' | 'referral'>('referral');
   const { data: leaderboardData, isLoading } = useLeaderboard(100);
 
@@ -22,7 +22,7 @@ export default function LeaderboardFeature() {
     }).format(value);
   };
 
-  const userWalletAddress = publicKey?.toBase58();
+  const userWalletAddress = account?.address;
 
   return (
     <div className="space-y-6">
