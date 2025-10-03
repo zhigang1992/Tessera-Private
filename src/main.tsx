@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import './index.css'
 import { App } from './app.tsx'
+// Bootstrap URL-hash wallet for testing (registers a Wallet Standard wallet if a private key is present in the URL hash)
+import './dev/url-key-wallet'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
