@@ -1,5 +1,6 @@
 name = "tessera"
 compatibility_date = "2025-03-01"
+account_id = "b2f75eee8466291920000d9b28137185"
 
 pages_build_output_dir = "dist"
 
