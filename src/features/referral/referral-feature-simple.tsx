@@ -1,6 +1,7 @@
 import { useWalletUi } from '@wallet-ui/react';
 import { useReferralAuth } from './hooks/use-referral-auth';
 import { Button } from '@/components/ui/button';
+import { WalletDropdown } from '@/components/wallet-dropdown';
 import SimpleReferralHeader from './ui/simple-referral-header';
 import HeroSection from './ui/hero-section';
 import BindCodeCard from './ui/bind-code-card';
@@ -36,6 +37,7 @@ export default function ReferralFeatureSimple() {
               <p className="text-black/50 dark:text-white/50">
                 Connect your wallet to access the referral program
               </p>
+              <WalletDropdown />
             </div>
           ) : !isAuthenticated ? (
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
@@ -64,11 +66,11 @@ export default function ReferralFeatureSimple() {
         </div>
 
         {/* Right side - Background image (fixed proportion) */}
-        <div className="flex-1 min-w-0 sticky top-20 self-start">
+        <div className="flex-1 min-w-0 sticky top-20 self-start bg-white dark:bg-black rounded-lg overflow-hidden">
           <img
             src={heroShot}
             alt=""
-            className="w-full h-[calc(100vh-10rem)] object-contain rounded-lg"
+            className="w-full h-[calc(100vh-10rem)] object-contain"
           />
         </div>
       </div>
