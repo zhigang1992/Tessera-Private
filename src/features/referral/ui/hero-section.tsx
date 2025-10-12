@@ -4,8 +4,11 @@ export default function HeroSection() {
       {/* Tagline */}
       <div className="flex flex-col gap-4">
         <h1 className="text-[40px] leading-[1.21] font-bold text-black dark:text-white">
-          The first non-KYC private equity token, right at your fingertips.
+          Tessera
         </h1>
+        <p className="text-[40px] leading-[1.21] font-bold text-black dark:text-white">
+          A new form of trading
+        </p>
       </div>
 
       {/* Social section */}

@@ -27,7 +27,7 @@ export default function BindCodeCard() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4">
-        <h2 className="text-lg font-normal text-black dark:text-white">Bind referral code</h2>
+        <h2 className="text-lg font-normal text-black dark:text-white">Referral code (Who invited you?)</h2>
         <Card className="border border-[#E4E4E7] dark:border-[#404040]">
           <CardContent className="p-6">
             <p className="text-black/50 dark:text-white/50">Loading...</p>
@@ -39,7 +39,7 @@ export default function BindCodeCard() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-normal text-black dark:text-white">Bind referral code</h2>
+      <h2 className="text-lg font-normal text-black dark:text-white">Referral code (Who invited you?)</h2>
 
       <Card className="border border-[#E4E4E7] dark:border-[#404040] shadow-sm">
         <CardContent className="p-6 flex flex-col gap-4">
@@ -70,7 +70,7 @@ export default function BindCodeCard() {
             </p>
           ) : (
             <p className="text-sm text-black/70 dark:text-white/70">
-              The account linked to this referral code will earn rewards proportionate to your trading volume.
+              The account linked to this referral code will earn rewards.
             </p>
           )}
         </CardContent>
