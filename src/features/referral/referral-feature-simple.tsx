@@ -6,7 +6,7 @@ import SimpleReferralHeader from './ui/simple-referral-header';
 import HeroSection from './ui/hero-section';
 import BindCodeCard from './ui/bind-code-card';
 import CreateCodeCard from './ui/create-code-card';
-import heroShot from '@/assets/heroShot.jpg';
+import heroShot from '@/assets/heroShot.png';
 
 export default function ReferralFeatureSimple() {
   const { connected } = useWalletUi();
