@@ -47,6 +47,42 @@ export async function authenticateRequest(
 }
 
 /**
+ * Middleware to optionally authenticate requests.
+ * For read operations (GET), authentication is optional - returns authenticated context if available, null otherwise.
+ * For write operations (POST), authentication is required - same behavior as authenticateRequest.
+ */
+export async function optionalAuthenticateRequest(
+  request: Request,
+  env: Env,
+): Promise<{ authenticated: false; context: null } | { authenticated: true; context: AuthenticatedContext }> {
+  const token = readBearerToken(request);
+
+  if (!token) {
+    return {
+      authenticated: false,
+      context: null,
+    };
+  }
+
+  const session = await getSessionRecord(token, env.SESSION_KV);
+
+  if (!session) {
+    return {
+      authenticated: false,
+      context: null,
+    };
+  }
+
+  return {
+    authenticated: true,
+    context: {
+      session,
+      walletAddress: session.walletAddress,
+    },
+  };
+}
+
+/**
  * Helper to ensure a user record exists in the database for the authenticated wallet.
  * Creates or updates the user record if needed.
  */

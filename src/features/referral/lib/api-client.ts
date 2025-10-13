@@ -104,19 +104,47 @@ export class ReferralApiClient {
 
   constructor(baseUrl: string = API_BASE) {
     this.baseUrl = baseUrl;
-    // Try to load token from localStorage
+    // Try to load token from localStorage with validation
     if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('referral_session_token');
+      this.loadAndValidateToken();
     }
   }
 
-  setToken(token: string | null) {
+  private loadAndValidateToken() {
+    const token = localStorage.getItem('referral_session_token');
+    const expiresAt = localStorage.getItem('referral_session_expires_at');
+
+    if (token && expiresAt) {
+      const expirationTime = new Date(expiresAt).getTime();
+      const now = Date.now();
+
+      if (expirationTime > now) {
+        // Token is still valid
+        this.token = token;
+      } else {
+        // Token has expired, clean it up
+        localStorage.removeItem('referral_session_token');
+        localStorage.removeItem('referral_session_expires_at');
+        this.token = null;
+      }
+    } else if (token) {
+      // Legacy token without expiration info, remove it
+      localStorage.removeItem('referral_session_token');
+      this.token = null;
+    }
+  }
+
+  setToken(token: string | null, expiresAt?: string) {
     this.token = token;
     if (typeof window !== 'undefined') {
       if (token) {
         localStorage.setItem('referral_session_token', token);
+        if (expiresAt) {
+          localStorage.setItem('referral_session_expires_at', expiresAt);
+        }
       } else {
         localStorage.removeItem('referral_session_token');
+        localStorage.removeItem('referral_session_expires_at');
       }
     }
   }
@@ -125,11 +153,30 @@ export class ReferralApiClient {
     return this.token;
   }
 
+  isTokenValid(): boolean {
+    if (!this.token) return false;
+
+    if (typeof window !== 'undefined') {
+      const expiresAt = localStorage.getItem('referral_session_expires_at');
+      if (expiresAt) {
+        const expirationTime = new Date(expiresAt).getTime();
+        return expirationTime > Date.now();
+      }
+    }
+
+    return false; // If no expiration info, consider invalid
+  }
+
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options?.headers as Record<string, string> || {}),
     };
+
+    // Validate token before using it
+    if (this.token && !this.isTokenValid()) {
+      this.setToken(null); // Clear expired token
+    }
 
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
@@ -141,6 +188,10 @@ export class ReferralApiClient {
     });
 
     if (!response.ok) {
+      // Handle 401 errors by clearing expired tokens
+      if (response.status === 401) {
+        this.setToken(null);
+      }
       const error = await response.json().catch(() => ({ error: 'Request failed' }));
       throw new Error(error.error || `HTTP ${response.status}`);
     }
@@ -182,7 +233,7 @@ export class ReferralApiClient {
     return this.request('/api/referral/trader');
   }
 
-  async bindToReferralCode(referralCode: string): Promise<{ success: boolean; binding: any }> {
+  async bindToReferralCode(referralCode: string): Promise<{ success: boolean; binding: { traderWallet: string; referrerCode: string; referrerWallet: string; boundAt: string } }> {
     return this.request('/api/referral/trader/bind', {
       method: 'POST',
       body: JSON.stringify({ referralCode }),
@@ -192,6 +243,10 @@ export class ReferralApiClient {
   // Affiliate endpoints
   async getAffiliateData(): Promise<AffiliateData> {
     return this.request('/api/referral/affiliate');
+  }
+
+  async getAffiliateDataPublic(walletAddress: string): Promise<AffiliateData> {
+    return this.request(`/api/referral/affiliate?wallet=${encodeURIComponent(walletAddress)}`);
   }
 
   // Leaderboard endpoints

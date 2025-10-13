@@ -16,17 +16,31 @@ export function useTraderData(enabled = true) {
     queryKey: referralKeys.trader(),
     queryFn: () => apiClient.getTraderData(),
     enabled,
-    staleTime: 30000, // 30 seconds
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep data in cache longer
+    retry: 1, // Less aggressive retry for read operations that might not be authenticated
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnMount: true, // Always refetch on mount
   });
 }
 
 // Affiliate queries
-export function useAffiliateData(enabled = true) {
+export function useAffiliateData(enabled = true, walletAddress?: string | null) {
   return useQuery({
     queryKey: referralKeys.affiliate(),
-    queryFn: () => apiClient.getAffiliateData(),
-    enabled,
-    staleTime: 30000,
+    queryFn: () => {
+      // If we have a wallet address but no authentication, use public endpoint
+      if (walletAddress && !apiClient.getToken()) {
+        return apiClient.getAffiliateDataPublic(walletAddress);
+      }
+      return apiClient.getAffiliateData();
+    },
+    enabled: enabled && (walletAddress !== undefined), // Enable if wallet is available or undefined
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep data in cache longer
+    retry: 1, // Less aggressive retry for read operations that might not be authenticated
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnMount: true, // Always refetch on mount
   });
 }
 
@@ -46,8 +60,11 @@ export function useCreateReferralCode() {
   return useMutation({
     mutationFn: (payload: { codeSlug?: string; activeLayer?: number }) =>
       apiClient.createReferralCode(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: referralKeys.affiliate() });
+    onSuccess: async () => {
+      // Invalidate affiliate queries to force refetch
+      await queryClient.invalidateQueries({ queryKey: referralKeys.affiliate() });
+      // Also refetch immediately to ensure UI updates
+      await queryClient.refetchQueries({ queryKey: referralKeys.affiliate() });
       toast.success('Referral code created successfully!');
     },
     onError: (error: Error) => {

@@ -1,5 +1,5 @@
 import type { D1Database, KVNamespace, PagesFunction } from '@cloudflare/workers-types';
-import { authenticateRequest, ensureUserExists } from '../../lib/middleware';
+import { optionalAuthenticateRequest, ensureUserExists } from '../../lib/middleware';
 
 type Env = {
   DB: D1Database;
@@ -31,13 +31,25 @@ type ReferralCode = {
 };
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
-  const authResult = await authenticateRequest(request, env);
-  if (!authResult.authenticated) {
-    return authResult.error;
+  const authResult = await optionalAuthenticateRequest(request, env);
+  const walletAddress = authResult.authenticated ? authResult.context.walletAddress : null;
+
+  // If not authenticated, return default/empty data
+  if (!walletAddress) {
+    return Response.json({
+      walletAddress: null,
+      metrics: {
+        tradingVolume: 0,
+        feeRebateTotal: 0,
+        tradingPoints: 0,
+        feeDiscountPct: 0,
+        snapshotAt: new Date().toISOString(),
+      },
+      referral: null,
+    });
   }
 
-  const { walletAddress } = authResult.context;
-
+  // Only ensure user exists if authenticated
   await ensureUserExists(walletAddress, env.DB);
 
   // Fetch trader metrics (or return defaults if not yet tracked)

@@ -18,11 +18,6 @@ type ReferralCode = {
   active_layer: number;
 };
 
-type TraderBinding = {
-  wallet_address: string;
-  referrer_code_id: number;
-};
-
 /**
  * Rebuild referral tree edges for a trader by walking up the referral chain.
  * Creates edges for levels 1-3 based on the active_layer of each referrer.

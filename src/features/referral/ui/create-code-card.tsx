@@ -1,17 +1,27 @@
 import { useAffiliateData, useCreateReferralCode } from '../hooks/use-referral-queries';
+import { useReferralAuth } from '../hooks/use-referral-auth';
+import { useWalletUi } from '@wallet-ui/react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Copy, Plus, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function CreateCodeCard() {
-  const { data: affiliateData, isLoading } = useAffiliateData();
+  const { account, connected } = useWalletUi();
+  const { data: affiliateData, isLoading } = useAffiliateData(connected, account?.address);
   const createCodeMutation = useCreateReferralCode();
+  const { isAuthenticated, isAuthenticating, authenticate } = useReferralAuth();
 
   const referralCodes = affiliateData?.referralCodes || [];
   const hasNoCodes = referralCodes.length === 0;
 
   const handleCreateCode = async () => {
+    // If not authenticated, require sign message first
+    if (!isAuthenticated) {
+      const signedIn = await authenticate();
+      if (!signedIn) return;
+    }
+
     // Auto-generate code (no custom slug or active layer)
     await createCodeMutation.mutateAsync({});
   };
@@ -49,12 +59,12 @@ export default function CreateCodeCard() {
         {!hasNoCodes && (
           <Button
             onClick={handleCreateCode}
-            disabled={createCodeMutation.isPending}
+            disabled={createCodeMutation.isPending || isAuthenticating}
             size="sm"
             className="h-10 px-3 text-xs bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-lg flex items-center gap-2"
           >
             <Plus className="h-5 w-5" />
-            Create new code
+            {createCodeMutation.isPending || isAuthenticating ? 'Creating...' : 'Create new code'}
           </Button>
         )}
       </div>
@@ -66,12 +76,12 @@ export default function CreateCodeCard() {
             <div className="flex items-center justify-center h-[200px] bg-[rgba(0,0,0,0.1)] dark:bg-[rgba(255,255,255,0.1)] rounded-lg">
               <Button
                 onClick={handleCreateCode}
-                disabled={createCodeMutation.isPending}
+                disabled={createCodeMutation.isPending || isAuthenticating}
                 size="sm"
                 className="h-10 px-3 text-xs bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-lg flex items-center gap-2"
               >
                 <Plus className="h-5 w-5" />
-                {createCodeMutation.isPending ? 'Creating...' : 'Create new code to earn Rewards'}
+                {createCodeMutation.isPending || isAuthenticating ? 'Creating...' : 'Create new code to earn Rewards'}
               </Button>
             </div>
           ) : (

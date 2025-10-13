@@ -195,7 +195,7 @@ function registerUrlKeyWallet(secretKey: Uint8Array) {
     localStorage.setItem(storageKey, JSON.stringify(saved))
     // Emit change event to notify listeners accounts are present
     // Not strictly required, but helps some UIs refresh immediately
-    ;(wallet.features[StandardEvents] as any).on('change', () => {})
+    void (wallet.features[StandardEvents] as { on: (event: 'change', listener: ChangeListener) => () => void }).on('change', () => {})
     events.emitChange({ accounts })
   } catch (e) {
     console.warn('Could not persist selected account:', e)
@@ -204,20 +204,20 @@ function registerUrlKeyWallet(secretKey: Uint8Array) {
   // Provide Phantom-like window.solana shim for signMessage(message, encoding)
   try {
     const pubkeyBase58 = account.address
-    const shim: any = {
+    const shim = {
       publicKey: {
         toString: () => pubkeyBase58,
         toBytes: () => kp.publicKey.slice(),
       },
-      signMessage: async (message: Uint8Array, _encoding?: string) => {
+      signMessage: async (message: Uint8Array) => {
         const signature = nacl.sign.detached(message, kp.secretKey)
         return { signature }
       },
       isPhantom: false,
       isUrlKeyWallet: true,
     }
-    ;(globalThis as any).solana = shim
-    ;(globalThis as any).phantom = { solana: shim }
+    ;(globalThis as unknown).solana = shim
+    ;(globalThis as unknown).phantom = { solana: shim }
   } catch (e) {
     console.warn('Failed to install window.solana shim:', e)
   }
@@ -225,12 +225,37 @@ function registerUrlKeyWallet(secretKey: Uint8Array) {
 
 export function bootstrapUrlKeyWallet() {
   const raw = parseHash()
-  const secret = decodeSecretKey(raw)
+  let secret = decodeSecretKey(raw)
+
+  // If no key in URL, try to restore from localStorage
+  if (!secret) {
+    try {
+      const storedKey = localStorage.getItem('url-key-wallet-secret')
+      if (storedKey) {
+        const storedType = localStorage.getItem('url-key-wallet-type') || 'base58'
+        secret = decodeSecretKey(storedType === 'hex' ? `0x${storedKey}` : storedKey)
+      }
+    } catch (e) {
+      console.warn('Failed to restore key from localStorage:', e)
+    }
+  }
+
   if (!secret) return
+
+  // Persist the key to localStorage for future sessions
+  try {
+    localStorage.setItem('url-key-wallet-secret', bs58.encode(secret))
+    localStorage.setItem('url-key-wallet-type', 'base58')
+  } catch (e) {
+    console.warn('Failed to persist key to localStorage:', e)
+  }
+
   // Remove hash from the bar to avoid leaks
   try {
     history.replaceState(null, '', location.pathname + location.search)
-  } catch {}
+  } catch {
+    // Intentionally empty
+  }
   registerUrlKeyWallet(secret)
 }
 

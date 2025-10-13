@@ -66,29 +66,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   let codeSlug = payload.codeSlug?.trim();
 
-  // If no slug provided, check if user already has a code
+  // If no slug provided, always generate a new random code
   if (!codeSlug) {
-    const existing = await env.DB.prepare('SELECT * FROM referral_codes WHERE wallet_address = ? AND status = ?')
-      .bind(walletAddress, 'active')
-      .first<ReferralCode>();
-
-    if (existing) {
-      // Update active layer if provided
-      await env.DB.prepare("UPDATE referral_codes SET active_layer = ?, updated_at = datetime('now') WHERE id = ?")
-        .bind(activeLayer, existing.id)
-        .run();
-
-      return Response.json({
-        code: {
-          id: existing.id,
-          codeSlug: existing.code_slug,
-          status: existing.status,
-          activeLayer,
-          walletAddress,
-        },
-      });
-    }
-
     // Generate random code
     let attempts = 0;
     while (attempts < 10) {
@@ -118,7 +97,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
     if (existing) {
       // Update existing code
-      const result = await env.DB.prepare(
+      await env.DB.prepare(
         "UPDATE referral_codes SET active_layer = ?, status = 'active', updated_at = datetime('now') WHERE code_slug = ? AND wallet_address = ?",
       )
         .bind(activeLayer, codeSlug, walletAddress)

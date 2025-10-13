@@ -5,24 +5,15 @@ import { toast } from 'sonner';
 
 export function useReferralAuth() {
   const { account, connected, wallet } = useWalletUi();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [sessionToken, setSessionToken] = useState<string | null>(null);
 
-  // Check if we have a valid session on mount
-  useEffect(() => {
-    const token = apiClient.getToken();
-    if (token) {
-      setSessionToken(token);
-      setIsAuthenticated(true);
-    }
-  }, []);
+  // Check if we have a valid session on every render
+  const isAuthenticated = Boolean(apiClient.getToken() && apiClient.isTokenValid());
+  const sessionToken = apiClient.getToken();
 
   // Clear auth when wallet disconnects
   useEffect(() => {
     if (!connected) {
-      setIsAuthenticated(false);
-      setSessionToken(null);
       apiClient.setToken(null);
     }
   }, [connected]);
@@ -37,10 +28,10 @@ export function useReferralAuth() {
     }
 
     // Get the wallet from window.solana or window.phantom
-    const standardWallet = (window as any).phantom?.solana || (window as any).solana;
+    const standardWallet = (window as { phantom?: { solana?: unknown } }).phantom?.solana || (window as { solana?: unknown }).solana;
     console.log('Using window.solana for signing:', standardWallet);
 
-    if (!standardWallet || typeof standardWallet.signMessage !== 'function') {
+    if (!standardWallet || typeof (standardWallet as { signMessage?: (message: Uint8Array, encoding?: string) => Promise<{ signature: Uint8Array }> }).signMessage !== 'function') {
       console.error('Wallet does not support message signing');
       toast.error('Wallet does not support message signing');
       return false;
@@ -70,10 +61,8 @@ export function useReferralAuth() {
         signatureEncoding: 'base64',
       });
 
-      // Save token
-      apiClient.setToken(verifyResponse.token);
-      setSessionToken(verifyResponse.token);
-      setIsAuthenticated(true);
+      // Save token with expiration
+      apiClient.setToken(verifyResponse.token, verifyResponse.expiresAt);
 
       toast.success('Authentication successful!');
       return true;
@@ -88,8 +77,6 @@ export function useReferralAuth() {
 
   const logout = useCallback(() => {
     apiClient.setToken(null);
-    setSessionToken(null);
-    setIsAuthenticated(false);
     toast.success('Logged out');
   }, []);
 

@@ -1,5 +1,5 @@
 import type { D1Database, KVNamespace, PagesFunction } from '@cloudflare/workers-types';
-import { authenticateRequest, ensureUserExists } from '../../lib/middleware';
+import { optionalAuthenticateRequest, ensureUserExists } from '../../lib/middleware';
 
 type Env = {
   DB: D1Database;
@@ -34,12 +34,42 @@ type ReferralCode = {
 };
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
-  const authResult = await authenticateRequest(request, env);
-  if (!authResult.authenticated) {
-    return authResult.error;
+  const authResult = await optionalAuthenticateRequest(request, env);
+  let walletAddress = authResult.authenticated ? authResult.context.walletAddress : null;
+
+  // Check if wallet address is provided as query parameter for public access
+  const url = new URL(request.url);
+  const publicWalletAddress = url.searchParams.get('wallet');
+
+  // Use public wallet address if not authenticated but provided in query
+  if (!walletAddress && publicWalletAddress) {
+    walletAddress = publicWalletAddress;
   }
 
-  const { walletAddress } = authResult.context;
+  // If no wallet address available, return default/empty data
+  if (!walletAddress) {
+    return Response.json({
+      walletAddress: null,
+      displayName: null,
+      email: null,
+      emailVerified: false,
+      metrics: {
+        rebatesTotal: 0,
+        referralPoints: 0,
+        snapshotAt: new Date().toISOString(),
+      },
+      referralCodes: [],
+      tree: {
+        l1TraderCount: 0,
+        l2TraderCount: 0,
+        l3TraderCount: 0,
+        totalTraderCount: 0,
+        l1Traders: [],
+        l2Traders: [],
+        l3Traders: [],
+      },
+    });
+  }
 
   await ensureUserExists(walletAddress, env.DB);
 

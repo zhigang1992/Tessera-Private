@@ -97,7 +97,18 @@ async function bindToCode(token: string, referralCode: string): Promise<void> {
 }
 
 // Get affiliate data to verify tree
-async function getAffiliateData(token: string): Promise<any> {
+async function getAffiliateData(token: string): Promise<{
+  walletAddress: string;
+  tree: {
+    l1TraderCount: number;
+    l2TraderCount: number;
+    l3TraderCount: number;
+    totalTraderCount: number;
+    l1Traders: string[];
+    l2Traders: string[];
+    l3Traders: string[];
+  };
+}> {
   const response = await fetch(`${API_BASE}/api/referral/affiliate`, {
     headers: {
       'Authorization': `Bearer ${token}`,

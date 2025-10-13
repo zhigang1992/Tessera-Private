@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTraderData, useBindReferralCode } from '../hooks/use-referral-queries';
+import { useReferralAuth } from '../hooks/use-referral-auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,7 @@ import { Input } from '@/components/ui/input';
 export default function BindCodeCard() {
   const { data: traderData, isLoading } = useTraderData();
   const bindMutation = useBindReferralCode();
+  const { isAuthenticated, isAuthenticating, authenticate } = useReferralAuth();
 
   const [referralCodeInput, setReferralCodeInput] = useState('');
 
@@ -14,6 +16,13 @@ export default function BindCodeCard() {
 
   const handleBindCode = async () => {
     if (!referralCodeInput.trim()) return;
+
+    // If not authenticated, require sign message first
+    if (!isAuthenticated) {
+      const signedIn = await authenticate();
+      if (!signedIn) return;
+    }
+
     await bindMutation.mutateAsync(referralCodeInput.toUpperCase());
     setReferralCodeInput('');
   };
@@ -54,11 +63,11 @@ export default function BindCodeCard() {
             />
             <Button
               onClick={handleBindCode}
-              disabled={!referralCodeInput.trim() || isAlreadyBound || bindMutation.isPending}
+              disabled={!referralCodeInput.trim() || isAlreadyBound || bindMutation.isPending || isAuthenticating}
               size="lg"
               className="w-[160px] h-[42px] text-base bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-lg"
             >
-              {bindMutation.isPending ? 'Binding...' : 'Bind Code'}
+              {bindMutation.isPending || isAuthenticating ? 'Binding...' : 'Bind Code'}
             </Button>
           </div>
 

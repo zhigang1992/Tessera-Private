@@ -1,6 +1,4 @@
 import { useWalletUi } from '@wallet-ui/react';
-import { useReferralAuth } from './hooks/use-referral-auth';
-import { Button } from '@/components/ui/button';
 import { WalletDropdown } from '@/components/wallet-dropdown';
 import SimpleReferralHeader from './ui/simple-referral-header';
 import HeroSection from './ui/hero-section';
@@ -10,7 +8,6 @@ import heroShot from '@/assets/heroShot.png';
 
 export default function ReferralFeatureSimple() {
   const { connected } = useWalletUi();
-  const { isAuthenticated, isAuthenticating, authenticate } = useReferralAuth();
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
@@ -38,16 +35,6 @@ export default function ReferralFeatureSimple() {
                 Connect your wallet to access the referral program
               </p>
               <WalletDropdown />
-            </div>
-          ) : !isAuthenticated ? (
-            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-              <h2 className="text-2xl font-bold text-black dark:text-white">Sign In Required</h2>
-              <p className="text-black/50 dark:text-white/50">
-                Sign a message to verify your wallet and access the referral program
-              </p>
-              <Button onClick={authenticate} disabled={isAuthenticating} size="lg">
-                {isAuthenticating ? 'Signing...' : 'Sign Message'}
-              </Button>
             </div>
           ) : (
             <div className="flex flex-col gap-10">

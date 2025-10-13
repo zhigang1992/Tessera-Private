@@ -1,5 +1,5 @@
-export async function onRequest(context: any) {
-  const { request, next, env } = context;
+export async function onRequest(context: { request: Request; next: () => Promise<Response>; env: unknown }) {
+  const { request, next } = context;
 
   // Handle CORS preflight requests
   if (request.method === 'OPTIONS') {
