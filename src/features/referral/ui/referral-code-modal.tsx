@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useWalletUi } from '@wallet-ui/react';
 import {
   Dialog,
