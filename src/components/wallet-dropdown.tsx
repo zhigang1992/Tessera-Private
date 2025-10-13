@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,12 +37,22 @@ function WalletDropdownItem({ wallet }: { wallet: UiWallet }) {
   )
 }
 
-function WalletDropdown() {
+type WalletDropdownProps = {
+  triggerClassName?: string
+  triggerSize?: ComponentProps<typeof Button>['size']
+  triggerVariant?: ComponentProps<typeof Button>['variant']
+}
+
+function WalletDropdown({
+  triggerClassName,
+  triggerSize = 'default',
+  triggerVariant = 'outline',
+}: WalletDropdownProps = {}) {
   const { account, connected, copy, disconnect, wallet, wallets } = useWalletUi()
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="cursor-pointer">
+        <Button variant={triggerVariant} size={triggerSize} className={cn('cursor-pointer', triggerClassName)}>
           {wallet?.icon ? <WalletAvatar wallet={wallet} /> : null}
           {connected ? (account ? ellipsify(account.address) : wallet?.name) : 'Select Wallet'}
         </Button>

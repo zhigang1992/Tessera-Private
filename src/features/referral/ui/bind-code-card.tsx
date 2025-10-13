@@ -53,7 +53,7 @@ export default function BindCodeCard() {
     return (
       <div className="flex flex-col gap-4">
         <h2 className="text-base text-black font-semibold dark:text-white">Referral code (Who invited you?)</h2>
-        <Card className="border border-[#D4D4D8] dark:border-[#404040]">
+        <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111827]">
           <CardContent className="p-6">
             <p className="text-black/50 dark:text-white/50">Loading...</p>
           </CardContent>
@@ -65,24 +65,23 @@ export default function BindCodeCard() {
   return (
     <>
       <div className="flex flex-col gap-4">
-        <h2 className="text-base text-black font-semibold dark:text-white">Referral code (Who invited you?)</h2>
+        <h2 className="text-lg font-semibold text-black dark:text-white">Referral code (Who invited you?)</h2>
 
-        <Card className="border border-[#D4D4D8] dark:border-[#404040] shadow-sm">
-          <CardContent className="p-6 flex flex-col gap-4">
-            {/* Input and button row */}
-            <div className="flex items-center gap-2.5">
+        <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111827]">
+          <CardContent className="flex flex-col gap-6 p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
               <Input
                 value={referralCodeInput}
                 onChange={handleInputChange}
                 placeholder="Enter a code"
                 disabled={isAlreadyBound || bindMutation.isPending}
-                className="flex-1 h-[42px] text-base border-[#D4D4D8] dark:border-[#404040] bg-white dark:bg-[#27272A] rounded-lg disabled:opacity-50"
+                className="flex-1 h-[52px] rounded-[16px] border-0 bg-[#E9ECF2] px-4 text-base text-[#111827] placeholder:text-[#9CA3AF] focus-visible:border-[#111827]/20 focus-visible:ring-[#111827]/20 dark:bg-[#27272A] dark:text-white dark:placeholder:text-[#71717A]"
               />
               <Button
                 onClick={handleBindCode}
                 disabled={!referralCodeInput.trim() || isAlreadyBound || bindMutation.isPending || isAuthenticating}
                 size="lg"
-                className="w-[160px] h-[42px] text-base bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-lg flex items-center gap-2"
+                className="h-[52px] min-w-[160px] rounded-[16px] bg-black px-6 text-base font-semibold text-white transition-colors hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
               >
                 {(bindMutation.isPending || isAuthenticating) && (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -91,14 +90,13 @@ export default function BindCodeCard() {
               </Button>
             </div>
 
-            {/* Help text or bound status */}
             {isAlreadyBound ? (
-              <p className="text-sm text-black dark:text-white">
+              <p className="text-sm font-medium text-[#111827] dark:text-white">
                 You are already bound to referral code:{' '}
                 <span className="font-semibold">{traderData?.referral?.referrerCode}</span>
               </p>
             ) : (
-              <p className="text-sm text-[#71717A] dark:text-[#A1A1AA]">
+              <p className="text-sm text-[#6B7280] dark:text-[#A1A1AA]">
                 The account linked to this referral code will earn rewards.
               </p>
             )}

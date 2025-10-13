@@ -57,7 +57,7 @@ export default function CreateCodeCard() {
     return (
       <div className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold text-black dark:text-white">Create my referral code</h2>
-        <Card className="border border-[#E4E4E7] dark:border-[#404040]">
+        <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111827]">
           <CardContent className="p-6">
             <p className="text-black/50 dark:text-white/50">Loading...</p>
           </CardContent>
@@ -71,13 +71,13 @@ export default function CreateCodeCard() {
       <div className="flex flex-col gap-4">
         {/* Section header with create button */}
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-black dark:text-white">Create my referral code</h2>
+          <h2 className="text-lg font-semibold text-black dark:text-white">Create my referral code</h2>
           {!hasNoCodes && (
             <Button
               onClick={handleCreateCode}
               disabled={createCodeMutation.isPending || isAuthenticating}
               size="sm"
-              className="h-10 px-3 text-xs bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-lg flex items-center gap-2"
+              className="flex h-10 items-center gap-2 rounded-full bg-black px-4 text-xs font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
             >
               {(createCodeMutation.isPending || isAuthenticating) ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -89,16 +89,16 @@ export default function CreateCodeCard() {
           )}
         </div>
 
-        <Card className="border border-[#D4D4D8] dark:border-[#404040] shadow-sm">
-          <CardContent className="p-6 flex flex-col gap-6">
+        <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111827]">
+          <CardContent className="flex flex-col gap-6 p-6">
             {hasNoCodes ? (
               /* Empty state */
-              <div className="flex items-center justify-center h-[200px] bg-[rgba(0,0,0,0.1)] dark:bg-[rgba(255,255,255,0.1)] rounded-lg">
+              <div className="flex min-h-[200px] items-center justify-center rounded-[20px] border border-dashed border-[#D4D4D8] bg-white px-6 py-10 text-center dark:border-[#3F3F46] dark:bg-[#1F1F23]">
                 <Button
                   onClick={handleCreateCode}
                   disabled={createCodeMutation.isPending || isAuthenticating}
                   size="sm"
-                  className="h-10 px-3 text-xs bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-lg flex items-center gap-2"
+                  className="flex h-12 items-center gap-2 rounded-full bg-black px-6 text-sm font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
                 >
                   {(createCodeMutation.isPending || isAuthenticating) ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -110,56 +110,54 @@ export default function CreateCodeCard() {
               </div>
             ) : (
               /* Filled state - Table of codes */
-              <div className="flex flex-col gap-4">
-                {/* Table header */}
-                <div className="flex items-center gap-2.5 px-2.5">
+              <div className="flex flex-col gap-5">
+                <div className="flex items-center gap-2.5 px-2">
                   <div className="w-[240px]">
-                    <span className="text-xs text-[#71717A] dark:text-[#A1A1AA]">Referral Code</span>
+                    <span className="text-xs font-medium uppercase tracking-[0.08em] text-[#6B7280] dark:text-[#A1A1AA]">
+                      Referral Code
+                    </span>
                   </div>
                   <div className="flex-1">
-                    <span className="text-xs text-[#71717A] dark:text-[#A1A1AA]">Traders Referred</span>
+                    <span className="text-xs font-medium uppercase tracking-[0.08em] text-[#6B7280] dark:text-[#A1A1AA]">
+                      Traders Referred
+                    </span>
                   </div>
                 </div>
 
-                {/* Divider */}
-                <div className="h-px bg-[rgba(17,17,17,0.15)] dark:bg-[rgba(255,255,255,0.15)] mx-2.5" />
+                <div className="mx-2 h-px bg-[#E2E4E9] dark:bg-[#27272A]" />
 
-                {/* Table rows */}
-                <div className="flex flex-col gap-[5px]">
+                <div className="flex flex-col gap-2">
                   {referralCodes.map((code, index) => (
                     <div
                       key={code.id}
-                      className={`flex items-center gap-2.5 p-2.5 rounded ${
+                      className={`flex items-center gap-3 rounded-[16px] px-3 py-4 transition-colors ${
                         index % 2 === 0
-                          ? 'bg-[#FAFAFA] dark:bg-[#18181B]'
-                          : 'bg-white dark:bg-black'
+                          ? 'bg-white dark:bg-[#1F1F23]'
+                          : 'bg-[#F1F2F6] dark:bg-[#131318]'
                       }`}
                     >
-                      {/* Code with copy and share buttons */}
-                      <div className="w-[240px] flex items-center gap-[5px]">
-                        <span className="text-sm font-semibold uppercase text-[#404040] dark:text-[#D4D4D8]">
+                      <div className="flex w-[240px] items-center gap-2">
+                        <span className="text-sm font-semibold uppercase tracking-[0.08em] text-[#111827] dark:text-[#E4E4E7]">
                           {code.codeSlug}
                         </span>
                         <button
                           onClick={() => copyToClipboard(code.codeSlug)}
-                          className="w-4 h-4 flex items-center justify-center hover:opacity-70 transition-opacity"
+                          className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E5E7EB] text-[#4B5563] transition hover:bg-[#D1D5DB] dark:bg-[#27272A] dark:text-[#D1D5DB]"
                           title="Copy code"
                         >
-                          <Copy className="w-4 h-4 text-[#A1A1AA] dark:text-[#71717A]" />
+                          <Copy className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => shareCode(code.codeSlug)}
-                          className="w-4 h-4 flex items-center justify-center hover:opacity-70 transition-opacity"
+                          className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E5E7EB] text-[#4B5563] transition hover:bg-[#D1D5DB] dark:bg-[#27272A] dark:text-[#D1D5DB]"
                           title="Share referral link"
                         >
-                          <Share2 className="w-4 h-4 text-[#A1A1AA] dark:text-[#71717A]" />
+                          <Share2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
 
-                      {/* Traders count */}
-                      <div className="flex-1 flex items-center">
-                        <span className="text-sm text-black dark:text-white">
-                          {/* We don't have this data from backend yet, show placeholder */}
+                      <div className="flex flex-1 items-center">
+                        <span className="text-sm font-medium text-[#111827] dark:text-white">
                           -
                         </span>
                       </div>
@@ -173,14 +171,14 @@ export default function CreateCodeCard() {
                     <Button
                       size="sm"
                       variant="default"
-                      className="w-10 h-10 p-0 bg-black dark:bg-white text-white dark:text-black rounded-lg"
+                      className="h-10 w-10 rounded-full bg-black p-0 text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
                     >
                       1
                     </Button>
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="w-10 h-10 p-0 bg-[rgba(212,212,216,0.4)] dark:bg-[rgba(255,255,255,0.1)] text-black dark:text-white rounded-lg"
+                      className="h-10 w-10 rounded-full bg-[rgba(212,212,216,0.4)] p-0 text-black hover:bg-[rgba(212,212,216,0.6)] dark:bg-[rgba(255,255,255,0.1)] dark:text-white dark:hover:bg-[rgba(255,255,255,0.18)]"
                     >
                       2
                     </Button>

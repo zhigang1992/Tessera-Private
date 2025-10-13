@@ -13,7 +13,6 @@ export default function ReferralFeatureSimple() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [referralCode, setReferralCode] = useState<string | null>(null);
 
-  // Check for referral code in URL parameters on component mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
@@ -33,24 +32,17 @@ export default function ReferralFeatureSimple() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black">
-      {/* Main container with side-by-side layout */}
-      <div className="flex gap-20 p-20 max-w-[1600px] mx-auto">
-        {/* Left side - Content (600px fixed width) */}
-        <div className="w-[600px] flex-shrink-0 flex flex-col gap-6">
-          {/* Header */}
+    <div className="min-h-screen bg-white pb-16 dark:bg-black">
+      <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-16 px-6 pt-10 sm:px-10 lg:flex-row lg:items-start lg:gap-20 lg:px-16 lg:pt-16">
+        <div className="flex w-full max-w-[560px] flex-shrink-0 flex-col gap-8 lg:gap-10">
           <SimpleReferralHeader />
 
-          {/* Divider */}
-          <div className="h-px bg-[#DDDDDD]" />
+          <div className="h-px rounded-full bg-[#E7E7EA] dark:bg-[#27272A]" />
 
-          {/* Hero Section */}
           <HeroSection />
 
-          {/* Divider */}
-          <div className="h-px bg-[#DDDDDD]" />
+          <div className="h-px rounded-full bg-[#E7E7EA] dark:bg-[#27272A]" />
 
-          {/* Main Content */}
           {!connected ? (
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
               <h2 className="text-2xl font-bold text-black dark:text-white">Referral Program</h2>
@@ -75,17 +67,15 @@ export default function ReferralFeatureSimple() {
           </div>
         </div>
 
-        {/* Right side - Background image (fixed proportion) */}
-        <div className="flex-1 min-w-0 sticky top-20 self-start bg-white dark:bg-black rounded-lg overflow-hidden">
+        <div className="relative w-full overflow-hidden rounded-[32px] bg-[#F4F4F5] dark:bg-[#09090B] sm:max-h-[520px] lg:sticky lg:top-16 lg:max-h-none lg:flex-1 lg:self-start">
           <img
             src={heroShot}
             alt=""
-            className="w-full h-[calc(100vh-10rem)] object-contain"
+            className="h-full w-full object-cover"
           />
         </div>
       </div>
 
-      {/* Referral Code Modal */}
       {referralCode && (
         <ReferralCodeModal
           isOpen={isModalOpen}
