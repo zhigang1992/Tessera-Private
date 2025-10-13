@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { WalletDropdown } from '@/components/wallet-dropdown';
-import { UserIcon } from 'lucide-react';
+import { UserIcon, Loader2 } from 'lucide-react';
 import { useBindReferralCode } from '../hooks/use-referral-queries';
 import { useReferralAuth } from '../hooks/use-referral-auth';
 import { UrlKeyAlertDialog } from './url-key-alert-dialog';
@@ -145,9 +145,16 @@ export default function ReferralCodeModal({
           {/* Action Button */}
           <Button
             onClick={connected ? handleBindReferralCode : handleConnectWallet}
-            className="w-full bg-black hover:bg-black/90 text-white rounded-lg py-3 text-sm font-medium"
+            disabled={bindMutation.isPending || isAuthenticating}
+            className="w-full bg-black hover:bg-black/90 text-white rounded-lg py-3 text-sm font-medium disabled:opacity-50 flex items-center gap-2"
           >
-            {connected ? 'Bind Referral Code' : 'Connect Wallet'}
+            {(bindMutation.isPending || isAuthenticating) && (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            )}
+            {connected
+              ? (bindMutation.isPending || isAuthenticating ? 'Binding...' : 'Bind Referral Code')
+              : (isAuthenticating ? 'Connecting...' : 'Connect Wallet')
+            }
           </Button>
 
           {/* Change Code Link */}

@@ -4,6 +4,7 @@ import { useReferralAuth } from '../hooks/use-referral-auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Loader2 } from 'lucide-react';
 import { UrlKeyAlertDialog } from './url-key-alert-dialog';
 
 export default function BindCodeCard() {
@@ -81,8 +82,11 @@ export default function BindCodeCard() {
                 onClick={handleBindCode}
                 disabled={!referralCodeInput.trim() || isAlreadyBound || bindMutation.isPending || isAuthenticating}
                 size="lg"
-                className="w-[160px] h-[42px] text-base bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-lg"
+                className="w-[160px] h-[42px] text-base bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-lg flex items-center gap-2"
               >
+                {(bindMutation.isPending || isAuthenticating) && (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                )}
                 {bindMutation.isPending || isAuthenticating ? 'Binding...' : 'Bind Code'}
               </Button>
             </div>

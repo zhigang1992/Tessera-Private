@@ -3,7 +3,7 @@ import { useReferralAuth } from '../hooks/use-referral-auth';
 import { useWalletUi } from '@wallet-ui/react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, Plus, Share2 } from 'lucide-react';
+import { Copy, Plus, Share2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { UrlKeyAlertDialog } from './url-key-alert-dialog';
 
@@ -79,7 +79,11 @@ export default function CreateCodeCard() {
               size="sm"
               className="h-10 px-3 text-xs bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-lg flex items-center gap-2"
             >
-              <Plus className="h-5 w-5" />
+              {(createCodeMutation.isPending || isAuthenticating) ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Plus className="h-5 w-5" />
+              )}
               {createCodeMutation.isPending || isAuthenticating ? 'Creating...' : 'Create new code'}
             </Button>
           )}
@@ -96,7 +100,11 @@ export default function CreateCodeCard() {
                   size="sm"
                   className="h-10 px-3 text-xs bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 rounded-lg flex items-center gap-2"
                 >
-                  <Plus className="h-5 w-5" />
+                  {(createCodeMutation.isPending || isAuthenticating) ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Plus className="h-5 w-5" />
+                  )}
                   {createCodeMutation.isPending || isAuthenticating ? 'Creating...' : 'Create new code to earn Rewards'}
                 </Button>
               </div>
