@@ -216,8 +216,8 @@ function registerUrlKeyWallet(secretKey: Uint8Array) {
       isPhantom: false,
       isUrlKeyWallet: true,
     }
-    ;(globalThis as unknown).solana = shim
-    ;(globalThis as unknown).phantom = { solana: shim }
+    ;(globalThis as any).solana = shim
+    ;(globalThis as any).phantom = { solana: shim }
   } catch (e) {
     console.warn('Failed to install window.solana shim:', e)
   }

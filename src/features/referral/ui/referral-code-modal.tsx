@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useWalletUi } from '@wallet-ui/react';
 import {
   Dialog,
@@ -29,8 +29,7 @@ export default function ReferralCodeModal({
   const { connected, account } = useWalletUi();
   const bindMutation = useBindReferralCode();
   const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert } = useReferralAuth();
-  const [newReferralCode, setNewReferralCode] = useState(referralCode);
-
+  
   const handleUrlKeyConfirm = async () => {
     const handlers = (window as any)._urlKeyAlertHandlers;
     if (handlers?.handleConfirm) {
@@ -51,7 +50,7 @@ export default function ReferralCodeModal({
       return;
     }
 
-    if (!newReferralCode.trim()) {
+    if (!referralCode.trim()) {
       toast.error('Please enter a referral code');
       return;
     }
@@ -63,7 +62,7 @@ export default function ReferralCodeModal({
     }
 
     try {
-      await bindMutation.mutateAsync(newReferralCode.toUpperCase());
+      await bindMutation.mutateAsync(referralCode.toUpperCase());
       toast.success('Referral code bound successfully!');
       onClose();
     } catch (error) {

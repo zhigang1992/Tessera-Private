@@ -68,21 +68,21 @@ export function useReferralAuth() {
       setIsAuthenticating(true);
       try {
         // Step 1: Get nonce
-        console.log('Getting nonce for', account.address);
-        const nonceData = await apiClient.getNonce(account.address);
+        console.log('Getting nonce for', account!.address);
+        const nonceData = await apiClient.getNonce(account!.address);
         console.log('Nonce received:', nonceData);
 
         // Step 2: Sign the message using window.solana
         const message = new TextEncoder().encode(nonceData.message);
         console.log('Signing message with window.solana...');
-        const signatureResult = await standardWallet.signMessage(message, 'utf8');
+        const signatureResult = await (standardWallet as any).signMessage(message, 'utf8');
         console.log('Signature result:', signatureResult);
         const signatureBytes = signatureResult.signature;
         console.log('Signature received');
 
         // Step 3: Verify signature and get session token
         const verifyResponse = await apiClient.verifySignature({
-          walletAddress: account.address,
+          walletAddress: account!.address,
           nonce: nonceData.nonce,
           signature: Buffer.from(signatureBytes).toString('base64'),
           timestamp: nonceData.issuedAt,
