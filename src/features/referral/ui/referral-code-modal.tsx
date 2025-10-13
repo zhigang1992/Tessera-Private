@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { WalletDropdown } from '@/components/wallet-dropdown';
-import { XIcon, UserIcon } from 'lucide-react';
+import { UserIcon } from 'lucide-react';
 import { useBindReferralCode } from '../hooks/use-referral-queries';
 import { useReferralAuth } from '../hooks/use-referral-auth';
 import { UrlKeyAlertDialog } from './url-key-alert-dialog';
@@ -87,18 +87,10 @@ export default function ReferralCodeModal({
       <DialogContent className="w-[342px] max-w-[342px] p-0 bg-[#F4F4F5] dark:bg-[#F4F4F5] rounded-2xl">
         <div className="flex flex-col gap-4 p-6">
           {/* Header */}
-          <DialogHeader className="flex flex-row items-center justify-between gap-4 p-0">
+          <DialogHeader className="p-0">
             <DialogTitle className="text-base font-normal text-black">
               Join Tessera
             </DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-6 h-6 p-0 hover:bg-transparent"
-              onClick={onClose}
-            >
-              <XIcon className="w-4 h-4 text-[#A1A1AA]" />
-            </Button>
           </DialogHeader>
 
           {/* Wallet Connection Status */}
