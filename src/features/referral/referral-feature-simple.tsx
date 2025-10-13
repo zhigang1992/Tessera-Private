@@ -4,10 +4,33 @@ import SimpleReferralHeader from './ui/simple-referral-header';
 import HeroSection from './ui/hero-section';
 import BindCodeCard from './ui/bind-code-card';
 import CreateCodeCard from './ui/create-code-card';
+import ReferralCodeModal from './ui/referral-code-modal';
 import heroShot from '@/assets/heroShot.png';
+import { useEffect, useState } from 'react';
 
 export default function ReferralFeatureSimple() {
   const { connected } = useWalletUi();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+
+  // Check for referral code in URL parameters on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+
+    if (code) {
+      setReferralCode(code);
+      setIsModalOpen(true);
+
+      // Optional: Clean up the URL by removing the code parameter
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, []);
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
@@ -61,6 +84,15 @@ export default function ReferralFeatureSimple() {
           />
         </div>
       </div>
+
+      {/* Referral Code Modal */}
+      {referralCode && (
+        <ReferralCodeModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          referralCode={referralCode}
+        />
+      )}
     </div>
   );
 }

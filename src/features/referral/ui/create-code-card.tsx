@@ -48,7 +48,7 @@ export default function CreateCodeCard() {
 
   const shareCode = (code: string) => {
     // Simple share functionality - can be enhanced with native share API
-    const url = `${window.location.origin}/referral?code=${code}`;
+    const url = `${window.location.origin}/?code=${code}`;
     copyToClipboard(url);
     toast.success('Referral link copied!');
   };
