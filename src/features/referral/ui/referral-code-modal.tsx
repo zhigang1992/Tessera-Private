@@ -45,11 +45,6 @@ export default function ReferralCodeModal({
     }
   };
 
-  const handleConnectWallet = () => {
-    // We'll let the WalletDropdown handle the connection
-    // No need to close the modal here
-  };
-
   const handleBindReferralCode = async () => {
     if (!connected || !account?.address) {
       toast.error('Please connect your wallet first');
@@ -143,19 +138,25 @@ export default function ReferralCodeModal({
           </div>
 
           {/* Action Button */}
-          <Button
-            onClick={connected ? handleBindReferralCode : handleConnectWallet}
-            disabled={bindMutation.isPending || isAuthenticating}
-            className="w-full bg-black hover:bg-black/90 text-white rounded-lg py-3 text-sm font-medium disabled:opacity-50 flex items-center gap-2"
-          >
-            {(bindMutation.isPending || isAuthenticating) && (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            )}
-            {connected
-              ? (bindMutation.isPending || isAuthenticating ? 'Binding...' : 'Bind Referral Code')
-              : (isAuthenticating ? 'Connecting...' : 'Connect Wallet')
-            }
-          </Button>
+          {connected ? (
+            <Button
+              onClick={handleBindReferralCode}
+              disabled={bindMutation.isPending || isAuthenticating}
+              className="w-full bg-black hover:bg-black/90 text-white rounded-lg py-3 text-sm font-medium disabled:opacity-50 flex items-center gap-2"
+            >
+              {(bindMutation.isPending || isAuthenticating) && (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              )}
+              {bindMutation.isPending || isAuthenticating ? 'Binding...' : 'Bind Referral Code'}
+            </Button>
+          ) : (
+            <Button
+              disabled={true}
+              className="w-full bg-gray-400 text-white rounded-lg py-3 text-sm font-medium opacity-50 cursor-not-allowed"
+            >
+              Please connect wallet using the dropdown above
+            </Button>
+          )}
 
           {/* Change Code Link */}
           <button
