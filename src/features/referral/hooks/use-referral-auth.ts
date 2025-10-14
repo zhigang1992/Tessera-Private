@@ -85,8 +85,6 @@ export function useReferralAuth() {
         });
 
         apiClient.setToken(verifyResponse.token, verifyResponse.expiresAt);
-
-        toast.success('Authentication successful!');
         return true;
       } catch (error) {
         console.error('Authentication error:', error);
