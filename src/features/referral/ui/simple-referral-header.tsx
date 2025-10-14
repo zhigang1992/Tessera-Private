@@ -1,9 +1,8 @@
-import { useWalletUi, ellipsify } from '@wallet-ui/react';
+import { useWalletUi } from '@wallet-ui/react';
 import { WalletDropdown } from '@/components/wallet-dropdown';
-import { User } from 'lucide-react';
 
 export default function SimpleReferralHeader() {
-  const { account, connected, disconnect } = useWalletUi();
+  const { account, connected } = useWalletUi();
 
   return (
     <div className="flex items-center justify-between gap-4">
@@ -14,22 +13,15 @@ export default function SimpleReferralHeader() {
       </div>
 
       {connected && account ? (
-        <div className="flex items-center gap-3 rounded-full border border-transparent bg-[#F7F7FA] px-4 py-2.5 shadow-[0_8px_12px_rgba(15,23,42,0.05)] dark:bg-[#18181B]">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#D2FB95] text-black">
-            <User className="h-5 w-5" />
-          </div>
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-semibold text-black dark:text-white">
-              {ellipsify(account.address, 6)}
-            </span>
-            <button
-              onClick={disconnect}
-              className="text-xs font-medium text-[#6B7280] transition-colors hover:text-black dark:text-[#A1A1AA] dark:hover:text-white"
-            >
-              Disconnect
-            </button>
-          </div>
-        </div>
+        <WalletDropdown
+          triggerVariant="ghost"
+          triggerSize="icon"
+          triggerClassName="h-11 w-11 gap-0 rounded-full border border-transparent bg-[#D2FB95] p-0 text-black shadow-[0_8px_12px_rgba(15,23,42,0.05)] transition-colors hover:bg-[#C6F381] focus-visible:ring-[#D2FB95]/50 dark:bg-[#18181B] dark:text-white dark:hover:bg-[#26262C]"
+          walletAvatarClassName="size-6 bg-transparent text-current"
+          walletAvatarFallbackClassName="bg-transparent text-current"
+          hideTriggerLabelOnConnect
+          triggerAriaLabel="Wallet menu"
+        />
       ) : (
         <WalletDropdown
           triggerVariant="default"

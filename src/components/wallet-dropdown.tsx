@@ -11,11 +11,21 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 
-function WalletAvatar({ className, wallet }: { className?: string; wallet: UiWallet }) {
+function WalletAvatar({
+  className,
+  fallbackClassName,
+  wallet,
+}: {
+  className?: string
+  fallbackClassName?: string
+  wallet: UiWallet
+}) {
   return (
-    <Avatar className={cn('rounded-md h-6 w-6', className)}>
-      <AvatarImage src={wallet.icon} alt={wallet.name} />
-      <AvatarFallback>{wallet.name[0]}</AvatarFallback>
+    <Avatar className={cn('size-6 rounded-full', className)}>
+      {wallet.icon ? <AvatarImage src={wallet.icon} alt={wallet.name} /> : null}
+      <AvatarFallback className={cn('bg-muted text-xs font-medium uppercase', fallbackClassName)}>
+        {wallet.name?.[0] ?? '?'}
+      </AvatarFallback>
     </Avatar>
   )
 }
@@ -31,7 +41,7 @@ function WalletDropdownItem({ wallet }: { wallet: UiWallet }) {
         return connect()
       }}
     >
-      {wallet.icon ? <WalletAvatar wallet={wallet} /> : null}
+      <WalletAvatar wallet={wallet} />
       {wallet.name}
     </DropdownMenuItem>
   )
@@ -41,20 +51,47 @@ type WalletDropdownProps = {
   triggerClassName?: string
   triggerSize?: ComponentProps<typeof Button>['size']
   triggerVariant?: ComponentProps<typeof Button>['variant']
+  hideTriggerLabelOnConnect?: boolean
+  triggerAriaLabel?: string
+  walletAvatarClassName?: string
+  walletAvatarFallbackClassName?: string
 }
 
 function WalletDropdown({
   triggerClassName,
   triggerSize = 'default',
   triggerVariant = 'outline',
+  hideTriggerLabelOnConnect = false,
+  triggerAriaLabel,
+  walletAvatarClassName,
+  walletAvatarFallbackClassName,
 }: WalletDropdownProps = {}) {
   const { account, connected, copy, disconnect, wallet, wallets } = useWalletUi()
+  const label = connected
+    ? account
+      ? ellipsify(account.address)
+      : wallet?.name ?? 'Wallet'
+    : 'Select Wallet'
+  const showLabel = !(connected && hideTriggerLabelOnConnect)
+  const ariaLabel = !showLabel ? triggerAriaLabel ?? (connected ? 'Open wallet menu' : 'Connect wallet') : undefined
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant={triggerVariant} size={triggerSize} className={cn('cursor-pointer', triggerClassName)}>
-          {wallet?.icon ? <WalletAvatar wallet={wallet} /> : null}
-          {connected ? (account ? ellipsify(account.address) : wallet?.name) : 'Select Wallet'}
+        <Button
+          aria-label={ariaLabel}
+          variant={triggerVariant}
+          size={triggerSize}
+          className={cn('cursor-pointer', triggerClassName)}
+        >
+          {wallet ? (
+            <WalletAvatar
+              wallet={wallet}
+              className={walletAvatarClassName}
+              fallbackClassName={walletAvatarFallbackClassName}
+            />
+          ) : null}
+          <span className={cn(showLabel ? '' : 'sr-only')}>{label}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
