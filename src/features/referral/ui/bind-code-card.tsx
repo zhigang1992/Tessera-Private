@@ -75,13 +75,13 @@ export default function BindCodeCard() {
                 onChange={handleInputChange}
                 placeholder="Enter a code"
                 disabled={isAlreadyBound || bindMutation.isPending}
-                className="flex-1 h-[52px] rounded-[16px] border-0 bg-[#E9ECF2] px-4 text-base text-[#111827] placeholder:text-[#9CA3AF] focus-visible:border-[#111827]/20 focus-visible:ring-[#111827]/20 dark:bg-[#27272A] dark:text-white dark:placeholder:text-[#71717A]"
+                className="h-[42px] rounded-[16px] border-0 bg-[#E9ECF2] px-4 text-base text-[#111827] placeholder:text-[#9CA3AF] focus-visible:border-[#111827]/20 focus-visible:ring-[#111827]/20 dark:bg-[#27272A] dark:text-white dark:placeholder:text-[#71717A]"
               />
               <Button
                 onClick={handleBindCode}
                 disabled={!referralCodeInput.trim() || isAlreadyBound || bindMutation.isPending || isAuthenticating}
                 size="lg"
-                className="h-[52px] min-w-[160px] rounded-[16px] bg-black px-6 text-base font-semibold text-white transition-colors hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+                className="h-[42px] min-w-[160px] rounded-[16px] bg-black px-6 text-base font-semibold text-white transition-colors hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
               >
                 {(bindMutation.isPending || isAuthenticating) && (
                   <Loader2 className="w-4 h-4 animate-spin" />

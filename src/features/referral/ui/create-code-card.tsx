@@ -98,7 +98,7 @@ export default function CreateCodeCard() {
                   onClick={handleCreateCode}
                   disabled={createCodeMutation.isPending || isAuthenticating}
                   size="sm"
-                  className="flex h-12 items-center gap-2 rounded-full bg-black px-6 text-sm font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+                  className="flex h-10 items-center gap-2 rounded-lg bg-black px-6 text-sm font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
                 >
                   {(createCodeMutation.isPending || isAuthenticating) ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
