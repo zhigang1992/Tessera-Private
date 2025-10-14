@@ -1,8 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useWalletUi } from '@wallet-ui/react';
-import { getWalletAccountFeature } from '@wallet-standard/ui';
-import { getWalletAccountForUiWalletAccount_DO_NOT_USE_OR_YOU_WILL_BE_FIRED as getWalletAccountForUiWalletAccountUnsafe } from '@wallet-standard/ui-registry';
-import { SolanaSignMessage, type SolanaSignMessageFeature } from '@solana/wallet-standard-features';
+import { useSignMessage, useWalletUi } from '@wallet-ui/react';
+import { SolanaSignMessage } from '@solana/wallet-standard-features';
 import { apiClient } from '../lib/api-client';
 import { toast } from 'sonner';
 
@@ -22,6 +20,8 @@ export function useReferralAuth() {
     }
   }, [connected]);
 
+  const signMessage = useSignMessage(account!);
+
   const authenticate = useCallback(async () => {
     console.log('authenticate called', { account, wallet });
 
@@ -31,25 +31,15 @@ export function useReferralAuth() {
       return false;
     }
 
-    let signMessageFeature: SolanaSignMessageFeature[typeof SolanaSignMessage] | undefined;
-    let standardAccount: ReturnType<typeof getWalletAccountForUiWalletAccountUnsafe> | undefined;
-
-    try {
-      signMessageFeature = getWalletAccountFeature(account, SolanaSignMessage) as SolanaSignMessageFeature[typeof SolanaSignMessage];
-      standardAccount = getWalletAccountForUiWalletAccountUnsafe(account);
-    } catch (error) {
-      console.error('Wallet does not support message signing', error);
+    if (!account.features.includes(SolanaSignMessage)) {
+      console.error('Wallet does not support message signing');
       toast.error('Wallet does not support message signing');
-      return false;
-    }
-
-    if (!signMessageFeature || !standardAccount) {
       return false;
     }
 
     const isUrlKeyWallet = wallet?.name === 'URL Key Wallet';
 
-    const performAuth = () => performAuthentication(signMessageFeature, standardAccount);
+    const performAuth = () => performAuthentication();
 
     if (isUrlKeyWallet) {
       return new Promise<boolean>((resolve) => {
@@ -72,10 +62,7 @@ export function useReferralAuth() {
 
     return await performAuth();
 
-    async function performAuthentication(
-      feature: SolanaSignMessageFeature[typeof SolanaSignMessage],
-      selectedAccount: ReturnType<typeof getWalletAccountForUiWalletAccountUnsafe>,
-    ) {
+    async function performAuthentication() {
       setIsAuthenticating(true);
       try {
         console.log('Getting nonce for', account!.address);
@@ -84,14 +71,9 @@ export function useReferralAuth() {
 
         const message = new TextEncoder().encode(nonceData.message);
         console.log('Signing message with connected wallet...');
-        const [signatureResult] = await feature.signMessage({ account: selectedAccount, message });
-
-        if (!signatureResult?.signature) {
-          throw new Error('Wallet did not return a signature');
-        }
-
-        console.log('Signature result:', signatureResult);
-        const signatureBytes = signatureResult.signature;
+        const { signature } = await signMessage({ message });
+        console.log('Signature result received');
+        const signatureBytes = signature;
         console.log('Signature received');
 
         const verifyResponse = await apiClient.verifySignature({
@@ -114,7 +96,7 @@ export function useReferralAuth() {
         setIsAuthenticating(false);
       }
     }
-  }, [account, wallet]);
+  }, [account, wallet, signMessage]);
 
   const logout = useCallback(() => {
     apiClient.setToken(null);

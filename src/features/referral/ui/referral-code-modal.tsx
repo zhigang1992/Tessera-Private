@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useWalletUi } from '@wallet-ui/react';
 import {
   Dialog,
@@ -27,42 +28,7 @@ export default function ReferralCodeModal({
 }: ReferralCodeModalProps) {
   const { connected, account } = useWalletUi();
   const bindMutation = useBindReferralCode();
-  const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert } = useReferralAuth();
-  
-  const handleUrlKeyConfirm = async () => {
-    const handlers = (window as any)._urlKeyAlertHandlers;
-    if (handlers?.handleConfirm) {
-      await handlers.handleConfirm();
-    }
-  };
-
-  const handleUrlKeyCancel = () => {
-    const handlers = (window as any)._urlKeyAlertHandlers;
-    if (handlers?.handleCancel) {
-      handlers.handleCancel();
-    }
-  };
-
-  const handleBindReferralCode = async () => {
-    if (!connected || !account?.address) {
-      toast.error('Please connect your wallet first');
-      return;
-    }
-
-    if (!referralCode.trim()) {
-      toast.error('Please enter a referral code');
-      return;
-    }
-
-    // If not authenticated, require sign message first
-    if (!isAuthenticated) {
-      const signedIn = await authenticate();
-      if (!signedIn) return;
-    }
-
-    await bindMutation.mutateAsync(referralCode.toUpperCase());
-  };
-
+  const hasAccount = Boolean(connected && account);
   const handleChangeCode = () => {
     // For now, just close the modal. In the future, this could open a code input
     onClose();
@@ -126,17 +92,13 @@ export default function ReferralCodeModal({
           </div>
 
           {/* Action Button */}
-          {connected ? (
-            <Button
-              onClick={handleBindReferralCode}
-              disabled={bindMutation.isPending || isAuthenticating}
-              className="w-full bg-black hover:bg-black/90 text-white rounded-lg py-3 text-sm font-medium disabled:opacity-50 flex items-center gap-2"
-            >
-              {(bindMutation.isPending || isAuthenticating) && (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              )}
-              {bindMutation.isPending || isAuthenticating ? 'Binding...' : 'Bind Referral Code'}
-            </Button>
+          {hasAccount ? (
+            <ReferralCodeModalConnected
+              referralCode={referralCode}
+              bindReferralCode={bindMutation.mutateAsync}
+              bindPending={bindMutation.isPending}
+              accountAddress={account!.address}
+            />
           ) : (
             <WalletDropdown
               triggerVariant="default"
@@ -154,14 +116,75 @@ export default function ReferralCodeModal({
           </button>
         </div>
       </DialogContent>
+    </Dialog>
+  );
+}
 
-      {/* URL Key Alert Dialog for wallet authentication */}
+interface ReferralCodeModalConnectedProps {
+  referralCode: string;
+  bindReferralCode: (referralCode: string) => Promise<unknown>;
+  bindPending: boolean;
+  accountAddress: string;
+}
+
+function ReferralCodeModalConnected({
+  referralCode,
+  bindReferralCode,
+  bindPending,
+  accountAddress,
+}: ReferralCodeModalConnectedProps) {
+  const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert } = useReferralAuth();
+
+  const handleUrlKeyConfirm = useCallback(async () => {
+    const handlers = (window as any)._urlKeyAlertHandlers;
+    if (handlers?.handleConfirm) {
+      await handlers.handleConfirm();
+    }
+  }, []);
+
+  const handleUrlKeyCancel = useCallback(() => {
+    const handlers = (window as any)._urlKeyAlertHandlers;
+    if (handlers?.handleCancel) {
+      handlers.handleCancel();
+    }
+  }, []);
+
+  const handleBindReferralCode = useCallback(async () => {
+    if (!accountAddress) {
+      toast.error('Please connect your wallet first');
+      return;
+    }
+
+    if (!referralCode.trim()) {
+      toast.error('Please enter a referral code');
+      return;
+    }
+
+    if (!isAuthenticated) {
+      const signedIn = await authenticate();
+      if (!signedIn) return;
+    }
+
+    await bindReferralCode(referralCode.toUpperCase());
+  }, [accountAddress, authenticate, bindReferralCode, isAuthenticated, referralCode]);
+
+  return (
+    <>
+      <Button
+        onClick={handleBindReferralCode}
+        disabled={bindPending || isAuthenticating}
+        className="w-full bg-black hover:bg-black/90 text-white rounded-lg py-3 text-sm font-medium disabled:opacity-50 flex items-center gap-2"
+      >
+        {(bindPending || isAuthenticating) && <Loader2 className="w-4 h-4 animate-spin" />}
+        {bindPending || isAuthenticating ? 'Binding...' : 'Bind Referral Code'}
+      </Button>
+
       <UrlKeyAlertDialog
         open={showUrlKeyAlert}
         onOpenChange={setShowUrlKeyAlert}
         onConfirm={handleUrlKeyConfirm}
         onCancel={handleUrlKeyCancel}
       />
-    </Dialog>
+    </>
   );
 }

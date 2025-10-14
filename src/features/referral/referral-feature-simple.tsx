@@ -10,7 +10,7 @@ import ReferralCodeModal from './ui/referral-code-modal';
 import heroShot from '@/assets/heroShot.png';
 
 export default function ReferralFeatureSimple() {
-  const { connected } = useWalletUi();
+  const { connected, account } = useWalletUi();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [referralCode, setReferralCode] = useState<string | null>(null);
 
@@ -47,7 +47,7 @@ export default function ReferralFeatureSimple() {
 
           <div className="h-px rounded-full bg-[#E7E7EA] dark:bg-[#27272A]" />
 
-          {!connected ? (
+          {!connected || !account ? (
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
               <h2 className="text-2xl font-bold text-black dark:text-white">Referral Program</h2>
               <p className="text-black/50 dark:text-white/50">

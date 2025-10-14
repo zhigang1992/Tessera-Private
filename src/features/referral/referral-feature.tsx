@@ -7,11 +7,9 @@ import { AffiliateView } from './ui/affiliate-view';
 import { Link } from 'react-router';
 
 export default function ReferralFeature() {
-  const { connected } = useWalletUi();
-  const { isAuthenticated, isAuthenticating, authenticate } = useReferralAuth();
-  const [activeTab, setActiveTab] = useState<'traders' | 'affiliates'>('traders');
+  const { connected, account } = useWalletUi();
 
-  if (!connected) {
+  if (!connected || !account) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <h2 className="text-2xl font-bold">Referral Program</h2>
@@ -19,6 +17,13 @@ export default function ReferralFeature() {
       </div>
     );
   }
+
+  return <ReferralFeatureConnected />;
+}
+
+function ReferralFeatureConnected() {
+  const { isAuthenticated, isAuthenticating, authenticate } = useReferralAuth();
+  const [activeTab, setActiveTab] = useState<'traders' | 'affiliates'>('traders');
 
   if (!isAuthenticated) {
     return (
