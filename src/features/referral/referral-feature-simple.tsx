@@ -32,9 +32,9 @@ export default function ReferralFeatureSimple() {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-16 dark:bg-black">
-      <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-16 px-6 pt-10 sm:px-10 lg:flex-row lg:items-start lg:gap-20 lg:px-16 lg:pt-16">
-        <div className="flex w-full max-w-[560px] flex-shrink-0 flex-col gap-8 lg:gap-10">
+    <div className="min-h-screen bg-white pb-12 dark:bg-black">
+      <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-12 px-6 pt-8 sm:px-10 lg:flex-row lg:items-start lg:gap-16 lg:px-16 lg:pt-12">
+        <div className="flex w-full max-w-[560px] flex-shrink-0 flex-col gap-6 lg:gap-8">
           <SimpleReferralHeader />
 
           <div className="h-px rounded-full bg-[#E7E7EA] dark:bg-[#27272A]" />
@@ -62,7 +62,7 @@ export default function ReferralFeatureSimple() {
           )}
 
           {/* Footer */}
-          <div className="text-center text-xs text-black/50 dark:text-white/50 mt-12">
+          <div className="mt-8 text-center text-xs text-black/50 dark:text-white/50">
             © 2025 Tessera PE. All rights reserved.
           </div>
         </div>

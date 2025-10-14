@@ -1,7 +1,7 @@
 export default function HeroSection() {
   return (
-    <section className="flex flex-col gap-10">
-      <div className="flex flex-col gap-3 text-black dark:text-white">
+    <section className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2 text-black dark:text-white">
         <h1 className="text-[54px] font-semibold leading-[1.05] tracking-tight sm:text-[60px]">
           Tessera
         </h1>
@@ -10,7 +10,7 @@ export default function HeroSection() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-4 text-[#4B5563] dark:text-[#D1D5DB] sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 text-[#4B5563] dark:text-[#D1D5DB] sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm leading-relaxed">
           Join our social channels
           <br className="hidden sm:block" />

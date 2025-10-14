@@ -51,7 +51,7 @@ export default function BindCodeCard() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <h2 className="text-base text-black font-semibold dark:text-white">Referral code (Who invited you?)</h2>
         <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111827]">
           <CardContent className="p-6">
@@ -64,12 +64,12 @@ export default function BindCodeCard() {
 
   return (
     <>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-black dark:text-white">Referral code (Who invited you?)</h2>
 
         <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111827]">
-          <CardContent className="flex flex-col gap-6 p-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <CardContent className="flex flex-col gap-5 p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
               <Input
                 value={referralCodeInput}
                 onChange={handleInputChange}
