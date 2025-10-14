@@ -109,11 +109,8 @@ export default function ReferralCodeModal({
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <div className="text-xs text-[#2B664B] font-medium">
-                    Please Connect Wallet
-                  </div>
-                  <WalletDropdown />
+                <div className="text-xs font-medium text-[#2B664B]">
+                  Please Connect Wallet
                 </div>
               )}
             </div>
@@ -148,12 +145,11 @@ export default function ReferralCodeModal({
               {bindMutation.isPending || isAuthenticating ? 'Binding...' : 'Bind Referral Code'}
             </Button>
           ) : (
-            <Button
-              disabled={true}
-              className="w-full bg-gray-400 text-white rounded-lg py-3 text-sm font-medium opacity-50 cursor-not-allowed"
-            >
-              Please connect wallet using the dropdown above
-            </Button>
+            <WalletDropdown
+              triggerVariant="default"
+              triggerSize="lg"
+              triggerClassName="w-full rounded-lg bg-black px-4 py-3 text-sm font-semibold text-white hover:bg-black/90"
+            />
           )}
 
           {/* Change Code Link */}
