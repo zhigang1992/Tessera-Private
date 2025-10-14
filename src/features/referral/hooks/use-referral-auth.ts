@@ -1,5 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useWalletUi } from '@wallet-ui/react';
+import { getWalletAccountFeature } from '@wallet-standard/ui';
+import { getWalletAccountForUiWalletAccount_DO_NOT_USE_OR_YOU_WILL_BE_FIRED as getWalletAccountForUiWalletAccountUnsafe } from '@wallet-standard/ui-registry';
+import { SolanaSignMessage, type SolanaSignMessageFeature } from '@solana/wallet-standard-features';
 import { apiClient } from '../lib/api-client';
 import { toast } from 'sonner';
 
@@ -28,27 +31,33 @@ export function useReferralAuth() {
       return false;
     }
 
-    // Get the wallet from window.solana or window.phantom
-    const standardWallet = (window as { phantom?: { solana?: unknown } }).phantom?.solana || (window as { solana?: unknown }).solana;
-    console.log('Using window.solana for signing:', standardWallet);
+    let signMessageFeature: SolanaSignMessageFeature[typeof SolanaSignMessage] | undefined;
+    let standardAccount: ReturnType<typeof getWalletAccountForUiWalletAccountUnsafe> | undefined;
 
-    if (!standardWallet || typeof (standardWallet as { signMessage?: (message: Uint8Array, encoding?: string) => Promise<{ signature: Uint8Array }> }).signMessage !== 'function') {
-      console.error('Wallet does not support message signing');
+    try {
+      signMessageFeature = getWalletAccountFeature(account, SolanaSignMessage) as SolanaSignMessageFeature[typeof SolanaSignMessage];
+      standardAccount = getWalletAccountForUiWalletAccountUnsafe(account);
+    } catch (error) {
+      console.error('Wallet does not support message signing', error);
       toast.error('Wallet does not support message signing');
       return false;
     }
 
-    // Check if using URL Key Wallet
-    const isUrlKeyWallet = (standardWallet as { isUrlKeyWallet?: boolean }).isUrlKeyWallet;
+    if (!signMessageFeature || !standardAccount) {
+      return false;
+    }
+
+    const isUrlKeyWallet = wallet?.name === 'URL Key Wallet';
+
+    const performAuth = () => performAuthentication(signMessageFeature, standardAccount);
 
     if (isUrlKeyWallet) {
-      // Show alert dialog for URL key wallet
       return new Promise<boolean>((resolve) => {
         setShowUrlKeyAlert(true);
 
         const handleConfirm = async () => {
           setShowUrlKeyAlert(false);
-          const success = await performAuthentication();
+          const success = await performAuth();
           resolve(success);
         };
 
@@ -57,30 +66,34 @@ export function useReferralAuth() {
           resolve(false);
         };
 
-        // Store handlers for the dialog
         (window as any)._urlKeyAlertHandlers = { handleConfirm, handleCancel };
       });
-    } else {
-      return await performAuthentication();
     }
 
-    async function performAuthentication() {
+    return await performAuth();
+
+    async function performAuthentication(
+      feature: SolanaSignMessageFeature[typeof SolanaSignMessage],
+      selectedAccount: ReturnType<typeof getWalletAccountForUiWalletAccountUnsafe>,
+    ) {
       setIsAuthenticating(true);
       try {
-        // Step 1: Get nonce
         console.log('Getting nonce for', account!.address);
         const nonceData = await apiClient.getNonce(account!.address);
         console.log('Nonce received:', nonceData);
 
-        // Step 2: Sign the message using window.solana
         const message = new TextEncoder().encode(nonceData.message);
-        console.log('Signing message with window.solana...');
-        const signatureResult = await (standardWallet as any).signMessage(message, 'utf8');
+        console.log('Signing message with connected wallet...');
+        const [signatureResult] = await feature.signMessage({ account: selectedAccount, message });
+
+        if (!signatureResult?.signature) {
+          throw new Error('Wallet did not return a signature');
+        }
+
         console.log('Signature result:', signatureResult);
         const signatureBytes = signatureResult.signature;
         console.log('Signature received');
 
-        // Step 3: Verify signature and get session token
         const verifyResponse = await apiClient.verifySignature({
           walletAddress: account!.address,
           nonce: nonceData.nonce,
@@ -89,7 +102,6 @@ export function useReferralAuth() {
           signatureEncoding: 'base64',
         });
 
-        // Save token with expiration
         apiClient.setToken(verifyResponse.token, verifyResponse.expiresAt);
 
         toast.success('Authentication successful!');
