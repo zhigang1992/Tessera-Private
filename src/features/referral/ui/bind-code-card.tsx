@@ -27,8 +27,8 @@ export default function BindCodeCard() {
   };
 
   const [referralCodeInput, setReferralCodeInput] = useState('');
-
-  const isAlreadyBound = !!traderData?.referral?.referrerCode;
+  const activeReferralCode = traderData?.referral?.referrerCode;
+  const isAlreadyBound = Boolean(activeReferralCode);
 
   const handleBindCode = async () => {
     if (!referralCodeInput.trim()) return;
@@ -69,36 +69,41 @@ export default function BindCodeCard() {
 
         <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111827]">
           <CardContent className="flex flex-col gap-5 p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
-              <Input
-                value={referralCodeInput}
-                onChange={handleInputChange}
-                placeholder="Enter a code"
-                disabled={isAlreadyBound || bindMutation.isPending}
-                className="h-[42px] rounded-[16px] border-0 bg-[#E9ECF2] px-4 text-base text-[#111827] placeholder:text-[#9CA3AF] focus-visible:border-[#111827]/20 focus-visible:ring-[#111827]/20 dark:bg-[#27272A] dark:text-white dark:placeholder:text-[#71717A]"
-              />
-              <Button
-                onClick={handleBindCode}
-                disabled={!referralCodeInput.trim() || isAlreadyBound || bindMutation.isPending || isAuthenticating}
-                size="lg"
-                className="h-[42px] min-w-[160px] rounded-[16px] bg-black px-6 text-base font-semibold text-white transition-colors hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
-              >
-                {(bindMutation.isPending || isAuthenticating) && (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                )}
-                {bindMutation.isPending || isAuthenticating ? 'Binding...' : 'Bind Code'}
-              </Button>
-            </div>
-
             {isAlreadyBound ? (
-              <p className="text-sm font-medium text-[#111827] dark:text-white">
-                You are already bound to referral code:{' '}
-                <span className="font-semibold">{traderData?.referral?.referrerCode}</span>
-              </p>
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-medium uppercase text-[#6B7280] dark:text-[#A1A1AA]">
+                  Active referral code
+                </p>
+                <p className="text-2xl font-semibold text-[#111827] dark:text-white">
+                  {activeReferralCode}
+                </p>
+              </div>
             ) : (
-              <p className="text-sm text-[#6B7280] dark:text-[#A1A1AA]">
-                The account linked to this referral code will earn rewards.
-              </p>
+              <>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
+                  <Input
+                    value={referralCodeInput}
+                    onChange={handleInputChange}
+                    placeholder="Enter a code"
+                    disabled={bindMutation.isPending}
+                    className="h-[42px] rounded-[16px] border-0 bg-[#E9ECF2] px-4 text-base text-[#111827] placeholder:text-[#9CA3AF] focus-visible:border-[#111827]/20 focus-visible:ring-[#111827]/20 dark:bg-[#27272A] dark:text-white dark:placeholder:text-[#71717A]"
+                  />
+                  <Button
+                    onClick={handleBindCode}
+                    disabled={!referralCodeInput.trim() || bindMutation.isPending || isAuthenticating}
+                    size="lg"
+                    className="h-[42px] min-w-[160px] rounded-[16px] bg-black px-6 text-base font-semibold text-white transition-colors hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+                  >
+                    {(bindMutation.isPending || isAuthenticating) && (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    )}
+                    {bindMutation.isPending || isAuthenticating ? 'Binding...' : 'Bind Code'}
+                  </Button>
+                </div>
+                <p className="text-sm text-[#6B7280] dark:text-[#A1A1AA]">
+                  The account linked to this referral code will earn rewards.
+                </p>
+              </>
             )}
           </CardContent>
         </Card>
