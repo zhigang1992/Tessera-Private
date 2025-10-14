@@ -67,11 +67,11 @@ export default function ReferralFeatureSimple() {
           </div>
         </div>
 
-        <div className="relative w-full overflow-hidden rounded-[32px] bg-[#F4F4F5] dark:bg-[#09090B] sm:max-h-[520px] lg:sticky lg:top-16 lg:max-h-none lg:flex-1 lg:self-start">
+        <div className="relative w-full overflow-hidden rounded-[32px] sm:max-h-[520px] lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)] lg:flex-1 lg:self-start">
           <img
             src={heroShot}
             alt=""
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain p-6 sm:p-8 lg:p-10"
           />
         </div>
       </div>
