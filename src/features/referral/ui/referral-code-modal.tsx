@@ -60,14 +60,7 @@ export default function ReferralCodeModal({
       if (!signedIn) return;
     }
 
-    try {
-      await bindMutation.mutateAsync(referralCode.toUpperCase());
-      toast.success('Referral code bound successfully!');
-      onClose();
-    } catch (error) {
-      console.error('Failed to bind referral code:', error);
-      toast.error('Failed to bind referral code. Please try again.');
-    }
+    await bindMutation.mutateAsync(referralCode.toUpperCase());
   };
 
   const handleChangeCode = () => {
