@@ -54,7 +54,7 @@ export default function BindCodeCard() {
     return (
       <div className="flex flex-col gap-3">
         <h2 className="text-base text-black font-semibold dark:text-white">Referral code (Who invited you?)</h2>
-        <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111827]">
+        <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
           <CardContent className="p-6">
             <p className="text-black/50 dark:text-white/50">Loading...</p>
           </CardContent>
@@ -68,14 +68,14 @@ export default function BindCodeCard() {
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-black dark:text-white">Referral code (Who invited you?)</h2>
 
-        <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111827]">
+        <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
           <CardContent className="flex flex-col gap-5 p-5">
             {isAlreadyBound ? (
               <div className="flex flex-col gap-1">
                 <p className="text-sm font-medium uppercase text-[#6B7280] dark:text-[#A1A1AA]">
                   Active referral code
                 </p>
-                <p className="text-2xl font-semibold text-[#111827] dark:text-white">
+                <p className="text-2xl font-semibold text-[#111111] dark:text-white">
                   {activeReferralCode}
                 </p>
               </div>
@@ -87,7 +87,7 @@ export default function BindCodeCard() {
                     onChange={handleInputChange}
                     placeholder="Enter a code"
                     disabled={bindMutation.isPending}
-                    className="h-[42px] rounded-[16px] border-0 bg-[#E9ECF2] px-4 text-base text-[#111827] placeholder:text-[#9CA3AF] focus-visible:border-[#111827]/20 focus-visible:ring-[#111827]/20 dark:bg-[#27272A] dark:text-white dark:placeholder:text-[#71717A]"
+                    className="h-[42px] rounded-[16px] border-0 bg-[#E9ECF2] px-4 text-base text-[#111111] placeholder:text-[#9CA3AF] focus-visible:border-[#111111]/20 focus-visible:ring-[#111111]/20 dark:bg-[#27272A] dark:text-white dark:placeholder:text-[#71717A]"
                   />
                   <Button
                     onClick={handleBindCode}
