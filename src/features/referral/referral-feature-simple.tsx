@@ -34,9 +34,6 @@ export default function ReferralFeatureSimple() {
 
   return (
     <div className="min-h-screen bg-white pb-12 dark:bg-black">
-      <div className="flex justify-end px-6 pt-6 sm:px-10 lg:px-16">
-        <ThemeToggleButton />
-      </div>
       <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-12 px-6 pt-6 sm:px-10 lg:flex-row lg:items-start lg:gap-16 lg:px-16 lg:pt-10">
         <div className="flex w-full max-w-[560px] flex-shrink-0 flex-col gap-6 lg:gap-8">
           <SimpleReferralHeader />
@@ -66,8 +63,9 @@ export default function ReferralFeatureSimple() {
           )}
 
           {/* Footer */}
-          <div className="mt-8 text-center text-xs text-black/50 dark:text-white/50">
-            © 2025 Tessera PE. All rights reserved.
+          <div className="mt-8 flex items-center justify-center gap-3 text-center text-xs text-black/50 dark:text-white/50">
+            <span>© 2025 Tessera PE. All rights reserved.</span>
+            <ThemeToggleButton />
           </div>
         </div>
 
