@@ -114,12 +114,12 @@ export default function CreateCodeCard() {
               /* Filled state - Table of codes */
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-2 px-2">
-                  <div className="w-[240px]">
+                  <div className="flex-1">
                     <span className="text-xs font-medium uppercase tracking-[0.08em] text-[#6B7280] dark:text-[#A1A1AA]">
                       Referral Code
                     </span>
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 flex flex-row justify-center">
                     <span className="text-xs font-medium uppercase tracking-[0.08em] text-[#6B7280] dark:text-[#A1A1AA]">
                       Traders Referred
                     </span>
@@ -132,37 +132,36 @@ export default function CreateCodeCard() {
                   {referralCodes.map((code, index) => (
                     <div
                       key={code.id}
-                      className={`flex items-center gap-3 rounded-[16px] px-3 py-4 transition-colors ${
+                      className={`flex items-center justify-between gap-3 rounded-[16px] px-3 py-4 transition-colors ${
                         index % 2 === 0
                           ? 'bg-white dark:bg-[#1F1F23]'
                           : 'bg-[#F1F2F6] dark:bg-[#131318]'
                       }`}
                     >
-                      <div className="flex w-[240px] items-center gap-2">
+                      <div className="flex-1 flex items-center gap-2">
                         <span className="text-sm font-semibold uppercase tracking-[0.08em] text-[#111827] dark:text-[#E4E4E7]">
                           {code.codeSlug}
                         </span>
                         <button
                           onClick={() => copyToClipboard(code.codeSlug)}
-                          className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E5E7EB] text-[#4B5563] transition hover:bg-[#D1D5DB] dark:bg-[#27272A] dark:text-[#D1D5DB]"
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-[#E5E7EB] text-[#4B5563] transition hover:bg-[#D1D5DB] dark:bg-[#27272A] dark:text-[#D1D5DB]"
                           title="Copy code"
                         >
-                          <Copy className="h-3.5 w-3.5" />
+                          <Copy className="h-2.5 w-2.5" />
                         </button>
                         <button
                           onClick={() => shareCode(code.codeSlug)}
                           className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E5E7EB] text-[#4B5563] transition hover:bg-[#D1D5DB] dark:bg-[#27272A] dark:text-[#D1D5DB]"
                           title="Share referral link"
                         >
-                          <Share2 className="h-3.5 w-3.5" />
+                          <Share2 className="h-2.5 w-2.5" />
                         </button>
                       </div>
-
-                      <div className="flex flex-1 items-center">
-                        <span className="text-sm font-medium text-[#111827] dark:text-white">
+<div className="flex-1 flex flex-row justify-center">
+                         <span className="text-sm font-medium text-[#111827] dark:text-white">
                           {code.referredTraderCount ?? 0}
                         </span>
-                      </div>
+</div>
                     </div>
                   ))}
                 </div>

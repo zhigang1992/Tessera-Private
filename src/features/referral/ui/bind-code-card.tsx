@@ -94,7 +94,7 @@ export default function BindCodeCard() {
                     onClick={handleBindCode}
                     disabled={!referralCodeInput.trim() || bindMutation.isPending || isAuthenticating}
                     size="lg"
-                    className="h-[42px] min-w-[160px] rounded-[16px] bg-black px-6 text-base font-semibold text-white transition-colors hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+                    className="flex h-10 items-center gap-2 rounded-lg bg-black px-6 text-sm font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
                   >
                     {(bindMutation.isPending || isAuthenticating) && (
                       <Loader2 className="w-4 h-4 animate-spin" />

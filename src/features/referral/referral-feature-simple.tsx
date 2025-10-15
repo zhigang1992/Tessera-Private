@@ -35,7 +35,7 @@ export default function ReferralFeatureSimple() {
   return (
     <div className="min-h-screen bg-white pb-12 dark:bg-black">
       <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-12 px-6 pt-6 sm:px-10 lg:flex-row lg:items-start lg:gap-16 lg:px-16 lg:pt-10">
-        <div className="flex w-full max-w-[560px] flex-shrink-0 flex-col gap-6 lg:gap-8">
+        <div className="flex w-full lg:max-w-[560px] flex-shrink-0 flex-col gap-6 lg:gap-8">
           <SimpleReferralHeader />
 
           <div className="h-px rounded-full bg-[#E7E7EA] dark:bg-[#27272A]" />
@@ -69,7 +69,7 @@ export default function ReferralFeatureSimple() {
           </div>
         </div>
 
-        <div className="relative w-full overflow-hidden rounded-[32px] sm:max-h-[520px] lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)] lg:flex-1 lg:self-start">
+        <div className="relative w-full overflow-hidden rounded-[32px] hidden lg:block lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)] lg:flex-1 lg:self-start">
           <img
             src={heroShot}
             alt=""
