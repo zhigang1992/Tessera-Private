@@ -58,7 +58,7 @@ export default function CreateCodeCard() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-black dark:text-white">Create my referral code</h2>
+        <h2 className="text-lg font-semibold text-black dark:text-white">My referral codes</h2>
         <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111827]">
           <CardContent className="p-6">
             <p className="text-black/50 dark:text-white/50">Loading...</p>
@@ -72,8 +72,8 @@ export default function CreateCodeCard() {
     <>
       <div className="flex flex-col gap-3">
         {/* Section header with create button */}
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-black dark:text-white">Create my referral code</h2>
+        <div className="flex items-center justify-between gap-1">
+          <h2 className="text-lg font-semibold text-black dark:text-white">My referral codes</h2>
           {!hasNoCodes && (
             <Button
               onClick={handleCreateCode}
