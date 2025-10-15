@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import type { MessageSignerWalletAdapterProps } from '@solana/wallet-adapter-base'
+import { useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../lib/api-client'
 import { toast } from 'sonner'
 import { setUrlKeyAlertHandlers } from '../lib/url-key-alert'
+import { referralKeys } from './use-referral-queries'
 
 export function useReferralAuth() {
   const { publicKey, connected, wallet, signMessage: walletSignMessage } = useWallet()
   const [isAuthenticating, setIsAuthenticating] = useState(false)
   const [showUrlKeyAlert, setShowUrlKeyAlert] = useState(false)
+  const queryClient = useQueryClient()
 
   // Check if we have a valid session on every render
   const isAuthenticated = Boolean(apiClient.getToken() && apiClient.isTokenValid())
@@ -20,8 +23,31 @@ export function useReferralAuth() {
   useEffect(() => {
     if (!connected) {
       apiClient.setToken(null)
+      queryClient.resetQueries({ queryKey: referralKeys.all })
     }
-  }, [connected])
+  }, [connected, queryClient])
+
+  useEffect(() => {
+    const sessionWalletAddress = apiClient.getSessionWalletAddress()
+    const hasToken = Boolean(apiClient.getToken())
+
+    if (!walletAddress) {
+      if (hasToken) {
+        apiClient.setToken(null)
+        queryClient.resetQueries({ queryKey: referralKeys.all })
+      }
+      return
+    }
+
+    if (!hasToken) {
+      return
+    }
+
+    if (!sessionWalletAddress || sessionWalletAddress !== walletAddress) {
+      apiClient.setToken(null)
+      queryClient.resetQueries({ queryKey: referralKeys.all })
+    }
+  }, [walletAddress, queryClient])
 
   const authenticate = useCallback(async () => {
     const adapterName = wallet?.adapter?.name
@@ -90,7 +116,7 @@ export function useReferralAuth() {
           signatureEncoding: 'base64',
         })
 
-        apiClient.setToken(verifyResponse.token, verifyResponse.expiresAt)
+        apiClient.setToken(verifyResponse.token, verifyResponse.expiresAt, verifyResponse.walletAddress)
         return true
       } catch (error) {
         console.error('Authentication error:', error)

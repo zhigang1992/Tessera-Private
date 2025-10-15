@@ -81,6 +81,7 @@ export type AffiliateData = {
 export class ReferralApiClient {
   private baseUrl: string;
   private token: string | null = null;
+  private sessionWalletAddress: string | null = null;
 
   constructor(baseUrl: string = API_BASE) {
     this.baseUrl = baseUrl;
@@ -93,6 +94,7 @@ export class ReferralApiClient {
   private loadAndValidateToken() {
     const token = localStorage.getItem('referral_session_token');
     const expiresAt = localStorage.getItem('referral_session_expires_at');
+    const walletAddress = localStorage.getItem('referral_session_wallet_address');
 
     if (token && expiresAt) {
       const expirationTime = new Date(expiresAt).getTime();
@@ -101,36 +103,52 @@ export class ReferralApiClient {
       if (expirationTime > now) {
         // Token is still valid
         this.token = token;
+        this.sessionWalletAddress = walletAddress;
       } else {
         // Token has expired, clean it up
         localStorage.removeItem('referral_session_token');
         localStorage.removeItem('referral_session_expires_at');
+        localStorage.removeItem('referral_session_wallet_address');
         this.token = null;
+        this.sessionWalletAddress = null;
       }
     } else if (token) {
       // Legacy token without expiration info, remove it
       localStorage.removeItem('referral_session_token');
+      localStorage.removeItem('referral_session_wallet_address');
       this.token = null;
+      this.sessionWalletAddress = null;
     }
   }
 
-  setToken(token: string | null, expiresAt?: string) {
+  setToken(token: string | null, expiresAt?: string, walletAddress?: string | null) {
     this.token = token;
+    this.sessionWalletAddress = walletAddress ?? null;
     if (typeof window !== 'undefined') {
       if (token) {
         localStorage.setItem('referral_session_token', token);
         if (expiresAt) {
           localStorage.setItem('referral_session_expires_at', expiresAt);
         }
+        if (walletAddress) {
+          localStorage.setItem('referral_session_wallet_address', walletAddress);
+        } else {
+          localStorage.removeItem('referral_session_wallet_address');
+        }
       } else {
         localStorage.removeItem('referral_session_token');
         localStorage.removeItem('referral_session_expires_at');
+        localStorage.removeItem('referral_session_wallet_address');
       }
     }
   }
 
   getToken(): string | null {
     return this.token;
+  }
+
+  getSessionWalletAddress(): string | null {
+    return this.sessionWalletAddress;
   }
 
   isTokenValid(): boolean {

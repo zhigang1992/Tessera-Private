@@ -9,9 +9,10 @@ import { UrlKeyAlertDialog } from './url-key-alert-dialog';
 import { getUrlKeyAlertHandlers } from '../lib/url-key-alert';
 
 export default function BindCodeCard() {
-  const { data: traderData, isLoading } = useTraderData();
   const bindMutation = useBindReferralCode();
-  const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert } = useReferralAuth();
+  const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert, walletAddress } =
+    useReferralAuth();
+  const { data: traderData, isLoading } = useTraderData(walletAddress);
 
   const handleUrlKeyConfirm = async () => {
     const handlers = getUrlKeyAlertHandlers();

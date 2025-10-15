@@ -10,9 +10,9 @@ export const referralKeys = {
 };
 
 // Trader queries
-export function useTraderData(enabled = true) {
+export function useTraderData(walletAddress?: string | null, enabled = true) {
   return useQuery({
-    queryKey: referralKeys.trader(),
+    queryKey: [...referralKeys.trader(), walletAddress ?? 'no-wallet'],
     queryFn: () => apiClient.getTraderData(),
     enabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -26,7 +26,7 @@ export function useTraderData(enabled = true) {
 // Affiliate queries
 export function useAffiliateData(enabled = true, walletAddress?: string | null) {
   return useQuery({
-    queryKey: referralKeys.affiliate(),
+    queryKey: [...referralKeys.affiliate(), walletAddress ?? 'no-wallet'],
     queryFn: () => {
       // If we have a wallet address but no authentication, use public endpoint
       if (walletAddress && !apiClient.getToken()) {
