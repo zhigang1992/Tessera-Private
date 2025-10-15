@@ -3,10 +3,10 @@ import { WalletDropdown } from '@/components/wallet-dropdown'
 import { Navigate } from 'react-router'
 
 export default function AccountFeatureIndex() {
-  const { account } = useSolana()
+  const { address } = useSolana()
 
-  if (account) {
-    return <Navigate to={`/account/${account.address.toString()}`} replace />
+  if (address) {
+    return <Navigate to={`/account/${address}`} replace />
   }
 
   return (

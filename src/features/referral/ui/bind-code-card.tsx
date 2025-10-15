@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 import { UrlKeyAlertDialog } from './url-key-alert-dialog';
+import { getUrlKeyAlertHandlers } from '../lib/url-key-alert';
 
 export default function BindCodeCard() {
   const { data: traderData, isLoading } = useTraderData();
@@ -13,14 +14,14 @@ export default function BindCodeCard() {
   const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert } = useReferralAuth();
 
   const handleUrlKeyConfirm = async () => {
-    const handlers = (window as any)._urlKeyAlertHandlers;
+    const handlers = getUrlKeyAlertHandlers();
     if (handlers?.handleConfirm) {
       await handlers.handleConfirm();
     }
   };
 
   const handleUrlKeyCancel = () => {
-    const handlers = (window as any)._urlKeyAlertHandlers;
+    const handlers = getUrlKeyAlertHandlers();
     if (handlers?.handleCancel) {
       handlers.handleCancel();
     }

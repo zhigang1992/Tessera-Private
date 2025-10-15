@@ -1,18 +1,18 @@
-import { useEffect, useState } from 'react';
-import { useWalletUi } from '@wallet-ui/react';
-import { WalletDropdown } from '@/components/wallet-dropdown';
-import { ThemeToggleButton } from '@/components/theme-toggle-button';
-import SimpleReferralHeader from './ui/simple-referral-header';
-import HeroSection from './ui/hero-section';
-import BindCodeCard from './ui/bind-code-card';
-import CreateCodeCard from './ui/create-code-card';
-import ReferralCodeModal from './ui/referral-code-modal';
-import heroShot from '@/assets/heroShot.png';
+import { useEffect, useState } from 'react'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { WalletDropdown } from '@/components/wallet-dropdown'
+import { ThemeToggleButton } from '@/components/theme-toggle-button'
+import SimpleReferralHeader from './ui/simple-referral-header'
+import HeroSection from './ui/hero-section'
+import BindCodeCard from './ui/bind-code-card'
+import CreateCodeCard from './ui/create-code-card'
+import ReferralCodeModal from './ui/referral-code-modal'
+import heroShot from '@/assets/heroShot.png'
 
 export default function ReferralFeatureSimple() {
-  const { connected, account } = useWalletUi();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const { connected, publicKey } = useWallet()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [referralCode, setReferralCode] = useState<string | null>(null)
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -47,7 +47,7 @@ export default function ReferralFeatureSimple() {
 
           <div className="h-px rounded-full bg-[#E7E7EA] dark:bg-[#27272A]" />
 
-          {!connected || !account ? (
+          {!connected || !publicKey ? (
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
               <h2 className="text-2xl font-bold text-black dark:text-white">Referral Program</h2>
               <p className="text-black/50 dark:text-white/50">

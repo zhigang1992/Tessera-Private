@@ -1,15 +1,23 @@
 import type { ComponentProps } from 'react'
+import { useCallback, useMemo } from 'react'
+import { useWallet, type WalletContextState } from '@solana/wallet-adapter-react'
+import { useWalletModal } from '@solana/wallet-adapter-react-ui'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { cn } from '@/lib/utils'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ellipsify, UiWallet, useWalletUi, useWalletUiWallet } from '@wallet-ui/react'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { cn } from '@/lib/utils'
+
+function ellipsify(str = '', len = 4, delimiter = '..') {
+  const strLen = str.length
+  const limit = len * 2 + delimiter.length
+  return strLen >= limit ? `${str.substring(0, len)}${delimiter}${str.substring(strLen - len, strLen)}` : str
+}
 
 function WalletAvatar({
   className,
@@ -18,32 +26,18 @@ function WalletAvatar({
 }: {
   className?: string
   fallbackClassName?: string
-  wallet: UiWallet
+  wallet: NonNullable<WalletContextState['wallet']>
 }) {
+  const icon = wallet?.adapter?.icon
+  const iconSrc = Array.isArray(icon) ? icon[0] : icon
+
   return (
     <Avatar className={cn('size-6 rounded-full', className)}>
-      {wallet.icon ? <AvatarImage src={wallet.icon} alt={wallet.name} /> : null}
+      {iconSrc ? <AvatarImage src={iconSrc} alt={wallet.adapter.name} /> : null}
       <AvatarFallback className={cn('bg-muted text-xs font-medium uppercase', fallbackClassName)}>
-        {wallet.name?.[0] ?? '?'}
+        {wallet.adapter.name?.[0] ?? '?'}
       </AvatarFallback>
     </Avatar>
-  )
-}
-
-function WalletDropdownItem({ wallet }: { wallet: UiWallet }) {
-  const { connect } = useWalletUiWallet({ wallet })
-
-  return (
-    <DropdownMenuItem
-      className="cursor-pointer"
-      key={wallet.name}
-      onClick={() => {
-        return connect()
-      }}
-    >
-      <WalletAvatar wallet={wallet} />
-      {wallet.name}
-    </DropdownMenuItem>
   )
 }
 
@@ -66,14 +60,60 @@ function WalletDropdown({
   walletAvatarClassName,
   walletAvatarFallbackClassName,
 }: WalletDropdownProps = {}) {
-  const { account, connected, copy, disconnect, wallet, wallets } = useWalletUi()
-  const label = connected
-    ? account
-      ? ellipsify(account.address)
-      : wallet?.name ?? 'Wallet'
-    : 'Select Wallet'
+  const { connected, disconnect, publicKey, wallet } = useWallet()
+  const { setVisible } = useWalletModal()
+  const address = useMemo(() => publicKey?.toBase58() ?? '', [publicKey])
+  const label = connected ? (address ? ellipsify(address) : wallet?.adapter.name ?? 'Wallet') : 'Select Wallet'
   const showLabel = !(connected && hideTriggerLabelOnConnect)
   const ariaLabel = !showLabel ? triggerAriaLabel ?? (connected ? 'Open wallet menu' : 'Connect wallet') : undefined
+
+  const handleCopy = useCallback(async () => {
+    if (!address) {
+      return
+    }
+    try {
+      if (typeof navigator === 'undefined' || !navigator.clipboard) {
+        throw new Error('Clipboard API unavailable')
+      }
+      await navigator.clipboard.writeText(address)
+      toast.success('Address copied')
+    } catch (error) {
+      console.error('Failed to copy address', error)
+      toast.error('Failed to copy address')
+    }
+  }, [address])
+
+  const handleDisconnect = useCallback(async () => {
+    try {
+      await disconnect()
+      toast.success('Wallet disconnected')
+    } catch (error) {
+      console.error('Failed to disconnect wallet', error)
+      toast.error('Failed to disconnect wallet')
+    }
+  }, [disconnect])
+
+  const handleOpenModal = useCallback(() => {
+    setVisible(true)
+  }, [setVisible])
+
+  if (!connected) {
+    return (
+      <Button
+        aria-label={ariaLabel}
+        variant={triggerVariant}
+        size={triggerSize}
+        className={cn('cursor-pointer', triggerClassName)}
+        onClick={handleOpenModal}
+      >
+        <span className={cn(showLabel ? '' : 'sr-only')}>{label}</span>
+      </Button>
+    )
+  }
+
+  if (!wallet) {
+    return null
+  }
 
   return (
     <DropdownMenu>
@@ -95,26 +135,17 @@ function WalletDropdown({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        {account ? (
-          <>
-            <DropdownMenuItem className="cursor-pointer" onClick={copy}>
-              Copy address
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer" onClick={disconnect}>
-              Disconnect
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-          </>
-        ) : null}
-        {wallets.length ? (
-          wallets.map((wallet) => <WalletDropdownItem key={wallet.name} wallet={wallet} />)
-        ) : (
-          <DropdownMenuItem className="cursor-pointer" asChild>
-            <a href="https://solana.com/solana-wallets" target="_blank" rel="noopener noreferrer">
-              Get a Solana wallet to connect.
-            </a>
+        {address ? (
+          <DropdownMenuItem className="cursor-pointer" onClick={handleCopy}>
+            Copy address
           </DropdownMenuItem>
-        )}
+        ) : null}
+        <DropdownMenuItem className="cursor-pointer" onClick={handleOpenModal}>
+          Change wallet
+        </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer" onClick={handleDisconnect}>
+          Disconnect
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

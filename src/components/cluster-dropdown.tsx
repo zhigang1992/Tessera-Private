@@ -1,4 +1,3 @@
-import { SolanaClusterId, useWalletUi, useWalletUiCluster } from '@wallet-ui/react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -7,10 +6,12 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useSolana } from '@/components/solana/use-solana'
+import { type SolanaClusterId, useSolanaCluster } from '@/components/solana/solana-cluster-context'
 
 export function ClusterDropdown() {
-  const { cluster } = useWalletUi()
-  const { clusters, setCluster } = useWalletUiCluster()
+  const { cluster } = useSolana()
+  const { clusters, setCluster } = useSolanaCluster()
 
   return (
     <DropdownMenu>

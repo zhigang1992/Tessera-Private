@@ -1,7 +1,21 @@
 import { getExplorerLink, GetExplorerLinkArgs } from 'gill'
-import { getSolanaClusterMoniker } from '@wallet-ui/react-gill'
-import { useSolana } from '@/components/solana/use-solana'
+import type { SolanaClusterMoniker } from 'gill'
 import { ArrowUpRightFromSquare } from 'lucide-react'
+import { useSolana } from '@/components/solana/use-solana'
+import type { SolanaClusterId } from '@/components/solana/solana-cluster-context'
+
+function toExplorerCluster(clusterId: SolanaClusterId): SolanaClusterMoniker | 'mainnet-beta' | 'localhost' {
+  switch (clusterId) {
+    case 'solana:mainnet':
+      return 'mainnet'
+    case 'solana:devnet':
+      return 'devnet'
+    case 'solana:localnet':
+      return 'localnet'
+    default:
+      return 'mainnet'
+  }
+}
 
 export function AppExplorerLink({
   className,
@@ -14,7 +28,7 @@ export function AppExplorerLink({
   const { cluster } = useSolana()
   return (
     <a
-      href={getExplorerLink({ ...link, cluster: getSolanaClusterMoniker(cluster.id) })}
+      href={getExplorerLink({ ...link, cluster: toExplorerCluster(cluster.id) })}
       target="_blank"
       rel="noopener noreferrer"
       className={className ? className : `link font-mono inline-flex gap-1`}

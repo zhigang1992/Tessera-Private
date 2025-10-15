@@ -1,31 +1,33 @@
-import { useAffiliateData, useCreateReferralCode } from '../hooks/use-referral-queries';
-import { useReferralAuth } from '../hooks/use-referral-auth';
-import { useWalletUi } from '@wallet-ui/react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Copy, Plus, Share2, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { UrlKeyAlertDialog } from './url-key-alert-dialog';
+import { useAffiliateData, useCreateReferralCode } from '../hooks/use-referral-queries'
+import { useReferralAuth } from '../hooks/use-referral-auth'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Copy, Plus, Share2, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { UrlKeyAlertDialog } from './url-key-alert-dialog'
+import { getUrlKeyAlertHandlers } from '../lib/url-key-alert'
 
 export default function CreateCodeCard() {
-  const { account, connected } = useWalletUi();
-  const { data: affiliateData, isLoading } = useAffiliateData(connected, account?.address);
-  const createCodeMutation = useCreateReferralCode();
-  const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert } = useReferralAuth();
+  const { connected, publicKey } = useWallet()
+  const walletAddress = publicKey?.toBase58()
+  const { data: affiliateData, isLoading } = useAffiliateData(connected, walletAddress)
+  const createCodeMutation = useCreateReferralCode()
+  const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert } = useReferralAuth()
 
   const handleUrlKeyConfirm = async () => {
-    const handlers = (window as any)._urlKeyAlertHandlers;
+    const handlers = getUrlKeyAlertHandlers()
     if (handlers?.handleConfirm) {
-      await handlers.handleConfirm();
+      await handlers.handleConfirm()
     }
-  };
+  }
 
   const handleUrlKeyCancel = () => {
-    const handlers = (window as any)._urlKeyAlertHandlers;
+    const handlers = getUrlKeyAlertHandlers()
     if (handlers?.handleCancel) {
-      handlers.handleCancel();
+      handlers.handleCancel()
     }
-  };
+  }
 
   const referralCodes = affiliateData?.referralCodes || [];
   const hasNoCodes = referralCodes.length === 0;
@@ -49,7 +51,7 @@ export default function CreateCodeCard() {
   const shareCode = (code: string) => {
     // Simple share functionality - can be enhanced with native share API
     const url = `${window.location.origin}/?code=${code}`;
-    copyToClipboard(url);
+    navigator.clipboard.writeText(url);
     toast.success('Referral link copied!');
   };
 
@@ -77,7 +79,7 @@ export default function CreateCodeCard() {
               onClick={handleCreateCode}
               disabled={createCodeMutation.isPending || isAuthenticating}
               size="sm"
-              className="flex h-10 items-center gap-2 rounded-full bg-black px-4 text-xs font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+              className="flex h-10 items-center gap-2 rounded-lg bg-black px-4 text-xs font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
             >
               {(createCodeMutation.isPending || isAuthenticating) ? (
                 <Loader2 className="h-5 w-5 animate-spin" />

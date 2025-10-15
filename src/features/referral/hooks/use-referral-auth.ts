@@ -1,105 +1,111 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useSignMessage, useWalletUi } from '@wallet-ui/react';
-import { SolanaSignMessage } from '@solana/wallet-standard-features';
-import { apiClient } from '../lib/api-client';
-import { toast } from 'sonner';
+import { useCallback, useEffect, useState } from 'react'
+import { useWallet } from '@solana/wallet-adapter-react'
+import type { MessageSignerWalletAdapterProps } from '@solana/wallet-adapter-base'
+import { apiClient } from '../lib/api-client'
+import { toast } from 'sonner'
+import { setUrlKeyAlertHandlers } from '../lib/url-key-alert'
 
 export function useReferralAuth() {
-  const { account, connected, wallet } = useWalletUi();
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [showUrlKeyAlert, setShowUrlKeyAlert] = useState(false);
+  const { publicKey, connected, wallet, signMessage: walletSignMessage } = useWallet()
+  const [isAuthenticating, setIsAuthenticating] = useState(false)
+  const [showUrlKeyAlert, setShowUrlKeyAlert] = useState(false)
 
   // Check if we have a valid session on every render
-  const isAuthenticated = Boolean(apiClient.getToken() && apiClient.isTokenValid());
-  const sessionToken = apiClient.getToken();
+  const isAuthenticated = Boolean(apiClient.getToken() && apiClient.isTokenValid())
+  const sessionToken = apiClient.getToken()
+
+  const walletAddress = publicKey?.toBase58() ?? null
 
   // Clear auth when wallet disconnects
   useEffect(() => {
     if (!connected) {
-      apiClient.setToken(null);
+      apiClient.setToken(null)
     }
-  }, [connected]);
-
-  const signMessage = useSignMessage(account!);
+  }, [connected])
 
   const authenticate = useCallback(async () => {
-    console.log('authenticate called', { account, wallet });
+    const adapterName = wallet?.adapter?.name
+    console.log('authenticate called', { walletAddress, wallet: adapterName })
 
-    if (!account?.address) {
-      console.error('No account address');
-      toast.error('Please connect your wallet first');
-      return false;
+    if (!walletAddress) {
+      console.error('No account address')
+      toast.error('Please connect your wallet first')
+      return false
     }
 
-    if (!account.features.includes(SolanaSignMessage)) {
-      console.error('Wallet does not support message signing');
-      toast.error('Wallet does not support message signing');
-      return false;
+    const signMessage = walletSignMessage
+    if (!signMessage) {
+      console.error('Wallet does not support message signing')
+      toast.error('Wallet does not support message signing')
+      return false
     }
 
-    const isUrlKeyWallet = wallet?.name === 'URL Key Wallet';
+    const isUrlKeyWallet = adapterName === 'URL Key Wallet'
 
-    const performAuth = () => performAuthentication();
+    const performAuth = () => performAuthentication(walletAddress, signMessage)
 
     if (isUrlKeyWallet) {
       return new Promise<boolean>((resolve) => {
-        setShowUrlKeyAlert(true);
+        setShowUrlKeyAlert(true)
 
         const handleConfirm = async () => {
-          setShowUrlKeyAlert(false);
-          const success = await performAuth();
-          resolve(success);
-        };
+          setShowUrlKeyAlert(false)
+          setUrlKeyAlertHandlers(undefined)
+          const success = await performAuth()
+          resolve(success)
+        }
 
         const handleCancel = () => {
-          setShowUrlKeyAlert(false);
-          resolve(false);
-        };
+          setShowUrlKeyAlert(false)
+          setUrlKeyAlertHandlers(undefined)
+          resolve(false)
+        }
 
-        (window as any)._urlKeyAlertHandlers = { handleConfirm, handleCancel };
-      });
+        setUrlKeyAlertHandlers({ handleConfirm, handleCancel })
+      })
     }
 
-    return await performAuth();
+    return await performAuth()
 
-    async function performAuthentication() {
-      setIsAuthenticating(true);
+    async function performAuthentication(
+      address: string,
+      signMessageFn: MessageSignerWalletAdapterProps['signMessage'],
+    ) {
+      setIsAuthenticating(true)
       try {
-        console.log('Getting nonce for', account!.address);
-        const nonceData = await apiClient.getNonce(account!.address);
-        console.log('Nonce received:', nonceData);
+        console.log('Getting nonce for', address)
+        const nonceData = await apiClient.getNonce(address)
+        console.log('Nonce received:', nonceData)
 
-        const message = new TextEncoder().encode(nonceData.message);
-        console.log('Signing message with connected wallet...');
-        const { signature } = await signMessage({ message });
-        console.log('Signature result received');
-        const signatureBytes = signature;
-        console.log('Signature received');
+        const message = new TextEncoder().encode(nonceData.message)
+        console.log('Signing message with connected wallet...')
+        const signatureBytes = await signMessageFn(message)
+        console.log('Signature received')
 
         const verifyResponse = await apiClient.verifySignature({
-          walletAddress: account!.address,
+          walletAddress: address,
           nonce: nonceData.nonce,
           signature: Buffer.from(signatureBytes).toString('base64'),
           timestamp: nonceData.issuedAt,
           signatureEncoding: 'base64',
-        });
+        })
 
-        apiClient.setToken(verifyResponse.token, verifyResponse.expiresAt);
-        return true;
+        apiClient.setToken(verifyResponse.token, verifyResponse.expiresAt)
+        return true
       } catch (error) {
-        console.error('Authentication error:', error);
-        toast.error(error instanceof Error ? error.message : 'Authentication failed');
-        return false;
+        console.error('Authentication error:', error)
+        toast.error(error instanceof Error ? error.message : 'Authentication failed')
+        return false
       } finally {
-        setIsAuthenticating(false);
+        setIsAuthenticating(false)
       }
     }
-  }, [account, wallet, signMessage]);
+  }, [walletAddress, wallet, walletSignMessage])
 
   const logout = useCallback(() => {
-    apiClient.setToken(null);
-    toast.success('Logged out');
-  }, []);
+    apiClient.setToken(null)
+    toast.success('Logged out')
+  }, [])
 
   return {
     isAuthenticated,
@@ -107,8 +113,8 @@ export function useReferralAuth() {
     sessionToken,
     authenticate,
     logout,
-    walletAddress: account?.address || null,
+    walletAddress,
     showUrlKeyAlert,
     setShowUrlKeyAlert,
-  };
+  }
 }

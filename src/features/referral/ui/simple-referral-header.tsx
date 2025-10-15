@@ -1,8 +1,8 @@
-import { useWalletUi } from '@wallet-ui/react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletDropdown } from '@/components/wallet-dropdown';
 
 export default function SimpleReferralHeader() {
-  const { account, connected } = useWalletUi();
+  const { connected, publicKey } = useWallet();
 
   return (
     <div className="flex items-center justify-between gap-4">
@@ -12,7 +12,7 @@ export default function SimpleReferralHeader() {
         </svg>
       </div>
 
-      {connected && account ? (
+      {connected && publicKey ? (
         <WalletDropdown
           triggerVariant="ghost"
           triggerSize="icon"

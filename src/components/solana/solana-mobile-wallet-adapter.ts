@@ -1,10 +1,10 @@
-import { SolanaCluster } from '@wallet-ui/react'
 import {
   createDefaultAuthorizationCache,
   createDefaultChainSelector,
   createDefaultWalletNotFoundHandler,
   registerMwa,
 } from '@solana-mobile/wallet-standard-mobile'
+import type { SolanaCluster } from './solana-cluster-context'
 
 export function solanaMobileWalletAdapter({
   appIdentity = { name: 'Wallet UI' },

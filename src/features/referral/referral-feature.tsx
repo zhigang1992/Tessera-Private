@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useWalletUi } from '@wallet-ui/react';
+import { useState } from 'react'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { useReferralAuth } from './hooks/use-referral-auth';
 import { Button } from '@/components/ui/button';
 import { TraderView } from './ui/trader-view';
@@ -7,9 +7,9 @@ import { AffiliateView } from './ui/affiliate-view';
 import { Link } from 'react-router';
 
 export default function ReferralFeature() {
-  const { connected, account } = useWalletUi();
+  const { connected, publicKey } = useWallet()
 
-  if (!connected || !account) {
+  if (!connected || !publicKey) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <h2 className="text-2xl font-bold">Referral Program</h2>
