@@ -80,6 +80,7 @@ export default function ReferralCodeModal({ isOpen, onClose, referralCode }: Ref
               bindReferralCode={bindMutation.mutateAsync}
               bindPending={bindMutation.isPending}
               accountAddress={accountAddress!}
+              onClose={onClose}
             />
           ) : (
             <WalletDropdown
@@ -103,6 +104,7 @@ interface ReferralCodeModalConnectedProps {
   bindReferralCode: (referralCode: string) => Promise<unknown>
   bindPending: boolean
   accountAddress: string
+  onClose: () => void
 }
 
 function ReferralCodeModalConnected({
@@ -110,6 +112,7 @@ function ReferralCodeModalConnected({
   bindReferralCode,
   bindPending,
   accountAddress,
+  onClose,
 }: ReferralCodeModalConnectedProps) {
   const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert } = useReferralAuth()
 
@@ -143,8 +146,13 @@ function ReferralCodeModalConnected({
       if (!signedIn) return
     }
 
-    await bindReferralCode(referralCode.toUpperCase())
-  }, [accountAddress, authenticate, bindReferralCode, isAuthenticated, referralCode])
+    try {
+      await bindReferralCode(referralCode.toUpperCase())
+      onClose()
+    } catch (error) {
+      console.error('Failed to bind referral code', error)
+    }
+  }, [accountAddress, authenticate, bindReferralCode, isAuthenticated, onClose, referralCode])
 
   return (
     <>

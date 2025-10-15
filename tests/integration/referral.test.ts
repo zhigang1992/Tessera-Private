@@ -240,6 +240,10 @@ describe('Referral System', () => {
     // Should have at least 1 referral code
     expect(data.referralCodes.length).toBeGreaterThan(0);
 
+    const primaryCode = data.referralCodes.find((code: { codeSlug: string }) => code.codeSlug === referralCode);
+    expect(primaryCode).toBeDefined();
+    expect(primaryCode).toHaveProperty('referredTraderCount', 1);
+
     // Tree should show 1 L1 trader (the trader we bound)
     expect(data.tree).toHaveProperty('l1TraderCount', 1);
     expect(data.tree).toHaveProperty('l2TraderCount', 0);
@@ -300,5 +304,9 @@ describe('Referral System', () => {
     expect(affiliateData.tree.l1TraderCount).toBe(2); // trader + l2Trader
     expect(affiliateData.tree.l2TraderCount).toBe(1); // l3Trader
     expect(affiliateData.tree.totalTraderCount).toBe(3);
+
+    const primaryCode = affiliateData.referralCodes.find((code: { codeSlug: string }) => code.codeSlug === referralCode);
+    expect(primaryCode).toBeDefined();
+    expect(primaryCode).toHaveProperty('referredTraderCount', 2);
   });
 });

@@ -160,7 +160,7 @@ export default function CreateCodeCard() {
 
                       <div className="flex flex-1 items-center">
                         <span className="text-sm font-medium text-[#111827] dark:text-white">
-                          -
+                          {code.referredTraderCount ?? 0}
                         </span>
                       </div>
                     </div>

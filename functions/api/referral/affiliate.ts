@@ -107,6 +107,24 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     .bind(walletAddress)
     .all<ReferralCode>();
 
+  const codeIds = codes.results.map((code) => code.id);
+  let referralCounts: Array<{ code_id: number; count: number }> = [];
+
+  if (codeIds.length > 0) {
+    const placeholders = codeIds.map(() => '?').join(', ');
+    const countsQuery = await env.DB.prepare(
+      `SELECT referrer_code_id as code_id, COUNT(*) as count FROM trader_bindings WHERE referrer_code_id IN (${placeholders}) GROUP BY referrer_code_id`,
+    )
+      .bind(...codeIds)
+      .all<{ code_id: number; count: number }>();
+
+    referralCounts = countsQuery.results;
+  }
+
+  const countsMap = new Map<number, number>(
+    referralCounts.map((row) => [row.code_id, row.count]),
+  );
+
   // Calculate real-time tree counts from edges (more accurate than cached metrics)
   const l1Count = await env.DB.prepare('SELECT COUNT(DISTINCT descendant_wallet) as count FROM referral_tree_edges WHERE ancestor_wallet = ? AND level = 1')
     .bind(walletAddress)
@@ -154,8 +172,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       codeSlug: code.code_slug,
       status: code.status,
       activeLayer: code.active_layer,
+      walletAddress: code.wallet_address,
       createdAt: code.created_at,
       updatedAt: code.updated_at,
+      referredTraderCount: countsMap.get(code.id) ?? 0,
     })),
     tree: {
       l1TraderCount: l1Count?.count ?? 0,

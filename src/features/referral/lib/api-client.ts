@@ -31,6 +31,7 @@ export type ReferralCode = {
   codeSlug: string;
   status: string;
   activeLayer: number;
+  referredTraderCount: number;
   walletAddress: string;
   createdAt?: string;
   updatedAt?: string;
