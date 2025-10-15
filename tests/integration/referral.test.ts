@@ -247,26 +247,6 @@ describe('Referral System', () => {
     expect(data.tree).toHaveProperty('totalTraderCount', 1);
   });
 
-  test('GET /api/referral/leaderboard - should fetch leaderboard', async () => {
-    const response = await fetch(`${API_BASE}/api/referral/leaderboard?limit=10`);
-    const data = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(data).toHaveProperty('entries');
-    expect(data).toHaveProperty('snapshotAt');
-    expect(Array.isArray(data.entries)).toBe(true);
-
-    // Entries should have required fields
-    if (data.entries.length > 0) {
-      const entry = data.entries[0];
-      expect(entry).toHaveProperty('rank');
-      expect(entry).toHaveProperty('walletAddress');
-      expect(entry).toHaveProperty('referralPoints');
-      expect(entry).toHaveProperty('rebatesTotal');
-      expect(entry).toHaveProperty('traderCounts');
-    }
-  });
-
   test('Multi-level referral tree - should create 3-level hierarchy', async () => {
     // Create L2 and L3 traders
     const l2Trader = generateTestWallet();

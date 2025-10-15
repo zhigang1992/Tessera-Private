@@ -77,26 +77,6 @@ export type AffiliateData = {
   };
 };
 
-export type LeaderboardEntry = {
-  rank: number;
-  walletAddress: string;
-  displayName: string | null;
-  referralPoints: number;
-  rebatesTotal: number;
-  traderCounts: {
-    l1: number;
-    l2: number;
-    l3: number;
-    total: number;
-  };
-};
-
-export type LeaderboardResponse = {
-  entries: LeaderboardEntry[];
-  snapshotAt: string;
-  cached: boolean;
-};
-
 // API Client
 export class ReferralApiClient {
   private baseUrl: string;
@@ -249,22 +229,6 @@ export class ReferralApiClient {
     return this.request(`/api/referral/affiliate?wallet=${encodeURIComponent(walletAddress)}`);
   }
 
-  // Leaderboard endpoints
-  async getLeaderboard(limit = 100): Promise<LeaderboardResponse> {
-    return this.request(`/api/referral/leaderboard?limit=${limit}`);
-  }
-
-  // Email verification endpoints
-  async requestEmailVerification(email: string): Promise<{ success: boolean; verificationLink: string }> {
-    return this.request('/api/referral/email/request', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-    });
-  }
-
-  async verifyEmail(token: string): Promise<{ success: boolean; message: string }> {
-    return this.request(`/api/referral/email/verify?token=${encodeURIComponent(token)}`);
-  }
 }
 
 // Export singleton instance

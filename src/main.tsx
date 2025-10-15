@@ -1,6 +1,5 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router'
 import './index.css'
 import '@solana/wallet-adapter-react-ui/styles.css'
 import { App } from './app.tsx'
@@ -9,9 +8,7 @@ import './dev/url-key-wallet'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <App />
   </StrictMode>,
 )
 // Patch BigInt so we can log it using JSON.stringify without any errors
