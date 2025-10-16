@@ -31,7 +31,7 @@ export default function HeroSection() {
           </a>
 
           <a
-            href="https://google.com"
+            href="https://x.com/tessera_pe"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Follow Tessera on X"
