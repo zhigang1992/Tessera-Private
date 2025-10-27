@@ -12,7 +12,7 @@ export default function HeroSection() {
 
       <div className="flex flex-col gap-3 text-[#4B5563] dark:text-[#D1D5DB] sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm leading-relaxed">
-          Join our social channels
+          Join our social channels{' '}
           <br className="hidden sm:block" />
           for the latest updates.
         </p>
