@@ -1,3 +1,4 @@
+import { FormEvent, useMemo, useState } from 'react'
 import { useAffiliateData, useCreateReferralCode } from '../hooks/use-referral-queries'
 import { useReferralAuth } from '../hooks/use-referral-auth'
 import { useWallet } from '@solana/wallet-adapter-react'
@@ -7,6 +8,9 @@ import { Copy, Plus, Share2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { UrlKeyAlertDialog } from './url-key-alert-dialog'
 import { getUrlKeyAlertHandlers } from '../lib/url-key-alert'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 export default function CreateCodeCard() {
   const { connected, publicKey } = useWallet()
@@ -14,6 +18,16 @@ export default function CreateCodeCard() {
   const { data: affiliateData, isLoading } = useAffiliateData(connected, walletAddress)
   const createCodeMutation = useCreateReferralCode()
   const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert } = useReferralAuth()
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [customCode, setCustomCode] = useState('')
+
+  const trimmedCustomCode = useMemo(() => customCode.trim(), [customCode])
+  const normalizedCustomCode = useMemo(() => trimmedCustomCode.toUpperCase(), [trimmedCustomCode])
+  const isCustomCodeProvided = trimmedCustomCode.length > 0
+  const isCustomCodeLengthValid = !isCustomCodeProvided ||
+    (trimmedCustomCode.length >= 6 && trimmedCustomCode.length <= 12)
+  const isCreatePending = createCodeMutation.isPending || isAuthenticating
+  const isCreateDisabled = isCreatePending || (isCustomCodeProvided && !isCustomCodeLengthValid)
 
   const handleUrlKeyConfirm = async () => {
     const handlers = getUrlKeyAlertHandlers()
@@ -29,19 +43,46 @@ export default function CreateCodeCard() {
     }
   }
 
-  const referralCodes = affiliateData?.referralCodes || [];
-  const hasNoCodes = referralCodes.length === 0;
+  const referralCodes = affiliateData?.referralCodes || []
+  const hasNoCodes = referralCodes.length === 0
 
-  const handleCreateCode = async () => {
-    // If not authenticated, require sign message first
-    if (!isAuthenticated) {
-      const signedIn = await authenticate();
-      if (!signedIn) return;
+  const handleDialogOpenChange = (open: boolean) => {
+    setIsCreateDialogOpen(open)
+    if (!open && !isCreatePending) {
+      setCustomCode('')
+    }
+  }
+
+  const handleSubmitCreateCode = async (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault()
+
+    if (isCreateDisabled) {
+      return
     }
 
-    // Auto-generate code (no custom slug or active layer)
-    await createCodeMutation.mutateAsync({});
-  };
+    // If not authenticated, require sign message first
+    if (!isAuthenticated) {
+      const signedIn = await authenticate()
+      if (!signedIn) {
+        return
+      }
+    }
+
+    if (isCustomCodeProvided && !isCustomCodeLengthValid) {
+      toast.error('Custom codes must be between 6 and 12 characters')
+      return
+    }
+
+    const payload = isCustomCodeProvided ? { codeSlug: normalizedCustomCode } : {}
+
+    try {
+      await createCodeMutation.mutateAsync(payload)
+      setCustomCode('')
+      setIsCreateDialogOpen(false)
+    } catch (error) {
+      console.error('Failed to create referral code', error)
+    }
+  }
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -76,17 +117,17 @@ export default function CreateCodeCard() {
           <h2 className="text-lg font-semibold text-black dark:text-white">My referral codes</h2>
           {!hasNoCodes && (
             <Button
-              onClick={handleCreateCode}
-              disabled={createCodeMutation.isPending || isAuthenticating}
+              onClick={() => setIsCreateDialogOpen(true)}
+              disabled={isCreatePending}
               size="sm"
               className="flex h-10 items-center gap-2 rounded-lg bg-black px-4 text-xs font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
             >
-              {(createCodeMutation.isPending || isAuthenticating) ? (
+              {isCreatePending ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 <Plus className="h-5 w-5" />
               )}
-              {createCodeMutation.isPending || isAuthenticating ? 'Creating...' : 'Create new code'}
+              {isCreatePending ? 'Creating...' : 'Create new code'}
             </Button>
           )}
         </div>
@@ -97,17 +138,17 @@ export default function CreateCodeCard() {
               /* Empty state */
               <div className="flex min-h-[200px] items-center justify-center rounded-[16px] border border-dashed border-[#D4D4D8] bg-white px-6 py-10 text-center dark:border-[#3F3F46] dark:bg-[#1F1F23]">
                 <Button
-                  onClick={handleCreateCode}
-                  disabled={createCodeMutation.isPending || isAuthenticating}
+                  onClick={() => setIsCreateDialogOpen(true)}
+                  disabled={isCreatePending}
                   size="sm"
                   className="flex h-10 items-center gap-2 rounded-lg bg-black px-6 text-sm font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
                 >
-                  {(createCodeMutation.isPending || isAuthenticating) ? (
+                  {isCreatePending ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
                     <Plus className="h-5 w-5" />
                   )}
-                  {createCodeMutation.isPending || isAuthenticating ? 'Creating...' : 'Create new code to earn Rewards'}
+                  {isCreatePending ? 'Creating...' : 'Create new code to earn Rewards'}
                 </Button>
               </div>
             ) : (
@@ -138,7 +179,7 @@ export default function CreateCodeCard() {
                           : 'bg-[#F1F2F6] dark:bg-[#131318]'
                       }`}
                     >
-                      <div className="flex-1 flex items-center gap-2">
+                      <div className="flex flex-1 items-center gap-2">
                         <span className="text-sm font-semibold uppercase tracking-[0.08em] text-[#111827] dark:text-[#E4E4E7]">
                           {code.codeSlug}
                         </span>
@@ -157,11 +198,11 @@ export default function CreateCodeCard() {
                           <Share2 className="h-2.5 w-2.5" />
                         </button>
                       </div>
-<div className="flex-1 flex flex-row justify-center">
-                         <span className="text-sm font-medium text-[#111827] dark:text-white">
+                      <div className="flex flex-1 flex-row justify-center">
+                        <span className="text-sm font-medium text-[#111827] dark:text-white">
                           {code.referredTraderCount ?? 0}
                         </span>
-</div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -196,6 +237,66 @@ export default function CreateCodeCard() {
         onConfirm={handleUrlKeyConfirm}
         onCancel={handleUrlKeyCancel}
       />
+
+      <Dialog open={isCreateDialogOpen} onOpenChange={handleDialogOpenChange}>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="gap-1 text-left">
+            <DialogTitle>Create referral code</DialogTitle>
+            <DialogDescription>
+              Enter a custom code between 6 and 12 characters or leave the field blank to generate one automatically.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmitCreateCode} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2 text-left">
+              <Label htmlFor="custom-referral-code">Custom code</Label>
+              <Input
+                id="custom-referral-code"
+                value={customCode}
+                onChange={(event) => setCustomCode(event.target.value)}
+                placeholder="TESSERA1"
+                maxLength={12}
+                aria-invalid={isCustomCodeProvided && !isCustomCodeLengthValid}
+                aria-describedby={
+                  isCustomCodeProvided && !isCustomCodeLengthValid
+                    ? 'custom-referral-code-error'
+                    : 'custom-referral-code-helper'
+                }
+                disabled={isCreatePending}
+              />
+              <p
+                id="custom-referral-code-helper"
+                className="text-xs text-muted-foreground"
+              >
+                Leave blank to generate a random code.
+              </p>
+              {isCustomCodeProvided && !isCustomCodeLengthValid && (
+                <p
+                  id="custom-referral-code-error"
+                  className="text-xs font-medium text-destructive"
+                >
+                  Custom codes must be between 6 and 12 characters.
+                </p>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleDialogOpenChange(false)}
+                disabled={isCreatePending}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isCreateDisabled}>
+                {isCreatePending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isCreatePending ? 'Creating...' : 'Create code'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
