@@ -15,6 +15,7 @@ import { useReferralAuth } from '../hooks/use-referral-auth'
 import { UrlKeyAlertDialog } from './url-key-alert-dialog'
 import { toast } from 'sonner'
 import { getUrlKeyAlertHandlers } from '../lib/url-key-alert'
+import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 
 interface ReferralCodeModalProps {
   isOpen: boolean
@@ -27,13 +28,14 @@ export default function ReferralCodeModal({ isOpen, onClose, referralCode }: Ref
   const accountAddress = publicKey?.toBase58()
   const bindMutation = useBindReferralCode()
   const hasAccount = Boolean(connected && accountAddress)
+  const {visible} = useWalletModal()
 
   const handleChangeCode = () => {
     onClose()
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen && !visible} onOpenChange={onClose}>
       <DialogContent className="w-[342px] max-w-[342px] rounded-2xl bg-[#F4F4F5] p-0 dark:bg-[#F4F4F5]">
         <div className="flex flex-col gap-4 p-6">
           <DialogHeader className="p-0">
