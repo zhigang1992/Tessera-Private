@@ -20,6 +20,7 @@ export default function CreateCodeCard() {
   const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert } = useReferralAuth()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [customCode, setCustomCode] = useState('')
+  const [formError, setFormError] = useState<string | null>(null)
 
   const trimmedCustomCode = useMemo(() => customCode.trim(), [customCode])
   const normalizedCustomCode = useMemo(() => trimmedCustomCode.toUpperCase(), [trimmedCustomCode])
@@ -50,6 +51,7 @@ export default function CreateCodeCard() {
     setIsCreateDialogOpen(open)
     if (!open && !isCreatePending) {
       setCustomCode('')
+      setFormError(null)
     }
   }
 
@@ -69,17 +71,23 @@ export default function CreateCodeCard() {
     }
 
     if (isCustomCodeProvided && !isCustomCodeLengthValid) {
-      toast.error('Custom codes must be between 6 and 12 characters')
+      const validationMessage = 'Custom codes must be between 6 and 12 characters'
+      setFormError(validationMessage)
+      toast.error(validationMessage)
       return
     }
 
     const payload = isCustomCodeProvided ? { codeSlug: normalizedCustomCode } : {}
+
+    setFormError(null)
 
     try {
       await createCodeMutation.mutateAsync(payload)
       setCustomCode('')
       setIsCreateDialogOpen(false)
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create referral code'
+      setFormError(message)
       console.error('Failed to create referral code', error)
     }
   }
@@ -253,7 +261,12 @@ export default function CreateCodeCard() {
               <Input
                 id="custom-referral-code"
                 value={customCode}
-                onChange={(event) => setCustomCode(event.target.value)}
+                onChange={(event) => {
+                  setCustomCode(event.target.value)
+                  if (formError) {
+                    setFormError(null)
+                  }
+                }}
                 placeholder="TESSERA1"
                 maxLength={12}
                 aria-invalid={isCustomCodeProvided && !isCustomCodeLengthValid}
@@ -276,6 +289,14 @@ export default function CreateCodeCard() {
                   className="text-xs font-medium text-destructive"
                 >
                   Custom codes must be between 6 and 12 characters.
+                </p>
+              )}
+              {formError && !(isCustomCodeProvided && !isCustomCodeLengthValid) && (
+                <p
+                  className="text-xs font-medium text-destructive"
+                  role="alert"
+                >
+                  {formError}
                 </p>
               )}
             </div>
