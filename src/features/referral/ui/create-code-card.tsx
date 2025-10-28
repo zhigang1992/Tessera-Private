@@ -4,13 +4,16 @@ import { useReferralAuth } from '../hooks/use-referral-auth'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Copy, Plus, Share2, Loader2 } from 'lucide-react'
+import { Copy, Plus, Share2, Loader2, Download, Send, Twitter } from 'lucide-react'
 import { toast } from 'sonner'
 import { UrlKeyAlertDialog } from './url-key-alert-dialog'
 import { getUrlKeyAlertHandlers } from '../lib/url-key-alert'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import type { ReferralCode } from '../lib/api-client'
+
+const SHARE_IMAGE_BASE = import.meta.env.VITE_REFERRAL_SHARE_IMAGE_BASE || '/api/referral/share-card'
 
 export default function CreateCodeCard() {
   const { connected, publicKey } = useWallet()
@@ -21,6 +24,7 @@ export default function CreateCodeCard() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [customCode, setCustomCode] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
+  const [shareDialogCode, setShareDialogCode] = useState<ReferralCode | null>(null)
 
   const trimmedCustomCode = useMemo(() => customCode.trim(), [customCode])
   const normalizedCustomCode = useMemo(() => trimmedCustomCode.toUpperCase(), [trimmedCustomCode])
@@ -29,6 +33,28 @@ export default function CreateCodeCard() {
     (trimmedCustomCode.length >= 6 && trimmedCustomCode.length <= 12)
   const isCreatePending = createCodeMutation.isPending || isAuthenticating
   const isCreateDisabled = isCreatePending || (isCustomCodeProvided && !isCustomCodeLengthValid)
+  const isShareDialogOpen = shareDialogCode !== null
+
+  const shareLink = useMemo(() => {
+    if (!shareDialogCode) {
+      return ''
+    }
+
+    if (typeof window === 'undefined') {
+      return ''
+    }
+
+    return `${window.location.origin}/?code=${shareDialogCode.codeSlug}`
+  }, [shareDialogCode])
+
+  const shareImageUrl = useMemo(() => {
+    if (!shareDialogCode) {
+      return ''
+    }
+
+    const base = SHARE_IMAGE_BASE.endsWith('/') ? SHARE_IMAGE_BASE.slice(0, -1) : SHARE_IMAGE_BASE
+    return `${base}/${encodeURIComponent(shareDialogCode.codeSlug)}`
+  }, [shareDialogCode])
 
   const handleUrlKeyConfirm = async () => {
     const handlers = getUrlKeyAlertHandlers()
@@ -52,6 +78,12 @@ export default function CreateCodeCard() {
     if (!open && !isCreatePending) {
       setCustomCode('')
       setFormError(null)
+    }
+  }
+
+  const handleShareDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setShareDialogCode(null)
     }
   }
 
@@ -92,17 +124,82 @@ export default function CreateCodeCard() {
     }
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard!');
-  };
+  const copyToClipboard = async (text: string, successMessage = 'Copied to clipboard!') => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success(successMessage)
+    } catch (error) {
+      console.error('Failed to copy to clipboard', error)
+      toast.error('Unable to copy to clipboard')
+    }
+  }
 
-  const shareCode = (code: string) => {
-    // Simple share functionality - can be enhanced with native share API
-    const url = `${window.location.origin}/?code=${code}`;
-    navigator.clipboard.writeText(url);
-    toast.success('Referral link copied!');
-  };
+  const openShareDialog = (code: ReferralCode) => {
+    setShareDialogCode(code)
+  }
+
+  const handleCopyShareCode = () => {
+    if (!shareDialogCode) return
+    void copyToClipboard(shareDialogCode.codeSlug, 'Referral code copied!')
+  }
+
+  const handleCopyShareLink = () => {
+    if (!shareLink) {
+      toast.error('Referral link unavailable')
+      return
+    }
+    void copyToClipboard(shareLink, 'Referral link copied!')
+  }
+
+  const handleDownloadShareImage = async () => {
+    if (!shareDialogCode || !shareImageUrl) {
+      toast.error('Share image unavailable')
+      return
+    }
+
+    try {
+      const response = await fetch(shareImageUrl)
+      if (!response.ok) {
+        throw new Error(`Failed to download image: ${response.status}`)
+      }
+
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${shareDialogCode.codeSlug}.png`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      toast.success('Share image downloaded!')
+    } catch (error) {
+      console.error('Failed to download share image', error)
+      toast.error('Unable to download share image')
+    }
+  }
+
+  const handleShareTelegram = () => {
+    if (!shareDialogCode || !shareLink) {
+      toast.error('Referral link unavailable')
+      return
+    }
+
+    const text = `Join Tessera with my referral code ${shareDialogCode.codeSlug}`
+    const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareLink)}&text=${encodeURIComponent(text)}`
+    window.open(telegramUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  const handleShareTwitter = () => {
+    if (!shareDialogCode || !shareLink) {
+      toast.error('Referral link unavailable')
+      return
+    }
+
+    const text = `Join Tessera with my referral code ${shareDialogCode.codeSlug}`
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareLink)}`
+    window.open(twitterUrl, '_blank', 'noopener,noreferrer')
+  }
 
   if (isLoading) {
     return (
@@ -168,11 +265,12 @@ export default function CreateCodeCard() {
                       Referral Code
                     </span>
                   </div>
-                  <div className="flex-1 flex flex-row justify-center">
+                  <div className="flex flex-1 flex-row justify-center">
                     <span className="text-xs font-medium uppercase tracking-[0.08em] text-[#6B7280] dark:text-[#A1A1AA]">
                       Traders Referred
                     </span>
                   </div>
+                  <div className="w-[88px]" aria-hidden />
                 </div>
 
                 <div className="mx-2 h-px bg-[#E2E4E9] dark:bg-[#27272A]" />
@@ -181,7 +279,7 @@ export default function CreateCodeCard() {
                   {referralCodes.map((code, index) => (
                     <div
                       key={code.id}
-                      className={`flex items-center justify-between gap-3 rounded-[16px] px-3 py-4 transition-colors ${
+                      className={`flex items-center gap-3 rounded-[16px] px-3 py-4 transition-colors ${
                         index % 2 === 0
                           ? 'bg-white dark:bg-[#1F1F23]'
                           : 'bg-[#F1F2F6] dark:bg-[#131318]'
@@ -192,24 +290,27 @@ export default function CreateCodeCard() {
                           {code.codeSlug}
                         </span>
                         <button
-                          onClick={() => copyToClipboard(code.codeSlug)}
+                          onClick={() => void copyToClipboard(code.codeSlug)}
                           className="flex h-6 w-6 items-center justify-center rounded-full bg-[#E5E7EB] text-[#4B5563] transition hover:bg-[#D1D5DB] dark:bg-[#27272A] dark:text-[#D1D5DB]"
                           title="Copy code"
                         >
                           <Copy className="h-2.5 w-2.5" />
-                        </button>
-                        <button
-                          onClick={() => shareCode(code.codeSlug)}
-                          className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E5E7EB] text-[#4B5563] transition hover:bg-[#D1D5DB] dark:bg-[#27272A] dark:text-[#D1D5DB]"
-                          title="Share referral link"
-                        >
-                          <Share2 className="h-2.5 w-2.5" />
                         </button>
                       </div>
                       <div className="flex flex-1 flex-row justify-center">
                         <span className="text-sm font-medium text-[#111827] dark:text-white">
                           {code.referredTraderCount ?? 0}
                         </span>
+                      </div>
+                      <div className="flex w-[88px] justify-end">
+                        <Button
+                          size="sm"
+                          onClick={() => openShareDialog(code)}
+                          className="flex h-9 items-center gap-2 rounded-lg bg-black px-4 text-xs font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+                        >
+                          <Share2 className="h-4 w-4" />
+                          Share
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -316,6 +417,107 @@ export default function CreateCodeCard() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isShareDialogOpen} onOpenChange={handleShareDialogOpenChange}>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="gap-1 text-left">
+            <DialogTitle>Share</DialogTitle>
+            <DialogDescription>
+              Invite users and earn points by sharing your referral code.
+            </DialogDescription>
+          </DialogHeader>
+
+          {shareDialogCode && (
+            <div className="flex flex-col gap-4">
+              <div className="overflow-hidden rounded-2xl border border-[#E4E4E7] bg-[#F4F4F5] dark:border-[#27272A] dark:bg-[#111111]">
+                <img
+                  src={shareImageUrl}
+                  alt={`Referral share card for ${shareDialogCode.codeSlug}`}
+                  className="h-auto w-full object-cover"
+                />
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2 text-left">
+                  <Label className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                    Referral code
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input readOnly value={shareDialogCode.codeSlug} className="font-semibold uppercase" />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={handleCopyShareCode}
+                      className="h-10 w-10 rounded-xl"
+                      aria-label="Copy referral code"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 text-left">
+                  <Label className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                    Referral link
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input readOnly value={shareLink} className="font-medium" />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={handleCopyShareLink}
+                      className="h-10 w-10 rounded-xl"
+                      aria-label="Copy referral link"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleCopyShareLink}
+                  className="flex h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-[#E4E4E7] bg-white text-xs font-semibold text-[#111827] hover:bg-[#F4F4F5] dark:border-[#27272A] dark:bg-[#111111] dark:text-white dark:hover:bg-[#1F1F23]"
+                >
+                  <Copy className="h-5 w-5" />
+                  Copy URL
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleDownloadShareImage}
+                  className="flex h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-[#E4E4E7] bg-white text-xs font-semibold text-[#111827] hover:bg-[#F4F4F5] dark:border-[#27272A] dark:bg-[#111111] dark:text-white dark:hover:bg-[#1F1F23]"
+                >
+                  <Download className="h-5 w-5" />
+                  Download
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleShareTelegram}
+                  className="flex h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-[#E4E4E7] bg-white text-xs font-semibold text-[#111827] hover:bg-[#F4F4F5] dark:border-[#27272A] dark:bg-[#111111] dark:text-white dark:hover:bg-[#1F1F23]"
+                >
+                  <Send className="h-5 w-5" />
+                  Telegram
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleShareTwitter}
+                  className="flex h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-[#E4E4E7] bg-white text-xs font-semibold text-[#111827] hover:bg-[#F4F4F5] dark:border-[#27272A] dark:bg-[#111111] dark:text-white dark:hover:bg-[#1F1F23]"
+                >
+                  <Twitter className="h-5 w-5" />
+                  Twitter
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>
