@@ -135,7 +135,9 @@ export default function CreateCodeCard() {
   }
 
   const openShareDialog = (code: ReferralCode) => {
-    setShareDialogCode(code)
+    const referralUrl = `${window.location.origin}/?code=${code.codeSlug}`
+    void copyToClipboard(referralUrl, 'Referral URL copied!')
+    // setShareDialogCode(code)
   }
 
   const handleCopyShareCode = () => {
