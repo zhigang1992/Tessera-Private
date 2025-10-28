@@ -15,22 +15,28 @@ export default function ReferralFeatureSimple() {
   const [referralCode, setReferralCode] = useState<string | null>(null)
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
+    const urlParams = new URLSearchParams(window.location.search)
+    const code = urlParams.get('code')
 
     if (code) {
-      setReferralCode(code);
-      setIsModalOpen(true);
-
-      // Optional: Clean up the URL by removing the code parameter
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, '', newUrl);
+      setReferralCode(code)
+      setIsModalOpen(true)
     }
-  }, []);
+  }, [])
+
+  const clearCodeFromUrl = () => {
+    const url = new URL(window.location.href)
+    if (!url.searchParams.has('code')) return
+
+    url.searchParams.delete('code')
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
+  }
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
+    setIsModalOpen(false)
+    setReferralCode(null)
+    clearCodeFromUrl()
+  }
 
   return (
     <div className="min-h-screen bg-white pb-12 dark:bg-black">
