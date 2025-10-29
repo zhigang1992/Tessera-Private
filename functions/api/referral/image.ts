@@ -25,8 +25,8 @@ function generateQRCodeSVG(text: string): string {
   const qr = new QRCode({
     content: text,
     padding: 0,
-    width: 106,
-    height: 106,
+    width: 139,
+    height: 139,
     color: '#000000',
     background: '#ffffff',
     ecl: 'M',
@@ -60,7 +60,7 @@ function generateShareCardHTML(code: string, _origin: string): string {
       width: 800px;
       height: 450px;
       position: relative;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
       overflow: hidden;
     }
     .background {
@@ -73,88 +73,80 @@ function generateShareCardHTML(code: string, _origin: string): string {
       z-index: 0;
     }
     .container {
-      position: relative;
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
-      display: flex;
-      align-items: center;
-      padding: 40px 50px;
       z-index: 1;
     }
-    .left-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
     .logo {
-      height: 32px;
-      width: auto;
+      position: absolute;
+      left: 40px;
+      top: 40px;
+      width: 212px;
+      height: 44px;
     }
     .ref-section {
+      position: absolute;
+      left: 40px;
+      top: 121px;
+      width: 360px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 5px;
     }
     .ref-label {
+      font-family: 'Inter', sans-serif;
       font-size: 24px;
       font-weight: 900;
-      color: #000;
-      letter-spacing: 1.5px;
+      line-height: 1.21;
+      color: #000000;
       text-transform: uppercase;
     }
     .code-box {
-      background: white;
-      border-radius: 15px;
-      padding: 18px 30px;
-      display: inline-block;
-      max-width: fit-content;
+      background: #FFFFFF;
+      border-radius: 16px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .code {
-      font-size: 38px;
-      font-weight: 900;
-      color: #000;
-      letter-spacing: 5px;
-      font-family: 'Courier New', monospace;
-    }
-    .qr-section {
-      display: flex;
-      flex-direction: row;
-      gap: 15px;
-      align-items: center;
+      font-family: 'Inter', sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1.21;
+      color: #000000;
+      text-transform: uppercase;
     }
     .qr-container {
+      position: absolute;
+      left: 40px;
+      top: 283px;
+      width: 139px;
+      height: 139px;
       background: white;
-      border-radius: 15px;
-      padding: 12px;
-      display: inline-block;
-      width: 130px;
-      height: 130px;
+      border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
     .qr-container svg {
-      width: 106px;
-      height: 106px;
+      width: 100%;
+      height: 100%;
       display: block;
     }
     .qr-text {
-      font-size: 16px;
+      position: absolute;
+      left: 200px;
+      top: 323px;
+      width: 245px;
+      font-family: 'Inter', sans-serif;
+      font-size: 24px;
       font-weight: 700;
-      color: #000;
-      line-height: 1.3;
-    }
-    .right-section {
-      flex: 1;
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
+      line-height: 1.21;
+      color: #000000;
     }
   </style>
 </head>
@@ -162,29 +154,20 @@ function generateShareCardHTML(code: string, _origin: string): string {
   <img src="https://r2.tessera.fun/bg_1.png" alt="Background" class="background">
 
   <div class="container">
-    <div class="left-section">
-      <div class="logo-container">
-        <img src="https://r2.tessera.fun/TerreraLogo.png" alt="Tessera Logo" class="logo">
-      </div>
+    <img src="https://r2.tessera.fun/TerreraLogo.png" alt="Tessera Logo" class="logo">
 
-      <div class="ref-section">
-        <div class="ref-label">REF:</div>
-        <div class="code-box">
-          <div class="code">${code}</div>
-        </div>
-      </div>
-
-      <div class="qr-section">
-        <div class="qr-container">
-          ${qrCodeSVG}
-        </div>
-        <div class="qr-text">Invite users and earn points</div>
+    <div class="ref-section">
+      <div class="ref-label">REF:</div>
+      <div class="code-box">
+        <div class="code">${code}</div>
       </div>
     </div>
 
-    <div class="right-section">
-      <!-- Right side with the person image is part of the background -->
+    <div class="qr-container">
+      ${qrCodeSVG}
     </div>
+
+    <div class="qr-text">Invite users and earn points</div>
   </div>
 </body>
 </html>
