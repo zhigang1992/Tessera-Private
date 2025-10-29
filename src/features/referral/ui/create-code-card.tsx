@@ -566,7 +566,9 @@ export default function CreateCodeCard() {
                   onClick={handleShareTwitter}
                   className="flex h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-[#E4E4E7] bg-white text-xs font-semibold text-[#111827] hover:bg-[#F4F4F5] dark:border-[#27272A] dark:bg-[#111111] dark:text-white dark:hover:bg-[#1F1F23]"
                 >
-                  <Twitter className="h-5 w-5" />
+                  <svg width="16" height="15" viewBox="0 0 21 20" className="fill-current" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M17.5739 0L11.6749 6.71331L6.96349 0H0.132941L7.8777 11.0353L0 20H2.9381L9.18215 12.8939L14.1695 20H21L12.9796 8.57219L20.5118 0H17.5739ZM15.4593 17.8844L10.5532 11.0141L9.71346 9.83769L4.23962 2.17192H5.65923L10.3573 8.75137L11.111 9.80694L16.8789 17.8844H15.4593ZM10.0768 11.1605L3.32526 1.70549L9.32304 10.1049L10.0768 11.1605Z" />
+</svg>
                   X
                 </Button>
               </div>
