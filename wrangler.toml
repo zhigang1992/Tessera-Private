@@ -18,3 +18,11 @@ id = "7f042d440ec44368bdf4a0dc8a38c0e6"
 [[kv_namespaces]]
 binding = "LEADERBOARD_CACHE"
 id = "bea82344082d4078949725327c186f22"
+
+[[r2_buckets]]
+binding = "REFERRAL_IMAGES"
+bucket_name = "tessera-referral-images"
+
+# Browser Rendering API credentials (set these in production via wrangler secret)
+# CLOUDFLARE_ACCOUNT_ID = "your-account-id"
+# CLOUDFLARE_API_TOKEN = "your-api-token"

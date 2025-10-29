@@ -32,3 +32,4 @@ dist-ssr
 .envrc
 
 .playwright-mcp
+.dev.vars

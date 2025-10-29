@@ -13,8 +13,11 @@
       "command": "npx",
       "args": [
         "@playwright/mcp@latest",
-        "--isolated"
-      ]
+        "--extension"
+      ],
+      "env": {
+        "PLAYWRIGHT_MCP_EXTENSION_TOKEN": "${MCP_PLAYWRIGHT_MCP_EXTENSION_TOKEN}"
+      }
     }
   }
 }
