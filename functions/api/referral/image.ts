@@ -1,4 +1,5 @@
 import type { D1Database, KVNamespace, PagesFunction, R2Bucket } from '@cloudflare/workers-types';
+import QRCode from 'qrcode-svg';
 
 type Env = {
   DB: D1Database;
@@ -18,10 +19,30 @@ interface BrowserRenderingResponse {
 }
 
 /**
+ * Generate QR code SVG string server-side
+ */
+function generateQRCodeSVG(text: string): string {
+  const qr = new QRCode({
+    content: text,
+    padding: 0,
+    width: 160,
+    height: 160,
+    color: '#000000',
+    background: '#ffffff',
+    ecl: 'M',
+  });
+  return qr.svg();
+}
+
+/**
  * Generate HTML content for the share card
  * This is used when the origin is localhost (Browser Rendering API can't access localhost)
  */
-function generateShareCardHTML(code: string, origin: string): string {
+function generateShareCardHTML(code: string, _origin: string): string {
+  // Generate the referral URL for QR code
+  const referralUrl = `https://tessera.fun/?code=${code}`;
+  const qrCodeSVG = generateQRCodeSVG(referralUrl);
+
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -38,71 +59,132 @@ function generateShareCardHTML(code: string, origin: string): string {
     body {
       width: 1200px;
       height: 630px;
+      position: relative;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      overflow: hidden;
+    }
+    .background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+    .container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding: 60px 80px;
+      z-index: 1;
+    }
+    .left-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .logo {
+      height: 45px;
+      width: auto;
+    }
+    .ref-section {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .ref-label {
+      font-size: 32px;
+      font-weight: 900;
+      color: #000;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .code-box {
+      background: white;
+      border-radius: 20px;
+      padding: 25px 40px;
+      display: inline-block;
+      max-width: fit-content;
+    }
+    .code {
+      font-size: 52px;
+      font-weight: 900;
+      color: #000;
+      letter-spacing: 6px;
+      font-family: 'Courier New', monospace;
+    }
+    .qr-section {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      align-items: center;
+    }
+    .qr-container {
+      background: white;
+      border-radius: 20px;
+      padding: 15px;
+      display: inline-block;
+      width: 190px;
+      height: 190px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
     }
-    .card {
-      background: white;
-      border-radius: 24px;
-      padding: 60px;
-      max-width: 900px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    .qr-container svg {
+      width: 160px;
+      height: 160px;
+      display: block;
     }
-    .logo {
-      font-size: 32px;
-      font-weight: bold;
-      margin-bottom: 20px;
-      color: #1a1a1a;
+    .qr-text {
+      font-size: 22px;
+      font-weight: 700;
+      color: #000;
+      line-height: 1.3;
     }
-    .title {
-      font-size: 48px;
-      font-weight: bold;
-      color: #1a1a1a;
-      margin-bottom: 20px;
-    }
-    .description {
-      font-size: 24px;
-      color: #666;
-      margin-bottom: 40px;
-    }
-    .code-container {
-      background: #f5f5f5;
-      border-radius: 16px;
-      padding: 30px;
-      margin-bottom: 30px;
-    }
-    .code-label {
-      font-size: 18px;
-      color: #666;
-      margin-bottom: 10px;
-    }
-    .code {
-      font-size: 48px;
-      font-weight: bold;
-      color: #667eea;
-      letter-spacing: 4px;
-      font-family: 'Courier New', monospace;
-    }
-    .footer {
-      font-size: 20px;
-      color: #999;
-      text-align: center;
+    .right-section {
+      flex: 1;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="logo">🎯 Tessera</div>
-    <div class="title">Join Tessera!</div>
-    <div class="description">Use my referral code to get started with private equity trading</div>
-    <div class="code-container">
-      <div class="code-label">REFERRAL CODE</div>
-      <div class="code">${code}</div>
+  <img src="https://r2.tessera.fun/bg_1.png" alt="Background" class="background">
+
+  <div class="container">
+    <div class="left-section">
+      <div class="logo-container">
+        <img src="https://r2.tessera.fun/TerreraLogo.png" alt="Tessera Logo" class="logo">
+      </div>
+
+      <div class="ref-section">
+        <div class="ref-label">REF:</div>
+        <div class="code-box">
+          <div class="code">${code}</div>
+        </div>
+      </div>
+
+      <div class="qr-section">
+        <div class="qr-container">
+          ${qrCodeSVG}
+        </div>
+        <div class="qr-text">Invite users and earn points</div>
+      </div>
     </div>
-    <div class="footer">${origin}</div>
+
+    <div class="right-section">
+      <!-- Right side with the person image is part of the background -->
+    </div>
   </div>
 </body>
 </html>
@@ -208,7 +290,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
         },
         gotoOptions: {
           waitUntil: 'load', // Wait for page to load
-          timeout: 10000,
+          timeout: 15000,
         },
       }),
     });
