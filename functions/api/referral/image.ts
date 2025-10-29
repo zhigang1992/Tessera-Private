@@ -25,8 +25,8 @@ function generateQRCodeSVG(text: string): string {
   const qr = new QRCode({
     content: text,
     padding: 0,
-    width: 160,
-    height: 160,
+    width: 106,
+    height: 106,
     color: '#000000',
     background: '#ffffff',
     ecl: 'M',
@@ -57,8 +57,8 @@ function generateShareCardHTML(code: string, _origin: string): string {
       box-sizing: border-box;
     }
     body {
-      width: 1200px;
-      height: 630px;
+      width: 800px;
+      height: 450px;
       position: relative;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
       overflow: hidden;
@@ -78,74 +78,74 @@ function generateShareCardHTML(code: string, _origin: string): string {
       height: 100%;
       display: flex;
       align-items: center;
-      padding: 60px 80px;
+      padding: 40px 50px;
       z-index: 1;
     }
     .left-section {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 30px;
+      gap: 20px;
     }
     .logo-container {
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 12px;
     }
     .logo {
-      height: 45px;
+      height: 32px;
       width: auto;
     }
     .ref-section {
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 10px;
     }
     .ref-label {
-      font-size: 32px;
+      font-size: 24px;
       font-weight: 900;
       color: #000;
-      letter-spacing: 2px;
+      letter-spacing: 1.5px;
       text-transform: uppercase;
     }
     .code-box {
       background: white;
-      border-radius: 20px;
-      padding: 25px 40px;
+      border-radius: 15px;
+      padding: 18px 30px;
       display: inline-block;
       max-width: fit-content;
     }
     .code {
-      font-size: 52px;
+      font-size: 38px;
       font-weight: 900;
       color: #000;
-      letter-spacing: 6px;
+      letter-spacing: 5px;
       font-family: 'Courier New', monospace;
     }
     .qr-section {
       display: flex;
       flex-direction: row;
-      gap: 20px;
+      gap: 15px;
       align-items: center;
     }
     .qr-container {
       background: white;
-      border-radius: 20px;
-      padding: 15px;
+      border-radius: 15px;
+      padding: 12px;
       display: inline-block;
-      width: 190px;
-      height: 190px;
+      width: 130px;
+      height: 130px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
     .qr-container svg {
-      width: 160px;
-      height: 160px;
+      width: 106px;
+      height: 106px;
       display: block;
     }
     .qr-text {
-      font-size: 22px;
+      font-size: 16px;
       font-weight: 700;
       color: #000;
       line-height: 1.3;
@@ -262,11 +262,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     // Get the origin from the request to construct the share URL
     const origin = url.origin;
 
-    // For localhost/development, we can't use URL since Browser Rendering API can't access it
-    // Instead, we'll use HTML content directly
-    const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
-
     // Create HTML content for the share card
+    // We always use HTML rendering instead of URL to have full control
     const htmlContent = generateShareCardHTML(code, origin);
 
     // Call Browser Rendering API
@@ -279,10 +276,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        ...(isLocalhost ? { html: htmlContent } : { url: `${origin}/?code=${code}&share_modal=true` }),
+        html: htmlContent,
         viewport: {
-          width: 1200,
-          height: 630, // Standard social media share dimensions
+          width: 800,
+          height: 450,
         },
         screenshotOptions: {
           fullPage: false,
