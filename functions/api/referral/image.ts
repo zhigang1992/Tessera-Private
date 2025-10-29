@@ -25,10 +25,10 @@ function generateQRCodeSVG(text: string): string {
   const qr = new QRCode({
     content: text,
     padding: 0,
-    width: 139,
-    height: 139,
+    width: 119,
+    height: 119,
     color: '#000000',
-    background: '#ffffff',
+    background: 'transparent',
     ecl: 'M',
   });
   return qr.svg();
@@ -128,9 +128,11 @@ function generateShareCardHTML(code: string, _origin: string): string {
       height: 139px;
       background: white;
       border-radius: 16px;
+      padding: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
     }
     .qr-container svg {
       width: 100%;
