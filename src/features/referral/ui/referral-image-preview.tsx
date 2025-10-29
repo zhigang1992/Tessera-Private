@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 
 interface ReferralImagePreviewProps {
@@ -9,6 +9,12 @@ interface ReferralImagePreviewProps {
 export function ReferralImagePreview({ imageUrl, codeSlug }: ReferralImagePreviewProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
+
+  // Reset loading state when imageUrl changes (e.g., when background changes)
+  useEffect(() => {
+    setIsLoading(true)
+    setHasError(false)
+  }, [imageUrl])
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-[#E4E4E7] bg-[#F4F4F5] dark:border-[#27272A] dark:bg-[#111111]">

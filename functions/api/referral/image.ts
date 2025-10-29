@@ -38,10 +38,11 @@ function generateQRCodeSVG(text: string): string {
  * Generate HTML content for the share card
  * This is used when the origin is localhost (Browser Rendering API can't access localhost)
  */
-function generateShareCardHTML(code: string, _origin: string): string {
+function generateShareCardHTML(code: string, _origin: string, backgroundNumber: number): string {
   // Generate the referral URL for QR code
   const referralUrl = `https://tessera.fun/?code=${code}`;
   const qrCodeSVG = generateQRCodeSVG(referralUrl);
+  const backgroundUrl = `https://r2.tessera.fun/bg_${backgroundNumber}.png`;
 
   return `
 <!DOCTYPE html>
@@ -153,7 +154,7 @@ function generateShareCardHTML(code: string, _origin: string): string {
   </style>
 </head>
 <body>
-  <img src="https://r2.tessera.fun/bg_1.png" alt="Background" class="background">
+  <img src="${backgroundUrl}" alt="Background" class="background">
 
   <div class="container">
     <img src="https://r2.tessera.fun/TerreraLogo.png" alt="Tessera Logo" class="logo">
@@ -205,6 +206,16 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     });
   }
 
+  // Parse and validate background number (1-6, default to 1)
+  const bgParam = url.searchParams.get('bg');
+  let backgroundNumber = 1;
+  if (bgParam) {
+    const parsed = parseInt(bgParam, 10);
+    if (!isNaN(parsed) && parsed >= 1 && parsed <= 6) {
+      backgroundNumber = parsed;
+    }
+  }
+
   try {
     // Check if the referral code exists in the database
     const referralCode = await env.DB.prepare('SELECT code_slug FROM referral_codes WHERE code_slug = ?')
@@ -219,7 +230,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     }
 
     // Check if image already exists in R2
-    const imageKey = `referral-${code}.png`;
+    const imageKey = `referral-${code}-bg${backgroundNumber}.png`;
     const existingImage = await env.REFERRAL_IMAGES.get(imageKey);
 
     if (existingImage) {
@@ -249,7 +260,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 
     // Create HTML content for the share card
     // We always use HTML rendering instead of URL to have full control
-    const htmlContent = generateShareCardHTML(code, origin);
+    const htmlContent = generateShareCardHTML(code, origin, backgroundNumber);
 
     // Call Browser Rendering API
     const browserRenderingUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/browser-rendering/snapshot`;

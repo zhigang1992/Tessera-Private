@@ -4,7 +4,7 @@ import { useReferralAuth } from '../hooks/use-referral-auth'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Copy, Plus, Share2, Loader2, Download, Send, Twitter } from 'lucide-react'
+import { Copy, Plus, Share2, Loader2, Download, Send, Twitter, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { UrlKeyAlertDialog } from './url-key-alert-dialog'
 import { getUrlKeyAlertHandlers } from '../lib/url-key-alert'
@@ -26,6 +26,7 @@ export default function CreateCodeCard() {
   const [customCode, setCustomCode] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
   const [shareDialogCode, setShareDialogCode] = useState<ReferralCode | null>(null)
+  const [selectedBackground, setSelectedBackground] = useState(1)
 
   const trimmedCustomCode = useMemo(() => customCode.trim(), [customCode])
   const normalizedCustomCode = useMemo(() => trimmedCustomCode.toUpperCase(), [trimmedCustomCode])
@@ -54,8 +55,8 @@ export default function CreateCodeCard() {
     }
 
     const base = SHARE_IMAGE_BASE.endsWith('/') ? SHARE_IMAGE_BASE.slice(0, -1) : SHARE_IMAGE_BASE
-    return `${base}?code=${encodeURIComponent(shareDialogCode.codeSlug)}`
-  }, [shareDialogCode])
+    return `${base}?code=${encodeURIComponent(shareDialogCode.codeSlug)}&bg=${selectedBackground}`
+  }, [shareDialogCode, selectedBackground])
 
   const handleUrlKeyConfirm = async () => {
     const handlers = getUrlKeyAlertHandlers()
@@ -85,7 +86,16 @@ export default function CreateCodeCard() {
   const handleShareDialogOpenChange = (open: boolean) => {
     if (!open) {
       setShareDialogCode(null)
+      setSelectedBackground(1)
     }
+  }
+
+  const handlePreviousBackground = () => {
+    setSelectedBackground((prev) => (prev > 1 ? prev - 1 : 6))
+  }
+
+  const handleNextBackground = () => {
+    setSelectedBackground((prev) => (prev < 6 ? prev + 1 : 1))
   }
 
   const handleSubmitCreateCode = async (event?: FormEvent<HTMLFormElement>) => {
@@ -436,10 +446,54 @@ export default function CreateCodeCard() {
 
           {shareDialogCode && (
             <div className="flex flex-col gap-4">
-              <ReferralImagePreview
-                imageUrl={shareImageUrl}
-                codeSlug={shareDialogCode.codeSlug}
-              />
+              <div className="flex flex-col gap-3">
+                <ReferralImagePreview
+                  imageUrl={shareImageUrl}
+                  codeSlug={shareDialogCode.codeSlug}
+                />
+
+                {/* Background carousel navigation */}
+                <div className="flex items-center justify-center gap-3">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handlePreviousBackground}
+                    className="h-8 w-8 rounded-full bg-[#F4F4F5] hover:bg-[#E4E4E7] dark:bg-[#27272A] dark:hover:bg-[#3F3F46]"
+                    aria-label="Previous background"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+
+                  {/* Dot indicators */}
+                  <div className="flex items-center gap-2">
+                    {[1, 2, 3, 4, 5, 6].map((bg) => (
+                      <button
+                        key={bg}
+                        type="button"
+                        onClick={() => setSelectedBackground(bg)}
+                        className={`h-2 w-2 rounded-full transition-all ${
+                          selectedBackground === bg
+                            ? 'bg-black dark:bg-white w-6'
+                            : 'bg-[#D4D4D8] dark:bg-[#52525B]'
+                        }`}
+                        aria-label={`Select background ${bg}`}
+                      />
+                    ))}
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleNextBackground}
+                    className="h-8 w-8 rounded-full bg-[#F4F4F5] hover:bg-[#E4E4E7] dark:bg-[#27272A] dark:hover:bg-[#3F3F46]"
+                    aria-label="Next background"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
 
               <div className="flex flex-col gap-3">
                 <div className="flex flex-col gap-2 text-left">
