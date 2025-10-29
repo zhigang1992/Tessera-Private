@@ -191,12 +191,17 @@ export default function CreateCodeCard() {
   }
 
   const handleShareTwitter = () => {
-    if (!shareDialogCode || !shareLink) {
+    if (!shareDialogCode || !shareLink || !shareImageUrl) {
       toast.error('Referral link unavailable')
       return
     }
 
-    const text = `Join Tessera with my referral code ${shareDialogCode.codeSlug}`
+    // Build the full image URL (must be absolute for Twitter Card)
+    const fullImageUrl = shareImageUrl.startsWith('http')
+      ? shareImageUrl
+      : `${window.location.origin}${shareImageUrl}`
+
+    const text = `Join Tessera with my referral code ${shareDialogCode.codeSlug}\n\n${fullImageUrl}`
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareLink)}`
     window.open(twitterUrl, '_blank', 'noopener,noreferrer')
   }
