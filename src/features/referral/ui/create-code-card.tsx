@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { ReferralCode } from '../lib/api-client'
 
-const SHARE_IMAGE_BASE = import.meta.env.VITE_REFERRAL_SHARE_IMAGE_BASE || '/api/referral/share-card'
+const SHARE_IMAGE_BASE = import.meta.env.VITE_REFERRAL_SHARE_IMAGE_BASE || '/api/referral/image'
 
 export default function CreateCodeCard() {
   const { connected, publicKey } = useWallet()
@@ -53,7 +53,7 @@ export default function CreateCodeCard() {
     }
 
     const base = SHARE_IMAGE_BASE.endsWith('/') ? SHARE_IMAGE_BASE.slice(0, -1) : SHARE_IMAGE_BASE
-    return `${base}/${encodeURIComponent(shareDialogCode.codeSlug)}`
+    return `${base}?code=${encodeURIComponent(shareDialogCode.codeSlug)}`
   }, [shareDialogCode])
 
   const handleUrlKeyConfirm = async () => {
