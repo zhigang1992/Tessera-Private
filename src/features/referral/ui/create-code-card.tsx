@@ -46,8 +46,9 @@ export default function CreateCodeCard() {
       return ''
     }
 
-    return `${window.location.origin}/?code=${shareDialogCode.codeSlug}`
-  }, [shareDialogCode])
+    // Use /s endpoint for social media sharing with OG tags
+    return `${window.location.origin}/s?code=${shareDialogCode.codeSlug}&bg=${selectedBackground}`
+  }, [shareDialogCode, selectedBackground])
 
   const shareImageUrl = useMemo(() => {
     if (!shareDialogCode) {
@@ -202,17 +203,13 @@ export default function CreateCodeCard() {
   }
 
   const handleShareTwitter = () => {
-    if (!shareDialogCode || !shareLink || !shareImageUrl) {
+    if (!shareDialogCode || !shareLink) {
       toast.error('Referral link unavailable')
       return
     }
 
-    // Build the full image URL (must be absolute for Twitter Card)
-    const fullImageUrl = shareImageUrl.startsWith('http')
-      ? shareImageUrl
-      : `${window.location.origin}${shareImageUrl}`
-
-    const text = `Join Tessera with my referral code ${shareDialogCode.codeSlug}\n\n${fullImageUrl}`
+    // Twitter will automatically fetch the image from OG tags at the /s endpoint
+    const text = `Join Tessera with my referral code ${shareDialogCode.codeSlug}`
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareLink)}`
     window.open(twitterUrl, '_blank', 'noopener,noreferrer')
   }
