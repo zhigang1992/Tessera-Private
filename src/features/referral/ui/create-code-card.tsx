@@ -567,7 +567,7 @@ export default function CreateCodeCard() {
                   className="flex h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-[#E4E4E7] bg-white text-xs font-semibold text-[#111827] hover:bg-[#F4F4F5] dark:border-[#27272A] dark:bg-[#111111] dark:text-white dark:hover:bg-[#1F1F23]"
                 >
                   <Twitter className="h-5 w-5" />
-                  Twitter
+                  X
                 </Button>
               </div>
             </div>
