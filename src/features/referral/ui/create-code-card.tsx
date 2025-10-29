@@ -25,6 +25,7 @@ export default function CreateCodeCard() {
   const [customCode, setCustomCode] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
   const [shareDialogCode, setShareDialogCode] = useState<ReferralCode | null>(null)
+  const [isImageLoading, setIsImageLoading] = useState(false)
 
   const trimmedCustomCode = useMemo(() => customCode.trim(), [customCode])
   const normalizedCustomCode = useMemo(() => trimmedCustomCode.toUpperCase(), [trimmedCustomCode])
@@ -135,6 +136,7 @@ export default function CreateCodeCard() {
   }
 
   const openShareDialog = (code: ReferralCode) => {
+    setIsImageLoading(true) // Start loading state when dialog opens
     setShareDialogCode(code)
   }
 
@@ -435,11 +437,23 @@ export default function CreateCodeCard() {
 
           {shareDialogCode && (
             <div className="flex flex-col gap-4">
-              <div className="overflow-hidden rounded-2xl border border-[#E4E4E7] bg-[#F4F4F5] dark:border-[#27272A] dark:bg-[#111111]">
+              <div className="relative overflow-hidden rounded-2xl border border-[#E4E4E7] bg-[#F4F4F5] dark:border-[#27272A] dark:bg-[#111111]">
+                {isImageLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-[#F4F4F5] dark:bg-[#111111]" style={{ aspectRatio: '800/450' }}>
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="h-8 w-8 animate-spin text-black/20 dark:text-white/20" />
+                      <p className="text-sm text-black/50 dark:text-white/50">Generating image...</p>
+                    </div>
+                  </div>
+                )}
                 <img
                   src={shareImageUrl}
                   alt={`Referral share card for ${shareDialogCode.codeSlug}`}
                   className="h-auto w-full object-cover"
+                  onLoadStart={() => setIsImageLoading(true)}
+                  onLoad={() => setIsImageLoading(false)}
+                  onError={() => setIsImageLoading(false)}
+                  style={{ display: isImageLoading ? 'none' : 'block' }}
                 />
               </div>
 
