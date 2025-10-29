@@ -197,7 +197,7 @@ export default function CreateCodeCard() {
       return
     }
 
-    const text = `Join Tessera with my referral code ${shareDialogCode.codeSlug}`
+    const text = `Own a piece of the future, before everyone else; on-chain without KYC`
     const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareLink)}&text=${encodeURIComponent(text)}`
     window.open(telegramUrl, '_blank', 'noopener,noreferrer')
   }
@@ -209,7 +209,7 @@ export default function CreateCodeCard() {
     }
 
     // Twitter will automatically fetch the image from OG tags at the /s endpoint
-    const text = `Join Tessera with my referral code ${shareDialogCode.codeSlug}`
+    const text = `Join me on owning a piece of the future, before everyone else; on-chain without KYC via @Tessera_PE`
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareLink)}`
     window.open(twitterUrl, '_blank', 'noopener,noreferrer')
   }
