@@ -179,12 +179,12 @@ function generateShareCardHTML(code: string, _origin: string, backgroundNumber: 
 
 /**
  * API endpoint to generate referral code share images
- * GET /api/referral/image?code=XXXXX
+ * GET /api/referral/image?code=XXXXX&bg=1-6
  *
  * This endpoint generates a share image for a referral code by:
- * 1. Checking if the code exists in the database
+ * 1. Validating the code format (6-12 alphanumeric characters)
  * 2. Checking if an image already exists in R2 storage
- * 3. If not, using Cloudflare Browser Rendering API to capture the share modal
+ * 3. If not, using Cloudflare Browser Rendering API to render the share card
  * 4. Saving and returning the image
  */
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
@@ -198,9 +198,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     });
   }
 
-  // Validate code format (alphanumeric, 4-10 chars)
-  if (!/^[a-zA-Z0-9]{4,10}$/.test(code)) {
-    return new Response(JSON.stringify({ error: 'Invalid code format' }), {
+  // Validate code format (alphanumeric, 6-12 chars)
+  if (!/^[a-zA-Z0-9]{6,12}$/.test(code)) {
+    return new Response(JSON.stringify({ error: 'Invalid code format. Code must be 6-12 alphanumeric characters.' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
@@ -217,18 +217,6 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   try {
-    // Check if the referral code exists in the database
-    const referralCode = await env.DB.prepare('SELECT code_slug FROM referral_codes WHERE code_slug = ?')
-      .bind(code)
-      .first();
-
-    if (!referralCode) {
-      return new Response(JSON.stringify({ error: 'Referral code not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
     // Check if image already exists in R2
     const imageKey = `referral-${code}-bg${backgroundNumber}.png`;
     const existingImage = await env.REFERRAL_IMAGES.get(imageKey);
