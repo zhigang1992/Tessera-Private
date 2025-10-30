@@ -37,9 +37,9 @@ export default function HeroSection() {
             aria-label="Follow Tessera on X"
             className="flex h-11 w-11 items-center justify-center rounded-full bg-[#D2FB95] text-black transition-transform duration-200 hover:-translate-y-0.5 hover:opacity-90"
           >
-            <svg width="18" height="15" viewBox="0 0 22 17" fill="currentColor">
-              <path d="M21.46 2.01c-.77.34-1.6.57-2.46.67a4.3 4.3 0 0 0 1.88-2.37c-.83.5-1.75.85-2.72 1.05A4.28 4.28 0 0 0 10.88 5.3a12.14 12.14 0 0 1-8.8-4.47 4.28 4.28 0 0 0 1.32 5.71c-.7-.02-1.37-.22-1.95-.54v.05c0 2.07 1.47 3.8 3.42 4.19a4.3 4.3 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.97 8.59 8.59 0 0 1-5.31 1.83c-.35 0-.69-.02-1.02-.06a12.1 12.1 0 0 0 6.55 1.92c7.86 0 12.16-6.51 12.16-12.16 0-.19 0-.37-.01-.56A8.68 8.68 0 0 0 21.46 2.01z" />
-            </svg>
+            <svg width="18" height="17" viewBox="0 0 21 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M17.5739 0L11.6749 6.71331L6.96349 0H0.132941L7.8777 11.0353L0 20H2.9381L9.18215 12.8939L14.1695 20H21L12.9796 8.57219L20.5118 0H17.5739ZM15.4593 17.8844L10.5532 11.0141L9.71346 9.83769L4.23962 2.17192H5.65923L10.3573 8.75137L11.111 9.80694L16.8789 17.8844H15.4593ZM10.0768 11.1605L3.32526 1.70549L9.32304 10.1049L10.0768 11.1605Z" />
+</svg>
           </a>
 
           <a
