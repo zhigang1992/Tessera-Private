@@ -31,7 +31,8 @@ export function getReferralProgram(
     }
   );
 
-  const program = new Program(ReferralSystemIDL as any, provider);
+  const programId = getReferralProgramId();
+  const program = new Program(ReferralSystemIDL as any, programId, provider);
 
   return program;
 }
