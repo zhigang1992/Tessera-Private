@@ -5,6 +5,7 @@
  * Integrates with React Query for caching and state management.
  */
 
+import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { toast } from 'sonner';
@@ -45,11 +46,13 @@ export function useReferralProgram() {
   const wallet = useWallet();
   const connection = useSolanaConnection();
 
-  if (!wallet.publicKey) {
-    return null;
-  }
-
-  return getReferralProgram(connection, wallet);
+  // useMemo to prevent re-creating the program on every render
+  return React.useMemo(() => {
+    if (!wallet.publicKey) {
+      return null;
+    }
+    return getReferralProgram(connection, wallet);
+  }, [connection, wallet, wallet.publicKey]);
 }
 
 /**

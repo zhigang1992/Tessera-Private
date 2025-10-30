@@ -22,19 +22,24 @@ export function getReferralProgram(
     return null;
   }
 
-  const provider = new AnchorProvider(
-    connection,
-    wallet as any, // Anchor types are slightly different
-    {
-      commitment: CONNECTION_CONFIG.commitment,
-      preflightCommitment: CONNECTION_CONFIG.commitment,
-    }
-  );
+  try {
+    const provider = new AnchorProvider(
+      connection,
+      wallet as any, // Anchor types are slightly different
+      {
+        commitment: CONNECTION_CONFIG.commitment,
+        preflightCommitment: CONNECTION_CONFIG.commitment,
+      }
+    );
 
-  const programId = getReferralProgramId();
-  const program = new Program(ReferralSystemIDL as any, programId, provider);
+    // Create program using IDL (which contains the program ID in metadata)
+    const program = new Program(ReferralSystemIDL as any, provider);
 
-  return program;
+    return program;
+  } catch (error) {
+    console.error('Failed to initialize referral program:', error);
+    return null;
+  }
 }
 
 /**
