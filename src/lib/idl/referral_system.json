@@ -1,0 +1,267 @@
+{
+  "version": "0.1.0",
+  "name": "referral_system",
+  "constants": [],
+  "instructions": [
+    {
+      "name": "initializeReferralSystem",
+      "accounts": [
+        {
+          "name": "referralConfig",
+          "isMut": true
+        },
+        {
+          "name": "authority",
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "tesseraTokenProgram",
+          "type": "publicKey"
+        },
+        {
+          "name": "defaultFeeReductionPercentage",
+          "type": "u16"
+        },
+        {
+          "name": "tier1SplitPercentage",
+          "type": "u16"
+        },
+        {
+          "name": "tier2SplitPercentage",
+          "type": "u16"
+        },
+        {
+          "name": "tier3SplitPercentage",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "createReferralCode",
+      "accounts": [
+        {
+          "name": "referralCode",
+          "isMut": true,
+          "isInit": true
+        },
+        {
+          "name": "owner",
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "code",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "registerWithReferralCode",
+      "accounts": [
+        {
+          "name": "userRegistration",
+          "isMut": true,
+          "isInit": true
+        },
+        {
+          "name": "referralCode",
+          "isMut": true
+        },
+        {
+          "name": "user",
+          "isSigner": true
+        },
+        {
+          "name": "referralConfig",
+          "isMut": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "authorizeReferralProgram",
+      "accounts": [
+        {
+          "name": "authorizedPrograms",
+          "isMut": true
+        },
+        {
+          "name": "authority",
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "programId",
+          "type": "publicKey"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ReferralConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "tesseraTokenProgram",
+            "type": "publicKey"
+          },
+          {
+            "name": "defaultFeeReductionPercentage",
+            "type": "u16"
+          },
+          {
+            "name": "tier1SplitPercentage",
+            "type": "u16"
+          },
+          {
+            "name": "tier2SplitPercentage",
+            "type": "u16"
+          },
+          {
+            "name": "tier3SplitPercentage",
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReferralCode",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "code",
+            "type": "string"
+          },
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "name": "totalReferrals",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserRegistration",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "publicKey"
+          },
+          {
+            "name": "referralCode",
+            "type": "publicKey"
+          },
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "tier2Referrer",
+            "type": "publicKey"
+          },
+          {
+            "name": "tier3Referrer",
+            "type": "publicKey"
+          },
+          {
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuthorizedPrograms",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "authorizedPrograms",
+            "type": {
+              "array": [
+                "publicKey"
+              ],
+              "size": 10
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "events": [],
+  "errors": [
+    {
+      "code": 200,
+      "name": "InvalidCodeFormat",
+      "msg": "The referral code format is invalid"
+    },
+    {
+      "code": 201,
+      "name": "ReferralCodeAlreadyExists",
+      "msg": "The referral code already exists"
+    },
+    {
+      "code": 202,
+      "name": "ReferralCodeNotFound",
+      "msg": "The referral code was not found"
+    },
+    {
+      "code": 203,
+      "name": "Unauthorized",
+      "msg": "The authority does not have permission to perform this action"
+    },
+    {
+      "code": 204,
+      "name": "InactiveReferralCode",
+      "msg": "The referral code is not active"
+    },
+    {
+      "code": 205,
+      "name": "InvalidPercentage",
+      "msg": "The percentage is invalid"
+    }
+  ],
+  "metadata": {
+    "address": "RefSys1111111111111111111111111111111111"
+  }
+}

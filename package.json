@@ -12,7 +12,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "bun test",
-    "test:watch": "bun test --watch"
+    "test:watch": "bun test --watch",
+    "migrate:export": "bun run scripts/export-production-data.ts",
+    "migrate:devnet": "bun run scripts/migrate-to-devnet.ts"
   },
   "description": "React+Vite, Tailwind, gill (based on @solana/kit), Wallet UI",
   "keywords": [
@@ -28,6 +30,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
     "@noble/curves": "^1.4.2",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -35,6 +38,7 @@
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-slot": "^1.2.3",
     "@solana-mobile/wallet-standard-mobile": "^0.4.1",
+    "@solana/spl-token": "^0.3.8",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/wallet-adapter-react": "^0.15.39",
     "@solana/wallet-adapter-react-ui": "^0.9.39",

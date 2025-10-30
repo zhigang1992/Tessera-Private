@@ -1,0 +1,98 @@
+{
+  "version": "0.1.0",
+  "name": "tessera_token",
+  "constants": [],
+  "instructions": [
+    {
+      "name": "initializeFeeConfig",
+      "accounts": [
+        {
+          "name": "feeConfig",
+          "isMut": true
+        },
+        {
+          "name": "authority",
+          "isSigner": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "authorizeProgram",
+      "accounts": [
+        {
+          "name": "authorizedPrograms",
+          "isMut": true
+        },
+        {
+          "name": "authority",
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "programId",
+          "type": "publicKey"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "FeeConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "defaultFeeRecipient",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuthorizedPrograms",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "authorizedPrograms",
+            "type": {
+              "array": [
+                "publicKey"
+              ],
+              "size": 10
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "events": [],
+  "errors": [
+    {
+      "code": 100,
+      "name": "InvalidReferralCode",
+      "msg": "The provided referral code is invalid"
+    }
+  ],
+  "metadata": {
+    "address": "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+  }
+}
