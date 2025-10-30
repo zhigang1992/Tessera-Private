@@ -1,13 +1,10 @@
-import { FormEvent, useMemo, useState } from 'react'
-import { useAffiliateData, useCreateReferralCode } from '../hooks/use-referral-queries'
-import { useReferralAuth } from '../hooks/use-referral-auth'
+import { FormEvent, useMemo, useState, useEffect } from 'react'
+import { useAffiliateData, useCreateReferralCode, setCurrentWalletForTracking } from '../hooks/use-referral-onchain'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Copy, Plus, Share2, Loader2, Download, Send, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
-import { UrlKeyAlertDialog } from './url-key-alert-dialog'
-import { getUrlKeyAlertHandlers } from '../lib/url-key-alert'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,20 +18,26 @@ export default function CreateCodeCard() {
   const walletAddress = publicKey?.toBase58()
   const { data: affiliateData, isLoading } = useAffiliateData(connected, walletAddress)
   const createCodeMutation = useCreateReferralCode()
-  const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert } = useReferralAuth()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [customCode, setCustomCode] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
   const [shareDialogCode, setShareDialogCode] = useState<ReferralCode | null>(null)
   const [selectedBackground, setSelectedBackground] = useState(1)
 
+  // Track wallet for localStorage code management
+  useEffect(() => {
+    if (walletAddress) {
+      setCurrentWalletForTracking(walletAddress)
+    }
+  }, [walletAddress])
+
   const trimmedCustomCode = useMemo(() => customCode.trim(), [customCode])
   const normalizedCustomCode = useMemo(() => trimmedCustomCode.toUpperCase(), [trimmedCustomCode])
   const isCustomCodeProvided = trimmedCustomCode.length > 0
   const isCustomCodeLengthValid = !isCustomCodeProvided ||
     (trimmedCustomCode.length >= 6 && trimmedCustomCode.length <= 12)
-  const isCreatePending = createCodeMutation.isPending || isAuthenticating
-  const isCreateDisabled = isCreatePending || (isCustomCodeProvided && !isCustomCodeLengthValid)
+  const isCreatePending = createCodeMutation.isPending
+  const isCreateDisabled = !connected || isCreatePending || (isCustomCodeProvided && !isCustomCodeLengthValid)
   const isShareDialogOpen = shareDialogCode !== null
 
   const shareLink = useMemo(() => {
@@ -58,20 +61,6 @@ export default function CreateCodeCard() {
     const base = SHARE_IMAGE_BASE.endsWith('/') ? SHARE_IMAGE_BASE.slice(0, -1) : SHARE_IMAGE_BASE
     return `${base}?code=${encodeURIComponent(shareDialogCode.codeSlug)}&bg=${selectedBackground}`
   }, [shareDialogCode, selectedBackground])
-
-  const handleUrlKeyConfirm = async () => {
-    const handlers = getUrlKeyAlertHandlers()
-    if (handlers?.handleConfirm) {
-      await handlers.handleConfirm()
-    }
-  }
-
-  const handleUrlKeyCancel = () => {
-    const handlers = getUrlKeyAlertHandlers()
-    if (handlers?.handleCancel) {
-      handlers.handleCancel()
-    }
-  }
 
   const referralCodes = affiliateData?.referralCodes || []
   const hasNoCodes = referralCodes.length === 0
@@ -106,12 +95,9 @@ export default function CreateCodeCard() {
       return
     }
 
-    // If not authenticated, require sign message first
-    if (!isAuthenticated) {
-      const signedIn = await authenticate()
-      if (!signedIn) {
-        return
-      }
+    if (!connected) {
+      toast.error('Please connect your wallet first')
+      return
     }
 
     if (isCustomCodeProvided && !isCustomCodeLengthValid) {
@@ -352,12 +338,6 @@ export default function CreateCodeCard() {
           </CardContent>
         </Card>
       </div>
-      <UrlKeyAlertDialog
-        open={showUrlKeyAlert}
-        onOpenChange={setShowUrlKeyAlert}
-        onConfirm={handleUrlKeyConfirm}
-        onCancel={handleUrlKeyCancel}
-      />
 
       <Dialog open={isCreateDialogOpen} onOpenChange={handleDialogOpenChange}>
         <DialogContent className="max-w-md">

@@ -1,32 +1,17 @@
 import { useState } from 'react';
-import { useTraderData, useBindReferralCode } from '../hooks/use-referral-queries';
-import { useReferralAuth } from '../hooks/use-referral-auth';
+import { useTraderData, useBindReferralCode } from '../hooks/use-referral-onchain';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
-import { UrlKeyAlertDialog } from './url-key-alert-dialog';
-import { getUrlKeyAlertHandlers } from '../lib/url-key-alert';
+import { toast } from 'sonner';
 
 export default function BindCodeCard() {
+  const { connected, publicKey } = useWallet();
+  const walletAddress = publicKey?.toBase58();
   const bindMutation = useBindReferralCode();
-  const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert, walletAddress } =
-    useReferralAuth();
-  const { data: traderData, isLoading } = useTraderData(walletAddress);
-
-  const handleUrlKeyConfirm = async () => {
-    const handlers = getUrlKeyAlertHandlers();
-    if (handlers?.handleConfirm) {
-      await handlers.handleConfirm();
-    }
-  };
-
-  const handleUrlKeyCancel = () => {
-    const handlers = getUrlKeyAlertHandlers();
-    if (handlers?.handleCancel) {
-      handlers.handleCancel();
-    }
-  };
+  const { data: traderData, isLoading } = useTraderData(walletAddress, connected);
 
   const [referralCodeInput, setReferralCodeInput] = useState('');
   const activeReferralCode = traderData?.referral?.referrerCode;
@@ -35,14 +20,18 @@ export default function BindCodeCard() {
   const handleBindCode = async () => {
     if (!referralCodeInput.trim()) return;
 
-    // If not authenticated, require sign message first
-    if (!isAuthenticated) {
-      const signedIn = await authenticate();
-      if (!signedIn) return;
+    if (!connected) {
+      toast.error('Please connect your wallet first');
+      return;
     }
 
-    await bindMutation.mutateAsync(referralCodeInput.toUpperCase());
-    setReferralCodeInput('');
+    try {
+      await bindMutation.mutateAsync(referralCodeInput.toUpperCase());
+      setReferralCodeInput('');
+    } catch (error) {
+      // Error already handled by mutation
+      console.error('Bind code error:', error);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,14 +81,14 @@ export default function BindCodeCard() {
                   />
                   <Button
                     onClick={handleBindCode}
-                    disabled={!referralCodeInput.trim() || bindMutation.isPending || isAuthenticating}
+                    disabled={!connected || !referralCodeInput.trim() || bindMutation.isPending}
                     size="lg"
                     className="flex h-10 items-center gap-2 rounded-lg bg-black px-6 text-sm font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
                   >
-                    {(bindMutation.isPending || isAuthenticating) && (
+                    {bindMutation.isPending && (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     )}
-                    {bindMutation.isPending || isAuthenticating ? 'Binding...' : 'Bind Code'}
+                    {bindMutation.isPending ? 'Binding...' : 'Bind Code'}
                   </Button>
                 </div>
                 <p className="text-sm text-[#6B7280] dark:text-[#A1A1AA]">
@@ -110,12 +99,6 @@ export default function BindCodeCard() {
           </CardContent>
         </Card>
       </div>
-      <UrlKeyAlertDialog
-        open={showUrlKeyAlert}
-        onOpenChange={setShowUrlKeyAlert}
-        onConfirm={handleUrlKeyConfirm}
-        onCancel={handleUrlKeyCancel}
-      />
     </>
   );
 }
