@@ -11,7 +11,6 @@ import { PublicKey } from '@solana/web3.js';
 import { toast } from 'sonner';
 import {
   useCreateReferralCode as useCreateCodeMutation,
-  useUserRegistration,
   useSolanaConnection,
   getReferralProgram,
   fetchReferralCode,
@@ -53,13 +52,13 @@ export function useTraderData(walletAddress?: string | null, enabled = true) {
       );
 
       try {
-        const registration = await program.account.userRegistration.fetch(registrationPDA);
+        const registration = await (program.account as any).userRegistration.fetch(registrationPDA);
 
         // Fetch the referral code details
         let referralCode = null;
         if (registration.referralCode) {
           try {
-            const codeAccount = await program.account.referralCode.fetch(
+            const codeAccount = await (program.account as any).referralCode.fetch(
               registration.referralCode
             );
             referralCode = {
@@ -136,7 +135,7 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
       for (const code of knownCodes) {
         try {
           const [codePDA] = getReferralCodePDA(code);
-          const codeAccount = await program.account.referralCode.fetch(codePDA);
+          const codeAccount = await (program.account as any).referralCode.fetch(codePDA);
 
           if (codeAccount.owner.equals(pubkey)) {
             referralCodes.push({
@@ -225,7 +224,7 @@ export function useBindReferralCode() {
   const connection = useSolanaConnection();
 
   return useMutation({
-    mutationFn: async (referralCode: string) => {
+    mutationFn: async (referralCode: string): Promise<{ code: string; txSignature: string }> => {
       if (!wallet.publicKey) {
         throw new Error('Wallet not connected');
       }

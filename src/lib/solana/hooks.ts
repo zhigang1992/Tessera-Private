@@ -7,7 +7,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
 import { toast } from 'sonner';
 import {
   createConnection,
@@ -15,8 +14,6 @@ import {
   fetchReferralCode,
   fetchUserRegistration,
   fetchReferralConfig,
-  getReferralCodePDA,
-  getUserRegistrationPDA,
   getCreateReferralCodeAccounts,
   validateReferralCodeFormat,
   checkReferralCodeAvailability,
@@ -274,7 +271,6 @@ export function useCheckCodeAvailability(code: string) {
  */
 export function useReferralTree() {
   const { data: registration } = useUserRegistration();
-  const connection = useSolanaConnection();
 
   return useQuery({
     queryKey: ['referralTree', registration?.user.toBase58()],
@@ -311,8 +307,9 @@ export function useTransactionStatus(signature: string | null) {
       return status;
     },
     enabled: !!signature,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Stop refetching once confirmed
+      const data = query.state.data;
       if (data?.value?.confirmationStatus === 'finalized') {
         return false;
       }

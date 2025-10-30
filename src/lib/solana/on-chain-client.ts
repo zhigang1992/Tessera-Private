@@ -17,7 +17,11 @@ import { getRpcEndpoint, getReferralProgramId, CONNECTION_CONFIG } from './confi
 export function getReferralProgram(
   connection: Connection,
   wallet: WalletContextState
-): Program {
+): Program | null {
+  if (!wallet.publicKey) {
+    return null;
+  }
+
   const provider = new AnchorProvider(
     connection,
     wallet as any, // Anchor types are slightly different
@@ -27,8 +31,7 @@ export function getReferralProgram(
     }
   );
 
-  const programId = getReferralProgramId();
-  const program = new Program(ReferralSystemIDL as any, programId, provider);
+  const program = new Program(ReferralSystemIDL as any, provider);
 
   return program;
 }
@@ -84,10 +87,12 @@ export function getUserRegistrationPDA(userPubkey: PublicKey): [PublicKey, numbe
  */
 export async function fetchReferralConfig(connection: Connection) {
   const program = getReferralProgram(connection, {} as WalletContextState);
+  if (!program) return null;
+
   const [configPDA] = getReferralConfigPDA();
 
   try {
-    const config = await program.account.referralConfig.fetch(configPDA);
+    const config = await (program.account as any).referralConfig.fetch(configPDA);
     return config;
   } catch (error) {
     console.error('Failed to fetch referral config:', error);
@@ -100,10 +105,12 @@ export async function fetchReferralConfig(connection: Connection) {
  */
 export async function fetchReferralCode(connection: Connection, code: string) {
   const program = getReferralProgram(connection, {} as WalletContextState);
+  if (!program) return null;
+
   const [codePDA] = getReferralCodePDA(code);
 
   try {
-    const codeAccount = await program.account.referralCode.fetch(codePDA);
+    const codeAccount = await (program.account as any).referralCode.fetch(codePDA);
     return codeAccount;
   } catch (error) {
     // Account doesn't exist - not an error
@@ -116,10 +123,12 @@ export async function fetchReferralCode(connection: Connection, code: string) {
  */
 export async function fetchUserRegistration(connection: Connection, userPubkey: PublicKey) {
   const program = getReferralProgram(connection, {} as WalletContextState);
+  if (!program) return null;
+
   const [registrationPDA] = getUserRegistrationPDA(userPubkey);
 
   try {
-    const registration = await program.account.userRegistration.fetch(registrationPDA);
+    const registration = await (program.account as any).userRegistration.fetch(registrationPDA);
     return registration;
   } catch (error) {
     // Account doesn't exist - user not registered
