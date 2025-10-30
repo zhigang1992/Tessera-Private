@@ -64,7 +64,7 @@ export function getWsEndpoint(): string {
  */
 export const PROGRAM_IDS = {
   TESSERA_TOKEN: new PublicKey('GVxEUUr9UjePfvviCqwGcioZboBwfs2Ui2tv9TWRUiBW'),
-  REFERRAL_SYSTEM: new PublicKey('AtFcQgJSEEQPjjJZMYV9V8zVJ3QVVKqxgQaGdukDCUhX'),
+  REFERRAL_SYSTEM: new PublicKey('3dbcAghTFKLzbzZpEf2AdBgvTEVuDA1ffadqWShcVRgV'),
 } as const;
 
 /**

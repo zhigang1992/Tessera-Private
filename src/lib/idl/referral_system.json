@@ -1,54 +1,67 @@
 {
-  "version": "0.1.0",
-  "name": "referral_system",
-  "constants": [],
+  "address": "3dbcAghTFKLzbzZpEf2AdBgvTEVuDA1ffadqWShcVRgV",
+  "metadata": {
+    "name": "referral_system",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Solana referral system with fee reduction and splitting"
+  },
   "instructions": [
     {
-      "name": "initializeReferralSystem",
-      "accounts": [
-        {
-          "name": "referralConfig",
-          "isMut": true
-        },
-        {
-          "name": "authority",
-          "isSigner": true
-        }
+      "name": "create_referral_code",
+      "docs": [
+        "Create a referral code for an owner",
+        "Only the program caller (owner) can create referral codes"
       ],
-      "args": [
-        {
-          "name": "tesseraTokenProgram",
-          "type": "publicKey"
-        },
-        {
-          "name": "defaultFeeReductionPercentage",
-          "type": "u16"
-        },
-        {
-          "name": "tier1SplitPercentage",
-          "type": "u16"
-        },
-        {
-          "name": "tier2SplitPercentage",
-          "type": "u16"
-        },
-        {
-          "name": "tier3SplitPercentage",
-          "type": "u16"
-        }
-      ]
-    },
-    {
-      "name": "createReferralCode",
+      "discriminator": [
+        206,
+        2,
+        37,
+        2,
+        193,
+        190,
+        203,
+        191
+      ],
       "accounts": [
         {
-          "name": "referralCode",
-          "isMut": true,
-          "isInit": true
+          "name": "referral_code",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  100,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "code"
+              }
+            ]
+          }
         },
         {
           "name": "owner",
-          "isSigner": true
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -59,85 +72,676 @@
       ]
     },
     {
-      "name": "registerWithReferralCode",
+      "name": "deactivate_referral_code",
+      "docs": [
+        "Deactivate a referral code (owner only)",
+        "Only the referral code owner can deactivate their code"
+      ],
+      "discriminator": [
+        210,
+        161,
+        175,
+        173,
+        126,
+        7,
+        89,
+        159
+      ],
       "accounts": [
         {
-          "name": "userRegistration",
-          "isMut": true,
-          "isInit": true
+          "name": "referral_code",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  100,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "referral_code.code",
+                "account": "ReferralCode"
+              }
+            ]
+          }
         },
         {
-          "name": "referralCode",
-          "isMut": true
-        },
-        {
-          "name": "user",
-          "isSigner": true
-        },
-        {
-          "name": "referralConfig",
-          "isMut": true
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "referral_code"
+          ]
         }
       ],
       "args": []
     },
     {
-      "name": "authorizeReferralProgram",
+      "name": "initialize_referral_system",
+      "docs": [
+        "Initialize the referral system with authority and configuration"
+      ],
+      "discriminator": [
+        63,
+        171,
+        112,
+        122,
+        51,
+        237,
+        106,
+        140
+      ],
       "accounts": [
         {
-          "name": "authorizedPrograms",
-          "isMut": true
+          "name": "referral_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "authority",
-          "isSigner": true
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "programId",
-          "type": "publicKey"
+          "name": "tessera_token_program",
+          "type": "pubkey"
+        },
+        {
+          "name": "default_fee_reduction_percentage",
+          "type": "u16"
+        },
+        {
+          "name": "tier1_split_percentage",
+          "type": "u16"
+        },
+        {
+          "name": "tier2_split_percentage",
+          "type": "u16"
+        },
+        {
+          "name": "tier3_split_percentage",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "reactivate_referral_code",
+      "docs": [
+        "Reactivate a referral code (owner only)"
+      ],
+      "discriminator": [
+        115,
+        6,
+        76,
+        81,
+        207,
+        228,
+        115,
+        85
+      ],
+      "accounts": [
+        {
+          "name": "referral_code",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  100,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "referral_code.code",
+                "account": "ReferralCode"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "referral_code"
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "register_with_referral_code",
+      "docs": [
+        "Register a user with a referral code",
+        "Only the program caller (user) can register themselves"
+      ],
+      "discriminator": [
+        53,
+        111,
+        51,
+        221,
+        37,
+        127,
+        20,
+        153
+      ],
+      "accounts": [
+        {
+          "name": "referral_code",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  100,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "referral_code.code",
+                "account": "ReferralCode"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_registration",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "referral_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "referrer_registration",
+          "docs": [
+            "Optional: The direct referrer's UserRegistration (if they exist in the system)"
+          ],
+          "optional": true
+        },
+        {
+          "name": "whitelist_entry",
+          "docs": [
+            "The whitelist entry account in the Tessera Token program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "sender_fee_config",
+          "docs": [
+            "The sender fee config account in the Tessera Token program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "tessera_fee_config",
+          "docs": [
+            "The Tessera Token program's FeeConfig account containing the default fee recipient"
+          ]
+        },
+        {
+          "name": "authorized_programs",
+          "docs": [
+            "The Tessera Token program's AuthorizedPrograms account"
+          ]
+        },
+        {
+          "name": "tessera_token_program",
+          "docs": [
+            "The Tessera Token program"
+          ],
+          "address": "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "The authority that can set fee configurations in Tessera Token"
+          ]
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_referral_config",
+      "docs": [
+        "Update referral system configuration (authority only)"
+      ],
+      "discriminator": [
+        129,
+        209,
+        121,
+        34,
+        163,
+        184,
+        187,
+        56
+      ],
+      "accounts": [
+        {
+          "name": "referral_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "referral_config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "new_fee_reduction_percentage",
+          "type": "u16"
+        },
+        {
+          "name": "new_tier1_split_percentage",
+          "type": "u16"
+        },
+        {
+          "name": "new_tier2_split_percentage",
+          "type": "u16"
+        },
+        {
+          "name": "new_tier3_split_percentage",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "update_user_fee_config",
+      "docs": [
+        "Update fee configuration for a registered user with custom parameters",
+        "This allows overriding the fee configuration for specific users",
+        "New registrations will use the current referral config, but existing users",
+        "can be updated with custom fee reduction and split percentages",
+        "Only the authority can update user fee configurations"
+      ],
+      "discriminator": [
+        80,
+        110,
+        233,
+        148,
+        172,
+        16,
+        154,
+        252
+      ],
+      "accounts": [
+        {
+          "name": "user_registration",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "referral_code",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  100,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "referral_code.code",
+                "account": "ReferralCode"
+              }
+            ]
+          }
+        },
+        {
+          "name": "referral_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tessera_fee_config",
+          "docs": [
+            "The Tessera Token program's FeeConfig account containing the default fee recipient"
+          ]
+        },
+        {
+          "name": "authorized_programs",
+          "docs": [
+            "The Tessera Token program's AuthorizedPrograms account"
+          ]
+        },
+        {
+          "name": "whitelist_entry",
+          "docs": [
+            "The whitelist entry account in the Tessera Token program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "sender_fee_config",
+          "docs": [
+            "The sender fee config account in the Tessera Token program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "tessera_token_program",
+          "docs": [
+            "The Tessera Token program"
+          ],
+          "address": "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "The authority that can set fee configurations in Tessera Token",
+            "Only the referral system authority can update user fee configurations"
+          ],
+          "signer": true
+        },
+        {
+          "name": "user",
+          "docs": [
+            "The user whose fee configuration is being updated"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "fee_reduction_percentage",
+          "type": "u16"
+        },
+        {
+          "name": "owner_split_percentage",
+          "type": "u16"
         }
       ]
     }
   ],
   "accounts": [
     {
-      "name": "ReferralConfig",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "authority",
-            "type": "publicKey"
-          },
-          {
-            "name": "tesseraTokenProgram",
-            "type": "publicKey"
-          },
-          {
-            "name": "defaultFeeReductionPercentage",
-            "type": "u16"
-          },
-          {
-            "name": "tier1SplitPercentage",
-            "type": "u16"
-          },
-          {
-            "name": "tier2SplitPercentage",
-            "type": "u16"
-          },
-          {
-            "name": "tier3SplitPercentage",
-            "type": "u16"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
+      "name": "ReferralCode",
+      "discriminator": [
+        227,
+        239,
+        247,
+        224,
+        128,
+        187,
+        44,
+        229
+      ]
     },
+    {
+      "name": "ReferralConfig",
+      "discriminator": [
+        102,
+        148,
+        171,
+        235,
+        148,
+        83,
+        250,
+        140
+      ]
+    },
+    {
+      "name": "UserRegistration",
+      "discriminator": [
+        128,
+        102,
+        192,
+        182,
+        31,
+        20,
+        27,
+        194
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidCodeFormat",
+      "msg": "Invalid referral code format. Must be 6-12 alphanumeric characters."
+    },
+    {
+      "code": 6001,
+      "name": "InactiveReferralCode",
+      "msg": "Referral code is not active."
+    },
+    {
+      "code": 6002,
+      "name": "InvalidPercentage",
+      "msg": "Invalid percentage. Must be between 0 and 10000 basis points."
+    },
+    {
+      "code": 6003,
+      "name": "Unauthorized",
+      "msg": "Unauthorized. Only the correct authority can perform this action."
+    }
+  ],
+  "types": [
     {
       "name": "ReferralCode",
       "type": {
@@ -149,15 +753,51 @@
           },
           {
             "name": "owner",
-            "type": "publicKey"
+            "type": "pubkey"
           },
           {
-            "name": "isActive",
+            "name": "is_active",
             "type": "bool"
           },
           {
-            "name": "totalReferrals",
+            "name": "total_referrals",
             "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReferralConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "tessera_token_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "default_fee_reduction_percentage",
+            "type": "u16"
+          },
+          {
+            "name": "tier1_split_percentage",
+            "type": "u16"
+          },
+          {
+            "name": "tier2_split_percentage",
+            "type": "u16"
+          },
+          {
+            "name": "tier3_split_percentage",
+            "type": "u16"
           },
           {
             "name": "bump",
@@ -173,26 +813,26 @@
         "fields": [
           {
             "name": "user",
-            "type": "publicKey"
+            "type": "pubkey"
           },
           {
-            "name": "referralCode",
-            "type": "publicKey"
+            "name": "referral_code",
+            "type": "pubkey"
           },
           {
             "name": "owner",
-            "type": "publicKey"
+            "type": "pubkey"
           },
           {
-            "name": "tier2Referrer",
-            "type": "publicKey"
+            "name": "tier2_referrer",
+            "type": "pubkey"
           },
           {
-            "name": "tier3Referrer",
-            "type": "publicKey"
+            "name": "tier3_referrer",
+            "type": "pubkey"
           },
           {
-            "name": "isActive",
+            "name": "is_active",
             "type": "bool"
           },
           {
@@ -201,67 +841,6 @@
           }
         ]
       }
-    },
-    {
-      "name": "AuthorizedPrograms",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "authority",
-            "type": "publicKey"
-          },
-          {
-            "name": "authorizedPrograms",
-            "type": {
-              "array": [
-                "publicKey"
-              ],
-              "size": 10
-            }
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
     }
-  ],
-  "events": [],
-  "errors": [
-    {
-      "code": 200,
-      "name": "InvalidCodeFormat",
-      "msg": "The referral code format is invalid"
-    },
-    {
-      "code": 201,
-      "name": "ReferralCodeAlreadyExists",
-      "msg": "The referral code already exists"
-    },
-    {
-      "code": 202,
-      "name": "ReferralCodeNotFound",
-      "msg": "The referral code was not found"
-    },
-    {
-      "code": 203,
-      "name": "Unauthorized",
-      "msg": "The authority does not have permission to perform this action"
-    },
-    {
-      "code": 204,
-      "name": "InactiveReferralCode",
-      "msg": "The referral code is not active"
-    },
-    {
-      "code": 205,
-      "name": "InvalidPercentage",
-      "msg": "The percentage is invalid"
-    }
-  ],
-  "metadata": {
-    "address": "AtFcQgJSEEQPjjJZMYV9V8zVJ3QVVKqxgQaGdukDCUhX"
-  }
+  ]
 }

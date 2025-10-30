@@ -32,7 +32,7 @@ export function getReferralProgram(
       }
     );
 
-    // Create program using IDL (which contains the program ID in metadata)
+    // Use the two-argument constructor - Program will read programId from IDL metadata
     const program = new Program(ReferralSystemIDL as any, provider);
 
     return program;
