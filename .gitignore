@@ -33,3 +33,9 @@ dist-ssr
 
 .playwright-mcp
 .dev.vars
+.env.migration
+
+# Migration data (DO NOT COMMIT PRODUCTION DATA)
+data/*.json
+data/migration-*.json
+data/logs/
