@@ -59,16 +59,31 @@ export function getWsEndpoint(): string {
 }
 
 /**
- * Program IDs - same across all networks for now
- * TODO: Update with actual deployed program IDs for each network
+ * Program IDs - Devnet deployed addresses
+ * Configure via environment variables for different networks
  */
 export const PROGRAM_IDS = {
-  TESSERA_TOKEN: new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'),
-  REFERRAL_SYSTEM: new PublicKey('RefSys1111111111111111111111111111111111111'),
+  TESSERA_TOKEN: new PublicKey('GVxEUUr9UjePfvviCqwGcioZboBwfs2Ui2tv9TWRUiBW'),
+  REFERRAL_SYSTEM: new PublicKey('AtFcQgJSEEQPjjJZMYV9V8zVJ3QVVKqxgQaGdukDCUhX'),
 } as const;
 
 /**
- * Get program ID with environment override support
+ * Get Tessera Token program ID with environment override support
+ */
+export function getTesseraTokenProgramId(): PublicKey {
+  const override = import.meta.env.VITE_TESSERA_TOKEN_PROGRAM_ID;
+  if (override) {
+    try {
+      return new PublicKey(override);
+    } catch {
+      console.warn('Invalid VITE_TESSERA_TOKEN_PROGRAM_ID, using default');
+    }
+  }
+  return PROGRAM_IDS.TESSERA_TOKEN;
+}
+
+/**
+ * Get Referral System program ID with environment override support
  */
 export function getReferralProgramId(): PublicKey {
   const override = import.meta.env.VITE_REFERRAL_PROGRAM_ID;
