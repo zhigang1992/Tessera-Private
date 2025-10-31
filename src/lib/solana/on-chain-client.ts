@@ -9,30 +9,47 @@ import { Program, AnchorProvider } from '@coral-xyz/anchor';
 import { Connection, PublicKey, SystemProgram } from '@solana/web3.js';
 import type { WalletContextState } from '@solana/wallet-adapter-react';
 import ReferralSystemIDL from '../idl/referral_system.json';
-import { getRpcEndpoint, getReferralProgramId, CONNECTION_CONFIG } from './config';
+import {
+  getRpcEndpoint,
+  getReferralProgramId,
+  CONNECTION_CONFIG,
+  getTesseraTokenProgramId,
+} from './config';
+
+type ReadOnlyWallet = {
+  publicKey: PublicKey;
+  signTransaction: (tx: any) => Promise<any>;
+  signAllTransactions: (txs: any[]) => Promise<any[]>;
+};
+
+function createReadOnlyWallet(): ReadOnlyWallet {
+  return {
+    publicKey: PublicKey.default,
+    signTransaction: async (tx) => tx,
+    signAllTransactions: async (transactions) => transactions,
+  };
+}
 
 /**
  * Get Anchor program instance for referral system
  */
 export function getReferralProgram(
   connection: Connection,
-  wallet: WalletContextState
+  wallet?: WalletContextState | null
 ): Program | null {
-  if (!wallet.publicKey) {
-    return null;
-  }
-
   try {
+    const resolvedWallet =
+      wallet && wallet.publicKey ? (wallet as any) : (createReadOnlyWallet() as any);
+
     const provider = new AnchorProvider(
       connection,
-      wallet as any, // Anchor types are slightly different
+      resolvedWallet, // Anchor types are slightly different
       {
         commitment: CONNECTION_CONFIG.commitment,
         preflightCommitment: CONNECTION_CONFIG.commitment,
       }
     );
 
-    // Use the two-argument constructor - Program will read programId from IDL metadata
     const program = new Program(ReferralSystemIDL as any, provider);
 
     return program;
@@ -85,6 +102,35 @@ export function getUserRegistrationPDA(userPubkey: PublicKey): [PublicKey, numbe
 }
 
 /**
+ * Tessera Token PDA helpers
+ */
+export function getTesseraFeeConfigPDA(): [PublicKey, number] {
+  const tesseraProgramId = getTesseraTokenProgramId();
+  return PublicKey.findProgramAddressSync([Buffer.from('fee_config')], tesseraProgramId);
+}
+
+export function getAuthorizedProgramsPDA(): [PublicKey, number] {
+  const tesseraProgramId = getTesseraTokenProgramId();
+  return PublicKey.findProgramAddressSync([Buffer.from('authorized_programs')], tesseraProgramId);
+}
+
+export function getWhitelistEntryPDA(address: PublicKey): [PublicKey, number] {
+  const tesseraProgramId = getTesseraTokenProgramId();
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('whitelist'), address.toBuffer()],
+    tesseraProgramId
+  );
+}
+
+export function getSenderFeeConfigPDA(sender: PublicKey): [PublicKey, number] {
+  const tesseraProgramId = getTesseraTokenProgramId();
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('sender_fee_config'), sender.toBuffer()],
+    tesseraProgramId
+  );
+}
+
+/**
  * Account Fetching Functions
  */
 
@@ -92,7 +138,7 @@ export function getUserRegistrationPDA(userPubkey: PublicKey): [PublicKey, numbe
  * Fetch referral config account
  */
 export async function fetchReferralConfig(connection: Connection) {
-  const program = getReferralProgram(connection, {} as WalletContextState);
+  const program = getReferralProgram(connection, null);
   if (!program) return null;
 
   const [configPDA] = getReferralConfigPDA();
@@ -110,7 +156,7 @@ export async function fetchReferralConfig(connection: Connection) {
  * Fetch referral code account
  */
 export async function fetchReferralCode(connection: Connection, code: string) {
-  const program = getReferralProgram(connection, {} as WalletContextState);
+  const program = getReferralProgram(connection, null);
   if (!program) return null;
 
   const [codePDA] = getReferralCodePDA(code);
@@ -128,7 +174,7 @@ export async function fetchReferralCode(connection: Connection, code: string) {
  * Fetch user registration account
  */
 export async function fetchUserRegistration(connection: Connection, userPubkey: PublicKey) {
-  const program = getReferralProgram(connection, {} as WalletContextState);
+  const program = getReferralProgram(connection, null);
   if (!program) return null;
 
   const [registrationPDA] = getUserRegistrationPDA(userPubkey);

@@ -397,7 +397,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
 import ReferralSystemIDL from "./referral_system.json";
 
-const REFERRAL_PROGRAM_ID = new PublicKey("RefSys1111111111111111111111111111111111111");
+const REFERRAL_PROGRAM_ID = new PublicKey("AN2rCmWzkPZUpnbJ2uJkAkay51CVZvQiCUJKVGpMm2cL");
 
 export function useReferralProgram() {
   const wallet = useWallet();
@@ -728,7 +728,7 @@ tessera-on-solana/
 - **Solana RPC**: https://api.devnet.solana.com
 - **Program IDs**:
   - Tessera Token: `Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS`
-  - Referral System: `RefSys1111111111111111111111111111111111111`
+  - Referral System: `AN2rCmWzkPZUpnbJ2uJkAkay51CVZvQiCUJKVGpMm2cL`
 - **Contract Repository**: `/Users/kylefang/Projects/alex/tessera-on-solana`
 
 ---

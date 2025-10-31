@@ -7,14 +7,23 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey, SystemProgram } from '@solana/web3.js';
 import { toast } from 'sonner';
 import {
   useCreateReferralCode as useCreateCodeMutation,
   useSolanaConnection,
   getReferralProgram,
   fetchReferralCode,
+  fetchReferralConfig,
+  fetchUserRegistration,
   getReferralCodePDA,
+  getUserRegistrationPDA,
+  getReferralConfigPDA,
+  getWhitelistEntryPDA,
+  getSenderFeeConfigPDA,
+  getTesseraFeeConfigPDA,
+  getAuthorizedProgramsPDA,
+  getTesseraTokenProgramId,
   shortenAddress,
 } from '@/lib/solana';
 
@@ -244,18 +253,53 @@ export function useBindReferralCode() {
         throw new Error('Referral code is not active');
       }
 
-      // TODO: Implement full registration with Tessera Token integration
-      throw new Error(
-        'Binding to referral code is not yet fully implemented. Requires Tessera Token integration.'
-      );
+      const referralConfig = await fetchReferralConfig(connection);
+      if (!referralConfig) {
+        throw new Error('Referral system is not initialized');
+      }
 
-      // This would be the full implementation:
-      // const tx = await program.methods
-      //   .registerWithReferralCode()
-      //   .accounts({...})
-      //   .rpc();
-      //
-      // return { code: referralCode, txSignature: tx };
+      const [referralCodePda] = getReferralCodePDA(referralCode);
+      const [userRegistrationPda] = getUserRegistrationPDA(wallet.publicKey);
+      const [referralConfigPda] = getReferralConfigPDA();
+
+      const referrerPubkey = new PublicKey(codeAccount.owner);
+      const referrerRegistrationAccount = await fetchUserRegistration(connection, referrerPubkey);
+      const referrerRegistrationPda = referrerRegistrationAccount
+        ? getUserRegistrationPDA(referrerPubkey)[0]
+        : null;
+
+      const [whitelistEntryPda] = getWhitelistEntryPDA(wallet.publicKey);
+      const [senderFeeConfigPda] = getSenderFeeConfigPDA(wallet.publicKey);
+      const [tesseraFeeConfigPda] = getTesseraFeeConfigPDA();
+      const [authorizedProgramsPda] = getAuthorizedProgramsPDA();
+      const tesseraTokenProgramId = getTesseraTokenProgramId();
+
+      const authorityPubkey = new PublicKey(referralConfig.authority);
+
+      const accounts: Record<string, PublicKey> = {
+        referralCode: referralCodePda,
+        userRegistration: userRegistrationPda,
+        referralConfig: referralConfigPda,
+        whitelistEntry: whitelistEntryPda,
+        senderFeeConfig: senderFeeConfigPda,
+        tesseraFeeConfig: tesseraFeeConfigPda,
+        authorizedPrograms: authorizedProgramsPda,
+        tesseraTokenProgram: tesseraTokenProgramId,
+        authority: authorityPubkey,
+        user: wallet.publicKey,
+        systemProgram: SystemProgram.programId,
+      };
+
+      if (referrerRegistrationPda) {
+        accounts.referrerRegistration = referrerRegistrationPda;
+      }
+
+      const txSignature = await program.methods
+        .registerWithReferralCode()
+        .accounts(accounts as any)
+        .rpc();
+
+      return { code: referralCode, txSignature };
     },
     onSuccess: (data) => {
       toast.success(

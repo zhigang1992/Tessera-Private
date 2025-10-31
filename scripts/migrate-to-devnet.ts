@@ -52,7 +52,7 @@ interface MigrationSummary {
 
 // Configuration
 const DEVNET_RPC_URL = 'https://api.devnet.solana.com';
-const REFERRAL_PROGRAM_ID = new PublicKey('RefSys1111111111111111111111111111111111111');
+const REFERRAL_PROGRAM_ID = new PublicKey('AN2rCmWzkPZUpnbJ2uJkAkay51CVZvQiCUJKVGpMm2cL');
 
 // Rate limiting
 const BATCH_SIZE = 10; // Process 10 codes at a time

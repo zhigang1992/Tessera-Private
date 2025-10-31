@@ -63,8 +63,8 @@ export function getWsEndpoint(): string {
  * Configure via environment variables for different networks
  */
 export const PROGRAM_IDS = {
-  TESSERA_TOKEN: new PublicKey('GVxEUUr9UjePfvviCqwGcioZboBwfs2Ui2tv9TWRUiBW'),
-  REFERRAL_SYSTEM: new PublicKey('3dbcAghTFKLzbzZpEf2AdBgvTEVuDA1ffadqWShcVRgV'),
+  TESSERA_TOKEN: new PublicKey('43KC5gBoedg3E6MRQjNWQi5KSrQteuBDHYDw37goeZ4c'),
+  REFERRAL_SYSTEM: new PublicKey('AN2rCmWzkPZUpnbJ2uJkAkay51CVZvQiCUJKVGpMm2cL'),
 } as const;
 
 /**
