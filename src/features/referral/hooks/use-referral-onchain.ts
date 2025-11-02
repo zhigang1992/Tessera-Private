@@ -7,7 +7,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey, SystemProgram } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import { toast } from 'sonner';
 import {
   useCreateReferralCode as useCreateCodeMutation,
@@ -19,11 +19,8 @@ import {
   getReferralCodePDA,
   getUserRegistrationPDA,
   getReferralConfigPDA,
-  getWhitelistEntryPDA,
-  getSenderFeeConfigPDA,
-  getTesseraFeeConfigPDA,
-  getAuthorizedProgramsPDA,
-  getTesseraTokenProgramId,
+  getRegisterWithReferralCodeAccounts,
+  getTesseraMintAddress,
   shortenAddress,
 } from '@/lib/solana';
 
@@ -258,41 +255,21 @@ export function useBindReferralCode() {
         throw new Error('Referral system is not initialized');
       }
 
-      const [referralCodePda] = getReferralCodePDA(referralCode);
-      const [userRegistrationPda] = getUserRegistrationPDA(wallet.publicKey);
-      const [referralConfigPda] = getReferralConfigPDA();
+      const [referralConfigPda] = getReferralConfigPDA(program.programId);
+      const tesseraMint = getTesseraMintAddress();
 
       const referrerPubkey = new PublicKey(codeAccount.owner);
       const referrerRegistrationAccount = await fetchUserRegistration(connection, referrerPubkey);
       const referrerRegistrationPda = referrerRegistrationAccount
-        ? getUserRegistrationPDA(referrerPubkey)[0]
+        ? getUserRegistrationPDA(referrerPubkey, program.programId)[0]
         : null;
 
-      const [whitelistEntryPda] = getWhitelistEntryPDA(wallet.publicKey);
-      const [senderFeeConfigPda] = getSenderFeeConfigPDA(wallet.publicKey);
-      const [tesseraFeeConfigPda] = getTesseraFeeConfigPDA();
-      const [authorizedProgramsPda] = getAuthorizedProgramsPDA();
-      const tesseraTokenProgramId = getTesseraTokenProgramId();
-
-      const authorityPubkey = new PublicKey(referralConfig.authority);
-
-      const accounts: Record<string, PublicKey> = {
-        referralCode: referralCodePda,
-        userRegistration: userRegistrationPda,
+      const accounts = getRegisterWithReferralCodeAccounts(referralCode, wallet.publicKey, {
+        mint: tesseraMint,
         referralConfig: referralConfigPda,
-        whitelistEntry: whitelistEntryPda,
-        senderFeeConfig: senderFeeConfigPda,
-        tesseraFeeConfig: tesseraFeeConfigPda,
-        authorizedPrograms: authorizedProgramsPda,
-        tesseraTokenProgram: tesseraTokenProgramId,
-        authority: authorityPubkey,
-        user: wallet.publicKey,
-        systemProgram: SystemProgram.programId,
-      };
-
-      if (referrerRegistrationPda) {
-        accounts.referrerRegistration = referrerRegistrationPda;
-      }
+        referrerRegistration: referrerRegistrationPda,
+        programId: program.programId,
+      });
 
       const txSignature = await program.methods
         .registerWithReferralCode()

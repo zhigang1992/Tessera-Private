@@ -8,6 +8,7 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import { toast } from 'sonner';
 import {
   createConnection,
@@ -16,10 +17,14 @@ import {
   fetchUserRegistration,
   fetchReferralConfig,
   getCreateReferralCodeAccounts,
+  getReferralConfigPDA,
+  getRegisterWithReferralCodeAccounts,
+  getUserRegistrationPDA,
   validateReferralCodeFormat,
   checkReferralCodeAvailability,
   shortenAddress,
 } from './on-chain-client';
+import { getTesseraMintAddress } from './config';
 
 /**
  * Query Keys
@@ -148,7 +153,11 @@ export function useCreateReferralCode() {
       }
 
       // Get accounts
-      const accounts = getCreateReferralCodeAccounts(code, wallet.publicKey);
+      const accounts = getCreateReferralCodeAccounts(
+        code,
+        wallet.publicKey,
+        program.programId
+      );
 
       // Send transaction
       const tx = await program.methods.createReferralCode(code).accounts(accounts).rpc();
@@ -179,7 +188,6 @@ export function useCreateReferralCode() {
 
 /**
  * Hook: Register with referral code mutation
- * Note: This is a simplified version that needs Tessera Token integration
  */
 export function useRegisterWithReferralCode() {
   const wallet = useWallet();
@@ -213,19 +221,33 @@ export function useRegisterWithReferralCode() {
         throw new Error('Referral code is not active');
       }
 
-      // TODO: Implement full registration with Tessera Token accounts
-      // For now, throw error to indicate incomplete implementation
-      throw new Error(
-        'Registration not yet implemented - requires Tessera Token integration'
-      );
+      const referralConfig = await fetchReferralConfig(connection);
+      if (!referralConfig) {
+        throw new Error('Referral system is not initialized');
+      }
 
-      // const accounts = getRegisterWithReferralCodeAccounts(code, wallet.publicKey);
-      // const tx = await program.methods
-      //   .registerWithReferralCode()
-      //   .accounts(accounts)
-      //   .rpc();
-      //
-      // return { code, txSignature: tx };
+      const [referralConfigPda] = getReferralConfigPDA(program.programId);
+      const tesseraMint = getTesseraMintAddress();
+
+      const referrerPubkey = new PublicKey(codeAccount.owner);
+      const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey);
+      const referrerRegistrationPda = referrerRegistration
+        ? getUserRegistrationPDA(referrerPubkey, program.programId)[0]
+        : null;
+
+      const accounts = getRegisterWithReferralCodeAccounts(code, wallet.publicKey, {
+        mint: tesseraMint,
+        referralConfig: referralConfigPda,
+        referrerRegistration: referrerRegistrationPda,
+        programId: program.programId,
+      });
+
+      const tx = await program.methods
+        .registerWithReferralCode()
+        .accounts(accounts as any)
+        .rpc();
+
+      return { code, txSignature: tx };
     },
     onSuccess: (data: any) => {
       toast.success(

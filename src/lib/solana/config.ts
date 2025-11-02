@@ -63,9 +63,20 @@ export function getWsEndpoint(): string {
  * Configure via environment variables for different networks
  */
 export const PROGRAM_IDS = {
-  TESSERA_TOKEN: new PublicKey('43KC5gBoedg3E6MRQjNWQi5KSrQteuBDHYDw37goeZ4c'),
-  REFERRAL_SYSTEM: new PublicKey('AN2rCmWzkPZUpnbJ2uJkAkay51CVZvQiCUJKVGpMm2cL'),
+  TESSERA_TOKEN: new PublicKey('TESQvsR4TmYxiroPPQgZpVRoSFG8pru4fsYr67iv6kf'),
+  REFERRAL_SYSTEM: new PublicKey('5jSqXLX7QFr6ZvvQPLRH7mGhw9P3r96uarkVLy7NEdog'),
 } as const;
+
+/**
+ * Default Tessera mint addresses per environment.
+ * Extend this map if additional mints are deployed.
+ */
+export const DEFAULT_MINT_ADDRESSES: Record<SolanaNetwork, PublicKey> = {
+  localnet: PublicKey.default,
+  devnet: new PublicKey('7jDuVvqwV1Q5hcc27Kjd8aGaCNeUmMnuQjQweXfGNzZ2'),
+  testnet: PublicKey.default,
+  'mainnet-beta': new PublicKey('TESQvsR4TmYxiroPPQgZpVRoSFG8pru4fsYr67iv6kf'), // TODO: replace with production mint when available
+};
 
 /**
  * Get Tessera Token program ID with environment override support
@@ -95,6 +106,31 @@ export function getReferralProgramId(): PublicKey {
     }
   }
   return PROGRAM_IDS.REFERRAL_SYSTEM;
+}
+
+/**
+ * Get Tessera mint address with environment override support.
+ * Falls back to network-specific defaults defined above.
+ */
+export function getTesseraMintAddress(): PublicKey {
+  const override = import.meta.env.VITE_TESSERA_MINT_ADDRESS;
+  if (override) {
+    try {
+      return new PublicKey(override);
+    } catch {
+      console.warn('Invalid VITE_TESSERA_MINT_ADDRESS, using default');
+    }
+  }
+
+  const network = getCurrentNetwork();
+  const defaultMint = DEFAULT_MINT_ADDRESSES[network];
+
+  if (defaultMint && !defaultMint.equals(PublicKey.default)) {
+    return defaultMint;
+  }
+
+  // Fallback to devnet mint when network-specific mint is unavailable
+  return DEFAULT_MINT_ADDRESSES.devnet;
 }
 
 /**
