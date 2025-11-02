@@ -228,6 +228,9 @@ export function useRegisterWithReferralCode() {
 
       const [referralConfigPda] = getReferralConfigPDA(program.programId);
       const tesseraMint = getTesseraMintAddress();
+      const tesseraTokenProgramId = new PublicKey(
+        (referralConfig as any).tesseraTokenProgram ?? (referralConfig as any).tessera_token_program
+      );
 
       const referrerPubkey = new PublicKey(codeAccount.owner);
       const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey);
@@ -240,6 +243,7 @@ export function useRegisterWithReferralCode() {
         referralConfig: referralConfigPda,
         referrerRegistration: referrerRegistrationPda,
         programId: program.programId,
+        tesseraTokenProgram: tesseraTokenProgramId,
       });
 
       const tx = await program.methods

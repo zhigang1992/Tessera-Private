@@ -17,8 +17,8 @@ import {
   fetchReferralCode,
   fetchReferralConfig,
   fetchUserRegistration,
-  getUserRegistrationPDA,
   getReferralConfigPDA,
+  getUserRegistrationPDA,
   getRegisterWithReferralCodeAccounts,
   getTesseraMintAddress,
   shortenAddress,
@@ -235,10 +235,13 @@ export function useBindReferralCode() {
 
       const [referralConfigPda] = getReferralConfigPDA(program.programId);
       const tesseraMint = getTesseraMintAddress();
+      const tesseraTokenProgramId = new PublicKey(
+        (referralConfig as any).tesseraTokenProgram ?? (referralConfig as any).tessera_token_program
+      );
 
       const referrerPubkey = new PublicKey(codeAccount.owner);
-      const referrerRegistrationAccount = await fetchUserRegistration(connection, referrerPubkey);
-      const referrerRegistrationPda = referrerRegistrationAccount
+      const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey);
+      const referrerRegistrationPda = referrerRegistration
         ? getUserRegistrationPDA(referrerPubkey, program.programId)[0]
         : null;
 
@@ -247,6 +250,7 @@ export function useBindReferralCode() {
         referralConfig: referralConfigPda,
         referrerRegistration: referrerRegistrationPda,
         programId: program.programId,
+        tesseraTokenProgram: tesseraTokenProgramId,
       });
 
       const txSignature = await program.methods

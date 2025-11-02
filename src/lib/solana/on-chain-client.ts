@@ -9,6 +9,7 @@ import { Program, AnchorProvider } from '@coral-xyz/anchor';
 import { Connection, PublicKey, SystemProgram } from '@solana/web3.js';
 import type { WalletContextState } from '@solana/wallet-adapter-react';
 import ReferralSystemIDL from '../idl/referral_system.json';
+import type { ReferralSystem } from '@/generated/referral-system/types';
 import {
   getRpcEndpoint,
   getReferralProgramId,
@@ -37,7 +38,7 @@ function createReadOnlyWallet(): ReadOnlyWallet {
 export function getReferralProgram(
   connection: Connection,
   wallet?: WalletContextState | null
-): Program | null {
+): Program<ReferralSystem> | null {
   try {
     const resolvedWallet =
       wallet && wallet.publicKey ? (wallet as any) : (createReadOnlyWallet() as any);
@@ -51,7 +52,7 @@ export function getReferralProgram(
       }
     );
 
-    const program = new Program(ReferralSystemIDL as any, provider);
+    const program = new Program<ReferralSystem>(ReferralSystemIDL as ReferralSystem, provider);
 
     return program;
   } catch (error) {
@@ -156,7 +157,7 @@ export async function fetchReferralConfig(connection: Connection) {
   const [configPDA] = getReferralConfigPDA(program.programId);
 
   try {
-    const config = await (program.account as any).referralConfig.fetch(configPDA);
+    const config = await program.account.referralConfig.fetch(configPDA);
     return config;
   } catch (error) {
     console.error('Failed to fetch referral config:', error);
@@ -174,7 +175,7 @@ export async function fetchReferralCode(connection: Connection, code: string) {
   const [codePDA] = getReferralCodePDA(code, program.programId);
 
   try {
-    const codeAccount = await (program.account as any).referralCode.fetch(codePDA);
+    const codeAccount = await program.account.referralCode.fetch(codePDA);
     return codeAccount;
   } catch (error) {
     // Account doesn't exist - not an error
@@ -192,7 +193,7 @@ export async function fetchUserRegistration(connection: Connection, userPubkey: 
   const [registrationPDA] = getUserRegistrationPDA(userPubkey, program.programId);
 
   try {
-    const registration = await (program.account as any).userRegistration.fetch(registrationPDA);
+    const registration = await program.account.userRegistration.fetch(registrationPDA);
     return registration;
   } catch (error) {
     // Account doesn't exist - user not registered
@@ -284,6 +285,7 @@ type RegisterWithReferralCodeOptions = {
   referralConfig?: PublicKey;
   referrerRegistration?: PublicKey | null;
   programId?: PublicKey;
+  tesseraTokenProgram?: PublicKey;
 };
 
 export function getRegisterWithReferralCodeAccounts(
@@ -300,7 +302,7 @@ export function getRegisterWithReferralCodeAccounts(
   const resolvedMint = options.mint ?? getTesseraMintAddress();
   const [whitelistEntryPDA] = getWhitelistEntryPDA(userPubkey);
   const [senderFeeConfigPDA] = getSenderFeeConfigPDA(resolvedMint, userPubkey);
-  const tesseraTokenProgramId = getTesseraTokenProgramId();
+  const tesseraTokenProgramId = options.tesseraTokenProgram ?? getTesseraTokenProgramId();
 
   return {
     referralCode: referralCodePDA,
@@ -313,9 +315,7 @@ export function getRegisterWithReferralCodeAccounts(
     tesseraTokenProgram: tesseraTokenProgramId,
     user: userPubkey,
     systemProgram: SystemProgram.programId,
-    ...(options.referrerRegistration
-      ? { referrerRegistration: options.referrerRegistration }
-      : {}),
+    referrerRegistration: options.referrerRegistration ?? null,
   };
 }
 
