@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import { toast } from 'sonner';
+import type { ReferralCode as ReferralCodeRecord, AffiliateData as AffiliateDataRecord } from '../lib/api-client';
 import {
   useCreateReferralCode as useCreateCodeMutation,
   useSolanaConnection,
@@ -16,7 +17,6 @@ import {
   fetchReferralCode,
   fetchReferralConfig,
   fetchUserRegistration,
-  getReferralCodePDA,
   getUserRegistrationPDA,
   getReferralConfigPDA,
   getRegisterWithReferralCodeAccounts,
@@ -127,41 +127,21 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
       const program = getReferralProgram(connection, wallet);
       if (!program) return null;
 
-      // Fetch all referral codes owned by this wallet
-      // Note: This requires indexing or getProgramAccounts which is expensive
-      // For now, return empty array - codes will be managed differently
-      // In production, you'd need an indexer or maintain a list client-side
+      const allCodes = await (program.account as any).referralCode.all();
+      const referralCodes: ReferralCodeRecord[] = allCodes
+        .filter(({ account }: any) => account.owner.equals(pubkey))
+        .map(({ account }: any, index: number) => ({
+          id: index,
+          codeSlug: account.code,
+          status: account.isActive ? 'active' : 'inactive',
+          activeLayer: 3,
+          walletAddress: pubkey.toBase58(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          referredTraderCount: account.totalReferrals,
+        }));
 
-      const referralCodes: any[] = [];
-
-      // Try to fetch known codes from localStorage or indexer
-      // This is a simplified version - in production you'd query an indexer
-      const knownCodes = getKnownCodesForWallet(pubkey.toBase58());
-
-      for (const code of knownCodes) {
-        try {
-          const [codePDA] = getReferralCodePDA(code);
-          const codeAccount = await (program.account as any).referralCode.fetch(codePDA);
-
-          if (codeAccount.owner.equals(pubkey)) {
-            referralCodes.push({
-              id: code, // Use code as ID
-              codeSlug: codeAccount.code,
-              status: codeAccount.isActive ? 'active' : 'inactive',
-              activeLayer: 3, // Not stored in current schema
-              walletAddress: pubkey.toBase58(),
-              createdAt: new Date().toISOString(), // Not stored on-chain
-              updatedAt: new Date().toISOString(),
-              referredTraderCount: codeAccount.totalReferrals,
-            });
-          }
-        } catch (error) {
-          // Code doesn't exist or error fetching
-          console.warn(`Failed to fetch code ${code}:`, error);
-        }
-      }
-
-      return {
+      const affiliateSummary: AffiliateDataRecord = {
         walletAddress: pubkey.toBase58(),
         displayName: null,
         email: null,
@@ -182,6 +162,7 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
           l3Traders: [],
         },
       };
+      return affiliateSummary;
     },
     enabled: enabled && (!!walletAddress || !!wallet.publicKey),
     staleTime: 30 * 1000, // 30 seconds
@@ -203,9 +184,6 @@ export function useCreateReferralCode() {
 
       // Store code in localStorage for future queries
       const result = await onChainMutation.mutateAsync(code);
-
-      // Save to localStorage for tracking user's codes
-      addKnownCodeForWallet(result.code);
 
       return result;
     },
@@ -302,40 +280,4 @@ function generateRandomCode(): string {
     code += alphabet[Math.floor(Math.random() * alphabet.length)];
   }
   return code;
-}
-
-/**
- * LocalStorage helpers for tracking user's codes
- * In production, this should be replaced with an indexer
- */
-const KNOWN_CODES_KEY = 'referral_known_codes';
-
-function getKnownCodesForWallet(walletAddress: string): string[] {
-  try {
-    const data = localStorage.getItem(`${KNOWN_CODES_KEY}_${walletAddress}`);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-}
-
-function addKnownCodeForWallet(code: string) {
-  try {
-    // Get current wallet
-    const wallet = (window as any).__currentWallet as string | undefined;
-    if (!wallet) return;
-
-    const known = getKnownCodesForWallet(wallet);
-    if (!known.includes(code)) {
-      known.push(code);
-      localStorage.setItem(`${KNOWN_CODES_KEY}_${wallet}`, JSON.stringify(known));
-    }
-  } catch (error) {
-    console.error('Failed to save known code:', error);
-  }
-}
-
-// Set current wallet for tracking (call this when wallet connects)
-export function setCurrentWalletForTracking(walletAddress: string) {
-  (window as any).__currentWallet = walletAddress;
 }

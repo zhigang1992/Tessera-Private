@@ -1,5 +1,5 @@
-import { FormEvent, useMemo, useState, useEffect } from 'react'
-import { useAffiliateData, useCreateReferralCode, setCurrentWalletForTracking } from '../hooks/use-referral-onchain'
+import { FormEvent, useMemo, useState } from 'react'
+import { useAffiliateData, useCreateReferralCode } from '../hooks/use-referral-onchain'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -23,13 +23,6 @@ export default function CreateCodeCard() {
   const [formError, setFormError] = useState<string | null>(null)
   const [shareDialogCode, setShareDialogCode] = useState<ReferralCode | null>(null)
   const [selectedBackground, setSelectedBackground] = useState(1)
-
-  // Track wallet for localStorage code management
-  useEffect(() => {
-    if (walletAddress) {
-      setCurrentWalletForTracking(walletAddress)
-    }
-  }, [walletAddress])
 
   const trimmedCustomCode = useMemo(() => customCode.trim(), [customCode])
   const normalizedCustomCode = useMemo(() => trimmedCustomCode.toUpperCase(), [trimmedCustomCode])
@@ -62,7 +55,7 @@ export default function CreateCodeCard() {
     return `${base}?code=${encodeURIComponent(shareDialogCode.codeSlug)}&bg=${selectedBackground}`
   }, [shareDialogCode, selectedBackground])
 
-  const referralCodes = affiliateData?.referralCodes || []
+  const referralCodes: ReferralCode[] = affiliateData?.referralCodes ?? []
   const hasNoCodes = referralCodes.length === 0
 
   const handleDialogOpenChange = (open: boolean) => {
