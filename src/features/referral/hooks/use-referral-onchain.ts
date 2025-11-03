@@ -17,10 +17,8 @@ import {
   fetchReferralCode,
   fetchReferralConfig,
   fetchUserRegistration,
-  getReferralConfigPDA,
   getUserRegistrationPDA,
   getRegisterWithReferralCodeAccounts,
-  getTesseraMintAddress,
   shortenAddress,
 } from '@/lib/solana';
 
@@ -58,13 +56,13 @@ export function useTraderData(walletAddress?: string | null, enabled = true) {
       );
 
       try {
-        const registration = await (program.account as any).userRegistration.fetch(registrationPDA);
+        const registration = await (program.account).userRegistration.fetch(registrationPDA);
 
         // Fetch the referral code details
         let referralCode = null;
         if (registration.referralCode) {
           try {
-            const codeAccount = await (program.account as any).referralCode.fetch(
+            const codeAccount = await (program.account).referralCode.fetch(
               registration.referralCode
             );
             referralCode = {
@@ -127,10 +125,10 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
       const program = getReferralProgram(connection, wallet);
       if (!program) return null;
 
-      const allCodes = await (program.account as any).referralCode.all();
+      const allCodes = await (program.account).referralCode.all();
       const referralCodes: ReferralCodeRecord[] = allCodes
-        .filter(({ account }: any) => account.owner.equals(pubkey))
-        .map(({ account }: any, index: number) => ({
+        .filter(({ account }) => account.owner.equals(pubkey))
+        .map(({ account }, index: number) => ({
           id: index,
           codeSlug: account.code,
           status: account.isActive ? 'active' : 'inactive',
@@ -233,29 +231,21 @@ export function useBindReferralCode() {
         throw new Error('Referral system is not initialized');
       }
 
-      const [referralConfigPda] = getReferralConfigPDA(program.programId);
-      const tesseraMint = getTesseraMintAddress();
-      const tesseraTokenProgramId = new PublicKey(
-        (referralConfig as any).tesseraTokenProgram ?? (referralConfig as any).tessera_token_program
-      );
-
+      // Get optional referrer registration if it exists
       const referrerPubkey = new PublicKey(codeAccount.owner);
       const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey);
       const referrerRegistrationPda = referrerRegistration
         ? getUserRegistrationPDA(referrerPubkey, program.programId)[0]
         : null;
 
+      // Get accounts with the referrer registration if available
       const accounts = getRegisterWithReferralCodeAccounts(referralCode, wallet.publicKey, {
-        mint: tesseraMint,
-        referralConfig: referralConfigPda,
         referrerRegistration: referrerRegistrationPda,
-        programId: program.programId,
-        tesseraTokenProgram: tesseraTokenProgramId,
       });
 
       const txSignature = await program.methods
         .registerWithReferralCode()
-        .accounts(accounts as any)
+        .accounts(accounts)
         .rpc();
 
       return { code: referralCode, txSignature };
