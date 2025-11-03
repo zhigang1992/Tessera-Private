@@ -143,18 +143,22 @@ export function getAuthorizedProgramsPDA(): [PublicKey, number] {
   );
 }
 
-export function getWhitelistEntryPDA(address: PublicKey): [PublicKey, number] {
-  const tesseraProgramId = getTesseraTokenProgramId();
+export function getWhitelistEntryPDA(address: PublicKey, programId?: PublicKey): [PublicKey, number] {
+  const tesseraProgramId = programId ?? getTesseraTokenProgramId();
   return PublicKey.findProgramAddressSync(
     [Buffer.from('whitelist'), address.toBuffer()],
     tesseraProgramId
   );
 }
 
-export function getSenderFeeConfigPDA(sender: PublicKey): [PublicKey, number] {
-  const tesseraProgramId = getTesseraTokenProgramId();
+export function getSenderFeeConfigPDA(
+  mint: PublicKey,
+  sender: PublicKey,
+  programId?: PublicKey,
+): [PublicKey, number] {
+  const tesseraProgramId = programId ?? getTesseraTokenProgramId();
   return PublicKey.findProgramAddressSync(
-    [Buffer.from('sender_fee_config'), sender.toBuffer()],
+    [Buffer.from('sender_fee_config'), mint.toBuffer(), sender.toBuffer()],
     tesseraProgramId
   );
 }
@@ -300,6 +304,7 @@ type RegisterWithReferralCodeOptions = {
   referrerRegistration?: PublicKey | null;
   programId?: PublicKey;
   tesseraTokenProgram?: PublicKey;
+  tesseraMint?: PublicKey;
 };
 
 export function getRegisterWithReferralCodeAccounts(
@@ -313,10 +318,10 @@ export function getRegisterWithReferralCodeAccounts(
   const [defaultReferralConfigPDA] = getReferralConfigPDA(programId);
   const referralConfigPDA = options.referralConfig ?? defaultReferralConfigPDA;
   const [tokenAuthorityPDA] = getTokenAuthorityPDA(referralConfigPDA, programId);
-  const [whitelistEntryPDA] = getWhitelistEntryPDA(userPubkey);
-  const [senderFeeConfigPDA] = getSenderFeeConfigPDA(userPubkey);
-  const tesseraMint = getTesseraMintAddress();
   const tesseraTokenProgramId = options.tesseraTokenProgram ?? getTesseraTokenProgramId();
+  const tesseraMint = options.tesseraMint ?? getTesseraMintAddress();
+  const [whitelistEntryPDA] = getWhitelistEntryPDA(userPubkey, tesseraTokenProgramId);
+  const [senderFeeConfigPDA] = getSenderFeeConfigPDA(tesseraMint, userPubkey, tesseraTokenProgramId);
 
   return {
     referralCode: referralCodePDA,

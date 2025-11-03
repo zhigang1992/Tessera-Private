@@ -73,7 +73,7 @@ export const PROGRAM_IDS = {
  */
 export const DEFAULT_MINT_ADDRESSES: Record<SolanaNetwork, PublicKey> = {
   localnet: PublicKey.default,
-  devnet: new PublicKey('7jDuVvqwV1Q5hcc27Kjd8aGaCNeUmMnuQjQweXfGNzZ2'),
+  devnet: new PublicKey('A8xxQEFytK4DS7F8fGh4uWf56TFrYg2Jynmay2dd8SbS'),
   testnet: PublicKey.default,
   'mainnet-beta': new PublicKey('TESQvsR4TmYxiroPPQgZpVRoSFG8pru4fsYr67iv6kf'), // TODO: replace with production mint when available
 };

@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,12 +10,13 @@ import {
 import { Card, CardContent } from '@/components/ui/card'
 import { WalletDropdown } from '@/components/wallet-dropdown'
 import { Loader2, UserIcon } from 'lucide-react'
-import { useBindReferralCode } from '../hooks/use-referral-queries'
+import { useBindReferralCode } from '../hooks/use-referral-onchain'
 import { useReferralAuth } from '../hooks/use-referral-auth'
 import { UrlKeyAlertDialog } from './url-key-alert-dialog'
 import { toast } from 'sonner'
 import { getUrlKeyAlertHandlers } from '../lib/url-key-alert'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
+import { apiClient } from '../lib/api-client'
 
 interface ReferralCodeModalProps {
   isOpen: boolean
@@ -103,7 +104,7 @@ export default function ReferralCodeModal({ isOpen, onClose, referralCode }: Ref
 
 interface ReferralCodeModalConnectedProps {
   referralCode: string
-  bindReferralCode: (referralCode: string) => Promise<unknown>
+  bindReferralCode: (referralCode: string) => Promise<{ code: string; txSignature: string }>
   bindPending: boolean
   accountAddress: string
   onClose: () => void
@@ -117,6 +118,7 @@ function ReferralCodeModalConnected({
   onClose,
 }: ReferralCodeModalConnectedProps) {
   const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert } = useReferralAuth()
+  const [isSyncing, setIsSyncing] = useState(false)
 
   const handleUrlKeyConfirm = useCallback(async () => {
     const handlers = getUrlKeyAlertHandlers()
@@ -143,28 +145,46 @@ function ReferralCodeModalConnected({
       return
     }
 
+    const normalizedCode = referralCode.trim().toUpperCase()
+
     if (!isAuthenticated) {
       const signedIn = await authenticate()
       if (!signedIn) return
     }
 
     try {
-      await bindReferralCode(referralCode.toUpperCase())
+      await bindReferralCode(normalizedCode)
+      setIsSyncing(true)
+      try {
+        await apiClient.bindToReferralCode(normalizedCode)
+      } catch (syncError) {
+        console.error('Failed to sync referral binding to backend', syncError)
+        toast.error('Referral bound on-chain, but syncing stats failed. Please refresh later.')
+      } finally {
+        setIsSyncing(false)
+      }
       onClose()
     } catch (error) {
       console.error('Failed to bind referral code', error)
     }
   }, [accountAddress, authenticate, bindReferralCode, isAuthenticated, onClose, referralCode])
 
+  const isProcessing = bindPending || isAuthenticating || isSyncing
+  const buttonLabel = isSyncing
+    ? 'Finalizing...'
+    : bindPending || isAuthenticating
+      ? 'Binding...'
+      : 'Bind Referral Code'
+
   return (
     <>
       <Button
         onClick={handleBindReferralCode}
-        disabled={bindPending || isAuthenticating}
+        disabled={isProcessing}
         className="flex w-full items-center gap-2 rounded-lg bg-black py-3 text-sm font-medium text-white hover:bg-black/90 disabled:opacity-50"
       >
-        {(bindPending || isAuthenticating) && <Loader2 className="h-4 w-4 animate-spin" />}
-        {bindPending || isAuthenticating ? 'Binding...' : 'Bind Referral Code'}
+        {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
+        {buttonLabel}
       </Button>
 
       <UrlKeyAlertDialog

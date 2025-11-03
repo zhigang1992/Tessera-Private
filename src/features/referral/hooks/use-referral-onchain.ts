@@ -17,8 +17,11 @@ import {
   fetchReferralCode,
   fetchReferralConfig,
   fetchUserRegistration,
+  getReferralConfigPDA,
   getUserRegistrationPDA,
   getRegisterWithReferralCodeAccounts,
+  getTesseraMintAddress,
+  getTesseraTokenProgramId,
   shortenAddress,
 } from '@/lib/solana';
 
@@ -231,6 +234,15 @@ export function useBindReferralCode() {
         throw new Error('Referral system is not initialized');
       }
 
+      const [referralConfigPda] = getReferralConfigPDA(program.programId);
+      const tesseraMint = getTesseraMintAddress();
+      const rawTokenProgram =
+        (referralConfig as any).tesseraTokenProgram ??
+        (referralConfig as any).tessera_token_program;
+      const tesseraTokenProgramId = rawTokenProgram
+        ? new PublicKey(rawTokenProgram)
+        : getTesseraTokenProgramId();
+
       // Get optional referrer registration if it exists
       const referrerPubkey = new PublicKey(codeAccount.owner);
       const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey);
@@ -241,6 +253,10 @@ export function useBindReferralCode() {
       // Get accounts with the referrer registration if available
       const accounts = getRegisterWithReferralCodeAccounts(referralCode, wallet.publicKey, {
         referrerRegistration: referrerRegistrationPda,
+        tesseraMint,
+        referralConfig: referralConfigPda,
+        programId: program.programId,
+        tesseraTokenProgram: tesseraTokenProgramId,
       });
 
       const txSignature = await program.methods

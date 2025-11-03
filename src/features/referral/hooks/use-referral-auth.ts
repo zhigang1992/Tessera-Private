@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../lib/api-client'
 import { toast } from 'sonner'
 import { setUrlKeyAlertHandlers } from '../lib/url-key-alert'
-import { referralKeys } from './use-referral-queries'
+import { referralKeys } from './use-referral-onchain'
 
 export function useReferralAuth() {
   const { publicKey, connected, wallet, signMessage: walletSignMessage } = useWallet()

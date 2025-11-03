@@ -239,7 +239,7 @@ export function useRegisterWithReferralCode() {
         : null;
 
       const accounts = getRegisterWithReferralCodeAccounts(code, wallet.publicKey, {
-        mint: tesseraMint,
+        tesseraMint,
         referralConfig: referralConfigPda,
         referrerRegistration: referrerRegistrationPda,
         programId: program.programId,
