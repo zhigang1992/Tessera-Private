@@ -18,6 +18,8 @@ import {
   getWhitelistEntryPDA,
   getTesseraMintAddress,
   getTesseraTokenProgramId,
+  fetchReferralCode,
+  fetchUserRegistration,
 } from '@/lib/solana';
 import type { TraderBindingData } from '../types/migration';
 
@@ -51,11 +53,29 @@ export function useAdminRegisterSingleUser() {
       }
 
       const userPubkey = new PublicKey(input.binding.userWallet);
+
+      // Validate referral code exists on-chain
+      const codeAccount = await fetchReferralCode(connection, input.binding.referralCode);
+      if (!codeAccount) {
+        throw new Error(`Referral code "${input.binding.referralCode}" does not exist on-chain. Create it first.`);
+      }
+
+      if (!codeAccount.isActive) {
+        throw new Error(`Referral code "${input.binding.referralCode}" is not active`);
+      }
+
       const [referralConfigPDA] = getReferralConfigPDA(program.programId);
       const [referralCodePDA] = getReferralCodePDA(input.binding.referralCode, program.programId);
       const [userRegistrationPDA] = getUserRegistrationPDA(userPubkey, program.programId);
       const [tokenAuthorityPDA] = getTokenAuthorityPDA(referralConfigPDA, program.programId);
       const [adminListPDA] = getAdminListPDA(program.programId);
+
+      // Get optional referrer registration if it exists (similar to user-facing flow)
+      const referrerPubkey = new PublicKey(codeAccount.owner);
+      const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey);
+      const referrerRegistrationPDA = referrerRegistration
+        ? getUserRegistrationPDA(referrerPubkey, program.programId)[0]
+        : null;
 
       const tesseraMint = getTesseraMintAddress();
       const tesseraTokenProgramId = getTesseraTokenProgramId();
@@ -69,7 +89,7 @@ export function useAdminRegisterSingleUser() {
           referralConfig: referralConfigPDA,
           tokenAuthority: tokenAuthorityPDA,
           adminList: adminListPDA,
-          referrerRegistration: null, // Will be derived on-chain
+          referrerRegistration: referrerRegistrationPDA,
           whitelistEntry: whitelistEntryPDA,
           userAccount: userPubkey,
           tesseraMint: tesseraMint,
