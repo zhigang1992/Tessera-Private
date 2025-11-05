@@ -56,7 +56,14 @@ export function useAdminRegisterSingleUser() {
       // Validate referral code exists on-chain
       const codeAccount = await fetchReferralCode(connection, input.binding.referralCode)
       if (!codeAccount) {
-        throw new Error(`Referral code "${input.binding.referralCode}" does not exist on-chain. Create it first.`)
+        // Debug: Show the PDA we're looking for
+        const [codePDA] = getReferralCodePDA(input.binding.referralCode, program.programId)
+        throw new Error(
+          `Referral code "${input.binding.referralCode}" does not exist on-chain.\n` +
+            `PDA: ${codePDA.toBase58()}\n` +
+            `Code bytes: ${Array.from(Buffer.from(input.binding.referralCode)).join(',')}\n` +
+            `Make sure this exact code was created in Step 3.`,
+        )
       }
 
       if (!codeAccount.isActive) {

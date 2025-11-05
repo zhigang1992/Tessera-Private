@@ -93,6 +93,13 @@ export function useAdminBatchCreateCodes() {
         lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
       })
 
+      // Debug: Log created codes and their PDAs
+      console.log('✅ Batch created codes:')
+      input.codes.forEach((codeData) => {
+        const [pda] = getReferralCodePDA(codeData.code, program.programId)
+        console.log(`  - "${codeData.code}" → PDA: ${pda.toBase58()}`)
+      })
+
       return {
         signature,
         count: input.codes.length,
