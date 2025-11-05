@@ -1,13 +1,16 @@
 /**
  * Admin Batch Create Referral Codes Hook
  *
- * Uses admin_batch_create_referral_codes instruction
+ * Uses admin_batch_create_referral_codes instruction (true batch operation)
+ * Creates up to 10 referral codes in a single on-chain transaction
+ *
+ * The on-chain program now handles PDA allocation automatically via invoke_signed
  */
 
 import { useMutation } from '@tanstack/react-query';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
-import { useSolanaConnection, getReferralProgram, getReferralConfigPDA } from '@/lib/solana';
+import { PublicKey, SystemProgram } from '@solana/web3.js';
+import { useSolanaConnection, getReferralProgram, getReferralConfigPDA, getReferralCodePDA, getAdminListPDA } from '@/lib/solana';
 import type { ReferralCodeData } from '../types/migration';
 
 interface BatchCreateCodesInput {
@@ -15,17 +18,15 @@ interface BatchCreateCodesInput {
 }
 
 interface BatchCreateCodesResult {
-  signatures: string[];
-  successful: number;
-  failed: number;
-  errors: Array<{ code: string; error: string }>;
+  signature: string;
+  count: number;
 }
 
-const MAX_BATCH_SIZE = 10;
-
 /**
- * Admin: Batch create referral codes
+ * Admin: Batch create referral codes (up to 10 at once)
  * Only the program authority can use this
+ *
+ * Uses the on-chain batch instruction which automatically allocates PDAs
  */
 export function useAdminBatchCreateCodes() {
   const wallet = useWallet();
@@ -37,62 +38,50 @@ export function useAdminBatchCreateCodes() {
         throw new Error('Wallet not connected');
       }
 
+      if (input.codes.length === 0 || input.codes.length > 10) {
+        throw new Error('Batch size must be between 1 and 10');
+      }
+
       const program = getReferralProgram(connection, wallet);
       if (!program) {
         throw new Error('Program not initialized');
       }
 
       const [referralConfigPDA] = getReferralConfigPDA(program.programId);
+      const [adminListPDA] = getAdminListPDA(program.programId);
 
-      const result: BatchCreateCodesResult = {
-        signatures: [],
-        successful: 0,
-        failed: 0,
-        errors: [],
+      // Extract codes and owners
+      const codes = input.codes.map((c) => c.code);
+      const owners = input.codes.map((c) => new PublicKey(c.ownerWallet));
+
+      // Derive all referral code PDAs and pass as remaining accounts
+      const referralCodePDAs = input.codes.map((c) => {
+        const [pda] = getReferralCodePDA(c.code, program.programId);
+        return {
+          pubkey: pda,
+          isWritable: true,
+          isSigner: false,
+        };
+      });
+
+      // Execute the batch create instruction
+      // The on-chain program will automatically allocate the PDAs using invoke_signed
+      const signature = await program.methods
+        .adminBatchCreateReferralCodes(codes, owners)
+        .accounts({
+          referralConfig: referralConfigPDA,
+          adminList: adminListPDA,
+          authority: wallet.publicKey,
+          payer: wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .remainingAccounts(referralCodePDAs)
+        .rpc();
+
+      return {
+        signature,
+        count: input.codes.length,
       };
-
-      // Split into batches of MAX_BATCH_SIZE
-      const batches: ReferralCodeData[][] = [];
-      for (let i = 0; i < input.codes.length; i += MAX_BATCH_SIZE) {
-        batches.push(input.codes.slice(i, i + MAX_BATCH_SIZE));
-      }
-
-      // Process each batch
-      for (const batch of batches) {
-        const codes = batch.map((c) => c.code);
-        const owners = batch.map((c) => new PublicKey(c.ownerWallet));
-
-        try {
-          const signature = await program.methods
-            .adminBatchCreateReferralCodes(codes, owners)
-            .accounts({
-              referralConfig: referralConfigPDA,
-              authority: wallet.publicKey,
-              payer: wallet.publicKey,
-              systemProgram: new PublicKey('11111111111111111111111111111111'),
-            })
-            .rpc();
-
-          result.signatures.push(signature);
-          result.successful += batch.length;
-
-          console.log(`✓ Batch created ${batch.length} codes: ${signature}`);
-        } catch (error) {
-          result.failed += batch.length;
-
-          // Add individual errors for each code in the failed batch
-          batch.forEach((code) => {
-            result.errors.push({
-              code: code.code,
-              error: error instanceof Error ? error.message : 'Unknown error',
-            });
-          });
-
-          console.error(`✗ Batch failed for codes:`, batch.map(c => c.code), error);
-        }
-      }
-
-      return result;
     },
   });
 }

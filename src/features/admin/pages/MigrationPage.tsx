@@ -8,9 +8,16 @@
 import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { PublicKey } from '@solana/web3.js';
 import { fetchMigrationData, exportMigrationDataAsJson } from '../lib/migration-api';
+import { useAdminBatchCreateCodes } from '../hooks/use-admin-batch-create-codes';
 import { useAdminCreateSingleCode } from '../hooks/use-admin-create-single-code';
 import { useAdminRegisterSingleUser } from '../hooks/use-admin-register-single-user';
+import {
+  useSolanaConnection,
+  fetchReferralCode,
+  fetchUserRegistration,
+} from '@/lib/solana';
 import type {
   MigrationData,
   MigrationConfig,
@@ -21,6 +28,7 @@ import type {
 
 export function MigrationPage() {
   const wallet = useWallet();
+  const connection = useSolanaConnection();
   const [migrationData, setMigrationData] = useState<MigrationData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +46,7 @@ export function MigrationPage() {
   const [userBatches, setUserBatches] = useState<TraderBindingData[][]>([]);
   const [userBatchStates, setUserBatchStates] = useState<Record<number, BatchState>>({});
 
+  const batchCreateCodes = useAdminBatchCreateCodes();
   const createCode = useAdminCreateSingleCode();
   const registerUser = useAdminRegisterSingleUser();
 
@@ -95,14 +104,44 @@ export function MigrationPage() {
     }));
 
     try {
-      // Execute first code in batch (single execution)
-      const result = await createCode.mutateAsync({ code: batch[0] });
+      // Filter out codes that already exist
+      let codesToCreate = batch;
+      let skippedCount = 0;
+
+      if (config.skipExisting) {
+        const existingChecks = await Promise.all(
+          batch.map(async (codeData) => {
+            const existing = await fetchReferralCode(connection, codeData.code);
+            return { codeData, exists: !!existing };
+          })
+        );
+
+        codesToCreate = existingChecks.filter((check) => !check.exists).map((check) => check.codeData);
+        skippedCount = existingChecks.filter((check) => check.exists).length;
+      }
+
+      if (codesToCreate.length === 0) {
+        // All codes already exist
+        setCodeBatchStates((prev) => ({
+          ...prev,
+          [batchIndex]: {
+            status: 'success',
+            error: `All ${skippedCount} codes already exist`,
+            timestamp: new Date().toISOString(),
+          },
+        }));
+        return;
+      }
+
+      // Execute batch create (true on-chain batch operation)
+      const result = await batchCreateCodes.mutateAsync({ codes: codesToCreate });
 
       setCodeBatchStates((prev) => ({
         ...prev,
         [batchIndex]: {
           status: 'success',
           signature: result.signature,
+          error: skippedCount > 0 ? `Created ${result.count}, skipped ${skippedCount}` : undefined,
           timestamp: new Date().toISOString(),
         },
       }));
@@ -128,14 +167,42 @@ export function MigrationPage() {
     }));
 
     try {
-      // Execute first user in batch (single execution)
-      const result = await registerUser.mutateAsync({ binding: batch[0] });
+      const results: string[] = [];
+      let successCount = 0;
+      let skippedCount = 0;
+      let failedCount = 0;
+
+      // Execute all users in batch
+      for (const bindingData of batch) {
+        try {
+          // Check if user already registered on-chain
+          if (config.skipExisting) {
+            const userPubkey = new PublicKey(bindingData.userWallet);
+            const existingRegistration = await fetchUserRegistration(connection, userPubkey);
+            if (existingRegistration) {
+              skippedCount++;
+              continue;
+            }
+          }
+
+          // Register the user
+          const result = await registerUser.mutateAsync({ binding: bindingData });
+          results.push(result.signature);
+          successCount++;
+        } catch (err) {
+          failedCount++;
+          console.error(`Failed to register user ${bindingData.userWallet}:`, err);
+        }
+      }
+
+      const summary = `Registered ${successCount}, Skipped ${skippedCount}, Failed ${failedCount}`;
 
       setUserBatchStates((prev) => ({
         ...prev,
         [batchIndex]: {
-          status: 'success',
-          signature: result.signature,
+          status: failedCount > 0 && successCount === 0 ? 'failed' : 'success',
+          signature: results.length > 0 ? results[0] : undefined,
+          error: failedCount > 0 ? `${failedCount} failed` : undefined,
           timestamp: new Date().toISOString(),
         },
       }));
@@ -292,8 +359,10 @@ export function MigrationPage() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex-1">
                         <div className="font-mono text-sm">
-                          Batch {index + 1}: {firstCode.code} → {firstCode.ownerWallet.slice(0, 8)}...
-                          {batch.length > 1 && ` (+${batch.length - 1} more)`}
+                          Batch {index + 1}: {batch.length} codes
+                          <span className="text-gray-500 ml-2">
+                            (e.g. {firstCode.code} → {firstCode.ownerWallet.slice(0, 8)}...)
+                          </span>
                         </div>
                       </div>
                       <button
@@ -317,30 +386,24 @@ export function MigrationPage() {
                     </div>
 
                     {/* Transaction Result */}
-                    {state.status !== 'pending' && (
+                    {state.status !== 'pending' && state.status !== 'executing' && (
                       <div
-                        className={`mt-2 p-3 rounded text-sm font-mono ${
+                        className={`mt-2 p-3 rounded text-sm ${
                           state.status === 'success'
                             ? 'bg-green-50 text-green-800'
-                            : state.status === 'failed'
-                            ? 'bg-red-50 text-red-800'
-                            : 'bg-gray-50 text-gray-800'
+                            : 'bg-red-50 text-red-800'
                         }`}
                       >
-                        {state.status === 'success' && state.signature && (
-                          <div>
-                            <div className="font-semibold">Transaction Signature:</div>
-                            <div className="break-all">{state.signature}</div>
-                            <div className="text-xs mt-1">{state.timestamp}</div>
+                        {state.signature && (
+                          <div className="mb-2">
+                            <div className="font-semibold">First TX:</div>
+                            <div className="font-mono text-xs break-all">{state.signature}</div>
                           </div>
                         )}
-                        {state.status === 'failed' && state.error && (
-                          <div>
-                            <div className="font-semibold">Error:</div>
-                            <div>{state.error}</div>
-                            <div className="text-xs mt-1">{state.timestamp}</div>
-                          </div>
+                        {state.error && (
+                          <div className="text-red-700 font-semibold">{state.error}</div>
                         )}
+                        <div className="text-xs text-gray-600 mt-1">{state.timestamp}</div>
                       </div>
                     )}
                   </div>
@@ -366,8 +429,10 @@ export function MigrationPage() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex-1">
                         <div className="font-mono text-sm">
-                          Batch {index + 1}: {firstUser.userWallet.slice(0, 8)}... → {firstUser.referralCode}
-                          {batch.length > 1 && ` (+${batch.length - 1} more)`}
+                          Batch {index + 1}: {batch.length} users
+                          <span className="text-gray-500 ml-2">
+                            (e.g. {firstUser.userWallet.slice(0, 8)}... → {firstUser.referralCode})
+                          </span>
                         </div>
                       </div>
                       <button
@@ -391,30 +456,24 @@ export function MigrationPage() {
                     </div>
 
                     {/* Transaction Result */}
-                    {state.status !== 'pending' && (
+                    {state.status !== 'pending' && state.status !== 'executing' && (
                       <div
-                        className={`mt-2 p-3 rounded text-sm font-mono ${
+                        className={`mt-2 p-3 rounded text-sm ${
                           state.status === 'success'
                             ? 'bg-green-50 text-green-800'
-                            : state.status === 'failed'
-                            ? 'bg-red-50 text-red-800'
-                            : 'bg-gray-50 text-gray-800'
+                            : 'bg-red-50 text-red-800'
                         }`}
                       >
-                        {state.status === 'success' && state.signature && (
-                          <div>
-                            <div className="font-semibold">Transaction Signature:</div>
-                            <div className="break-all">{state.signature}</div>
-                            <div className="text-xs mt-1">{state.timestamp}</div>
+                        {state.signature && (
+                          <div className="mb-2">
+                            <div className="font-semibold">First TX:</div>
+                            <div className="font-mono text-xs break-all">{state.signature}</div>
                           </div>
                         )}
-                        {state.status === 'failed' && state.error && (
-                          <div>
-                            <div className="font-semibold">Error:</div>
-                            <div>{state.error}</div>
-                            <div className="text-xs mt-1">{state.timestamp}</div>
-                          </div>
+                        {state.error && (
+                          <div className="text-red-700 font-semibold">{state.error}</div>
                         )}
+                        <div className="text-xs text-gray-600 mt-1">{state.timestamp}</div>
                       </div>
                     )}
                   </div>

@@ -8,10 +8,62 @@
   },
   "instructions": [
     {
+      "name": "add_admin",
+      "docs": [
+        "Add an admin to the admin list"
+      ],
+      "discriminator": [
+        177,
+        236,
+        33,
+        205,
+        124,
+        152,
+        55,
+        186
+      ],
+      "accounts": [
+        {
+          "name": "admin_list",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_admin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
       "name": "admin_batch_create_referral_codes",
       "docs": [
         "Admin: Batch create referral codes for multiple owners",
-        "Only the program authority can batch create referral codes"
+        "Only the program authority can batch create referral codes",
+        "Allocates PDA accounts and initializes them in a single transaction"
       ],
       "discriminator": [
         250,
@@ -46,6 +98,28 @@
                   102,
                   105,
                   103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin_list",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
                 ]
               }
             ]
@@ -120,6 +194,28 @@
                   102,
                   105,
                   103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin_list",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
                 ]
               }
             ]
@@ -387,6 +483,28 @@
           }
         },
         {
+          "name": "admin_list",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "token_authority",
           "docs": [
             "Token authority PDA that signs CPIs to Tessera Token program"
@@ -417,28 +535,6 @@
               {
                 "kind": "account",
                 "path": "referral_config"
-              }
-            ]
-          }
-        },
-        {
-          "name": "admin_list",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  97,
-                  100,
-                  109,
-                  105,
-                  110,
-                  95,
-                  108,
-                  105,
-                  115,
-                  116
-                ]
               }
             ]
           }
@@ -616,6 +712,84 @@
           "relations": [
             "referral_code"
           ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_admin_list",
+      "docs": [
+        "Initialize the admin list"
+      ],
+      "discriminator": [
+        202,
+        155,
+        78,
+        226,
+        91,
+        128,
+        203,
+        83
+      ],
+      "accounts": [
+        {
+          "name": "admin_list",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "referral_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -1039,6 +1213,57 @@
       "args": []
     },
     {
+      "name": "remove_admin",
+      "docs": [
+        "Remove an admin from the admin list"
+      ],
+      "discriminator": [
+        74,
+        202,
+        71,
+        106,
+        252,
+        31,
+        72,
+        183
+      ],
+      "accounts": [
+        {
+          "name": "admin_list",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "admin_to_remove",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
       "name": "update_referral_config",
       "docs": [
         "Update referral system configuration (authority only)"
@@ -1292,6 +1517,19 @@
   ],
   "accounts": [
     {
+      "name": "AdminList",
+      "discriminator": [
+        253,
+        56,
+        210,
+        167,
+        203,
+        37,
+        230,
+        165
+      ]
+    },
+    {
       "name": "ReferralCode",
       "discriminator": [
         227,
@@ -1389,9 +1627,51 @@
       "code": 6008,
       "name": "InvalidPDA",
       "msg": "Invalid PDA derivation."
+    },
+    {
+      "code": 6009,
+      "name": "AdminListFull",
+      "msg": "Admin list is full. Maximum 10 admins allowed."
+    },
+    {
+      "code": 6010,
+      "name": "AdminAlreadyExists",
+      "msg": "Admin already exists in the list."
+    },
+    {
+      "code": 6011,
+      "name": "CannotRemovePrimaryAuthority",
+      "msg": "Cannot remove the primary authority from the admin list."
+    },
+    {
+      "code": 6012,
+      "name": "AdminNotFound",
+      "msg": "Admin not found in the list."
     }
   ],
   "types": [
+    {
+      "name": "AdminList",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "admins",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
     {
       "name": "ReferralCode",
       "type": {
