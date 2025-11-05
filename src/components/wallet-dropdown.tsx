@@ -6,12 +6,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
 function ellipsify(str = '', len = 4, delimiter = '..') {
   const strLen = str.length
@@ -63,9 +58,9 @@ function WalletDropdown({
   const { connected, disconnect, publicKey, wallet } = useWallet()
   const { setVisible } = useWalletModal()
   const address = useMemo(() => publicKey?.toBase58() ?? '', [publicKey])
-  const label = connected ? (address ? ellipsify(address) : wallet?.adapter.name ?? 'Wallet') : 'Select Wallet'
+  const label = connected ? (address ? ellipsify(address) : (wallet?.adapter.name ?? 'Wallet')) : 'Select Wallet'
   const showLabel = !(connected && hideTriggerLabelOnConnect)
-  const ariaLabel = !showLabel ? triggerAriaLabel ?? (connected ? 'Open wallet menu' : 'Connect wallet') : undefined
+  const ariaLabel = !showLabel ? (triggerAriaLabel ?? (connected ? 'Open wallet menu' : 'Connect wallet')) : undefined
 
   const handleCopy = useCallback(async () => {
     if (!address) {

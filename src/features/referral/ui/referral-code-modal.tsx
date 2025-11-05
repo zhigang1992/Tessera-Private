@@ -1,12 +1,7 @@
 import { useCallback } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Card, CardContent } from '@/components/ui/card'
 import { WalletDropdown } from '@/components/wallet-dropdown'
 import { Loader2, UserIcon } from 'lucide-react'
@@ -25,7 +20,7 @@ export default function ReferralCodeModal({ isOpen, onClose, referralCode }: Ref
   const accountAddress = publicKey?.toBase58()
   const bindMutation = useBindReferralCode()
   const hasAccount = Boolean(connected && accountAddress)
-  const {visible} = useWalletModal()
+  const { visible } = useWalletModal()
 
   const handleChangeCode = () => {
     onClose()
@@ -41,13 +36,19 @@ export default function ReferralCodeModal({ isOpen, onClose, referralCode }: Ref
 
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#D2FB95]">
-              {connected ? <UserIcon className="h-6 w-6 text-[#979797]" /> : <div className="h-6 w-6 rounded-full bg-[#979797]" />}
+              {connected ? (
+                <UserIcon className="h-6 w-6 text-[#979797]" />
+              ) : (
+                <div className="h-6 w-6 rounded-full bg-[#979797]" />
+              )}
             </div>
             <div className="flex-1">
               {connected ? (
                 <div>
                   <div className="text-sm font-medium text-black">
-                    {accountAddress ? `${accountAddress.slice(0, 10)}...${accountAddress.slice(-8)}` : 'Wallet Connected'}
+                    {accountAddress
+                      ? `${accountAddress.slice(0, 10)}...${accountAddress.slice(-8)}`
+                      : 'Wallet Connected'}
                   </div>
                   <button
                     className="text-xs text-black/50 hover:text-black"

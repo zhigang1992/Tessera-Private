@@ -166,9 +166,7 @@ function registerUrlKeyWallet(secretKey: Uint8Array) {
       },
       [SolanaSignMessage]: {
         version: '1.0.0',
-        signMessage: async (
-          ...inputs: readonly { account: WalletAccount; message: Uint8Array }[]
-        ) => {
+        signMessage: async (...inputs: readonly { account: WalletAccount; message: Uint8Array }[]) => {
           // Inputs are { account, message }
           return inputs.map(({ message }) => {
             const signature = nacl.sign.detached(message, kp.secretKey)
@@ -195,7 +193,10 @@ function registerUrlKeyWallet(secretKey: Uint8Array) {
     localStorage.setItem(storageKey, JSON.stringify(saved))
     // Emit change event to notify listeners accounts are present
     // Not strictly required, but helps some UIs refresh immediately
-    void (wallet.features[StandardEvents] as { on: (event: 'change', listener: ChangeListener) => () => void }).on('change', () => {})
+    void (wallet.features[StandardEvents] as { on: (event: 'change', listener: ChangeListener) => () => void }).on(
+      'change',
+      () => {},
+    )
     events.emitChange({ accounts })
   } catch (e) {
     console.warn('Could not persist selected account:', e)

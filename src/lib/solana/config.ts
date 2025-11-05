@@ -5,17 +5,17 @@
  * Supports multiple environments (localnet, devnet, testnet, mainnet).
  */
 
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js'
 
 // Environment detection
-export type SolanaNetwork = 'localnet' | 'devnet' | 'testnet' | 'mainnet-beta';
+export type SolanaNetwork = 'localnet' | 'devnet' | 'testnet' | 'mainnet-beta'
 
 /**
  * Get current network from environment variables
  */
 export function getCurrentNetwork(): SolanaNetwork {
-  const network = import.meta.env.VITE_SOLANA_NETWORK || 'devnet';
-  return network as SolanaNetwork;
+  const network = import.meta.env.VITE_SOLANA_NETWORK || 'devnet'
+  return network as SolanaNetwork
 }
 
 /**
@@ -26,7 +26,7 @@ export const RPC_ENDPOINTS: Record<SolanaNetwork, string> = {
   devnet: 'https://api.devnet.solana.com',
   testnet: 'https://api.testnet.solana.com',
   'mainnet-beta': 'https://api.mainnet-beta.solana.com',
-};
+}
 
 /**
  * WebSocket endpoint URLs for each network
@@ -36,26 +36,26 @@ export const WS_ENDPOINTS: Record<SolanaNetwork, string> = {
   devnet: 'wss://api.devnet.solana.com',
   testnet: 'wss://api.testnet.solana.com',
   'mainnet-beta': 'wss://api.mainnet-beta.solana.com',
-};
+}
 
 /**
  * Get RPC endpoint for current network
  */
 export function getRpcEndpoint(): string {
   // Allow override via environment variable
-  const override = import.meta.env.VITE_SOLANA_RPC_URL;
-  if (override) return override;
+  const override = import.meta.env.VITE_SOLANA_RPC_URL
+  if (override) return override
 
-  const network = getCurrentNetwork();
-  return RPC_ENDPOINTS[network];
+  const network = getCurrentNetwork()
+  return RPC_ENDPOINTS[network]
 }
 
 /**
  * Get WebSocket endpoint for current network
  */
 export function getWsEndpoint(): string {
-  const network = getCurrentNetwork();
-  return WS_ENDPOINTS[network];
+  const network = getCurrentNetwork()
+  return WS_ENDPOINTS[network]
 }
 
 /**
@@ -65,7 +65,7 @@ export function getWsEndpoint(): string {
 export const PROGRAM_IDS = {
   TESSERA_TOKEN: new PublicKey('TESQvsR4TmYxiroPPQgZpVRoSFG8pru4fsYr67iv6kf'),
   REFERRAL_SYSTEM: new PublicKey('5jSqXLX7QFr6ZvvQPLRH7mGhw9P3r96uarkVLy7NEdog'),
-} as const;
+} as const
 
 /**
  * Default Tessera mint addresses per environment.
@@ -76,36 +76,36 @@ export const DEFAULT_MINT_ADDRESSES: Record<SolanaNetwork, PublicKey> = {
   devnet: new PublicKey('A8xxQEFytK4DS7F8fGh4uWf56TFrYg2Jynmay2dd8SbS'),
   testnet: PublicKey.default,
   'mainnet-beta': new PublicKey('TESQvsR4TmYxiroPPQgZpVRoSFG8pru4fsYr67iv6kf'), // TODO: replace with production mint when available
-};
+}
 
 /**
  * Get Tessera Token program ID with environment override support
  */
 export function getTesseraTokenProgramId(): PublicKey {
-  const override = import.meta.env.VITE_TESSERA_TOKEN_PROGRAM_ID;
+  const override = import.meta.env.VITE_TESSERA_TOKEN_PROGRAM_ID
   if (override) {
     try {
-      return new PublicKey(override);
+      return new PublicKey(override)
     } catch {
-      console.warn('Invalid VITE_TESSERA_TOKEN_PROGRAM_ID, using default');
+      console.warn('Invalid VITE_TESSERA_TOKEN_PROGRAM_ID, using default')
     }
   }
-  return PROGRAM_IDS.TESSERA_TOKEN;
+  return PROGRAM_IDS.TESSERA_TOKEN
 }
 
 /**
  * Get Referral System program ID with environment override support
  */
 export function getReferralProgramId(): PublicKey {
-  const override = import.meta.env.VITE_REFERRAL_PROGRAM_ID;
+  const override = import.meta.env.VITE_REFERRAL_PROGRAM_ID
   if (override) {
     try {
-      return new PublicKey(override);
+      return new PublicKey(override)
     } catch {
-      console.warn('Invalid VITE_REFERRAL_PROGRAM_ID, using default');
+      console.warn('Invalid VITE_REFERRAL_PROGRAM_ID, using default')
     }
   }
-  return PROGRAM_IDS.REFERRAL_SYSTEM;
+  return PROGRAM_IDS.REFERRAL_SYSTEM
 }
 
 /**
@@ -113,24 +113,24 @@ export function getReferralProgramId(): PublicKey {
  * Falls back to network-specific defaults defined above.
  */
 export function getTesseraMintAddress(): PublicKey {
-  const override = import.meta.env.VITE_TESSERA_MINT_ADDRESS;
+  const override = import.meta.env.VITE_TESSERA_MINT_ADDRESS
   if (override) {
     try {
-      return new PublicKey(override);
+      return new PublicKey(override)
     } catch {
-      console.warn('Invalid VITE_TESSERA_MINT_ADDRESS, using default');
+      console.warn('Invalid VITE_TESSERA_MINT_ADDRESS, using default')
     }
   }
 
-  const network = getCurrentNetwork();
-  const defaultMint = DEFAULT_MINT_ADDRESSES[network];
+  const network = getCurrentNetwork()
+  const defaultMint = DEFAULT_MINT_ADDRESSES[network]
 
   if (defaultMint && !defaultMint.equals(PublicKey.default)) {
-    return defaultMint;
+    return defaultMint
   }
 
   // Fallback to devnet mint when network-specific mint is unavailable
-  return DEFAULT_MINT_ADDRESSES.devnet;
+  return DEFAULT_MINT_ADDRESSES.devnet
 }
 
 /**
@@ -139,7 +139,7 @@ export function getTesseraMintAddress(): PublicKey {
 export const CONNECTION_CONFIG = {
   commitment: 'confirmed' as const,
   confirmTransactionInitialTimeout: 60000, // 60 seconds
-};
+}
 
 /**
  * Transaction retry configuration
@@ -148,54 +148,54 @@ export const TRANSACTION_CONFIG = {
   maxRetries: 3,
   skipPreflight: false,
   preflightCommitment: 'confirmed' as const,
-};
+}
 
 /**
  * Check if running on devnet
  */
 export function isDevnet(): boolean {
-  return getCurrentNetwork() === 'devnet';
+  return getCurrentNetwork() === 'devnet'
 }
 
 /**
  * Check if running on mainnet
  */
 export function isMainnet(): boolean {
-  return getCurrentNetwork() === 'mainnet-beta';
+  return getCurrentNetwork() === 'mainnet-beta'
 }
 
 /**
  * Check if running locally
  */
 export function isLocalnet(): boolean {
-  return getCurrentNetwork() === 'localnet';
+  return getCurrentNetwork() === 'localnet'
 }
 
 /**
  * Display-friendly network name
  */
 export function getNetworkName(): string {
-  const network = getCurrentNetwork();
+  const network = getCurrentNetwork()
   const names: Record<SolanaNetwork, string> = {
     localnet: 'Local',
     devnet: 'Devnet',
     testnet: 'Testnet',
     'mainnet-beta': 'Mainnet',
-  };
-  return names[network];
+  }
+  return names[network]
 }
 
 /**
  * Get Solana Explorer URL for transaction
  */
 export function getExplorerUrl(signature: string, type: 'tx' | 'address' = 'tx'): string {
-  const network = getCurrentNetwork();
-  const cluster = network === 'mainnet-beta' ? '' : `?cluster=${network}`;
+  const network = getCurrentNetwork()
+  const cluster = network === 'mainnet-beta' ? '' : `?cluster=${network}`
 
   if (type === 'tx') {
-    return `https://explorer.solana.com/tx/${signature}${cluster}`;
+    return `https://explorer.solana.com/tx/${signature}${cluster}`
   } else {
-    return `https://explorer.solana.com/address/${signature}${cluster}`;
+    return `https://explorer.solana.com/address/${signature}${cluster}`
   }
 }
 
@@ -203,8 +203,8 @@ export function getExplorerUrl(signature: string, type: 'tx' | 'address' = 'tx')
  * Get SolScan URL for transaction or address
  */
 export function getSolscanUrl(signature: string, type: 'tx' | 'account' = 'tx'): string {
-  const network = getCurrentNetwork();
-  const cluster = network === 'mainnet-beta' ? '' : `?cluster=${network}`;
+  const network = getCurrentNetwork()
+  const cluster = network === 'mainnet-beta' ? '' : `?cluster=${network}`
 
-  return `https://solscan.io/${type}/${signature}${cluster}`;
+  return `https://solscan.io/${type}/${signature}${cluster}`
 }

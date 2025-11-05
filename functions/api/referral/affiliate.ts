@@ -1,49 +1,49 @@
-import type { D1Database, KVNamespace, PagesFunction } from '@cloudflare/workers-types';
-import { optionalAuthenticateRequest, ensureUserExists } from '../../lib/middleware';
+import type { D1Database, KVNamespace, PagesFunction } from '@cloudflare/workers-types'
+import { optionalAuthenticateRequest, ensureUserExists } from '../../lib/middleware'
 
 type Env = {
-  DB: D1Database;
-  SESSION_KV: KVNamespace;
-};
+  DB: D1Database
+  SESSION_KV: KVNamespace
+}
 
 type ReferrerMetrics = {
-  wallet_address: string;
-  rebates_total: number;
-  referral_points: number;
-  l1_trader_count: number;
-  l2_trader_count: number;
-  l3_trader_count: number;
-  snapshot_at: string;
-};
+  wallet_address: string
+  rebates_total: number
+  referral_points: number
+  l1_trader_count: number
+  l2_trader_count: number
+  l3_trader_count: number
+  snapshot_at: string
+}
 
 type User = {
-  wallet_address: string;
-  display_name: string | null;
-  email: string | null;
-  email_verified: number;
-};
+  wallet_address: string
+  display_name: string | null
+  email: string | null
+  email_verified: number
+}
 
 type ReferralCode = {
-  id: number;
-  wallet_address: string;
-  code_slug: string;
-  status: string;
-  active_layer: number;
-  created_at: string;
-  updated_at: string;
-};
+  id: number
+  wallet_address: string
+  code_slug: string
+  status: string
+  active_layer: number
+  created_at: string
+  updated_at: string
+}
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
-  const authResult = await optionalAuthenticateRequest(request, env);
-  let walletAddress = authResult.authenticated ? authResult.context.walletAddress : null;
+  const authResult = await optionalAuthenticateRequest(request, env)
+  let walletAddress = authResult.authenticated ? authResult.context.walletAddress : null
 
   // Check if wallet address is provided as query parameter for public access
-  const url = new URL(request.url);
-  const publicWalletAddress = url.searchParams.get('wallet');
+  const url = new URL(request.url)
+  const publicWalletAddress = url.searchParams.get('wallet')
 
   // Use public wallet address if not authenticated but provided in query
   if (!walletAddress && publicWalletAddress) {
-    walletAddress = publicWalletAddress;
+    walletAddress = publicWalletAddress
   }
 
   // If no wallet address available, return default/empty data
@@ -68,20 +68,18 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
         l2Traders: [],
         l3Traders: [],
       },
-    });
+    })
   }
 
-  await ensureUserExists(walletAddress, env.DB);
+  await ensureUserExists(walletAddress, env.DB)
 
   // Fetch user info
-  const user = await env.DB.prepare('SELECT * FROM users WHERE wallet_address = ?')
-    .bind(walletAddress)
-    .first<User>();
+  const user = await env.DB.prepare('SELECT * FROM users WHERE wallet_address = ?').bind(walletAddress).first<User>()
 
   // Fetch referrer metrics
   let metrics = await env.DB.prepare('SELECT * FROM metrics_referrer WHERE wallet_address = ?')
     .bind(walletAddress)
-    .first<ReferrerMetrics>();
+    .first<ReferrerMetrics>()
 
   if (!metrics) {
     // Create default metrics
@@ -89,7 +87,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       'INSERT INTO metrics_referrer (wallet_address, rebates_total, referral_points, l1_trader_count, l2_trader_count, l3_trader_count) VALUES (?, 0, 0, 0, 0, 0)',
     )
       .bind(walletAddress)
-      .run();
+      .run()
 
     metrics = {
       wallet_address: walletAddress,
@@ -99,63 +97,67 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       l2_trader_count: 0,
       l3_trader_count: 0,
       snapshot_at: new Date().toISOString(),
-    };
+    }
   }
 
   // Fetch referral codes for this affiliate
   const codes = await env.DB.prepare('SELECT * FROM referral_codes WHERE wallet_address = ? ORDER BY created_at DESC')
     .bind(walletAddress)
-    .all<ReferralCode>();
+    .all<ReferralCode>()
 
-  const codeIds = codes.results.map((code) => code.id);
-  let referralCounts: Array<{ code_id: number; count: number }> = [];
+  const codeIds = codes.results.map((code) => code.id)
+  let referralCounts: Array<{ code_id: number; count: number }> = []
 
   if (codeIds.length > 0) {
-    const placeholders = codeIds.map(() => '?').join(', ');
+    const placeholders = codeIds.map(() => '?').join(', ')
     const countsQuery = await env.DB.prepare(
       `SELECT referrer_code_id as code_id, COUNT(*) as count FROM trader_bindings WHERE referrer_code_id IN (${placeholders}) GROUP BY referrer_code_id`,
     )
       .bind(...codeIds)
-      .all<{ code_id: number; count: number }>();
+      .all<{ code_id: number; count: number }>()
 
-    referralCounts = countsQuery.results;
+    referralCounts = countsQuery.results
   }
 
-  const countsMap = new Map<number, number>(
-    referralCounts.map((row) => [row.code_id, row.count]),
-  );
+  const countsMap = new Map<number, number>(referralCounts.map((row) => [row.code_id, row.count]))
 
   // Calculate real-time tree counts from edges (more accurate than cached metrics)
-  const l1Count = await env.DB.prepare('SELECT COUNT(DISTINCT descendant_wallet) as count FROM referral_tree_edges WHERE ancestor_wallet = ? AND level = 1')
+  const l1Count = await env.DB.prepare(
+    'SELECT COUNT(DISTINCT descendant_wallet) as count FROM referral_tree_edges WHERE ancestor_wallet = ? AND level = 1',
+  )
     .bind(walletAddress)
-    .first<{ count: number }>();
+    .first<{ count: number }>()
 
-  const l2Count = await env.DB.prepare('SELECT COUNT(DISTINCT descendant_wallet) as count FROM referral_tree_edges WHERE ancestor_wallet = ? AND level = 2')
+  const l2Count = await env.DB.prepare(
+    'SELECT COUNT(DISTINCT descendant_wallet) as count FROM referral_tree_edges WHERE ancestor_wallet = ? AND level = 2',
+  )
     .bind(walletAddress)
-    .first<{ count: number }>();
+    .first<{ count: number }>()
 
-  const l3Count = await env.DB.prepare('SELECT COUNT(DISTINCT descendant_wallet) as count FROM referral_tree_edges WHERE ancestor_wallet = ? AND level = 3')
+  const l3Count = await env.DB.prepare(
+    'SELECT COUNT(DISTINCT descendant_wallet) as count FROM referral_tree_edges WHERE ancestor_wallet = ? AND level = 3',
+  )
     .bind(walletAddress)
-    .first<{ count: number }>();
+    .first<{ count: number }>()
 
   // Fetch actual wallet addresses at each level for tree visualization
   const l1Traders = await env.DB.prepare(
     'SELECT DISTINCT descendant_wallet FROM referral_tree_edges WHERE ancestor_wallet = ? AND level = 1 ORDER BY descendant_wallet',
   )
     .bind(walletAddress)
-    .all<{ descendant_wallet: string }>();
+    .all<{ descendant_wallet: string }>()
 
   const l2Traders = await env.DB.prepare(
     'SELECT DISTINCT descendant_wallet FROM referral_tree_edges WHERE ancestor_wallet = ? AND level = 2 ORDER BY descendant_wallet',
   )
     .bind(walletAddress)
-    .all<{ descendant_wallet: string }>();
+    .all<{ descendant_wallet: string }>()
 
   const l3Traders = await env.DB.prepare(
     'SELECT DISTINCT descendant_wallet FROM referral_tree_edges WHERE ancestor_wallet = ? AND level = 3 ORDER BY descendant_wallet',
   )
     .bind(walletAddress)
-    .all<{ descendant_wallet: string }>();
+    .all<{ descendant_wallet: string }>()
 
   return Response.json({
     walletAddress,
@@ -186,5 +188,5 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       l2Traders: l2Traders.results.map((t) => t.descendant_wallet),
       l3Traders: l3Traders.results.map((t) => t.descendant_wallet),
     },
-  });
-};
+  })
+}

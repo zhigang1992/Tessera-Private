@@ -4,20 +4,26 @@
  * Uses admin_create_referral_code instruction (single code)
  */
 
-import { useMutation } from '@tanstack/react-query';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey, SystemProgram } from '@solana/web3.js';
-import { useSolanaConnection, getReferralProgram, getReferralConfigPDA, getReferralCodePDA, getAdminListPDA } from '@/lib/solana';
-import type { ReferralCodeData } from '../types/migration';
+import { useMutation } from '@tanstack/react-query'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { PublicKey, SystemProgram } from '@solana/web3.js'
+import {
+  useSolanaConnection,
+  getReferralProgram,
+  getReferralConfigPDA,
+  getReferralCodePDA,
+  getAdminListPDA,
+} from '@/lib/solana'
+import type { ReferralCodeData } from '../types/migration'
 
 interface CreateCodeInput {
-  code: ReferralCodeData;
+  code: ReferralCodeData
 }
 
 interface CreateCodeResult {
-  signature: string;
-  code: string;
-  owner: string;
+  signature: string
+  code: string
+  owner: string
 }
 
 /**
@@ -25,24 +31,24 @@ interface CreateCodeResult {
  * Only the program authority can use this
  */
 export function useAdminCreateSingleCode() {
-  const wallet = useWallet();
-  const connection = useSolanaConnection();
+  const wallet = useWallet()
+  const connection = useSolanaConnection()
 
   return useMutation({
     mutationFn: async (input: CreateCodeInput): Promise<CreateCodeResult> => {
       if (!wallet.publicKey) {
-        throw new Error('Wallet not connected');
+        throw new Error('Wallet not connected')
       }
 
-      const program = getReferralProgram(connection, wallet);
+      const program = getReferralProgram(connection, wallet)
       if (!program) {
-        throw new Error('Program not initialized');
+        throw new Error('Program not initialized')
       }
 
-      const [referralConfigPDA] = getReferralConfigPDA(program.programId);
-      const [referralCodePDA] = getReferralCodePDA(input.code.code, program.programId);
-      const [adminListPDA] = getAdminListPDA(program.programId);
-      const ownerPubkey = new PublicKey(input.code.ownerWallet);
+      const [referralConfigPDA] = getReferralConfigPDA(program.programId)
+      const [referralCodePDA] = getReferralCodePDA(input.code.code, program.programId)
+      const [adminListPDA] = getAdminListPDA(program.programId)
+      const ownerPubkey = new PublicKey(input.code.ownerWallet)
 
       const signature = await program.methods
         .adminCreateReferralCode(input.code.code, ownerPubkey)
@@ -54,13 +60,13 @@ export function useAdminCreateSingleCode() {
           payer: wallet.publicKey,
           systemProgram: SystemProgram.programId,
         })
-        .rpc();
+        .rpc()
 
       return {
         signature,
         code: input.code.code,
         owner: input.code.ownerWallet,
-      };
+      }
     },
-  });
+  })
 }

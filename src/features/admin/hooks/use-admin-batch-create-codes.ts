@@ -7,19 +7,25 @@
  * The on-chain program now handles PDA allocation automatically via invoke_signed
  */
 
-import { useMutation } from '@tanstack/react-query';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey, SystemProgram } from '@solana/web3.js';
-import { useSolanaConnection, getReferralProgram, getReferralConfigPDA, getReferralCodePDA, getAdminListPDA } from '@/lib/solana';
-import type { ReferralCodeData } from '../types/migration';
+import { useMutation } from '@tanstack/react-query'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { PublicKey, SystemProgram } from '@solana/web3.js'
+import {
+  useSolanaConnection,
+  getReferralProgram,
+  getReferralConfigPDA,
+  getReferralCodePDA,
+  getAdminListPDA,
+} from '@/lib/solana'
+import type { ReferralCodeData } from '../types/migration'
 
 interface BatchCreateCodesInput {
-  codes: ReferralCodeData[];
+  codes: ReferralCodeData[]
 }
 
 interface BatchCreateCodesResult {
-  signature: string;
-  count: number;
+  signature: string
+  count: number
 }
 
 /**
@@ -29,40 +35,40 @@ interface BatchCreateCodesResult {
  * Uses the on-chain batch instruction which automatically allocates PDAs
  */
 export function useAdminBatchCreateCodes() {
-  const wallet = useWallet();
-  const connection = useSolanaConnection();
+  const wallet = useWallet()
+  const connection = useSolanaConnection()
 
   return useMutation({
     mutationFn: async (input: BatchCreateCodesInput): Promise<BatchCreateCodesResult> => {
       if (!wallet.publicKey) {
-        throw new Error('Wallet not connected');
+        throw new Error('Wallet not connected')
       }
 
       if (input.codes.length === 0 || input.codes.length > 10) {
-        throw new Error('Batch size must be between 1 and 10');
+        throw new Error('Batch size must be between 1 and 10')
       }
 
-      const program = getReferralProgram(connection, wallet);
+      const program = getReferralProgram(connection, wallet)
       if (!program) {
-        throw new Error('Program not initialized');
+        throw new Error('Program not initialized')
       }
 
-      const [referralConfigPDA] = getReferralConfigPDA(program.programId);
-      const [adminListPDA] = getAdminListPDA(program.programId);
+      const [referralConfigPDA] = getReferralConfigPDA(program.programId)
+      const [adminListPDA] = getAdminListPDA(program.programId)
 
       // Extract codes and owners
-      const codes = input.codes.map((c) => c.code);
-      const owners = input.codes.map((c) => new PublicKey(c.ownerWallet));
+      const codes = input.codes.map((c) => c.code)
+      const owners = input.codes.map((c) => new PublicKey(c.ownerWallet))
 
       // Derive all referral code PDAs and pass as remaining accounts
       const referralCodePDAs = input.codes.map((c) => {
-        const [pda] = getReferralCodePDA(c.code, program.programId);
+        const [pda] = getReferralCodePDA(c.code, program.programId)
         return {
           pubkey: pda,
           isWritable: true,
           isSigner: false,
-        };
-      });
+        }
+      })
 
       // Execute the batch create instruction
       // The on-chain program will automatically allocate the PDAs using invoke_signed
@@ -76,12 +82,12 @@ export function useAdminBatchCreateCodes() {
           systemProgram: SystemProgram.programId,
         })
         .remainingAccounts(referralCodePDAs)
-        .rpc();
+        .rpc()
 
       return {
         signature,
         count: input.codes.length,
-      };
+      }
     },
-  });
+  })
 }

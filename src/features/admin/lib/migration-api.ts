@@ -4,9 +4,9 @@
  * Fetches off-chain referral data for migration to on-chain
  */
 
-import type { MigrationData, ReferralCodeData, TraderBindingData } from '../types/migration';
+import type { MigrationData, ReferralCodeData, TraderBindingData } from '../types/migration'
 
-const API_BASE = import.meta.env.VITE_API_BASE || '';
+const API_BASE = import.meta.env.VITE_API_BASE || ''
 
 /**
  * Fetch all migration data from off-chain database
@@ -17,14 +17,14 @@ export async function fetchMigrationData(): Promise<MigrationData> {
     headers: {
       'Content-Type': 'application/json',
     },
-  });
+  })
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch migration data: ${response.statusText}`);
+    throw new Error(`Failed to fetch migration data: ${response.statusText}`)
   }
 
-  const data = await response.json();
-  return data;
+  const data = await response.json()
+  return data
 }
 
 /**
@@ -36,14 +36,14 @@ export async function fetchReferralCodes(): Promise<ReferralCodeData[]> {
     headers: {
       'Content-Type': 'application/json',
     },
-  });
+  })
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch referral codes: ${response.statusText}`);
+    throw new Error(`Failed to fetch referral codes: ${response.statusText}`)
   }
 
-  const data = await response.json();
-  return data.codes || [];
+  const data = await response.json()
+  return data.codes || []
 }
 
 /**
@@ -55,27 +55,27 @@ export async function fetchTraderBindings(): Promise<TraderBindingData[]> {
     headers: {
       'Content-Type': 'application/json',
     },
-  });
+  })
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch trader bindings: ${response.statusText}`);
+    throw new Error(`Failed to fetch trader bindings: ${response.statusText}`)
   }
 
-  const data = await response.json();
-  return data.bindings || [];
+  const data = await response.json()
+  return data.bindings || []
 }
 
 /**
  * Export migration data as JSON file
  */
 export function exportMigrationDataAsJson(data: MigrationData, filename = 'migration-data.json') {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
 }
 
 /**
@@ -83,21 +83,21 @@ export function exportMigrationDataAsJson(data: MigrationData, filename = 'migra
  */
 export function importMigrationDataFromJson(file: File): Promise<MigrationData> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+    const reader = new FileReader()
 
     reader.onload = (e) => {
       try {
-        const data = JSON.parse(e.target?.result as string);
-        resolve(data);
+        const data = JSON.parse(e.target?.result as string)
+        resolve(data)
       } catch (error) {
-        reject(new Error('Invalid JSON file'));
+        reject(new Error('Invalid JSON file'))
       }
-    };
+    }
 
     reader.onerror = () => {
-      reject(new Error('Failed to read file'));
-    };
+      reject(new Error('Failed to read file'))
+    }
 
-    reader.readAsText(file);
-  });
+    reader.readAsText(file)
+  })
 }

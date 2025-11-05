@@ -6,12 +6,12 @@
  */
 
 interface Env {
-  DB: D1Database;
+  DB: D1Database
 }
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
-    const db = context.env.DB;
+    const db = context.env.DB
 
     // Fetch all active referral codes
     const codesQuery = `
@@ -23,9 +23,9 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       FROM referral_codes rc
       WHERE rc.status = 'active'
       ORDER BY rc.created_at
-    `;
+    `
 
-    const codesResult = await db.prepare(codesQuery).all();
+    const codesResult = await db.prepare(codesQuery).all()
 
     // Fetch all trader bindings with referral relationships
     const bindingsQuery = `
@@ -37,9 +37,9 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       FROM trader_bindings tb
       JOIN referral_codes rc ON tb.referrer_code_id = rc.id
       ORDER BY tb.bound_at
-    `;
+    `
 
-    const bindingsResult = await db.prepare(bindingsQuery).all();
+    const bindingsResult = await db.prepare(bindingsQuery).all()
 
     // Format the response
     const migrationData = {
@@ -61,7 +61,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         totalBindings: bindingsResult.results.length,
         dataSource: 'cloudflare-d1' as const,
       },
-    };
+    }
 
     return new Response(JSON.stringify(migrationData), {
       status: 200,
@@ -69,9 +69,9 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
       },
-    });
+    })
   } catch (error) {
-    console.error('Migration data fetch error:', error);
+    console.error('Migration data fetch error:', error)
     return new Response(
       JSON.stringify({
         error: 'Failed to fetch migration data',
@@ -83,7 +83,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
-      }
-    );
+      },
+    )
   }
-};
+}

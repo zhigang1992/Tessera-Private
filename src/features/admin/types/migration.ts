@@ -8,128 +8,128 @@
  * Input: Data fetched from off-chain database
  */
 export interface MigrationData {
-  referralCodes: ReferralCodeData[];
-  traderBindings: TraderBindingData[];
+  referralCodes: ReferralCodeData[]
+  traderBindings: TraderBindingData[]
   metadata: {
-    exportedAt: string;
-    totalCodes: number;
-    totalBindings: number;
-    dataSource: 'cloudflare-d1' | 'local' | 'api';
-  };
+    exportedAt: string
+    totalCodes: number
+    totalBindings: number
+    dataSource: 'cloudflare-d1' | 'local' | 'api'
+  }
 }
 
 /**
  * Individual referral code from database
  */
 export interface ReferralCodeData {
-  code: string;              // code_slug from referral_codes table
-  ownerWallet: string;       // wallet_address from referral_codes table
-  isActive: boolean;         // status === 'active'
-  createdAt: string;         // ISO timestamp
+  code: string // code_slug from referral_codes table
+  ownerWallet: string // wallet_address from referral_codes table
+  isActive: boolean // status === 'active'
+  createdAt: string // ISO timestamp
 }
 
 /**
  * Individual trader binding (referral relationship)
  */
 export interface TraderBindingData {
-  userWallet: string;        // wallet_address from trader_bindings table
-  referralCode: string;      // code_slug via JOIN with referral_codes
-  referrerWallet: string;    // owner of the referral code
-  boundAt: string;           // ISO timestamp
+  userWallet: string // wallet_address from trader_bindings table
+  referralCode: string // code_slug via JOIN with referral_codes
+  referrerWallet: string // owner of the referral code
+  boundAt: string // ISO timestamp
 }
 
 /**
  * Migration configuration
  */
 export interface MigrationConfig {
-  batchSize: number;         // Number of items per batch (max 10)
-  skipExisting: boolean;     // Skip codes/users that already exist
+  batchSize: number // Number of items per batch (max 10)
+  skipExisting: boolean // Skip codes/users that already exist
 }
 
 /**
  * Batch execution state
  */
 export interface BatchState {
-  status: 'pending' | 'executing' | 'success' | 'failed';
-  signature?: string;
-  error?: string;
-  timestamp?: string;
+  status: 'pending' | 'executing' | 'success' | 'failed'
+  signature?: string
+  error?: string
+  timestamp?: string
 }
 
 /**
  * Migration progress state
  */
 export interface MigrationProgress {
-  phase: 'idle' | 'creating-codes' | 'registering-users' | 'completed' | 'failed';
-  codesCreated: number;
-  codesTotal: number;
-  codesFailed: number;
-  usersRegistered: number;
-  usersTotal: number;
-  usersFailed: number;
-  currentBatch: number;
-  totalBatches: number;
-  estimatedTimeRemaining?: number; // in seconds
+  phase: 'idle' | 'creating-codes' | 'registering-users' | 'completed' | 'failed'
+  codesCreated: number
+  codesTotal: number
+  codesFailed: number
+  usersRegistered: number
+  usersTotal: number
+  usersFailed: number
+  currentBatch: number
+  totalBatches: number
+  estimatedTimeRemaining?: number // in seconds
 }
 
 /**
  * Individual transaction result
  */
 export interface TransactionResult {
-  type: 'code-creation' | 'user-registration';
-  status: 'success' | 'failed' | 'pending';
-  signature?: string;
-  error?: string;
-  timestamp: string;
+  type: 'code-creation' | 'user-registration'
+  status: 'success' | 'failed' | 'pending'
+  signature?: string
+  error?: string
+  timestamp: string
   data: {
-    code?: string;
-    owner?: string;
-    user?: string;
-    referralCode?: string;
-  };
+    code?: string
+    owner?: string
+    user?: string
+    referralCode?: string
+  }
 }
 
 /**
  * Migration summary
  */
 export interface MigrationSummary {
-  startedAt: string;
-  completedAt?: string;
-  duration?: number; // in seconds
+  startedAt: string
+  completedAt?: string
+  duration?: number // in seconds
 
   codes: {
-    total: number;
-    successful: number;
-    failed: number;
-    skipped: number;
-  };
+    total: number
+    successful: number
+    failed: number
+    skipped: number
+  }
 
   users: {
-    total: number;
-    successful: number;
-    failed: number;
-    skipped: number;
-  };
+    total: number
+    successful: number
+    failed: number
+    skipped: number
+  }
 
   costs: {
-    codesRent: number;        // SOL
-    usersRent: number;        // SOL
-    transactionFees: number;  // SOL
-    total: number;            // SOL
-    estimatedUSD?: number;
-  };
+    codesRent: number // SOL
+    usersRent: number // SOL
+    transactionFees: number // SOL
+    total: number // SOL
+    estimatedUSD?: number
+  }
 
-  transactions: TransactionResult[];
+  transactions: TransactionResult[]
 }
 
 /**
  * Migration log entry
  */
 export interface MigrationLog {
-  level: 'info' | 'warn' | 'error' | 'success';
-  message: string;
-  timestamp: string;
-  data?: any;
+  level: 'info' | 'warn' | 'error' | 'success'
+  message: string
+  timestamp: string
+  data?: any
 }
 
 /**
@@ -137,22 +137,22 @@ export interface MigrationLog {
  */
 export interface CostEstimate {
   codes: {
-    count: number;
-    rentPerCode: number;
-    totalRent: number;
-  };
+    count: number
+    rentPerCode: number
+    totalRent: number
+  }
   users: {
-    count: number;
-    rentPerUser: number;
-    totalRent: number;
-  };
+    count: number
+    rentPerUser: number
+    totalRent: number
+  }
   transactions: {
-    count: number;
-    feePerTx: number;
-    totalFees: number;
-  };
+    count: number
+    feePerTx: number
+    totalFees: number
+  }
   total: {
-    sol: number;
-    usd?: number;
-  };
+    sol: number
+    usd?: number
+  }
 }

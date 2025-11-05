@@ -1,7 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
-import { AppProviders } from '@/components/app-providers.tsx';
-import ReferralFeatureSimple from '@/features/referral/referral-feature-simple.tsx';
-import { MigrationPage } from '@/features/admin/pages/MigrationPage';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
+import { AppProviders } from '@/components/app-providers.tsx'
+import ReferralFeatureSimple from '@/features/referral/referral-feature-simple.tsx'
+import { MigrationPage } from '@/features/admin/pages/MigrationPage'
 
 export function App() {
   return (
@@ -14,5 +14,5 @@ export function App() {
         </Routes>
       </BrowserRouter>
     </AppProviders>
-  );
+  )
 }

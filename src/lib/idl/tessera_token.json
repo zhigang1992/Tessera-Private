@@ -9,20 +9,8 @@
   "instructions": [
     {
       "name": "add_whitelisted_address",
-      "docs": [
-        "Add an address to the whitelist with a custom transfer fee",
-        "This data is used by the transfer hook"
-      ],
-      "discriminator": [
-        238,
-        85,
-        47,
-        49,
-        55,
-        247,
-        196,
-        229
-      ],
+      "docs": ["Add an address to the whitelist with a custom transfer fee", "This data is used by the transfer hook"],
+      "discriminator": [238, 85, 47, 49, 55, 247, 196, 229],
       "accounts": [
         {
           "name": "whitelist_entry",
@@ -31,17 +19,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  119,
-                  104,
-                  105,
-                  116,
-                  101,
-                  108,
-                  105,
-                  115,
-                  116
-                ]
+                "value": [119, 104, 105, 116, 101, 108, 105, 115, 116]
               },
               {
                 "kind": "account",
@@ -52,29 +30,20 @@
         },
         {
           "name": "whitelisted_address",
-          "docs": [
-            "The address to whitelist"
-          ]
+          "docs": ["The address to whitelist"]
         },
         {
           "name": "mint",
-          "docs": [
-            "The mint for which to whitelist the address"
-          ]
+          "docs": ["The mint for which to whitelist the address"]
         },
         {
           "name": "authority",
-          "docs": [
-            "The authority that can add to whitelist",
-            "Must be the mint's transfer fee authority"
-          ],
+          "docs": ["The authority that can add to whitelist", "Must be the mint's transfer fee authority"],
           "signer": true
         },
         {
           "name": "payer",
-          "docs": [
-            "The payer for the whitelist entry account"
-          ],
+          "docs": ["The payer for the whitelist entry account"],
           "writable": true,
           "signer": true
         },
@@ -97,16 +66,7 @@
         "This distributes fees to all recipients according to their configured splits",
         "Useful for senders who have sender_fee_config with multiple recipients"
       ],
-      "discriminator": [
-        163,
-        199,
-        229,
-        223,
-        129,
-        213,
-        169,
-        128
-      ],
+      "discriminator": [163, 199, 229, 223, 129, 213, 169, 128],
       "accounts": [
         {
           "name": "sender_fee_config",
@@ -115,25 +75,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  115,
-                  101,
-                  110,
-                  100,
-                  101,
-                  114,
-                  95,
-                  102,
-                  101,
-                  101,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
+                "value": [115, 101, 110, 100, 101, 114, 95, 102, 101, 101, 95, 99, 111, 110, 102, 105, 103]
               },
               {
                 "kind": "account",
@@ -149,30 +91,22 @@
         },
         {
           "name": "mint",
-          "docs": [
-            "The Token-2022 mint"
-          ],
+          "docs": ["The Token-2022 mint"],
           "writable": true
         },
         {
           "name": "sender_token_account",
-          "docs": [
-            "The sender's token account (where fees are withheld)"
-          ],
+          "docs": ["The sender's token account (where fees are withheld)"],
           "writable": true
         },
         {
           "name": "recipient_token_account",
-          "docs": [
-            "The recipient's token account (where fees will be sent)"
-          ],
+          "docs": ["The recipient's token account (where fees will be sent)"],
           "writable": true
         },
         {
           "name": "withdraw_authority",
-          "docs": [
-            "The withdraw authority (program authority)"
-          ],
+          "docs": ["The withdraw authority (program authority)"],
           "signer": true
         },
         {
@@ -189,29 +123,16 @@
         "This leverages Token-2022's native functionality with automatic fee collection",
         "Each mint has its own independent fee configuration"
       ],
-      "discriminator": [
-        170,
-        5,
-        122,
-        242,
-        120,
-        73,
-        22,
-        54
-      ],
+      "discriminator": [170, 5, 122, 242, 120, 73, 22, 54],
       "accounts": [
         {
           "name": "mint",
-          "docs": [
-            "The Token-2022 mint to initialize with transfer fees"
-          ],
+          "docs": ["The Token-2022 mint to initialize with transfer fees"],
           "writable": true
         },
         {
           "name": "authority",
-          "docs": [
-            "The authority that can update transfer fees"
-          ],
+          "docs": ["The authority that can update transfer fees"],
           "writable": true,
           "signer": true
         },
@@ -249,45 +170,16 @@
         "Monitor transfer status and fee distribution for a sender",
         "This function provides detailed information about fee distribution status"
       ],
-      "discriminator": [
-        168,
-        32,
-        190,
-        243,
-        56,
-        160,
-        218,
-        109
-      ],
+      "discriminator": [168, 32, 190, 243, 56, 160, 218, 109],
       "accounts": [
         {
           "name": "sender_fee_config",
-          "docs": [
-            "The sender fee config account"
-          ],
+          "docs": ["The sender fee config account"],
           "pda": {
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  115,
-                  101,
-                  110,
-                  100,
-                  101,
-                  114,
-                  95,
-                  102,
-                  101,
-                  101,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
+                "value": [115, 101, 110, 100, 101, 114, 95, 102, 101, 101, 95, 99, 111, 110, 102, 105, 103]
               },
               {
                 "kind": "account",
@@ -303,34 +195,19 @@
         },
         {
           "name": "mint",
-          "docs": [
-            "The mint for which to monitor the sender fee status"
-          ]
+          "docs": ["The mint for which to monitor the sender fee status"]
         },
         {
           "name": "sender_token_account",
-          "docs": [
-            "The sender's token account (where fees are withheld)"
-          ]
+          "docs": ["The sender's token account (where fees are withheld)"]
         }
       ],
       "args": []
     },
     {
       "name": "remove_sender_fee_config",
-      "docs": [
-        "Remove sender fee configuration"
-      ],
-      "discriminator": [
-        186,
-        125,
-        4,
-        230,
-        211,
-        43,
-        29,
-        92
-      ],
+      "docs": ["Remove sender fee configuration"],
+      "discriminator": [186, 125, 4, 230, 211, 43, 29, 92],
       "accounts": [
         {
           "name": "sender_fee_config",
@@ -339,25 +216,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  115,
-                  101,
-                  110,
-                  100,
-                  101,
-                  114,
-                  95,
-                  102,
-                  101,
-                  101,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
+                "value": [115, 101, 110, 100, 101, 114, 95, 102, 101, 101, 95, 99, 111, 110, 102, 105, 103]
               },
               {
                 "kind": "account",
@@ -372,22 +231,15 @@
         },
         {
           "name": "mint",
-          "docs": [
-            "The mint for which to remove the sender fee configuration"
-          ]
+          "docs": ["The mint for which to remove the sender fee configuration"]
         },
         {
           "name": "sender",
-          "docs": [
-            "The sender address whose fee configuration is being removed"
-          ]
+          "docs": ["The sender address whose fee configuration is being removed"]
         },
         {
           "name": "authority",
-          "docs": [
-            "The authority that can remove sender fee config",
-            "Must be the mint's transfer fee authority"
-          ],
+          "docs": ["The authority that can remove sender fee config", "Must be the mint's transfer fee authority"],
           "writable": true,
           "signer": true
         }
@@ -396,19 +248,8 @@
     },
     {
       "name": "remove_whitelisted_address",
-      "docs": [
-        "Remove an address from the whitelist"
-      ],
-      "discriminator": [
-        45,
-        233,
-        186,
-        76,
-        203,
-        76,
-        29,
-        185
-      ],
+      "docs": ["Remove an address from the whitelist"],
+      "discriminator": [45, 233, 186, 76, 203, 76, 29, 185],
       "accounts": [
         {
           "name": "whitelist_entry",
@@ -417,17 +258,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  119,
-                  104,
-                  105,
-                  116,
-                  101,
-                  108,
-                  105,
-                  115,
-                  116
-                ]
+                "value": [119, 104, 105, 116, 101, 108, 105, 115, 116]
               },
               {
                 "kind": "account",
@@ -438,25 +269,16 @@
         },
         {
           "name": "whitelisted_address",
-          "docs": [
-            "The address to remove from whitelist"
-          ],
-          "relations": [
-            "whitelist_entry"
-          ]
+          "docs": ["The address to remove from whitelist"],
+          "relations": ["whitelist_entry"]
         },
         {
           "name": "mint",
-          "docs": [
-            "The mint for which to remove the address from whitelist"
-          ]
+          "docs": ["The mint for which to remove the address from whitelist"]
         },
         {
           "name": "authority",
-          "docs": [
-            "The authority that can remove from whitelist",
-            "Must be the mint's transfer fee authority"
-          ],
+          "docs": ["The authority that can remove from whitelist", "Must be the mint's transfer fee authority"],
           "writable": true,
           "signer": true
         }
@@ -465,19 +287,8 @@
     },
     {
       "name": "set_sender_fee_recipients",
-      "docs": [
-        "Set up fee recipients for a specific sender on a specific mint"
-      ],
-      "discriminator": [
-        56,
-        231,
-        39,
-        64,
-        251,
-        168,
-        197,
-        220
-      ],
+      "docs": ["Set up fee recipients for a specific sender on a specific mint"],
+      "discriminator": [56, 231, 39, 64, 251, 168, 197, 220],
       "accounts": [
         {
           "name": "sender_fee_config",
@@ -486,25 +297,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  115,
-                  101,
-                  110,
-                  100,
-                  101,
-                  114,
-                  95,
-                  102,
-                  101,
-                  101,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
+                "value": [115, 101, 110, 100, 101, 114, 95, 102, 101, 101, 95, 99, 111, 110, 102, 105, 103]
               },
               {
                 "kind": "account",
@@ -519,29 +312,20 @@
         },
         {
           "name": "mint",
-          "docs": [
-            "The mint for which to configure fee recipients"
-          ]
+          "docs": ["The mint for which to configure fee recipients"]
         },
         {
           "name": "sender",
-          "docs": [
-            "The sender address for which to configure fee recipients"
-          ]
+          "docs": ["The sender address for which to configure fee recipients"]
         },
         {
           "name": "authority",
-          "docs": [
-            "The authority that can set fee configurations",
-            "Must be the mint's transfer fee authority"
-          ],
+          "docs": ["The authority that can set fee configurations", "Must be the mint's transfer fee authority"],
           "signer": true
         },
         {
           "name": "payer",
-          "docs": [
-            "The payer for account initialization"
-          ],
+          "docs": ["The payer for account initialization"],
           "writable": true,
           "signer": true
         },
@@ -569,30 +353,16 @@
         "Update Token-2022's native transfer fee configuration",
         "Authority must be the mint's transfer fee authority"
       ],
-      "discriminator": [
-        167,
-        83,
-        107,
-        237,
-        1,
-        210,
-        249,
-        1
-      ],
+      "discriminator": [167, 83, 107, 237, 1, 210, 249, 1],
       "accounts": [
         {
           "name": "mint",
-          "docs": [
-            "The Token-2022 mint"
-          ],
+          "docs": ["The Token-2022 mint"],
           "writable": true
         },
         {
           "name": "authority",
-          "docs": [
-            "The authority that can update transfer fees",
-            "Must be the mint's transfer fee authority"
-          ],
+          "docs": ["The authority that can update transfer fees", "Must be the mint's transfer fee authority"],
           "writable": true,
           "signer": true
         },
@@ -614,26 +384,12 @@
     },
     {
       "name": "write_token_metadata",
-      "docs": [
-        "Initialize Token-2022 metadata (write to mint)",
-        "Creates UPDATEABLE metadata with authority control"
-      ],
-      "discriminator": [
-        85,
-        178,
-        148,
-        20,
-        69,
-        219,
-        57,
-        212
-      ],
+      "docs": ["Initialize Token-2022 metadata (write to mint)", "Creates UPDATEABLE metadata with authority control"],
+      "discriminator": [85, 178, 148, 20, 69, 219, 57, 212],
       "accounts": [
         {
           "name": "mint",
-          "docs": [
-            "The Token-2022 mint with metadata pointer"
-          ],
+          "docs": ["The Token-2022 mint with metadata pointer"],
           "writable": true
         },
         {
@@ -673,29 +429,11 @@
   "accounts": [
     {
       "name": "SenderFeeConfig",
-      "discriminator": [
-        106,
-        0,
-        96,
-        189,
-        100,
-        137,
-        232,
-        90
-      ]
+      "discriminator": [106, 0, 96, 189, 100, 137, 232, 90]
     },
     {
       "name": "WhitelistEntry",
-      "discriminator": [
-        51,
-        70,
-        173,
-        81,
-        219,
-        192,
-        234,
-        62
-      ]
+      "discriminator": [51, 70, 173, 81, 219, 192, 234, 62]
     }
   ],
   "errors": [

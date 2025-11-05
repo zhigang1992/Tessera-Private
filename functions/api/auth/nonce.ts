@@ -1,21 +1,21 @@
-import type { D1Database, KVNamespace, PagesFunction } from '@cloudflare/workers-types';
+import type { D1Database, KVNamespace, PagesFunction } from '@cloudflare/workers-types'
 
-import { buildSignInMessage, NONCE_TTL_SECONDS } from '../../lib/auth';
-import { decodeBase58 } from '../../lib/encoding';
+import { buildSignInMessage, NONCE_TTL_SECONDS } from '../../lib/auth'
+import { decodeBase58 } from '../../lib/encoding'
 
 type Env = {
-  DB: D1Database;
-  SESSION_KV: KVNamespace;
-};
+  DB: D1Database
+  SESSION_KV: KVNamespace
+}
 
 function assertValidWalletAddress(address: string): void {
   if (address.length < 32 || address.length > 44) {
-    throw new Error('Invalid wallet address length');
+    throw new Error('Invalid wallet address length')
   }
 
-  const decoded = decodeBase58(address);
+  const decoded = decodeBase58(address)
   if (decoded.length !== 32) {
-    throw new Error('Wallet address must decode to 32 bytes');
+    throw new Error('Wallet address must decode to 32 bytes')
   }
 }
 
@@ -24,48 +24,50 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     return new Response('Method Not Allowed', {
       status: 405,
       headers: { Allow: 'GET' },
-    });
+    })
   }
 
-  const url = new URL(request.url);
-  const rawAddress = (url.searchParams.get('wallet') ?? url.searchParams.get('address') ?? '').trim();
+  const url = new URL(request.url)
+  const rawAddress = (url.searchParams.get('wallet') ?? url.searchParams.get('address') ?? '').trim()
 
   if (!rawAddress) {
-    return Response.json({ error: 'Missing wallet query parameter' }, { status: 400 });
+    return Response.json({ error: 'Missing wallet query parameter' }, { status: 400 })
   }
 
   try {
-    assertValidWalletAddress(rawAddress);
+    assertValidWalletAddress(rawAddress)
   } catch (error) {
-    return Response.json({ error: 'Invalid wallet address', detail: (error as Error).message }, { status: 400 });
+    return Response.json({ error: 'Invalid wallet address', detail: (error as Error).message }, { status: 400 })
   }
 
-  const issuedAt = new Date();
-  const expiresAt = new Date(issuedAt.getTime() + NONCE_TTL_SECONDS * 1000);
-  const nonce = crypto.randomUUID().replace(/-/g, '');
+  const issuedAt = new Date()
+  const expiresAt = new Date(issuedAt.getTime() + NONCE_TTL_SECONDS * 1000)
+  const nonce = crypto.randomUUID().replace(/-/g, '')
 
-  const db = env.DB;
-  const kv = env.SESSION_KV;
+  const db = env.DB
+  const kv = env.SESSION_KV
 
   try {
     // Ensure user exists first (required for foreign key)
     await db
-      .prepare("INSERT INTO users (wallet_address) VALUES (?) ON CONFLICT(wallet_address) DO UPDATE SET updated_at = datetime('now')")
+      .prepare(
+        "INSERT INTO users (wallet_address) VALUES (?) ON CONFLICT(wallet_address) DO UPDATE SET updated_at = datetime('now')",
+      )
       .bind(rawAddress)
-      .run();
+      .run()
 
     await db
       .prepare("DELETE FROM auth_nonces WHERE wallet_address = ? AND used = 0 AND expires_at <= datetime('now')")
       .bind(rawAddress)
-      .run();
+      .run()
 
     await db
       .prepare('INSERT INTO auth_nonces (nonce, wallet_address, expires_at, purpose) VALUES (?, ?, ?, ?)')
       .bind(nonce, rawAddress, expiresAt.toISOString(), 'session')
-      .run();
+      .run()
   } catch (error) {
-    console.error('Failed to persist nonce in D1', error);
-    return Response.json({ error: 'Failed to issue nonce' }, { status: 500 });
+    console.error('Failed to persist nonce in D1', error)
+    return Response.json({ error: 'Failed to issue nonce' }, { status: 500 })
   }
 
   try {
@@ -73,15 +75,19 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
       `nonce:${nonce}`,
       JSON.stringify({ walletAddress: rawAddress, purpose: 'session', expiresAt: expiresAt.toISOString() }),
       { expirationTtl: NONCE_TTL_SECONDS },
-    );
+    )
   } catch (error) {
-    console.error('Failed to persist nonce in KV', error);
-    await db.prepare('UPDATE auth_nonces SET used = 1 WHERE nonce = ?').bind(nonce).run().catch(() => {});
-    return Response.json({ error: 'Failed to issue nonce' }, { status: 500 });
+    console.error('Failed to persist nonce in KV', error)
+    await db
+      .prepare('UPDATE auth_nonces SET used = 1 WHERE nonce = ?')
+      .bind(nonce)
+      .run()
+      .catch(() => {})
+    return Response.json({ error: 'Failed to issue nonce' }, { status: 500 })
   }
 
-  const issuedAtIso = issuedAt.toISOString();
-  const expiresAtIso = expiresAt.toISOString();
+  const issuedAtIso = issuedAt.toISOString()
+  const expiresAtIso = expiresAt.toISOString()
 
   return Response.json(
     {
@@ -93,5 +99,5 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
       message: buildSignInMessage(nonce, issuedAtIso),
     },
     { headers: { 'Cache-Control': 'no-store' } },
-  );
-};
+  )
+}

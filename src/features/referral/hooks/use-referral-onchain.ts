@@ -5,11 +5,11 @@
  * Uses on-chain Solana queries instead of off-chain API
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
-import { toast } from 'sonner';
-import type { ReferralCode as ReferralCodeRecord, AffiliateData as AffiliateDataRecord } from '../lib/api-client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { PublicKey } from '@solana/web3.js'
+import { toast } from 'sonner'
+import type { ReferralCode as ReferralCodeRecord, AffiliateData as AffiliateDataRecord } from '../lib/api-client'
 import {
   useCreateReferralCode as useCreateCodeMutation,
   useSolanaConnection,
@@ -23,7 +23,7 @@ import {
   getTesseraMintAddress,
   getTesseraTokenProgramId,
   shortenAddress,
-} from '@/lib/solana';
+} from '@/lib/solana'
 
 /**
  * Query Keys - mimics the old structure for easier migration
@@ -33,49 +33,47 @@ export const referralKeys = {
   trader: () => [...referralKeys.all, 'trader'] as const,
   affiliate: () => [...referralKeys.all, 'affiliate'] as const,
   userCodes: (wallet: string) => [...referralKeys.all, 'userCodes', wallet] as const,
-};
+}
 
 /**
  * Trader Data (equivalent to useTraderData)
  * Returns user's registration and referral information
  */
 export function useTraderData(walletAddress?: string | null, enabled = true) {
-  const wallet = useWallet();
-  const connection = useSolanaConnection();
+  const wallet = useWallet()
+  const connection = useSolanaConnection()
 
   return useQuery({
     queryKey: [...referralKeys.trader(), walletAddress ?? 'no-wallet'],
     queryFn: async () => {
-      const pubkey = walletAddress ? new PublicKey(walletAddress) : wallet.publicKey;
-      if (!pubkey) return null;
+      const pubkey = walletAddress ? new PublicKey(walletAddress) : wallet.publicKey
+      if (!pubkey) return null
 
       // Fetch user registration from on-chain
-      const program = getReferralProgram(connection, wallet);
-      if (!program) return null;
+      const program = getReferralProgram(connection, wallet)
+      if (!program) return null
 
       const [registrationPDA] = PublicKey.findProgramAddressSync(
         [Buffer.from('user_registration'), pubkey.toBuffer()],
-        program.programId
-      );
+        program.programId,
+      )
 
       try {
-        const registration = await (program.account).userRegistration.fetch(registrationPDA);
+        const registration = await program.account.userRegistration.fetch(registrationPDA)
 
         // Fetch the referral code details
-        let referralCode = null;
+        let referralCode = null
         if (registration.referralCode) {
           try {
-            const codeAccount = await (program.account).referralCode.fetch(
-              registration.referralCode
-            );
+            const codeAccount = await program.account.referralCode.fetch(registration.referralCode)
             referralCode = {
               referrerCode: codeAccount.code,
               referrerWallet: registration.owner.toBase58(),
               boundAt: null, // Not stored on-chain in current schema
               lastModified: null,
-            };
+            }
           } catch (error) {
-            console.warn('Failed to fetch referral code details:', error);
+            console.warn('Failed to fetch referral code details:', error)
           }
         }
 
@@ -89,7 +87,7 @@ export function useTraderData(walletAddress?: string | null, enabled = true) {
             snapshotAt: new Date().toISOString(),
           },
           referral: referralCode,
-        };
+        }
       } catch (error) {
         // User not registered yet
         return {
@@ -102,13 +100,13 @@ export function useTraderData(walletAddress?: string | null, enabled = true) {
             snapshotAt: new Date().toISOString(),
           },
           referral: null,
-        };
+        }
       }
     },
     enabled: enabled && (!!walletAddress || !!wallet.publicKey),
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
-  });
+  })
 }
 
 /**
@@ -116,19 +114,19 @@ export function useTraderData(walletAddress?: string | null, enabled = true) {
  * Returns user's referral codes and metrics
  */
 export function useAffiliateData(enabled = true, walletAddress?: string | null) {
-  const wallet = useWallet();
-  const connection = useSolanaConnection();
+  const wallet = useWallet()
+  const connection = useSolanaConnection()
 
   return useQuery({
     queryKey: [...referralKeys.affiliate(), walletAddress ?? 'no-wallet'],
     queryFn: async () => {
-      const pubkey = walletAddress ? new PublicKey(walletAddress) : wallet.publicKey;
-      if (!pubkey) return null;
+      const pubkey = walletAddress ? new PublicKey(walletAddress) : wallet.publicKey
+      if (!pubkey) return null
 
-      const program = getReferralProgram(connection, wallet);
-      if (!program) return null;
+      const program = getReferralProgram(connection, wallet)
+      if (!program) return null
 
-      const allCodes = await (program.account).referralCode.all();
+      const allCodes = await program.account.referralCode.all()
       const referralCodes: ReferralCodeRecord[] = allCodes
         .filter(({ account }) => account.owner.equals(pubkey))
         .map(({ account }, index: number) => ({
@@ -140,7 +138,7 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           referredTraderCount: account.totalReferrals,
-        }));
+        }))
 
       const affiliateSummary: AffiliateDataRecord = {
         walletAddress: pubkey.toBase58(),
@@ -162,93 +160,90 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
           l2Traders: [],
           l3Traders: [],
         },
-      };
-      return affiliateSummary;
+      }
+      return affiliateSummary
     },
     enabled: enabled && (!!walletAddress || !!wallet.publicKey),
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
-  });
+  })
 }
 
 /**
  * Create Referral Code (uses on-chain transaction)
  */
 export function useCreateReferralCode() {
-  const queryClient = useQueryClient();
-  const onChainMutation = useCreateCodeMutation();
+  const queryClient = useQueryClient()
+  const onChainMutation = useCreateCodeMutation()
 
   return useMutation({
     mutationFn: async (payload: { codeSlug?: string; activeLayer?: number }) => {
       // Use auto-generated code if not provided
-      const code = payload.codeSlug || generateRandomCode();
+      const code = payload.codeSlug || generateRandomCode()
 
       // Store code in localStorage for future queries
-      const result = await onChainMutation.mutateAsync(code);
+      const result = await onChainMutation.mutateAsync(code)
 
-      return result;
+      return result
     },
     onSuccess: async () => {
       // Invalidate affiliate queries
-      await queryClient.invalidateQueries({ queryKey: referralKeys.affiliate() });
-      await queryClient.refetchQueries({ queryKey: referralKeys.affiliate() });
+      await queryClient.invalidateQueries({ queryKey: referralKeys.affiliate() })
+      await queryClient.refetchQueries({ queryKey: referralKeys.affiliate() })
     },
     onError: (error: Error) => {
       // Error handling already done in on-chain hook
-      console.error('Create referral code error:', error);
+      console.error('Create referral code error:', error)
     },
-  });
+  })
 }
 
 /**
  * Bind to Referral Code (uses on-chain transaction)
  */
 export function useBindReferralCode() {
-  const queryClient = useQueryClient();
-  const wallet = useWallet();
-  const connection = useSolanaConnection();
+  const queryClient = useQueryClient()
+  const wallet = useWallet()
+  const connection = useSolanaConnection()
 
   return useMutation({
     mutationFn: async (referralCode: string): Promise<{ code: string; txSignature: string }> => {
       if (!wallet.publicKey) {
-        throw new Error('Wallet not connected');
+        throw new Error('Wallet not connected')
       }
 
-      const program = getReferralProgram(connection, wallet);
+      const program = getReferralProgram(connection, wallet)
       if (!program) {
-        throw new Error('Program not initialized');
+        throw new Error('Program not initialized')
       }
 
       // Validate code exists
-      const codeAccount = await fetchReferralCode(connection, referralCode);
+      const codeAccount = await fetchReferralCode(connection, referralCode)
       if (!codeAccount) {
-        throw new Error('Referral code does not exist');
+        throw new Error('Referral code does not exist')
       }
 
       if (!codeAccount.isActive) {
-        throw new Error('Referral code is not active');
+        throw new Error('Referral code is not active')
       }
 
-      const referralConfig = await fetchReferralConfig(connection);
+      const referralConfig = await fetchReferralConfig(connection)
       if (!referralConfig) {
-        throw new Error('Referral system is not initialized');
+        throw new Error('Referral system is not initialized')
       }
 
-      const [referralConfigPda] = getReferralConfigPDA(program.programId);
-      const tesseraMint = getTesseraMintAddress();
+      const [referralConfigPda] = getReferralConfigPDA(program.programId)
+      const tesseraMint = getTesseraMintAddress()
       const rawTokenProgram =
-        (referralConfig as any).tesseraTokenProgram ??
-        (referralConfig as any).tessera_token_program;
-      const tesseraTokenProgramId = rawTokenProgram
-        ? new PublicKey(rawTokenProgram)
-        : getTesseraTokenProgramId();
+        (referralConfig as any).tesseraTokenProgram ?? (referralConfig as any).tessera_token_program
+      const tesseraTokenProgramId = rawTokenProgram ? new PublicKey(rawTokenProgram) : getTesseraTokenProgramId()
 
       // Get optional referrer registration if it exists
-      const referrerPubkey = new PublicKey(codeAccount.owner);
-      const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey);
+      const referrerPubkey = new PublicKey(codeAccount.owner)
+      const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey)
       const referrerRegistrationPda = referrerRegistration
         ? getUserRegistrationPDA(referrerPubkey, program.programId)[0]
-        : null;
+        : null
 
       // Get accounts with the referrer registration if available
       const accounts = getRegisterWithReferralCodeAccounts(referralCode, wallet.publicKey, {
@@ -257,37 +252,32 @@ export function useBindReferralCode() {
         referralConfig: referralConfigPda,
         programId: program.programId,
         tesseraTokenProgram: tesseraTokenProgramId,
-      });
+      })
 
-      const txSignature = await program.methods
-        .registerWithReferralCode()
-        .accounts(accounts)
-        .rpc();
+      const txSignature = await program.methods.registerWithReferralCode().accounts(accounts).rpc()
 
-      return { code: referralCode, txSignature };
+      return { code: referralCode, txSignature }
     },
     onSuccess: (data) => {
-      toast.success(
-        `Registered with code "${data.code}"! TX: ${shortenAddress(data.txSignature)}`
-      );
-      queryClient.invalidateQueries({ queryKey: referralKeys.trader() });
-      queryClient.invalidateQueries({ queryKey: referralKeys.affiliate() });
+      toast.success(`Registered with code "${data.code}"! TX: ${shortenAddress(data.txSignature)}`)
+      queryClient.invalidateQueries({ queryKey: referralKeys.trader() })
+      queryClient.invalidateQueries({ queryKey: referralKeys.affiliate() })
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to bind referral code');
+      toast.error(error.message || 'Failed to bind referral code')
     },
-  });
+  })
 }
 
 /**
  * Helper: Generate random referral code (6-12 chars)
  */
 function generateRandomCode(): string {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No confusing chars
-  const length = 8;
-  let code = '';
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // No confusing chars
+  const length = 8
+  let code = ''
   for (let i = 0; i < length; i++) {
-    code += alphabet[Math.floor(Math.random() * alphabet.length)];
+    code += alphabet[Math.floor(Math.random() * alphabet.length)]
   }
-  return code;
+  return code
 }

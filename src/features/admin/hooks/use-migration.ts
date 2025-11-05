@@ -6,9 +6,9 @@
  * 2. Register users with codes
  */
 
-import { useState, useCallback } from 'react';
-import { useAdminBatchCreateCodes } from './use-admin-batch-create-codes';
-import { useAdminBatchRegisterUsers } from './use-admin-batch-register-users';
+import { useState, useCallback } from 'react'
+import { useAdminBatchCreateCodes } from './use-admin-batch-create-codes'
+import { useAdminBatchRegisterUsers } from './use-admin-batch-register-users'
 import type {
   MigrationData,
   MigrationConfig,
@@ -16,17 +16,17 @@ import type {
   MigrationSummary,
   MigrationLog,
   TransactionResult,
-} from '../types/migration';
+} from '../types/migration'
 
 interface UseMigrationResult {
-  progress: MigrationProgress;
-  summary: MigrationSummary | null;
-  logs: MigrationLog[];
-  isRunning: boolean;
-  startMigration: (data: MigrationData, config: MigrationConfig) => Promise<void>;
-  pauseMigration: () => void;
-  resumeMigration: () => void;
-  cancelMigration: () => void;
+  progress: MigrationProgress
+  summary: MigrationSummary | null
+  logs: MigrationLog[]
+  isRunning: boolean
+  startMigration: (data: MigrationData, config: MigrationConfig) => Promise<void>
+  pauseMigration: () => void
+  resumeMigration: () => void
+  cancelMigration: () => void
 }
 
 export function useMigration(): UseMigrationResult {
@@ -40,16 +40,16 @@ export function useMigration(): UseMigrationResult {
     usersFailed: 0,
     currentBatch: 0,
     totalBatches: 0,
-  });
+  })
 
-  const [summary, setSummary] = useState<MigrationSummary | null>(null);
-  const [logs, setLogs] = useState<MigrationLog[]>([]);
-  const [isRunning, setIsRunning] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isCancelled, setIsCancelled] = useState(false);
+  const [summary, setSummary] = useState<MigrationSummary | null>(null)
+  const [logs, setLogs] = useState<MigrationLog[]>([])
+  const [isRunning, setIsRunning] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const [isCancelled, setIsCancelled] = useState(false)
 
-  const batchCreateCodes = useAdminBatchCreateCodes();
-  const batchRegisterUsers = useAdminBatchRegisterUsers();
+  const batchCreateCodes = useAdminBatchCreateCodes()
+  const batchRegisterUsers = useAdminBatchRegisterUsers()
 
   const addLog = useCallback((level: MigrationLog['level'], message: string, data?: any) => {
     const log: MigrationLog = {
@@ -57,28 +57,28 @@ export function useMigration(): UseMigrationResult {
       message,
       timestamp: new Date().toISOString(),
       data,
-    };
-    setLogs((prev) => [...prev, log]);
-    console.log(`[${level.toUpperCase()}]`, message, data);
-  }, []);
+    }
+    setLogs((prev) => [...prev, log])
+    console.log(`[${level.toUpperCase()}]`, message, data)
+  }, [])
 
-  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
   const startMigration = useCallback(
     async (data: MigrationData, config: MigrationConfig) => {
-      setIsRunning(true);
-      setIsPaused(false);
-      setIsCancelled(false);
-      setLogs([]);
+      setIsRunning(true)
+      setIsPaused(false)
+      setIsCancelled(false)
+      setLogs([])
 
-      const startTime = Date.now();
-      const transactions: TransactionResult[] = [];
+      const startTime = Date.now()
+      const transactions: TransactionResult[] = []
 
       try {
         addLog('info', 'Starting migration process', {
           totalCodes: data.referralCodes.length,
           totalBindings: data.traderBindings.length,
-        });
+        })
 
         // Phase 1: Create referral codes
         setProgress((prev) => ({
@@ -86,20 +86,20 @@ export function useMigration(): UseMigrationResult {
           phase: 'creating-codes',
           codesTotal: data.referralCodes.length,
           totalBatches: Math.ceil(data.referralCodes.length / config.batchSize),
-        }));
+        }))
 
-        addLog('info', `Creating ${data.referralCodes.length} referral codes...`);
+        addLog('info', `Creating ${data.referralCodes.length} referral codes...`)
 
         if (!config.dryRun) {
           const codeResult = await batchCreateCodes.mutateAsync({
             codes: data.referralCodes,
-          });
+          })
 
           setProgress((prev) => ({
             ...prev,
             codesCreated: codeResult.successful,
             codesFailed: codeResult.failed,
-          }));
+          }))
 
           // Add transactions to log
           codeResult.signatures.forEach((sig) => {
@@ -109,8 +109,8 @@ export function useMigration(): UseMigrationResult {
               signature: sig,
               timestamp: new Date().toISOString(),
               data: {},
-            });
-          });
+            })
+          })
 
           codeResult.errors.forEach((err) => {
             transactions.push({
@@ -119,25 +119,25 @@ export function useMigration(): UseMigrationResult {
               error: err.error,
               timestamp: new Date().toISOString(),
               data: { code: err.code },
-            });
-          });
+            })
+          })
 
           addLog('success', `Created ${codeResult.successful} codes`, {
             failed: codeResult.failed,
             signatures: codeResult.signatures,
-          });
+          })
         } else {
-          addLog('info', '(DRY RUN) Simulated code creation');
+          addLog('info', '(DRY RUN) Simulated code creation')
         }
 
         // Check for pause/cancel
         if (isCancelled) {
-          addLog('warn', 'Migration cancelled by user');
-          return;
+          addLog('warn', 'Migration cancelled by user')
+          return
         }
 
         // Wait between phases
-        await delay(config.batchDelayMs);
+        await delay(config.batchDelayMs)
 
         // Phase 2: Register users
         setProgress((prev) => ({
@@ -147,20 +147,20 @@ export function useMigration(): UseMigrationResult {
           totalBatches:
             Math.ceil(data.referralCodes.length / config.batchSize) +
             Math.ceil(data.traderBindings.length / config.batchSize),
-        }));
+        }))
 
-        addLog('info', `Registering ${data.traderBindings.length} users...`);
+        addLog('info', `Registering ${data.traderBindings.length} users...`)
 
         if (!config.dryRun) {
           const userResult = await batchRegisterUsers.mutateAsync({
             bindings: data.traderBindings,
-          });
+          })
 
           setProgress((prev) => ({
             ...prev,
             usersRegistered: userResult.successful,
             usersFailed: userResult.failed,
-          }));
+          }))
 
           // Add transactions to log
           userResult.signatures.forEach((sig) => {
@@ -170,8 +170,8 @@ export function useMigration(): UseMigrationResult {
               signature: sig,
               timestamp: new Date().toISOString(),
               data: {},
-            });
-          });
+            })
+          })
 
           userResult.errors.forEach((err) => {
             transactions.push({
@@ -180,22 +180,22 @@ export function useMigration(): UseMigrationResult {
               error: err.error,
               timestamp: new Date().toISOString(),
               data: { user: err.user },
-            });
-          });
+            })
+          })
 
           addLog('success', `Registered ${userResult.successful} users`, {
             failed: userResult.failed,
             signatures: userResult.signatures,
-          });
+          })
         } else {
-          addLog('info', '(DRY RUN) Simulated user registration');
+          addLog('info', '(DRY RUN) Simulated user registration')
         }
 
         // Mark as completed
-        setProgress((prev) => ({ ...prev, phase: 'completed' }));
+        setProgress((prev) => ({ ...prev, phase: 'completed' }))
 
-        const endTime = Date.now();
-        const duration = (endTime - startTime) / 1000;
+        const endTime = Date.now()
+        const duration = (endTime - startTime) / 1000
 
         // Build summary
         const migrationSummary: MigrationSummary = {
@@ -221,36 +221,36 @@ export function useMigration(): UseMigrationResult {
             total: 0,
           },
           transactions,
-        };
+        }
 
-        setSummary(migrationSummary);
-        addLog('success', 'Migration completed successfully!', migrationSummary);
+        setSummary(migrationSummary)
+        addLog('success', 'Migration completed successfully!', migrationSummary)
       } catch (error) {
-        setProgress((prev) => ({ ...prev, phase: 'failed' }));
-        addLog('error', 'Migration failed', error);
-        throw error;
+        setProgress((prev) => ({ ...prev, phase: 'failed' }))
+        addLog('error', 'Migration failed', error)
+        throw error
       } finally {
-        setIsRunning(false);
+        setIsRunning(false)
       }
     },
-    [batchCreateCodes, batchRegisterUsers, addLog, isCancelled, progress]
-  );
+    [batchCreateCodes, batchRegisterUsers, addLog, isCancelled, progress],
+  )
 
   const pauseMigration = useCallback(() => {
-    setIsPaused(true);
-    addLog('warn', 'Migration paused');
-  }, [addLog]);
+    setIsPaused(true)
+    addLog('warn', 'Migration paused')
+  }, [addLog])
 
   const resumeMigration = useCallback(() => {
-    setIsPaused(false);
-    addLog('info', 'Migration resumed');
-  }, [addLog]);
+    setIsPaused(false)
+    addLog('info', 'Migration resumed')
+  }, [addLog])
 
   const cancelMigration = useCallback(() => {
-    setIsCancelled(true);
-    setIsRunning(false);
-    addLog('warn', 'Migration cancelled');
-  }, [addLog]);
+    setIsCancelled(true)
+    setIsRunning(false)
+    addLog('warn', 'Migration cancelled')
+  }, [addLog])
 
   return {
     progress,
@@ -261,5 +261,5 @@ export function useMigration(): UseMigrationResult {
     pauseMigration,
     resumeMigration,
     cancelMigration,
-  };
+  }
 }

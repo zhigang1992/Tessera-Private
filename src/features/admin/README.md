@@ -30,6 +30,7 @@ Only the program authority wallet can execute migrations. Connect using the Sola
 ### 3. Load Migration Data
 
 The page automatically fetches current off-chain data from the API endpoint:
+
 - `GET /api/admin/migration/data`
 
 This returns all active referral codes and trader bindings in the format:
@@ -85,6 +86,7 @@ Click "Start Migration" to begin. The process runs in two phases:
 ### 6. View Results
 
 After completion, you'll see:
+
 - Total codes created
 - Total users registered
 - Failed transactions
@@ -98,6 +100,7 @@ After completion, you'll see:
 Fetches all migration data from the off-chain database.
 
 **Response:**
+
 ```json
 {
   "referralCodes": Array<ReferralCodeData>,
@@ -116,6 +119,7 @@ Fetches all migration data from the off-chain database.
 The API endpoint uses these SQL queries:
 
 ### Fetch Referral Codes
+
 ```sql
 SELECT
   rc.code_slug as code,
@@ -128,6 +132,7 @@ ORDER BY rc.created_at
 ```
 
 ### Fetch Trader Bindings
+
 ```sql
 SELECT
   tb.wallet_address as userWallet,
@@ -146,12 +151,14 @@ ORDER BY tb.bound_at
 Batch creates multiple referral codes.
 
 **Accounts:**
+
 - `referralConfig`: Global referral config PDA
 - `authority`: Program authority (signer)
 - `payer`: Transaction payer (signer)
 - `systemProgram`: Solana system program
 
 **Args:**
+
 - `codes`: Array of code strings (max 10)
 - `owners`: Array of owner public keys (max 10)
 
@@ -160,12 +167,14 @@ Batch creates multiple referral codes.
 Batch registers multiple users with referral codes.
 
 **Accounts:**
+
 - `referralConfig`: Global referral config PDA
 - `authority`: Program authority (signer)
 - `payer`: Transaction payer (signer)
 - `systemProgram`: Solana system program
 
 **Args:**
+
 - `users`: Array of user public keys (max 10)
 - `referralCodeKeys`: Array of referral code PDAs (max 10)
 
@@ -178,6 +187,7 @@ Estimated costs for migration:
 - **Transaction Fee**: ~0.000005 SOL per transaction
 
 **Example (100 codes, 1000 users):**
+
 - Codes: 100 × 0.001 = 0.1 SOL
 - Users: 1000 × 0.002 = 2.0 SOL
 - Fees: 1100 × 0.000005 = 0.0055 SOL
@@ -206,6 +216,7 @@ functions/api/admin/migration/
 ## Security Considerations
 
 ⚠️ **Important:**
+
 - Only program authority can execute migrations
 - Always test with dry-run mode first
 - Verify data before migrating
@@ -216,18 +227,23 @@ functions/api/admin/migration/
 ## Troubleshooting
 
 ### "Wallet not connected"
+
 Connect your Solana wallet using the wallet adapter button.
 
 ### "Unauthorized"
+
 Ensure you're using the program authority wallet. Check that the wallet matches the authority in the referral config.
 
 ### "Failed to fetch migration data"
+
 Check that:
+
 - API endpoint is running
 - Database connection is configured
 - CORS is enabled for your domain
 
 ### Transaction failures
+
 - Check SOL balance for rent and fees
 - Verify batch size is not too large
 - Ensure referral codes don't already exist

@@ -16,16 +16,16 @@
  */
 
 // Configuration
-export * from './config';
+export * from './config'
 
 // Client utilities
-export * from './on-chain-client';
+export * from './on-chain-client'
 
 // React hooks
-export * from './hooks';
+export * from './hooks'
 
 // Re-export commonly used types from @solana/web3.js
-export { PublicKey, Connection, SystemProgram, Transaction } from '@solana/web3.js';
+export { PublicKey, Connection, SystemProgram, Transaction } from '@solana/web3.js'
 
 // Re-export Anchor types
-export type { Program, AnchorProvider } from '@coral-xyz/anchor';
+export type { Program, AnchorProvider } from '@coral-xyz/anchor'

@@ -4,9 +4,9 @@
  * Uses admin_register_with_referral_code instruction (single user)
  */
 
-import { useMutation } from '@tanstack/react-query';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey, SystemProgram } from '@solana/web3.js';
+import { useMutation } from '@tanstack/react-query'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { PublicKey, SystemProgram } from '@solana/web3.js'
 import {
   useSolanaConnection,
   getReferralProgram,
@@ -20,17 +20,17 @@ import {
   getTesseraTokenProgramId,
   fetchReferralCode,
   fetchUserRegistration,
-} from '@/lib/solana';
-import type { TraderBindingData } from '../types/migration';
+} from '@/lib/solana'
+import type { TraderBindingData } from '../types/migration'
 
 interface RegisterUserInput {
-  binding: TraderBindingData;
+  binding: TraderBindingData
 }
 
 interface RegisterUserResult {
-  signature: string;
-  user: string;
-  referralCode: string;
+  signature: string
+  user: string
+  referralCode: string
 }
 
 /**
@@ -38,48 +38,48 @@ interface RegisterUserResult {
  * Only the program authority can use this
  */
 export function useAdminRegisterSingleUser() {
-  const wallet = useWallet();
-  const connection = useSolanaConnection();
+  const wallet = useWallet()
+  const connection = useSolanaConnection()
 
   return useMutation({
     mutationFn: async (input: RegisterUserInput): Promise<RegisterUserResult> => {
       if (!wallet.publicKey) {
-        throw new Error('Wallet not connected');
+        throw new Error('Wallet not connected')
       }
 
-      const program = getReferralProgram(connection, wallet);
+      const program = getReferralProgram(connection, wallet)
       if (!program) {
-        throw new Error('Program not initialized');
+        throw new Error('Program not initialized')
       }
 
-      const userPubkey = new PublicKey(input.binding.userWallet);
+      const userPubkey = new PublicKey(input.binding.userWallet)
 
       // Validate referral code exists on-chain
-      const codeAccount = await fetchReferralCode(connection, input.binding.referralCode);
+      const codeAccount = await fetchReferralCode(connection, input.binding.referralCode)
       if (!codeAccount) {
-        throw new Error(`Referral code "${input.binding.referralCode}" does not exist on-chain. Create it first.`);
+        throw new Error(`Referral code "${input.binding.referralCode}" does not exist on-chain. Create it first.`)
       }
 
       if (!codeAccount.isActive) {
-        throw new Error(`Referral code "${input.binding.referralCode}" is not active`);
+        throw new Error(`Referral code "${input.binding.referralCode}" is not active`)
       }
 
-      const [referralConfigPDA] = getReferralConfigPDA(program.programId);
-      const [referralCodePDA] = getReferralCodePDA(input.binding.referralCode, program.programId);
-      const [userRegistrationPDA] = getUserRegistrationPDA(userPubkey, program.programId);
-      const [tokenAuthorityPDA] = getTokenAuthorityPDA(referralConfigPDA, program.programId);
-      const [adminListPDA] = getAdminListPDA(program.programId);
+      const [referralConfigPDA] = getReferralConfigPDA(program.programId)
+      const [referralCodePDA] = getReferralCodePDA(input.binding.referralCode, program.programId)
+      const [userRegistrationPDA] = getUserRegistrationPDA(userPubkey, program.programId)
+      const [tokenAuthorityPDA] = getTokenAuthorityPDA(referralConfigPDA, program.programId)
+      const [adminListPDA] = getAdminListPDA(program.programId)
 
       // Get optional referrer registration if it exists (similar to user-facing flow)
-      const referrerPubkey = new PublicKey(codeAccount.owner);
-      const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey);
+      const referrerPubkey = new PublicKey(codeAccount.owner)
+      const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey)
       const referrerRegistrationPDA = referrerRegistration
         ? getUserRegistrationPDA(referrerPubkey, program.programId)[0]
-        : null;
+        : null
 
-      const tesseraMint = getTesseraMintAddress();
-      const tesseraTokenProgramId = getTesseraTokenProgramId();
-      const [whitelistEntryPDA] = getWhitelistEntryPDA(userPubkey, tesseraTokenProgramId);
+      const tesseraMint = getTesseraMintAddress()
+      const tesseraTokenProgramId = getTesseraTokenProgramId()
+      const [whitelistEntryPDA] = getWhitelistEntryPDA(userPubkey, tesseraTokenProgramId)
 
       const signature = await program.methods
         .adminRegisterWithReferralCode(userPubkey)
@@ -98,13 +98,13 @@ export function useAdminRegisterSingleUser() {
           payer: wallet.publicKey,
           systemProgram: SystemProgram.programId,
         })
-        .rpc();
+        .rpc()
 
       return {
         signature,
         user: input.binding.userWallet,
         referralCode: input.binding.referralCode,
-      };
+      }
     },
-  });
+  })
 }

@@ -53,9 +53,7 @@ export default function ReferralFeatureSimple() {
           {!connected || !publicKey ? (
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
               <h2 className="text-2xl font-bold text-black dark:text-white">Referral Program</h2>
-              <p className="text-black/50 dark:text-white/50">
-                Connect your wallet to access the referral program
-              </p>
+              <p className="text-black/50 dark:text-white/50">Connect your wallet to access the referral program</p>
               <WalletDropdown />
             </div>
           ) : (
@@ -76,21 +74,13 @@ export default function ReferralFeatureSimple() {
         </div>
 
         <div className="relative w-full overflow-hidden rounded-[32px] hidden lg:block lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)] lg:flex-1 lg:self-start">
-          <img
-            src={heroShot}
-            alt=""
-            className="h-full w-full object-contain p-6 sm:p-8 lg:p-10"
-          />
+          <img src={heroShot} alt="" className="h-full w-full object-contain p-6 sm:p-8 lg:p-10" />
         </div>
       </div>
 
       {referralCode && (
-        <ReferralCodeModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          referralCode={referralCode}
-        />
+        <ReferralCodeModal isOpen={isModalOpen} onClose={handleCloseModal} referralCode={referralCode} />
       )}
     </div>
-  );
+  )
 }
