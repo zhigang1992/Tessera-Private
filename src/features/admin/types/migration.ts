@@ -54,6 +54,15 @@ export interface BatchState {
   signature?: string
   error?: string
   timestamp?: string
+  details?: {
+    successful: number
+    failed: number
+    skipped: number
+    errors: Array<{
+      item: string // wallet address or code
+      error: string
+    }>
+  }
 }
 
 /**

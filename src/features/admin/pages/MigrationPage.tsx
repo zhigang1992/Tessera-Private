@@ -163,6 +163,7 @@ export function MigrationPage() {
       let successCount = 0
       let skippedCount = 0
       let failedCount = 0
+      const errors: Array<{ item: string; error: string }> = []
 
       // Execute all users in batch
       for (const bindingData of batch) {
@@ -183,6 +184,11 @@ export function MigrationPage() {
           successCount++
         } catch (err) {
           failedCount++
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+          errors.push({
+            item: `${bindingData.userWallet.slice(0, 8)}... → ${bindingData.referralCode}`,
+            error: errorMessage,
+          })
           console.error(`Failed to register user ${bindingData.userWallet}:`, err)
         }
       }
@@ -194,8 +200,14 @@ export function MigrationPage() {
         [batchIndex]: {
           status: failedCount > 0 && successCount === 0 ? 'failed' : 'success',
           signature: results.length > 0 ? results[0] : undefined,
-          error: failedCount > 0 ? `${failedCount} failed` : undefined,
+          error: failedCount > 0 ? summary : undefined,
           timestamp: new Date().toISOString(),
+          details: {
+            successful: successCount,
+            failed: failedCount,
+            skipped: skippedCount,
+            errors,
+          },
         },
       }))
     } catch (err) {
@@ -464,16 +476,40 @@ export function MigrationPage() {
                               : 'bg-red-50 dark:bg-red-950/30 text-red-800 dark:text-red-300'
                           }`}
                         >
+                          {/* Summary */}
+                          {state.details && (
+                            <div className="mb-3 font-semibold">
+                              Summary: {state.details.successful} successful, {state.details.skipped} skipped,{' '}
+                              {state.details.failed} failed
+                            </div>
+                          )}
+
                           {state.signature && (
                             <div className="mb-2">
-                              <div className="font-semibold">TX:</div>
+                              <div className="font-semibold">First TX:</div>
                               <div className="font-mono text-xs break-all">{state.signature}</div>
                             </div>
                           )}
-                          {state.error && (
-                            <div className="text-red-700 dark:text-red-400 font-semibold">{state.error}</div>
+
+                          {/* Individual Errors */}
+                          {state.details && state.details.errors.length > 0 && (
+                            <div className="mt-3 border-t border-red-200 dark:border-red-800 pt-3">
+                              <div className="font-semibold mb-2">Failed Registrations:</div>
+                              <div className="space-y-2 max-h-48 overflow-y-auto">
+                                {state.details.errors.map((err, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-2"
+                                  >
+                                    <div className="font-mono text-xs mb-1">{err.item}</div>
+                                    <div className="text-xs text-red-700 dark:text-red-400">{err.error}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           )}
-                          <div className="text-xs text-black/50 dark:text-white/50 mt-1">{state.timestamp}</div>
+
+                          <div className="text-xs text-black/50 dark:text-white/50 mt-2">{state.timestamp}</div>
                         </div>
                       )}
                     </div>
