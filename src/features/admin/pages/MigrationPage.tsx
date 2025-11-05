@@ -28,6 +28,7 @@ export function MigrationPage() {
   const [migrationData, setMigrationData] = useState<MigrationData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [dataWarning, setDataWarning] = useState<string | null>(null)
 
   const [config, setConfig] = useState<MigrationConfig>({
     batchSize: 10,
@@ -78,6 +79,45 @@ export function MigrationPage() {
 
     try {
       const data = await fetchMigrationData()
+
+      // Validate: Check if all trader bindings reference codes that exist in referralCodes
+      const codeSet = new Set(data.referralCodes.map((c) => c.code))
+      const missingCodes: string[] = []
+
+      data.traderBindings.forEach((binding) => {
+        if (!codeSet.has(binding.referralCode)) {
+          if (!missingCodes.includes(binding.referralCode)) {
+            missingCodes.push(binding.referralCode)
+          }
+        }
+      })
+
+      if (missingCodes.length > 0) {
+        console.warn('⚠️  Data validation warning:')
+        console.warn(`Found ${missingCodes.length} referral codes in traderBindings that are NOT in referralCodes:`)
+        missingCodes.forEach((code) => console.warn(`  - "${code}"`))
+        console.warn(
+          '\nThese users cannot be migrated because their referral codes were not included in the referralCodes data.',
+        )
+
+        // Log which users are affected
+        const affectedUsers = data.traderBindings.filter((b) => missingCodes.includes(b.referralCode))
+        console.warn(`Affected users: ${affectedUsers.length}`)
+        console.warn('First 5 affected users:')
+        affectedUsers.slice(0, 5).forEach((b) => {
+          console.warn(`  ${b.userWallet.slice(0, 8)}... → code: "${b.referralCode}"`)
+        })
+
+        // Set warning message for UI
+        setDataWarning(
+          `Data mismatch detected: ${affectedUsers.length} users reference ${missingCodes.length} ` +
+            `referral codes that are not in the referralCodes data. These users will fail to migrate. ` +
+            `Check console for details.`,
+        )
+      } else {
+        setDataWarning(null)
+      }
+
       setMigrationData(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch migration data')
@@ -317,6 +357,15 @@ export function MigrationPage() {
                   Export JSON
                 </button>
               </div>
+
+              {dataWarning && (
+                <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/50 rounded-[16px] p-4 mt-4">
+                  <h3 className="font-semibold mb-2 text-orange-900 dark:text-orange-300">
+                    ⚠️ Data Validation Warning
+                  </h3>
+                  <p className="text-sm text-orange-800 dark:text-orange-400">{dataWarning}</p>
+                </div>
+              )}
 
               {estimatedCost && (
                 <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800/50 rounded-[16px] p-4 mt-4">
