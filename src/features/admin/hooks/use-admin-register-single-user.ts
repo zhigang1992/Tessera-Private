@@ -17,7 +17,6 @@ import {
   getAdminListPDA,
   getWhitelistEntryPDA,
   getTesseraMintAddress,
-  getTesseraTokenProgramId,
   fetchReferralCode,
   fetchUserRegistration,
 } from '@/lib/solana'
@@ -77,8 +76,12 @@ export function useAdminRegisterSingleUser() {
         ? getUserRegistrationPDA(referrerPubkey, program.programId)[0]
         : null
 
+      // IMPORTANT: Fetch the referral config to get the tessera_token_program stored on-chain
+      // The admin instruction has a constraint that requires this exact program ID
+      const referralConfigAccount = await program.account.referralConfig.fetch(referralConfigPDA)
+      const tesseraTokenProgramId = referralConfigAccount.tesseraTokenProgram
+
       const tesseraMint = getTesseraMintAddress()
-      const tesseraTokenProgramId = getTesseraTokenProgramId()
       const [whitelistEntryPDA] = getWhitelistEntryPDA(userPubkey, tesseraTokenProgramId)
 
       const signature = await program.methods
