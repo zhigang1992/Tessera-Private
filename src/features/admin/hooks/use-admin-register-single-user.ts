@@ -14,8 +14,8 @@ import {
   getReferralCodePDA,
   getUserRegistrationPDA,
   getTokenAuthorityPDA,
+  getAdminListPDA,
   getWhitelistEntryPDA,
-  getSenderFeeConfigPDA,
   getTesseraMintAddress,
   getTesseraTokenProgramId,
 } from '@/lib/solana';
@@ -55,11 +55,11 @@ export function useAdminRegisterSingleUser() {
       const [referralCodePDA] = getReferralCodePDA(input.binding.referralCode, program.programId);
       const [userRegistrationPDA] = getUserRegistrationPDA(userPubkey, program.programId);
       const [tokenAuthorityPDA] = getTokenAuthorityPDA(referralConfigPDA, program.programId);
+      const [adminListPDA] = getAdminListPDA(program.programId);
 
       const tesseraMint = getTesseraMintAddress();
       const tesseraTokenProgramId = getTesseraTokenProgramId();
       const [whitelistEntryPDA] = getWhitelistEntryPDA(userPubkey, tesseraTokenProgramId);
-      const [senderFeeConfigPDA] = getSenderFeeConfigPDA(tesseraMint, userPubkey, tesseraTokenProgramId);
 
       const signature = await program.methods
         .adminRegisterWithReferralCode(userPubkey)
@@ -68,6 +68,7 @@ export function useAdminRegisterSingleUser() {
           userRegistration: userRegistrationPDA,
           referralConfig: referralConfigPDA,
           tokenAuthority: tokenAuthorityPDA,
+          adminList: adminListPDA,
           referrerRegistration: null, // Will be derived on-chain
           whitelistEntry: whitelistEntryPDA,
           userAccount: userPubkey,

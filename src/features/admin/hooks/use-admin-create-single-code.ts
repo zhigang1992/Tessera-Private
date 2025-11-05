@@ -7,7 +7,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, SystemProgram } from '@solana/web3.js';
-import { useSolanaConnection, getReferralProgram, getReferralConfigPDA, getReferralCodePDA } from '@/lib/solana';
+import { useSolanaConnection, getReferralProgram, getReferralConfigPDA, getReferralCodePDA, getAdminListPDA } from '@/lib/solana';
 import type { ReferralCodeData } from '../types/migration';
 
 interface CreateCodeInput {
@@ -41,6 +41,7 @@ export function useAdminCreateSingleCode() {
 
       const [referralConfigPDA] = getReferralConfigPDA(program.programId);
       const [referralCodePDA] = getReferralCodePDA(input.code.code, program.programId);
+      const [adminListPDA] = getAdminListPDA(program.programId);
       const ownerPubkey = new PublicKey(input.code.ownerWallet);
 
       const signature = await program.methods
@@ -48,6 +49,7 @@ export function useAdminCreateSingleCode() {
         .accounts({
           referralCode: referralCodePDA,
           referralConfig: referralConfigPDA,
+          adminList: adminListPDA,
           authority: wallet.publicKey,
           payer: wallet.publicKey,
           systemProgram: SystemProgram.programId,

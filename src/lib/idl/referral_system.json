@@ -230,6 +230,28 @@
           }
         },
         {
+          "name": "admin_list",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "authority",
           "writable": true,
           "signer": true
@@ -395,6 +417,28 @@
               {
                 "kind": "account",
                 "path": "referral_config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin_list",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
               }
             ]
           }

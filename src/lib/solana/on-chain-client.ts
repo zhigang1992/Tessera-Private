@@ -125,6 +125,14 @@ export function getTokenAuthorityPDA(
 }
 
 /**
+ * Derive the admin list PDA
+ */
+export function getAdminListPDA(programId?: PublicKey): [PublicKey, number] {
+  const id = resolveProgramId(programId);
+  return PublicKey.findProgramAddressSync([Buffer.from('admin_list')], id);
+}
+
+/**
  * Tessera Token PDA helpers
  */
 export function getTesseraFeeConfigPDA(): [PublicKey, number] {
