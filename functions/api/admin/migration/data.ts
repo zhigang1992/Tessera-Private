@@ -13,7 +13,8 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
     const db = context.env.DB
 
-    // Fetch all active referral codes
+    // Fetch all referral codes (including inactive ones that have bindings)
+    // We need to migrate inactive codes too if users are bound to them
     const codesQuery = `
       SELECT
         rc.code_slug as code,
@@ -21,7 +22,6 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         CASE WHEN rc.status = 'active' THEN 1 ELSE 0 END as isActive,
         rc.created_at as createdAt
       FROM referral_codes rc
-      WHERE rc.status = 'active'
       ORDER BY rc.created_at
     `
 
