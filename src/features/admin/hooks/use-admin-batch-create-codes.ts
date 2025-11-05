@@ -84,6 +84,15 @@ export function useAdminBatchCreateCodes() {
         .remainingAccounts(referralCodePDAs)
         .rpc()
 
+      // Wait for transaction confirmation before returning
+      // This ensures the codes exist on-chain before Step 4 tries to validate them
+      const latestBlockhash = await connection.getLatestBlockhash()
+      await connection.confirmTransaction({
+        signature,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      })
+
       return {
         signature,
         count: input.codes.length,

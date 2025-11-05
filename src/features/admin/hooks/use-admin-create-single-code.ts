@@ -62,6 +62,14 @@ export function useAdminCreateSingleCode() {
         })
         .rpc()
 
+      // Wait for transaction confirmation
+      const latestBlockhash = await connection.getLatestBlockhash()
+      await connection.confirmTransaction({
+        signature,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      })
+
       return {
         signature,
         code: input.code.code,
