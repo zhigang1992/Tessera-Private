@@ -126,19 +126,28 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
       const program = getReferralProgram(connection, wallet)
       if (!program) return null
 
-      const allCodes = await program.account.referralCode.all()
-      const referralCodes: ReferralCodeRecord[] = allCodes
-        .filter(({ account }) => account.owner.equals(pubkey))
-        .map(({ account }, index: number) => ({
-          id: index,
-          codeSlug: account.code,
-          status: account.isActive ? 'active' : 'inactive',
-          activeLayer: 3,
-          walletAddress: pubkey.toBase58(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          referredTraderCount: account.totalReferrals,
-        }))
+      // OPTIMIZATION: Filter by owner at RPC level using memcmp to avoid fetching all codes
+      // This is critical because there are 116+ old accounts with wrong discriminators
+      // that would cause deserialization failures if we used .all()
+      const allCodes = await program.account.referralCode.all([
+        {
+          memcmp: {
+            offset: 8 + 4 + 12, // discriminator(8) + string_len(4) + string_data(12)
+            bytes: pubkey.toBase58(), // Filter by owner pubkey
+          },
+        },
+      ])
+
+      const referralCodes: ReferralCodeRecord[] = allCodes.map(({ account }, index: number) => ({
+        id: index,
+        codeSlug: account.code,
+        status: account.isActive ? 'active' : 'inactive',
+        activeLayer: 3,
+        walletAddress: pubkey.toBase58(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        referredTraderCount: account.totalReferrals,
+      }))
 
       const affiliateSummary: AffiliateDataRecord = {
         walletAddress: pubkey.toBase58(),
