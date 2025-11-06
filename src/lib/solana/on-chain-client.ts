@@ -169,24 +169,15 @@ export async function fetchReferralConfig(connection: Connection) {
  */
 export async function fetchReferralCode(connection: Connection, code: string) {
   const program = getReferralProgram(connection, null)
-  if (!program) {
-    console.error('fetchReferralCode: Failed to get program')
-    return null
-  }
+  if (!program) return null
 
   const [codePDA] = getReferralCodePDA(code, program.programId)
 
-  console.log(`fetchReferralCode: Querying code "${code}"`)
-  console.log(`  Program ID: ${program.programId.toBase58()}`)
-  console.log(`  PDA: ${codePDA.toBase58()}`)
-
   try {
     const codeAccount = await program.account.referralCode.fetch(codePDA)
-    console.log(`  ✅ Found code account`)
     return codeAccount
   } catch (error) {
-    console.error(`  ❌ Failed to fetch code:`, error)
-    // Account doesn't exist - not an error
+    // Account doesn't exist or discriminator mismatch - not an error
     return null
   }
 }
