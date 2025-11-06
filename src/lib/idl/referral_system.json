@@ -9,8 +9,19 @@
   "instructions": [
     {
       "name": "add_admin",
-      "docs": ["Add an admin to the admin list"],
-      "discriminator": [177, 236, 33, 205, 124, 152, 55, 186],
+      "docs": [
+        "Add an admin to the admin list"
+      ],
+      "discriminator": [
+        177,
+        236,
+        33,
+        205,
+        124,
+        152,
+        55,
+        186
+      ],
       "accounts": [
         {
           "name": "admin_list",
@@ -19,7 +30,18 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 100, 109, 105, 110, 95, 108, 105, 115, 116]
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
               }
             ]
           }
@@ -43,7 +65,16 @@
         "Only the program authority can batch create referral codes",
         "Allocates PDA accounts and initializes them in a single transaction"
       ],
-      "discriminator": [250, 229, 195, 204, 33, 130, 222, 23],
+      "discriminator": [
+        250,
+        229,
+        195,
+        204,
+        33,
+        130,
+        222,
+        23
+      ],
       "accounts": [
         {
           "name": "referral_config",
@@ -51,7 +82,23 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 110, 102, 105, 103]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
               }
             ]
           }
@@ -62,7 +109,18 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 100, 109, 105, 110, 95, 108, 105, 115, 116]
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
               }
             ]
           }
@@ -103,7 +161,16 @@
         "Admin: Batch register multiple users with referral codes",
         "Only the program authority can batch register users"
       ],
-      "discriminator": [157, 52, 84, 105, 208, 158, 12, 66],
+      "discriminator": [
+        157,
+        52,
+        84,
+        105,
+        208,
+        158,
+        12,
+        66
+      ],
       "accounts": [
         {
           "name": "referral_config",
@@ -111,7 +178,23 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 110, 102, 105, 103]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
               }
             ]
           }
@@ -122,7 +205,18 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 100, 109, 105, 110, 95, 108, 105, 115, 116]
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
               }
             ]
           }
@@ -163,7 +257,16 @@
         "Admin: Create a referral code for a specified owner address",
         "Only the program authority can create referral codes on behalf of users"
       ],
-      "discriminator": [41, 77, 118, 47, 67, 246, 221, 165],
+      "discriminator": [
+        41,
+        77,
+        118,
+        47,
+        67,
+        246,
+        221,
+        165
+      ],
       "accounts": [
         {
           "name": "referral_code",
@@ -172,7 +275,21 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 100, 101]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  100,
+                  101
+                ]
               },
               {
                 "kind": "arg",
@@ -187,7 +304,23 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 110, 102, 105, 103]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
               }
             ]
           }
@@ -198,7 +331,18 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 100, 109, 105, 110, 95, 108, 105, 115, 116]
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
               }
             ]
           }
@@ -235,7 +379,16 @@
         "Admin: Register a user with a referral code",
         "Only the program authority can register users on their behalf"
       ],
-      "discriminator": [146, 231, 86, 12, 251, 124, 243, 187],
+      "discriminator": [
+        146,
+        231,
+        86,
+        12,
+        251,
+        124,
+        243,
+        187
+      ],
       "accounts": [
         {
           "name": "referral_code",
@@ -244,7 +397,21 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 100, 101]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  100,
+                  101
+                ]
               },
               {
                 "kind": "account",
@@ -261,7 +428,25 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [117, 115, 101, 114, 95, 114, 101, 103, 105, 115, 116, 114, 97, 116, 105, 111, 110]
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               },
               {
                 "kind": "arg",
@@ -276,7 +461,23 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 110, 102, 105, 103]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
               }
             ]
           }
@@ -287,20 +488,49 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 100, 109, 105, 110, 95, 108, 105, 115, 116]
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
               }
             ]
           }
         },
         {
           "name": "token_authority",
-          "docs": ["Token authority PDA that signs CPIs to Tessera Token program"],
+          "docs": [
+            "Token authority PDA that signs CPIs to Tessera Token program"
+          ],
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
-                "value": [116, 111, 107, 101, 110, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
               },
               {
                 "kind": "account",
@@ -311,25 +541,35 @@
         },
         {
           "name": "referrer_registration",
-          "docs": ["Optional: The direct referrer's UserRegistration (if they exist in the system)"],
+          "docs": [
+            "Optional: The direct referrer's UserRegistration (if they exist in the system)"
+          ],
           "optional": true
         },
         {
           "name": "whitelist_entry",
-          "docs": ["The whitelist entry account in the Tessera Token program"],
+          "docs": [
+            "The whitelist entry account in the Tessera Token program"
+          ],
           "writable": true
         },
         {
           "name": "user_account",
-          "docs": ["The user account to register"]
+          "docs": [
+            "The user account to register"
+          ]
         },
         {
           "name": "tessera_mint",
-          "docs": ["The Tessera Token mint"]
+          "docs": [
+            "The Tessera Token mint"
+          ]
         },
         {
           "name": "tessera_token_program",
-          "docs": ["The Tessera Token program"]
+          "docs": [
+            "The Tessera Token program"
+          ]
         },
         {
           "name": "authority",
@@ -355,8 +595,20 @@
     },
     {
       "name": "create_referral_code",
-      "docs": ["Create a referral code for an owner", "Only the program caller (owner) can create referral codes"],
-      "discriminator": [206, 2, 37, 2, 193, 190, 203, 191],
+      "docs": [
+        "Create a referral code for an owner",
+        "Only the program caller (owner) can create referral codes"
+      ],
+      "discriminator": [
+        206,
+        2,
+        37,
+        2,
+        193,
+        190,
+        203,
+        191
+      ],
       "accounts": [
         {
           "name": "referral_code",
@@ -365,7 +617,21 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 100, 101]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  100,
+                  101
+                ]
               },
               {
                 "kind": "arg",
@@ -393,8 +659,20 @@
     },
     {
       "name": "deactivate_referral_code",
-      "docs": ["Deactivate a referral code (owner only)", "Only the referral code owner can deactivate their code"],
-      "discriminator": [210, 161, 175, 173, 126, 7, 89, 159],
+      "docs": [
+        "Deactivate a referral code (owner only)",
+        "Only the referral code owner can deactivate their code"
+      ],
+      "discriminator": [
+        210,
+        161,
+        175,
+        173,
+        126,
+        7,
+        89,
+        159
+      ],
       "accounts": [
         {
           "name": "referral_code",
@@ -403,7 +681,21 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 100, 101]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  100,
+                  101
+                ]
               },
               {
                 "kind": "account",
@@ -417,15 +709,28 @@
           "name": "owner",
           "writable": true,
           "signer": true,
-          "relations": ["referral_code"]
+          "relations": [
+            "referral_code"
+          ]
         }
       ],
       "args": []
     },
     {
       "name": "initialize_admin_list",
-      "docs": ["Initialize the admin list"],
-      "discriminator": [202, 155, 78, 226, 91, 128, 203, 83],
+      "docs": [
+        "Initialize the admin list"
+      ],
+      "discriminator": [
+        202,
+        155,
+        78,
+        226,
+        91,
+        128,
+        203,
+        83
+      ],
       "accounts": [
         {
           "name": "admin_list",
@@ -434,7 +739,18 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 100, 109, 105, 110, 95, 108, 105, 115, 116]
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
               }
             ]
           }
@@ -445,7 +761,23 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 110, 102, 105, 103]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
               }
             ]
           }
@@ -464,8 +796,19 @@
     },
     {
       "name": "initialize_referral_system",
-      "docs": ["Initialize the referral system with authority and configuration"],
-      "discriminator": [63, 171, 112, 122, 51, 237, 106, 140],
+      "docs": [
+        "Initialize the referral system with authority and configuration"
+      ],
+      "discriminator": [
+        63,
+        171,
+        112,
+        122,
+        51,
+        237,
+        106,
+        140
+      ],
       "accounts": [
         {
           "name": "referral_config",
@@ -474,7 +817,23 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 110, 102, 105, 103]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
               }
             ]
           }
@@ -523,7 +882,16 @@
         "This PDA will be set as the transfer fee authority on the token mint",
         "allowing the referral program to make CPI calls without requiring signatures"
       ],
-      "discriminator": [54, 198, 42, 77, 164, 175, 253, 107],
+      "discriminator": [
+        54,
+        198,
+        42,
+        77,
+        164,
+        175,
+        253,
+        107
+      ],
       "accounts": [
         {
           "name": "token_authority",
@@ -532,7 +900,23 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [116, 111, 107, 101, 110, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
               },
               {
                 "kind": "account",
@@ -547,7 +931,23 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 110, 102, 105, 103]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
               }
             ]
           }
@@ -566,8 +966,19 @@
     },
     {
       "name": "reactivate_referral_code",
-      "docs": ["Reactivate a referral code (owner only)"],
-      "discriminator": [115, 6, 76, 81, 207, 228, 115, 85],
+      "docs": [
+        "Reactivate a referral code (owner only)"
+      ],
+      "discriminator": [
+        115,
+        6,
+        76,
+        81,
+        207,
+        228,
+        115,
+        85
+      ],
       "accounts": [
         {
           "name": "referral_code",
@@ -576,7 +987,21 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 100, 101]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  100,
+                  101
+                ]
               },
               {
                 "kind": "account",
@@ -590,15 +1015,29 @@
           "name": "owner",
           "writable": true,
           "signer": true,
-          "relations": ["referral_code"]
+          "relations": [
+            "referral_code"
+          ]
         }
       ],
       "args": []
     },
     {
       "name": "register_with_referral_code",
-      "docs": ["Register a user with a referral code", "Only the program caller (user) can register themselves"],
-      "discriminator": [53, 111, 51, 221, 37, 127, 20, 153],
+      "docs": [
+        "Register a user with a referral code",
+        "Only the program caller (user) can register themselves"
+      ],
+      "discriminator": [
+        53,
+        111,
+        51,
+        221,
+        37,
+        127,
+        20,
+        153
+      ],
       "accounts": [
         {
           "name": "referral_code",
@@ -607,7 +1046,21 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 100, 101]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  100,
+                  101
+                ]
               },
               {
                 "kind": "account",
@@ -624,7 +1077,25 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [117, 115, 101, 114, 95, 114, 101, 103, 105, 115, 116, 114, 97, 116, 105, 111, 110]
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               },
               {
                 "kind": "account",
@@ -639,20 +1110,54 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 110, 102, 105, 103]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
               }
             ]
           }
         },
         {
           "name": "token_authority",
-          "docs": ["Token authority PDA that signs CPIs to Tessera Token program"],
+          "docs": [
+            "Token authority PDA that signs CPIs to Tessera Token program"
+          ],
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
-                "value": [116, 111, 107, 101, 110, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+                "value": [
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
               },
               {
                 "kind": "account",
@@ -663,26 +1168,36 @@
         },
         {
           "name": "referrer_registration",
-          "docs": ["Optional: The direct referrer's UserRegistration (if they exist in the system)"],
+          "docs": [
+            "Optional: The direct referrer's UserRegistration (if they exist in the system)"
+          ],
           "optional": true
         },
         {
           "name": "whitelist_entry",
-          "docs": ["The whitelist entry account in the Tessera Token program"],
+          "docs": [
+            "The whitelist entry account in the Tessera Token program"
+          ],
           "writable": true
         },
         {
           "name": "sender_fee_config",
-          "docs": ["The sender fee config account in the Tessera Token program"],
+          "docs": [
+            "The sender fee config account in the Tessera Token program"
+          ],
           "writable": true
         },
         {
           "name": "tessera_mint",
-          "docs": ["The mint for which to configure fees (per-mint configuration)"]
+          "docs": [
+            "The mint for which to configure fees (per-mint configuration)"
+          ]
         },
         {
           "name": "tessera_token_program",
-          "docs": ["The Tessera Token program"],
+          "docs": [
+            "The Tessera Token program"
+          ],
           "address": "TESQvsR4TmYxiroPPQgZpVRoSFG8pru4fsYr67iv6kf"
         },
         {
@@ -699,8 +1214,19 @@
     },
     {
       "name": "remove_admin",
-      "docs": ["Remove an admin from the admin list"],
-      "discriminator": [74, 202, 71, 106, 252, 31, 72, 183],
+      "docs": [
+        "Remove an admin from the admin list"
+      ],
+      "discriminator": [
+        74,
+        202,
+        71,
+        106,
+        252,
+        31,
+        72,
+        183
+      ],
       "accounts": [
         {
           "name": "admin_list",
@@ -709,7 +1235,18 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 100, 109, 105, 110, 95, 108, 105, 115, 116]
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
               }
             ]
           }
@@ -728,8 +1265,19 @@
     },
     {
       "name": "update_referral_config",
-      "docs": ["Update referral system configuration (authority only)"],
-      "discriminator": [129, 209, 121, 34, 163, 184, 187, 56],
+      "docs": [
+        "Update referral system configuration (authority only)"
+      ],
+      "discriminator": [
+        129,
+        209,
+        121,
+        34,
+        163,
+        184,
+        187,
+        56
+      ],
       "accounts": [
         {
           "name": "referral_config",
@@ -738,7 +1286,23 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 110, 102, 105, 103]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
               }
             ]
           }
@@ -747,7 +1311,9 @@
           "name": "authority",
           "writable": true,
           "signer": true,
-          "relations": ["referral_config"]
+          "relations": [
+            "referral_config"
+          ]
         }
       ],
       "args": [
@@ -782,7 +1348,16 @@
         "can be updated with custom fee reduction and split percentages",
         "Only the authority can update user fee configurations"
       ],
-      "discriminator": [80, 110, 233, 148, 172, 16, 154, 252],
+      "discriminator": [
+        80,
+        110,
+        233,
+        148,
+        172,
+        16,
+        154,
+        252
+      ],
       "accounts": [
         {
           "name": "user_registration",
@@ -790,7 +1365,25 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [117, 115, 101, 114, 95, 114, 101, 103, 105, 115, 116, 114, 97, 116, 105, 111, 110]
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               },
               {
                 "kind": "account",
@@ -805,7 +1398,21 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 100, 101]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  100,
+                  101
+                ]
               },
               {
                 "kind": "account",
@@ -821,28 +1428,52 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 102, 101, 114, 114, 97, 108, 95, 99, 111, 110, 102, 105, 103]
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
               }
             ]
           }
         },
         {
           "name": "tessera_mint",
-          "docs": ["The mint for which to configure fees (per-mint configuration)"]
+          "docs": [
+            "The mint for which to configure fees (per-mint configuration)"
+          ]
         },
         {
           "name": "whitelist_entry",
-          "docs": ["The whitelist entry account in the Tessera Token program"],
+          "docs": [
+            "The whitelist entry account in the Tessera Token program"
+          ],
           "writable": true
         },
         {
           "name": "sender_fee_config",
-          "docs": ["The sender fee config account in the Tessera Token program"],
+          "docs": [
+            "The sender fee config account in the Tessera Token program"
+          ],
           "writable": true
         },
         {
           "name": "tessera_token_program",
-          "docs": ["The Tessera Token program"],
+          "docs": [
+            "The Tessera Token program"
+          ],
           "address": "TESQvsR4TmYxiroPPQgZpVRoSFG8pru4fsYr67iv6kf"
         },
         {
@@ -855,13 +1486,17 @@
         },
         {
           "name": "payer",
-          "docs": ["The payer for any account initialization"],
+          "docs": [
+            "The payer for any account initialization"
+          ],
           "writable": true,
           "signer": true
         },
         {
           "name": "user",
-          "docs": ["The user whose fee configuration is being updated"]
+          "docs": [
+            "The user whose fee configuration is being updated"
+          ]
         },
         {
           "name": "system_program",
@@ -883,23 +1518,68 @@
   "accounts": [
     {
       "name": "AdminList",
-      "discriminator": [253, 56, 210, 167, 203, 37, 230, 165]
+      "discriminator": [
+        253,
+        56,
+        210,
+        167,
+        203,
+        37,
+        230,
+        165
+      ]
     },
     {
       "name": "ReferralCode",
-      "discriminator": [227, 239, 247, 224, 128, 187, 44, 229]
+      "discriminator": [
+        227,
+        239,
+        247,
+        224,
+        128,
+        187,
+        44,
+        229
+      ]
     },
     {
       "name": "ReferralConfig",
-      "discriminator": [102, 148, 171, 235, 148, 83, 250, 140]
+      "discriminator": [
+        102,
+        148,
+        171,
+        235,
+        148,
+        83,
+        250,
+        140
+      ]
     },
     {
       "name": "TokenAuthority",
-      "discriminator": [145, 159, 9, 246, 161, 7, 193, 203]
+      "discriminator": [
+        145,
+        159,
+        9,
+        246,
+        161,
+        7,
+        193,
+        203
+      ]
     },
     {
       "name": "UserRegistration",
-      "discriminator": [128, 102, 192, 182, 31, 20, 27, 194]
+      "discriminator": [
+        128,
+        102,
+        192,
+        182,
+        31,
+        20,
+        27,
+        194
+      ]
     }
   ],
   "errors": [
