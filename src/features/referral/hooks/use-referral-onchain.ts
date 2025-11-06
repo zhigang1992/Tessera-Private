@@ -126,28 +126,64 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
       const program = getReferralProgram(connection, wallet)
       if (!program) return null
 
-      // OPTIMIZATION: Filter by owner at RPC level using memcmp to avoid fetching all codes
+      // OPTIMIZATION: Use raw getProgramAccounts with memcmp filter to avoid fetching all codes
       // This is critical because there are 116+ old accounts with wrong discriminators
       // that would cause deserialization failures if we used .all()
-      const allCodes = await program.account.referralCode.all([
-        {
-          memcmp: {
-            offset: 8 + 4 + 12, // discriminator(8) + string_len(4) + string_data(12)
-            bytes: pubkey.toBase58(), // Filter by owner pubkey
+      const accounts = await connection.getProgramAccounts(program.programId, {
+        filters: [
+          {
+            // Filter by account discriminator (ReferralCode)
+            memcmp: {
+              offset: 0,
+              bytes: 'f8H8SWXTmJC', // base58 of [227, 239, 247, 224, 128, 187, 44, 229]
+            },
           },
-        },
-      ])
+          {
+            // Filter by owner pubkey at offset 24
+            memcmp: {
+              offset: 24,
+              bytes: pubkey.toBase58(),
+            },
+          },
+        ],
+      })
 
-      const referralCodes: ReferralCodeRecord[] = allCodes.map(({ account }, index: number) => ({
-        id: index,
-        codeSlug: account.code,
-        status: account.isActive ? 'active' : 'inactive',
-        activeLayer: 3,
-        walletAddress: pubkey.toBase58(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        referredTraderCount: account.totalReferrals,
-      }))
+      const referralCodes: ReferralCodeRecord[] = []
+      for (const { pubkey: accountPubkey, account } of accounts) {
+        try {
+          // Manual deserialization from raw bytes
+          const data = account.data
+          let offset = 8 // Skip discriminator
+
+          // Read code (String: u32 length + bytes)
+          const codeLen = data.readUInt32LE(offset)
+          offset += 4
+          const code = data.slice(offset, offset + codeLen).toString('utf8')
+          offset += 12 // Fixed size for String(12)
+
+          // Read owner (Pubkey: 32 bytes)
+          // offset += 32  // Skip owner, we already know it
+
+          // Read is_active (bool: 1 byte) at offset 56
+          const isActive = data[56] === 1
+
+          // Read total_referrals (u32: 4 bytes) at offset 57
+          const totalReferrals = data.readUInt32LE(57)
+
+          referralCodes.push({
+            id: referralCodes.length,
+            codeSlug: code,
+            status: isActive ? 'active' : 'inactive',
+            activeLayer: 3,
+            walletAddress: pubkey.toBase58(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            referredTraderCount: totalReferrals,
+          })
+        } catch (err) {
+          console.warn('Failed to decode account:', accountPubkey.toBase58(), err)
+        }
+      }
 
       const affiliateSummary: AffiliateDataRecord = {
         walletAddress: pubkey.toBase58(),
