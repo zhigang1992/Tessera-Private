@@ -181,12 +181,61 @@ export async function fetchReferralCode(connection: Connection, code: string) {
   console.log(`  PDA: ${codePDA.toBase58()}`)
 
   try {
-    const codeAccount = await program.account.referralCode.fetch(codePDA)
-    console.log(`  ✅ Found code account`)
-    return codeAccount
+    // Fetch raw account info instead of using Anchor's deserializer
+    // This avoids issues with accounts that Anchor can't properly deserialize
+    const accountInfo = await connection.getAccountInfo(codePDA)
+
+    if (!accountInfo) {
+      console.log(`  ❌ Account not found`)
+      return null
+    }
+
+    // Manual deserialization from raw bytes
+    const data = accountInfo.data
+
+    // Verify discriminator matches ReferralCode (offset 0, 8 bytes)
+    const expectedDiscriminator = Buffer.from([227, 239, 247, 224, 128, 187, 44, 229])
+    const actualDiscriminator = data.slice(0, 8)
+    if (!expectedDiscriminator.equals(actualDiscriminator)) {
+      console.error(`  ❌ Discriminator mismatch`)
+      return null
+    }
+
+    let offset = 8 // Skip discriminator
+
+    // Read code (String: u32 length + bytes)
+    const codeLen = data.readUInt32LE(offset)
+    offset += 4
+    const codeStr = data.slice(offset, offset + codeLen).toString('utf8')
+    offset += 12 // Fixed size for String(12)
+
+    // Read owner (Pubkey: 32 bytes)
+    const ownerBytes = data.slice(offset, offset + 32)
+    const owner = new PublicKey(ownerBytes)
+    offset += 32
+
+    // Read is_active (bool: 1 byte)
+    const isActive = data[offset] === 1
+    offset += 1
+
+    // Read total_referrals (u32: 4 bytes)
+    const totalReferrals = data.readUInt32LE(offset)
+    offset += 4
+
+    // Read bump (u8: 1 byte)
+    const bump = data[offset]
+
+    console.log(`  ✅ Found code account: ${codeStr}, owner: ${owner.toBase58()}, active: ${isActive}`)
+
+    return {
+      code: codeStr,
+      owner,
+      isActive,
+      totalReferrals,
+      bump,
+    }
   } catch (error) {
     console.error(`  ❌ Failed to fetch code:`, error)
-    // Account doesn't exist - not an error
     return null
   }
 }
