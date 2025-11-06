@@ -17,7 +17,7 @@ import {
   getAdminListPDA,
   getWhitelistEntryPDA,
   getTesseraMintAddress,
-  // fetchReferralCode, // Temporarily disabled - see workaround below
+  fetchReferralCode,
   fetchUserRegistration,
 } from '@/lib/solana'
 import type { TraderBindingData } from '../types/migration'
@@ -53,25 +53,22 @@ export function useAdminRegisterSingleUser() {
 
       const userPubkey = new PublicKey(input.binding.userWallet)
 
-      // TEMPORARY FIX: Skip validation due to discriminator mismatch on old accounts
-      // Old accounts were created with different program version and have incompatible discriminator
-      // The on-chain program will handle validation - if code doesn't exist, it will fail there
-      // TODO: Remove this workaround once old accounts are closed and recreated
-      //
-      // const codeAccount = await fetchReferralCode(connection, input.binding.referralCode)
-      // if (!codeAccount) {
-      //   const [codePDA] = getReferralCodePDA(input.binding.referralCode, program.programId)
-      //   throw new Error(
-      //     `Referral code "${input.binding.referralCode}" does not exist on-chain.\n` +
-      //       `PDA: ${codePDA.toBase58()}\n` +
-      //       `Code bytes: ${Array.from(Buffer.from(input.binding.referralCode)).join(',')}\n` +
-      //       `Make sure this exact code was created in Step 3.`,
-      //   )
-      // }
-      //
-      // if (!codeAccount.isActive) {
-      //   throw new Error(`Referral code "${input.binding.referralCode}" is not active`)
-      // }
+      // Validate referral code exists on-chain
+      const codeAccount = await fetchReferralCode(connection, input.binding.referralCode)
+      if (!codeAccount) {
+        // Debug: Show the PDA we're looking for
+        const [codePDA] = getReferralCodePDA(input.binding.referralCode, program.programId)
+        throw new Error(
+          `Referral code "${input.binding.referralCode}" does not exist on-chain.\n` +
+            `PDA: ${codePDA.toBase58()}\n` +
+            `Code bytes: ${Array.from(Buffer.from(input.binding.referralCode)).join(',')}\n` +
+            `Make sure this exact code was created in Step 3.`,
+        )
+      }
+
+      if (!codeAccount.isActive) {
+        throw new Error(`Referral code "${input.binding.referralCode}" is not active`)
+      }
 
       const [referralConfigPDA] = getReferralConfigPDA(program.programId)
       const [referralCodePDA] = getReferralCodePDA(input.binding.referralCode, program.programId)
@@ -79,9 +76,8 @@ export function useAdminRegisterSingleUser() {
       const [tokenAuthorityPDA] = getTokenAuthorityPDA(referralConfigPDA, program.programId)
       const [adminListPDA] = getAdminListPDA(program.programId)
 
-      // Get optional referrer registration - need to derive from referral code owner
-      // Since we're skipping validation, we need to look up the code owner from the binding data
-      const referrerPubkey = new PublicKey(input.binding.referrerWallet)
+      // Get optional referrer registration if it exists (similar to user-facing flow)
+      const referrerPubkey = new PublicKey(codeAccount.owner)
       const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey)
       const referrerRegistrationPDA = referrerRegistration
         ? getUserRegistrationPDA(referrerPubkey, program.programId)[0]
