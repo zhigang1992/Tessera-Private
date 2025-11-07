@@ -252,6 +252,89 @@
       ]
     },
     {
+      "name": "admin_close_referral_code",
+      "docs": [
+        "Admin: Close a referral code account with incorrect discriminator",
+        "This is a maintenance function to clean up accounts created with wrong discriminators",
+        "Only admins can close accounts, and rent is returned to the authority"
+      ],
+      "discriminator": [
+        141,
+        154,
+        218,
+        171,
+        219,
+        183,
+        7,
+        187
+      ],
+      "accounts": [
+        {
+          "name": "referral_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin_list",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "referral_code",
+          "docs": [
+            "The referral code account to close",
+            "We use UncheckedAccount and manually handle closing to avoid discriminator validation"
+          ],
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "admin_create_referral_code",
       "docs": [
         "Admin: Create a referral code for a specified owner address",
@@ -1647,6 +1730,16 @@
       "code": 6012,
       "name": "AdminNotFound",
       "msg": "Admin not found in the list."
+    },
+    {
+      "code": 6013,
+      "name": "AccountNotInitialized",
+      "msg": "Account is not initialized."
+    },
+    {
+      "code": 6014,
+      "name": "InvalidDiscriminator",
+      "msg": "Invalid account discriminator. Account type mismatch."
     }
   ],
   "types": [

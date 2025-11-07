@@ -13,6 +13,7 @@ import { fetchMigrationData, exportMigrationDataAsJson } from '../lib/migration-
 import { useAdminBatchCreateCodes } from '../hooks/use-admin-batch-create-codes'
 import { useAdminCreateSingleCode } from '../hooks/use-admin-create-single-code'
 import { useAdminRegisterSingleUser } from '../hooks/use-admin-register-single-user'
+import { useAdminCloseCode } from '../hooks/use-admin-close-code'
 import {
   useSolanaConnection,
   fetchReferralCode,
@@ -51,6 +52,15 @@ export function MigrationPage() {
   const batchCreateCodes = useAdminBatchCreateCodes()
   const createCode = useAdminCreateSingleCode()
   const registerUser = useAdminRegisterSingleUser()
+  const closeCode = useAdminCloseCode()
+
+  // State for close code section
+  const [closeCodeInput, setCloseCodeInput] = useState('')
+  const [closeCodeResult, setCloseCodeResult] = useState<{
+    status: 'success' | 'error'
+    message: string
+    signature?: string
+  } | null>(null)
 
   // Fetch migration data on mount
   useEffect(() => {
@@ -308,6 +318,38 @@ export function MigrationPage() {
   const handleExportData = () => {
     if (migrationData) {
       exportMigrationDataAsJson(migrationData)
+    }
+  }
+
+  const handleCloseCode = async () => {
+    if (!closeCodeInput.trim()) {
+      setCloseCodeResult({
+        status: 'error',
+        message: 'Please enter a referral code',
+      })
+      return
+    }
+
+    try {
+      setCloseCodeResult(null)
+      console.log(`🗑️  Attempting to close code: ${closeCodeInput}`)
+
+      const result = await closeCode.mutateAsync({ code: closeCodeInput.trim() })
+
+      setCloseCodeResult({
+        status: 'success',
+        message: `Successfully closed code: ${result.code}`,
+        signature: result.signature,
+      })
+      setCloseCodeInput('')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      console.error('❌ Failed to close code:', errorMessage, err)
+
+      setCloseCodeResult({
+        status: 'error',
+        message: `Failed to close code: ${errorMessage}`,
+      })
     }
   }
 
@@ -610,6 +652,76 @@ export function MigrationPage() {
               </div>
             </div>
           </>
+        )}
+
+        {/* Close Referral Code Section */}
+        {wallet.publicKey && (
+          <div className="bg-[#F7F7FA] dark:bg-[#111111] border border-[#E4E4E7] dark:border-[#27272A] rounded-[24px] shadow-none p-6 mt-6">
+            <h2 className="text-xl font-semibold mb-4 text-black dark:text-white">Close Referral Code</h2>
+            <p className="text-sm text-black/60 dark:text-white/60 mb-4">
+              Close a referral code account and reclaim rent. Use this to clean up old or invalid codes.
+            </p>
+
+            <div className="flex gap-3 mb-4">
+              <input
+                type="text"
+                value={closeCodeInput}
+                onChange={(e) => setCloseCodeInput(e.target.value.toUpperCase())}
+                placeholder="Enter referral code (e.g. TEST2025)"
+                className="flex-1 px-4 py-2 bg-white dark:bg-black border border-[#E4E4E7] dark:border-[#27272A] rounded-[12px] text-black dark:text-white placeholder-black/40 dark:placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+                maxLength={12}
+              />
+              <button
+                onClick={handleCloseCode}
+                disabled={!closeCodeInput.trim() || closeCode.isPending}
+                className="px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 text-white rounded-[12px] font-medium transition-colors disabled:cursor-not-allowed"
+              >
+                {closeCode.isPending ? 'Closing...' : 'Close Code'}
+              </button>
+            </div>
+
+            {/* Result Message */}
+            {closeCodeResult && (
+              <div
+                className={`p-4 rounded-[12px] ${
+                  closeCodeResult.status === 'success'
+                    ? 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800/50'
+                    : 'bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50'
+                }`}
+              >
+                <div
+                  className={`font-semibold mb-2 ${
+                    closeCodeResult.status === 'success'
+                      ? 'text-green-800 dark:text-green-300'
+                      : 'text-red-800 dark:text-red-300'
+                  }`}
+                >
+                  {closeCodeResult.status === 'success' ? '✅ Success' : '❌ Error'}
+                </div>
+                <div
+                  className={`text-sm mb-2 ${
+                    closeCodeResult.status === 'success'
+                      ? 'text-green-700 dark:text-green-400'
+                      : 'text-red-700 dark:text-red-400'
+                  }`}
+                >
+                  {closeCodeResult.message}
+                </div>
+                {closeCodeResult.signature && (
+                  <div className="text-xs font-mono text-green-600 dark:text-green-500 break-all">
+                    TX: {closeCodeResult.signature}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800/50 rounded-[12px]">
+              <div className="text-sm text-yellow-800 dark:text-yellow-300">
+                ⚠️ <strong>Warning:</strong> This action is permanent and cannot be undone. The code account will
+                be deleted and rent will be returned to your wallet.
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
