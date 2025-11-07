@@ -12,6 +12,27 @@ const API_BASE = import.meta.env.VITE_API_BASE || ''
  * Fetch all migration data from off-chain database
  */
 export async function fetchMigrationData(): Promise<MigrationData> {
+  // TEMPORARY: Return mock test data for testing batch operations
+  // TODO: Restore real API call after testing
+  console.log('🧪 Using mock migration data for testing')
+
+  return {
+    referralCodes: [
+      {
+        code: 'TEST2025',
+        ownerWallet: 'Hzu1F1HF9ZEd7ezokS6ePUP5gP3p1UkdnoU7rKYS2xPu', // Your test wallet
+      },
+    ],
+    traderBindings: [
+      {
+        userWallet: '9Fvhvzk9kZQZqGjYJZ3jtT7ks2zXvQX8g3xV7nZkPjQM', // Random test wallet
+        referralCode: 'TEST2025',
+      },
+    ],
+  }
+
+  // Original implementation (commented out for testing):
+  /*
   const response = await fetch(`${API_BASE}/api/admin/migration/data`, {
     method: 'GET',
     headers: {
@@ -25,6 +46,7 @@ export async function fetchMigrationData(): Promise<MigrationData> {
 
   const data = await response.json()
   return data
+  */
 }
 
 /**

@@ -13,7 +13,12 @@ import { fetchMigrationData, exportMigrationDataAsJson } from '../lib/migration-
 import { useAdminBatchCreateCodes } from '../hooks/use-admin-batch-create-codes'
 import { useAdminCreateSingleCode } from '../hooks/use-admin-create-single-code'
 import { useAdminRegisterSingleUser } from '../hooks/use-admin-register-single-user'
-import { useSolanaConnection, fetchReferralCode, fetchUserRegistration } from '@/lib/solana'
+import {
+  useSolanaConnection,
+  fetchReferralCode,
+  fetchUserRegistration,
+  checkReferralCodeLayout,
+} from '@/lib/solana'
 import type {
   MigrationData,
   MigrationConfig,
@@ -143,13 +148,25 @@ export function MigrationPage() {
       if (config.skipExisting) {
         const existingChecks = await Promise.all(
           batch.map(async (codeData) => {
-            const existing = await fetchReferralCode(connection, codeData.code)
-            return { codeData, exists: !!existing }
+            const layout = await checkReferralCodeLayout(connection, codeData.code)
+            return { codeData, layout }
           }),
         )
 
-        codesToCreate = existingChecks.filter((check) => !check.exists).map((check) => check.codeData)
-        skippedCount = existingChecks.filter((check) => check.exists).length
+        // Only skip codes that exist AND have correct layout
+        // Codes with wrong layout need to be recreated
+        codesToCreate = existingChecks
+          .filter((check) => !check.layout.exists || check.layout.needsRecreation)
+          .map((check) => check.codeData)
+
+        skippedCount = existingChecks.filter((check) => check.layout.exists && !check.layout.needsRecreation).length
+
+        // Log codes that need recreation
+        const needsRecreation = existingChecks.filter((check) => check.layout.needsRecreation)
+        if (needsRecreation.length > 0) {
+          console.log(`⚠️  ${needsRecreation.length} codes have wrong layout and will be recreated:`)
+          needsRecreation.forEach((check) => console.log(`   - ${check.codeData.code}`))
+        }
       }
 
       if (codesToCreate.length === 0) {
@@ -166,8 +183,10 @@ export function MigrationPage() {
       }
 
       // Execute batch create (true on-chain batch operation)
+      console.log(`🔄 Executing batch ${batchIndex + 1}: Creating ${codesToCreate.length} codes...`)
       const result = await batchCreateCodes.mutateAsync({ codes: codesToCreate })
 
+      console.log(`✅ Batch ${batchIndex + 1} complete: TX ${result.signature}`)
       setCodeBatchStates((prev) => ({
         ...prev,
         [batchIndex]: {
@@ -178,14 +197,20 @@ export function MigrationPage() {
         },
       }))
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      console.error(`❌ Batch ${batchIndex + 1} failed:`, errorMessage, err)
+
       setCodeBatchStates((prev) => ({
         ...prev,
         [batchIndex]: {
           status: 'failed',
-          error: err instanceof Error ? err.message : 'Unknown error',
+          error: errorMessage,
           timestamp: new Date().toISOString(),
         },
       }))
+
+      // Show alert with detailed error
+      alert(`Batch ${batchIndex + 1} Failed:\n\n${errorMessage}\n\nCheck console for details.`)
     }
   }
 
@@ -205,7 +230,9 @@ export function MigrationPage() {
       let failedCount = 0
       const errors: Array<{ item: string; error: string }> = []
 
-      // Execute all users in batch
+      console.log(`🔄 Executing user batch ${batchIndex + 1}: Registering ${batch.length} users...`)
+
+      // Execute all users in batch (NOTE: This is NOT a true batch - each user is a separate transaction)
       for (const bindingData of batch) {
         try {
           // Check if user already registered on-chain
@@ -213,13 +240,16 @@ export function MigrationPage() {
             const userPubkey = new PublicKey(bindingData.userWallet)
             const existingRegistration = await fetchUserRegistration(connection, userPubkey)
             if (existingRegistration) {
+              console.log(`  ⏭️  Skipped ${bindingData.userWallet.slice(0, 8)}... (already registered)`)
               skippedCount++
               continue
             }
           }
 
-          // Register the user
+          // Register the user (each registration is a separate transaction)
+          console.log(`  📝 Registering ${bindingData.userWallet.slice(0, 8)}... with code ${bindingData.referralCode}`)
           const result = await registerUser.mutateAsync({ binding: bindingData })
+          console.log(`  ✅ Success: TX ${result.signature.slice(0, 8)}...`)
           results.push(result.signature)
           successCount++
         } catch (err) {
@@ -229,11 +259,12 @@ export function MigrationPage() {
             item: `${bindingData.userWallet.slice(0, 8)}... → ${bindingData.referralCode}`,
             error: errorMessage,
           })
-          console.error(`Failed to register user ${bindingData.userWallet}:`, err)
+          console.error(`  ❌ Failed to register ${bindingData.userWallet.slice(0, 8)}...:`, errorMessage, err)
         }
       }
 
       const summary = `Registered ${successCount}, Skipped ${skippedCount}, Failed ${failedCount}`
+      console.log(`✅ User batch ${batchIndex + 1} complete: ${summary}`)
 
       setUserBatchStates((prev) => ({
         ...prev,
@@ -250,15 +281,27 @@ export function MigrationPage() {
           },
         },
       }))
+
+      // Show alert if there were failures
+      if (failedCount > 0) {
+        const errorDetails = errors.map((e) => `  - ${e.item}: ${e.error}`).join('\n')
+        alert(`User Batch ${batchIndex + 1} completed with errors:\n\n${summary}\n\nFailed registrations:\n${errorDetails}\n\nCheck console for full details.`)
+      }
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      console.error(`❌ User batch ${batchIndex + 1} failed:`, errorMessage, err)
+
       setUserBatchStates((prev) => ({
         ...prev,
         [batchIndex]: {
           status: 'failed',
-          error: err instanceof Error ? err.message : 'Unknown error',
+          error: errorMessage,
           timestamp: new Date().toISOString(),
         },
       }))
+
+      // Show alert with detailed error
+      alert(`User Batch ${batchIndex + 1} Failed:\n\n${errorMessage}\n\nCheck console for details.`)
     }
   }
 

@@ -35,6 +35,7 @@ export function useAdminCreateSingleCode() {
   const connection = useSolanaConnection()
 
   return useMutation({
+    retry: false, // Don't retry on failure - user needs to manually retry
     mutationFn: async (input: CreateCodeInput): Promise<CreateCodeResult> => {
       if (!wallet.publicKey) {
         throw new Error('Wallet not connected')

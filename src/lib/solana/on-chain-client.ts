@@ -165,6 +165,74 @@ export async function fetchReferralConfig(connection: Connection) {
 }
 
 /**
+ * Check if referral code has correct memory layout that Anchor can deserialize
+ * Codes with wrong layout will cause AccountDidNotDeserialize errors in on-chain instructions
+ */
+export async function checkReferralCodeLayout(
+  connection: Connection,
+  code: string,
+): Promise<{
+  exists: boolean
+  hasCorrectLayout: boolean
+  needsRecreation: boolean
+}> {
+  const program = getReferralProgram(connection, null)
+  if (!program) {
+    return { exists: false, hasCorrectLayout: false, needsRecreation: false }
+  }
+
+  const [codePDA] = getReferralCodePDA(code, program.programId)
+
+  // Try Anchor's auto-deserializer first (this is what on-chain instructions use)
+  let anchorWorks = false
+  try {
+    await program.account.referralCode.fetch(codePDA)
+    anchorWorks = true
+  } catch (err) {
+    // Anchor deserialization failed - might be wrong layout or account doesn't exist
+  }
+
+  // If Anchor works, the code has correct layout
+  if (anchorWorks) {
+    return { exists: true, hasCorrectLayout: true, needsRecreation: false }
+  }
+
+  // Try manual deserialization to see if account exists with wrong layout
+  try {
+    const accountInfo = await connection.getAccountInfo(codePDA)
+    if (!accountInfo) {
+      return { exists: false, hasCorrectLayout: false, needsRecreation: false }
+    }
+
+    const data = accountInfo.data
+    const expectedDiscriminator = Buffer.from([227, 239, 247, 224, 128, 187, 44, 229])
+    const actualDiscriminator = data.slice(0, 8)
+
+    if (!expectedDiscriminator.equals(actualDiscriminator)) {
+      // Wrong discriminator - corrupted or very old account
+      return { exists: true, hasCorrectLayout: false, needsRecreation: true }
+    }
+
+    // Has correct discriminator but Anchor can't deserialize it
+    // Try manual deserialization to verify it follows Anchor's layout
+    try {
+      let offset = 8
+      const codeLen = data.readUInt32LE(offset)
+      offset += 4
+      offset += codeLen // Variable-length string
+
+      // If we can parse basic fields without error, layout is probably valid
+      // but there might be other issues. Mark as needing recreation to be safe.
+      return { exists: true, hasCorrectLayout: false, needsRecreation: true }
+    } catch {
+      return { exists: true, hasCorrectLayout: false, needsRecreation: true }
+    }
+  } catch (error) {
+    return { exists: false, hasCorrectLayout: false, needsRecreation: false }
+  }
+}
+
+/**
  * Fetch referral code account
  */
 export async function fetchReferralCode(connection: Connection, code: string) {
@@ -203,11 +271,13 @@ export async function fetchReferralCode(connection: Connection, code: string) {
 
     let offset = 8 // Skip discriminator
 
-    // Read code (String: u32 length + bytes)
+    // Read code (String: u32 length + N bytes - variable length, NOT fixed 12 bytes!)
+    // IMPORTANT: Anchor serializes String as variable-length, not fixed-length
+    // So owner field offset depends on actual code length
     const codeLen = data.readUInt32LE(offset)
     offset += 4
     const codeStr = data.slice(offset, offset + codeLen).toString('utf8')
-    offset += 12 // Fixed size for String(12)
+    offset += codeLen // Variable length - only advance by actual string length
 
     // Read owner (Pubkey: 32 bytes)
     const ownerBytes = data.slice(offset, offset + 32)

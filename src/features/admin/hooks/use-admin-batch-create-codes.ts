@@ -39,6 +39,7 @@ export function useAdminBatchCreateCodes() {
   const connection = useSolanaConnection()
 
   return useMutation({
+    retry: false, // Don't retry on failure - user needs to manually retry
     mutationFn: async (input: BatchCreateCodesInput): Promise<BatchCreateCodesResult> => {
       if (!wallet.publicKey) {
         throw new Error('Wallet not connected')
