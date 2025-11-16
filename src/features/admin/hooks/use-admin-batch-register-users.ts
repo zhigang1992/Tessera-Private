@@ -73,7 +73,7 @@ export function useAdminBatchRegisterUsers() {
               authority: wallet.publicKey,
               payer: wallet.publicKey,
               systemProgram: new PublicKey('11111111111111111111111111111111'),
-            })
+            } as any)
             .rpc()
 
           result.signatures.push(signature)

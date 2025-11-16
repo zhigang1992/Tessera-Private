@@ -11,12 +11,10 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { PublicKey } from '@solana/web3.js'
 import { fetchMigrationData, exportMigrationDataAsJson } from '../lib/migration-api'
 import { useAdminBatchCreateCodes } from '../hooks/use-admin-batch-create-codes'
-import { useAdminCreateSingleCode } from '../hooks/use-admin-create-single-code'
 import { useAdminRegisterSingleUser } from '../hooks/use-admin-register-single-user'
 import { useAdminCloseCode } from '../hooks/use-admin-close-code'
 import {
   useSolanaConnection,
-  fetchReferralCode,
   fetchUserRegistration,
   checkReferralCodeLayout,
 } from '@/lib/solana'
@@ -36,7 +34,7 @@ export function MigrationPage() {
   const [error, setError] = useState<string | null>(null)
   const [dataWarning, setDataWarning] = useState<string | null>(null)
 
-  const [config, setConfig] = useState<MigrationConfig>({
+  const [config] = useState<MigrationConfig>({
     batchSize: 10,
     skipExisting: true,
   })
@@ -50,7 +48,6 @@ export function MigrationPage() {
   const [userBatchStates, setUserBatchStates] = useState<Record<number, BatchState>>({})
 
   const batchCreateCodes = useAdminBatchCreateCodes()
-  const createCode = useAdminCreateSingleCode()
   const registerUser = useAdminRegisterSingleUser()
   const closeCode = useAdminCloseCode()
 

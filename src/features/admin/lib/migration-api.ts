@@ -21,14 +21,24 @@ export async function fetchMigrationData(): Promise<MigrationData> {
       {
         code: 'TEST2025',
         ownerWallet: 'Hzu1F1HF9ZEd7ezokS6ePUP5gP3p1UkdnoU7rKYS2xPu', // Your test wallet
+        isActive: true,
+        createdAt: new Date().toISOString(),
       },
     ],
     traderBindings: [
       {
         userWallet: '9Fvhvzk9kZQZqGjYJZ3jtT7ks2zXvQX8g3xV7nZkPjQM', // Random test wallet
         referralCode: 'TEST2025',
+        referrerWallet: 'Hzu1F1HF9ZEd7ezokS6ePUP5gP3p1UkdnoU7rKYS2xPu',
+        boundAt: new Date().toISOString(),
       },
     ],
+    metadata: {
+      exportedAt: new Date().toISOString(),
+      totalCodes: 1,
+      totalBindings: 1,
+      dataSource: 'local',
+    },
   }
 
   // Original implementation (commented out for testing):

@@ -81,7 +81,7 @@ export function useAdminBatchCreateCodes() {
           authority: wallet.publicKey,
           payer: wallet.publicKey,
           systemProgram: SystemProgram.programId,
-        })
+        } as any)
         .remainingAccounts(referralCodePDAs)
         .rpc()
 
