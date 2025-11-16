@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { MOCK_AUCTION_LIST } from '../lib/mock-data'
 import { AuctionPhase } from '../types/auction'
 import { AuctionTimer } from '../ui/auction-timer'
-import { formatNumber, formatPrice, isAuctionActive, calculateProgress } from '../lib/utils'
+import { formatPrice, isAuctionActive, calculateProgress } from '../lib/utils'
 
 type FilterOption = 'all' | 'active' | 'ended'
 

@@ -33,7 +33,6 @@ export function AuctionDetailPage() {
   }
 
   const userBid = getUserBidForAuction(auction.id)
-  const auctionWithUserBid = { ...auction, userBid }
   const isActive = isAuctionActive(auction.phase)
   const progress = calculateProgress(auction.tokensAllocated, auction.totalTokenSupply)
 
