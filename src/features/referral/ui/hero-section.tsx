@@ -43,7 +43,7 @@ export default function HeroSection() {
           </a>
 
           <a
-            href="https://t.me/tesseraPE"
+            href="https://t.me/TesseraLabs"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Join Tessera on Telegram"
