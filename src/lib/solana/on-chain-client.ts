@@ -9,7 +9,7 @@ import { Program, AnchorProvider } from '@coral-xyz/anchor'
 import { Connection, PublicKey, SystemProgram } from '@solana/web3.js'
 import type { WalletContextState } from '@solana/wallet-adapter-react'
 import ReferralSystemIDL from '../idl/referral_system.json'
-import type { ReferralSystem } from '@/generated/referral-system/types'
+import type { TesseraReferrals } from '@/generated/referral-system/types'
 import {
   getRpcEndpoint,
   getReferralProgramId,
@@ -38,7 +38,7 @@ function createReadOnlyWallet(): ReadOnlyWallet {
 export function getReferralProgram(
   connection: Connection,
   wallet?: WalletContextState | null,
-): Program<ReferralSystem> | null {
+): Program<TesseraReferrals> | null {
   try {
     const resolvedWallet = wallet && wallet.publicKey ? (wallet as any) : (createReadOnlyWallet() as any)
 
@@ -51,7 +51,7 @@ export function getReferralProgram(
       },
     )
 
-    const program = new Program<ReferralSystem>(ReferralSystemIDL as ReferralSystem, provider)
+    const program = new Program<TesseraReferrals>(ReferralSystemIDL as TesseraReferrals, provider)
 
     return program
   } catch (error) {

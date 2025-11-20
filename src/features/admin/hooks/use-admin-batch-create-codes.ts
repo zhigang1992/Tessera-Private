@@ -9,14 +9,7 @@
 
 import { useMutation } from '@tanstack/react-query'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { PublicKey, SystemProgram } from '@solana/web3.js'
-import {
-  useSolanaConnection,
-  getReferralProgram,
-  getReferralConfigPDA,
-  getReferralCodePDA,
-  getAdminListPDA,
-} from '@/lib/solana'
+import { useSolanaConnection, getReferralProgram } from '@/lib/solana'
 import type { ReferralCodeData } from '../types/migration'
 
 interface BatchCreateCodesInput {
@@ -32,7 +25,7 @@ interface BatchCreateCodesResult {
  * Admin: Batch create referral codes (up to 10 at once)
  * Only the program authority can use this
  *
- * Uses the on-chain batch instruction which automatically allocates PDAs
+ * DEPRECATED: Batch method removed from on-chain program
  */
 export function useAdminBatchCreateCodes() {
   const wallet = useWallet()
@@ -54,57 +47,12 @@ export function useAdminBatchCreateCodes() {
         throw new Error('Program not initialized')
       }
 
-      const [referralConfigPDA] = getReferralConfigPDA(program.programId)
-      const [adminListPDA] = getAdminListPDA(program.programId)
+      // Suppress unused variable warnings
+      void program
+      void input
 
-      // Extract codes and owners
-      const codes = input.codes.map((c) => c.code)
-      const owners = input.codes.map((c) => new PublicKey(c.ownerWallet))
-
-      // Derive all referral code PDAs and pass as remaining accounts
-      const referralCodePDAs = input.codes.map((c) => {
-        const [pda] = getReferralCodePDA(c.code, program.programId)
-        return {
-          pubkey: pda,
-          isWritable: true,
-          isSigner: false,
-        }
-      })
-
-      // Execute the batch create instruction
-      // The on-chain program will automatically allocate the PDAs using invoke_signed
-      const signature = await program.methods
-        .adminBatchCreateReferralCodes(codes, owners)
-        .accounts({
-          referralConfig: referralConfigPDA,
-          adminList: adminListPDA,
-          authority: wallet.publicKey,
-          payer: wallet.publicKey,
-          systemProgram: SystemProgram.programId,
-        } as any)
-        .remainingAccounts(referralCodePDAs)
-        .rpc()
-
-      // Wait for transaction confirmation before returning
-      // This ensures the codes exist on-chain before Step 4 tries to validate them
-      const latestBlockhash = await connection.getLatestBlockhash()
-      await connection.confirmTransaction({
-        signature,
-        blockhash: latestBlockhash.blockhash,
-        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-      })
-
-      // Debug: Log created codes and their PDAs
-      console.log('✅ Batch created codes:')
-      input.codes.forEach((codeData) => {
-        const [pda] = getReferralCodePDA(codeData.code, program.programId)
-        console.log(`  - "${codeData.code}" → PDA: ${pda.toBase58()}`)
-      })
-
-      return {
-        signature,
-        count: input.codes.length,
-      }
+      // NOTE: Batch method removed from on-chain program - this hook is deprecated
+      throw new Error('adminBatchCreateReferralCodes method no longer exists in on-chain program')
     },
   })
 }
