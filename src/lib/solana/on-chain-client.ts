@@ -413,6 +413,7 @@ type RegisterWithReferralCodeOptions = {
   programId?: PublicKey
   tesseraTokenProgram?: PublicKey
   tesseraMint?: PublicKey
+  authority?: PublicKey // Authority for authorized_programs PDA (referral config authority)
 }
 
 export function getRegisterWithReferralCodeAccounts(
@@ -429,7 +430,9 @@ export function getRegisterWithReferralCodeAccounts(
   const tesseraTokenProgramId = options.tesseraTokenProgram ?? getTesseraTokenProgramId()
   const tesseraMint = options.tesseraMint ?? getTesseraMintAddress()
   const [whitelistEntryPDA] = getWhitelistEntryPDA(userPubkey, tesseraTokenProgramId)
-  const [authorizedProgramsPDA] = getAuthorizedProgramsPDA(tokenAuthorityPDA, tesseraTokenProgramId)
+  // Use provided authority or fall back to tokenAuthority (though this may not be correct)
+  const authorityForAuthorizedPrograms = options.authority ?? tokenAuthorityPDA
+  const [authorizedProgramsPDA] = getAuthorizedProgramsPDA(authorityForAuthorizedPrograms, tesseraTokenProgramId)
   const [senderFeeConfigPDA] = getSenderFeeConfigPDA(tesseraMint, userPubkey, tesseraTokenProgramId)
   const [treasuryConfigPDA] = getTreasuryConfigPDA(tesseraMint, tesseraTokenProgramId)
 

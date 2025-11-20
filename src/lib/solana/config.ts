@@ -42,10 +42,6 @@ export const WS_ENDPOINTS: Record<SolanaNetwork, string> = {
  * Get RPC endpoint for current network
  */
 export function getRpcEndpoint(): string {
-  // Allow override via environment variable
-  const override = import.meta.env.VITE_SOLANA_RPC_URL
-  if (override) return override
-
   const network = getCurrentNetwork()
   return RPC_ENDPOINTS[network]
 }
@@ -59,69 +55,50 @@ export function getWsEndpoint(): string {
 }
 
 /**
- * Program IDs - Devnet deployed addresses
- * Configure via environment variables for different networks
+ * Program IDs - Same across all networks
  */
 export const PROGRAM_IDS = {
   TESSERA_TOKEN: new PublicKey('TESQvsR4TmYxiroPPQgZpVRoSFG8pru4fsYr67iv6kf'),
   REFERRAL_SYSTEM: new PublicKey('5jSqXLX7QFr6ZvvQPLRH7mGhw9P3r96uarkVLy7NEdog'),
+  AUCTION: new PublicKey('4Edp1p2soByRisvWP7SUA6dmfeZLHqa3UCCsoPm1Ak5R'),
 } as const
 
 /**
- * Default Tessera mint addresses per environment.
- * Extend this map if additional mints are deployed.
+ * Tessera mint addresses per environment
+ * See addresses.md for complete details
  */
 export const DEFAULT_MINT_ADDRESSES: Record<SolanaNetwork, PublicKey> = {
   localnet: PublicKey.default,
-  devnet: new PublicKey('A8xxQEFytK4DS7F8fGh4uWf56TFrYg2Jynmay2dd8SbS'),
+  devnet: new PublicKey('2Z41NAkarnW3VKA5EYk3YM58CgXDvpdyw5isEDbNW8mR'), // TTT02 - Current Test Mint
   testnet: PublicKey.default,
-  'mainnet-beta': new PublicKey('TESQvsR4TmYxiroPPQgZpVRoSFG8pru4fsYr67iv6kf'), // TODO: replace with production mint when available
+  'mainnet-beta': new PublicKey('TESgesqMiVxUG38tuJmLkDSQoebKmBn2FhZkYNBr8hu'), // TESS - Production Mint
 }
 
 /**
- * Get Tessera Token program ID with environment override support
+ * Get Tessera Token program ID
  */
 export function getTesseraTokenProgramId(): PublicKey {
-  const override = import.meta.env.VITE_TESSERA_TOKEN_PROGRAM_ID
-  if (override) {
-    try {
-      return new PublicKey(override)
-    } catch {
-      console.warn('Invalid VITE_TESSERA_TOKEN_PROGRAM_ID, using default')
-    }
-  }
   return PROGRAM_IDS.TESSERA_TOKEN
 }
 
 /**
- * Get Referral System program ID with environment override support
+ * Get Referral System program ID
  */
 export function getReferralProgramId(): PublicKey {
-  const override = import.meta.env.VITE_REFERRAL_PROGRAM_ID
-  if (override) {
-    try {
-      return new PublicKey(override)
-    } catch {
-      console.warn('Invalid VITE_REFERRAL_PROGRAM_ID, using default')
-    }
-  }
   return PROGRAM_IDS.REFERRAL_SYSTEM
 }
 
 /**
- * Get Tessera mint address with environment override support.
- * Falls back to network-specific defaults defined above.
+ * Get Auction program ID
+ */
+export function getAuctionProgramId(): PublicKey {
+  return PROGRAM_IDS.AUCTION
+}
+
+/**
+ * Get Tessera mint address for current network
  */
 export function getTesseraMintAddress(): PublicKey {
-  const override = import.meta.env.VITE_TESSERA_MINT_ADDRESS
-  if (override) {
-    try {
-      return new PublicKey(override)
-    } catch {
-      console.warn('Invalid VITE_TESSERA_MINT_ADDRESS, using default')
-    }
-  }
-
   const network = getCurrentNetwork()
   const defaultMint = DEFAULT_MINT_ADDRESSES[network]
 
