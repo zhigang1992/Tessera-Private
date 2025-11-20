@@ -124,9 +124,14 @@ export function getTesseraFeeConfigPDA(): [PublicKey, number] {
   return PublicKey.findProgramAddressSync([Buffer.from('fee_config')], tesseraProgramId)
 }
 
-export function getAuthorizedProgramsPDA(): [PublicKey, number] {
-  const tesseraProgramId = getTesseraTokenProgramId()
-  return PublicKey.findProgramAddressSync([Buffer.from('authorized_programs')], tesseraProgramId)
+export function getAuthorizedProgramsPDA(authority: PublicKey, programId?: PublicKey): [PublicKey, number] {
+  const tesseraProgramId = programId ?? getTesseraTokenProgramId()
+  return PublicKey.findProgramAddressSync([Buffer.from('authorized_programs'), authority.toBuffer()], tesseraProgramId)
+}
+
+export function getTreasuryConfigPDA(mint: PublicKey, programId?: PublicKey): [PublicKey, number] {
+  const tesseraProgramId = programId ?? getTesseraTokenProgramId()
+  return PublicKey.findProgramAddressSync([Buffer.from('treasury_config'), mint.toBuffer()], tesseraProgramId)
 }
 
 export function getWhitelistEntryPDA(address: PublicKey, programId?: PublicKey): [PublicKey, number] {
@@ -424,7 +429,9 @@ export function getRegisterWithReferralCodeAccounts(
   const tesseraTokenProgramId = options.tesseraTokenProgram ?? getTesseraTokenProgramId()
   const tesseraMint = options.tesseraMint ?? getTesseraMintAddress()
   const [whitelistEntryPDA] = getWhitelistEntryPDA(userPubkey, tesseraTokenProgramId)
+  const [authorizedProgramsPDA] = getAuthorizedProgramsPDA(tokenAuthorityPDA, tesseraTokenProgramId)
   const [senderFeeConfigPDA] = getSenderFeeConfigPDA(tesseraMint, userPubkey, tesseraTokenProgramId)
+  const [treasuryConfigPDA] = getTreasuryConfigPDA(tesseraMint, tesseraTokenProgramId)
 
   return {
     referralCode: referralCodePDA,
@@ -433,8 +440,10 @@ export function getRegisterWithReferralCodeAccounts(
     tokenAuthority: tokenAuthorityPDA,
     referrerRegistration: options.referrerRegistration ?? null,
     whitelistEntry: whitelistEntryPDA,
+    authorizedPrograms: authorizedProgramsPDA,
     senderFeeConfig: senderFeeConfigPDA,
     tesseraMint: tesseraMint,
+    treasuryConfig: treasuryConfigPDA,
     tesseraTokenProgram: tesseraTokenProgramId,
     user: userPubkey,
     systemProgram: SystemProgram.programId,
