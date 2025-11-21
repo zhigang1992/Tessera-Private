@@ -11,7 +11,11 @@
       "name": "add_whitelisted_address",
       "docs": [
         "Add an address to the whitelist with a custom transfer fee",
-        "This data is used by the transfer hook"
+        "This data is used by the transfer hook",
+        "",
+        "Authorization:",
+        "- Can be called by the mint's transfer fee config authority (program owner)",
+        "- OR by an authorized program (e.g., referral system) if using program authority"
       ],
       "discriminator": [
         238,
@@ -66,9 +70,17 @@
           "name": "authority",
           "docs": [
             "The authority that can add to whitelist",
-            "Must be the mint's transfer fee authority"
+            "Either the mint's transfer fee authority OR a PDA from an authorized program"
           ],
           "signer": true
+        },
+        {
+          "name": "authorized_programs",
+          "docs": [
+            "Optional: AuthorizedPrograms account for validating program-based authority",
+            "Required if authority is not the transfer fee config authority"
+          ],
+          "optional": true
         },
         {
           "name": "payer",
@@ -91,93 +103,202 @@
       ]
     },
     {
-      "name": "collect_split_withheld_fees",
+      "name": "authorize_program",
       "docs": [
-        "Collect withheld fees for senders with custom fee splits",
-        "This distributes fees to all recipients according to their configured splits",
-        "Useful for senders who have sender_fee_config with multiple recipients"
+        "Add a program to the authorized list",
+        "Only the authority can add programs"
       ],
       "discriminator": [
-        163,
-        199,
-        229,
-        223,
-        129,
-        213,
-        169,
-        128
+        75,
+        26,
+        98,
+        253,
+        17,
+        11,
+        56,
+        121
       ],
       "accounts": [
         {
-          "name": "sender_fee_config",
+          "name": "authorized_programs",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
                 "value": [
-                  115,
-                  101,
-                  110,
-                  100,
-                  101,
-                  114,
-                  95,
-                  102,
-                  101,
-                  101,
-                  95,
-                  99,
+                  97,
+                  117,
+                  116,
+                  104,
                   111,
-                  110,
-                  102,
+                  114,
                   105,
-                  103
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
                 ]
               },
               {
                 "kind": "account",
-                "path": "mint"
-              },
-              {
-                "kind": "account",
-                "path": "sender_fee_config.sender",
-                "account": "SenderFeeConfig"
+                "path": "authority"
               }
             ]
           }
         },
         {
-          "name": "mint",
-          "docs": [
-            "The Token-2022 mint"
-          ],
-          "writable": true
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "authorized_programs"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "program_id",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "deauthorize_program",
+      "docs": [
+        "Remove a program from the authorized list",
+        "Only the authority can remove programs"
+      ],
+      "discriminator": [
+        147,
+        240,
+        123,
+        211,
+        65,
+        232,
+        242,
+        123
+      ],
+      "accounts": [
+        {
+          "name": "authorized_programs",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
         },
         {
-          "name": "sender_token_account",
-          "docs": [
-            "The sender's token account (where fees are withheld)"
-          ],
-          "writable": true
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "authorized_programs"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "program_id",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "initialize_authorized_programs",
+      "docs": [
+        "Initialize authorized programs list for managing sender fee configs",
+        "Only callable once per authority"
+      ],
+      "discriminator": [
+        169,
+        252,
+        192,
+        189,
+        35,
+        61,
+        191,
+        45
+      ],
+      "accounts": [
+        {
+          "name": "authorized_programs",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  122,
+                  101,
+                  100,
+                  95,
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
         },
         {
-          "name": "recipient_token_account",
-          "docs": [
-            "The recipient's token account (where fees will be sent)"
-          ],
-          "writable": true
-        },
-        {
-          "name": "withdraw_authority",
-          "docs": [
-            "The withdraw authority (program authority)"
-          ],
+          "name": "authority",
+          "writable": true,
           "signer": true
         },
         {
-          "name": "token_2022_program",
-          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -189,14 +310,14 @@
         "This must be called once per mint to enable the transfer hook"
       ],
       "discriminator": [
-        92,
-        197,
-        174,
-        197,
-        41,
-        124,
-        19,
-        3
+        51,
+        85,
+        186,
+        2,
+        53,
+        203,
+        238,
+        115
       ],
       "accounts": [
         {
@@ -289,7 +410,8 @@
           "docs": [
             "The Token-2022 mint to initialize with transfer fees"
           ],
-          "writable": true
+          "writable": true,
+          "signer": true
         },
         {
           "name": "authority",
@@ -298,6 +420,138 @@
           ],
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "treasury_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_manager_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  109,
+                  97,
+                  110,
+                  97,
+                  103,
+                  101,
+                  114,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_manager_ata"
+        },
+        {
+          "name": "whitelist_entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  104,
+                  105,
+                  116,
+                  101,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fee_manager_ata"
+              }
+            ]
+          }
+        },
+        {
+          "name": "extra_account_metas",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  120,
+                  116,
+                  114,
+                  97,
+                  45,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116,
+                  45,
+                  109,
+                  101,
+                  116,
+                  97,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
         },
         {
           "name": "system_program",
@@ -322,48 +576,52 @@
           "type": "u64"
         },
         {
-          "name": "_default_fee_recipient",
+          "name": "treasury",
           "type": "pubkey"
+        },
+        {
+          "name": "fee_manager",
+          "type": "pubkey"
+        },
+        {
+          "name": "withdrawal_threshold",
+          "type": "u64"
         }
       ]
     },
     {
-      "name": "monitor_sender_fee_status",
+      "name": "initialize_treasury_config",
       "docs": [
-        "Monitor transfer status and fee distribution for a sender",
-        "This function provides detailed information about fee distribution status"
+        "Initialize treasury configuration for a mint",
+        "This sets the default treasury address that receives fees from non-referral users"
       ],
       "discriminator": [
-        168,
-        32,
-        190,
-        243,
-        56,
-        160,
-        218,
-        109
+        42,
+        221,
+        143,
+        37,
+        13,
+        169,
+        92,
+        98
       ],
       "accounts": [
         {
-          "name": "sender_fee_config",
-          "docs": [
-            "The sender fee config account"
-          ],
+          "name": "treasury_config",
+          "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
                 "value": [
-                  115,
-                  101,
-                  110,
-                  100,
-                  101,
+                  116,
                   114,
-                  95,
-                  102,
                   101,
-                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
                   95,
                   99,
                   111,
@@ -376,11 +634,6 @@
               {
                 "kind": "account",
                 "path": "mint"
-              },
-              {
-                "kind": "account",
-                "path": "sender_fee_config.sender",
-                "account": "SenderFeeConfig"
               }
             ]
           }
@@ -388,17 +641,32 @@
         {
           "name": "mint",
           "docs": [
-            "The mint for which to monitor the sender fee status"
+            "The mint this treasury is for"
           ]
         },
         {
-          "name": "sender_token_account",
+          "name": "authority",
           "docs": [
-            "The sender's token account (where fees are withheld)"
-          ]
+            "The authority who can update the treasury"
+          ],
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "treasury",
+          "type": "pubkey"
+        }
+      ]
     },
     {
       "name": "remove_sender_fee_config",
@@ -474,6 +742,13 @@
           ],
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "authorized_programs",
+          "docs": [
+            "Required if authority is not the transfer fee config authority"
+          ],
+          "optional": true
         }
       ],
       "args": []
@@ -481,7 +756,10 @@
     {
       "name": "remove_whitelisted_address",
       "docs": [
-        "Remove an address from the whitelist"
+        "Remove a whitelisted address, reverting it to the default transfer fee",
+        "Authority can be EITHER:",
+        "1. The transfer fee config authority for the mint",
+        "2. A program authorized in the `authorized_programs` account"
       ],
       "discriminator": [
         45,
@@ -496,53 +774,30 @@
       "accounts": [
         {
           "name": "whitelist_entry",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  119,
-                  104,
-                  105,
-                  116,
-                  101,
-                  108,
-                  105,
-                  115,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "whitelisted_address"
-              }
-            ]
-          }
+          "writable": true
         },
         {
-          "name": "whitelisted_address",
-          "docs": [
-            "The address to remove from whitelist"
-          ],
-          "relations": [
-            "whitelist_entry"
-          ]
+          "name": "whitelisted_address"
         },
         {
           "name": "mint",
           "docs": [
-            "The mint for which to remove the address from whitelist"
+            "The Token-2022 mint"
           ]
         },
         {
           "name": "authority",
           "docs": [
-            "The authority that can remove from whitelist",
-            "Must be the mint's transfer fee authority"
+            "The authority that can remove the whitelisted address"
           ],
-          "writable": true,
           "signer": true
+        },
+        {
+          "name": "authorized_programs",
+          "docs": [
+            "Required if authority is not the transfer fee config authority"
+          ],
+          "optional": true
         }
       ],
       "args": []
@@ -632,6 +887,13 @@
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "authorized_programs",
+          "docs": [
+            "Required if authority is not the transfer fee config authority"
+          ],
+          "optional": true
         }
       ],
       "args": [
@@ -651,17 +913,23 @@
       "name": "transfer_hook",
       "docs": [
         "Transfer Hook: Called by Token-2022 during transfers",
-        "Uses the official spl-transfer-hook-interface for proper integration"
+        "Uses the official spl-transfer-hook-interface for proper integration",
+        "",
+        "This hook emits FEE_ATTRIBUTION events that trusted workers monitor off-chain.",
+        "The workers then calculate and execute fee distributions based on these events.",
+        "",
+        "Token-2022 withholds fees in the RECIPIENT's account (destination).",
+        "Workers monitor events to determine how much each referrer should receive."
       ],
       "discriminator": [
-        220,
-        57,
-        220,
-        152,
-        126,
-        125,
-        97,
-        168
+        105,
+        37,
+        101,
+        197,
+        75,
+        251,
+        102,
+        26
       ],
       "accounts": [
         {
@@ -698,6 +966,103 @@
       "args": [
         {
           "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "update_fee_manager",
+      "docs": [
+        "Update or remove the fee manager configuration",
+        "",
+        "This instruction allows:",
+        "- Updating fee manager address and/or withdrawal threshold (new_fee_manager = Some)",
+        "- Removing fee manager entirely (new_fee_manager = None, closes account)",
+        "",
+        "Only the current authority (transfer_fee_config_authority) can call this.",
+        "",
+        "Use cases:",
+        "- Rotating fee manager keypairs for security",
+        "- Adjusting withdrawal thresholds based on volume",
+        "- Transferring fee management to a different entity",
+        "- Revoking fee manager privileges entirely"
+      ],
+      "discriminator": [
+        156,
+        165,
+        67,
+        60,
+        47,
+        30,
+        69,
+        153
+      ],
+      "accounts": [
+        {
+          "name": "fee_manager_config",
+          "docs": [
+            "Fee manager config to update or close"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  109,
+                  97,
+                  110,
+                  97,
+                  103,
+                  101,
+                  114,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "The Token-2022 mint"
+          ]
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "Authority (must match config.authority)"
+          ],
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "fee_manager_config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "new_fee_manager",
+          "type": {
+            "option": "pubkey"
+          }
+        },
+        {
+          "name": "new_withdrawal_threshold",
           "type": "u64"
         }
       ]
@@ -750,6 +1115,196 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "update_treasury_config",
+      "docs": [
+        "Update treasury address (admin only)"
+      ],
+      "discriminator": [
+        129,
+        100,
+        213,
+        18,
+        68,
+        118,
+        249,
+        154
+      ],
+      "accounts": [
+        {
+          "name": "treasury_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_config.mint",
+                "account": "TreasuryConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "treasury_config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "new_treasury",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "withdraw_to_fee_manager",
+      "docs": [
+        "Harvest fees from recipient accounts and withdraw to fee manager",
+        "",
+        "This is a two-step process in one instruction:",
+        "1. HARVEST: Move fees from recipient token accounts to mint",
+        "2. WITHDRAW: Move fees from mint to fee manager",
+        "",
+        "TIERED APPROVAL:",
+        "- Below threshold: Anyone can call (permissionless)",
+        "- Above threshold: Requires authority signature",
+        "",
+        "USAGE:",
+        "Pass recipient token accounts with withheld fees as remaining_accounts.",
+        "The instruction will harvest from all of them, then withdraw everything."
+      ],
+      "discriminator": [
+        50,
+        93,
+        60,
+        24,
+        94,
+        71,
+        66,
+        61
+      ],
+      "accounts": [
+        {
+          "name": "fee_manager_config",
+          "docs": [
+            "Fee manager config for this mint"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  109,
+                  97,
+                  110,
+                  97,
+                  103,
+                  101,
+                  114,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "The Token-2022 mint (with withheld fees)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "fee_manager_ata",
+          "docs": [
+            "The fee manager's token account (receives ALL fees)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "fee_authority",
+          "docs": [
+            "The fee authority PDA (signs the withdrawal)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "Optional authority signer (required if withdrawal amount > threshold)"
+          ],
+          "signer": true,
+          "optional": true
+        },
+        {
+          "name": "token_2022_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": []
     },
     {
       "name": "write_token_metadata",
@@ -811,6 +1366,32 @@
   ],
   "accounts": [
     {
+      "name": "AuthorizedPrograms",
+      "discriminator": [
+        151,
+        56,
+        130,
+        104,
+        13,
+        168,
+        62,
+        228
+      ]
+    },
+    {
+      "name": "FeeManagerConfig",
+      "discriminator": [
+        99,
+        247,
+        250,
+        235,
+        28,
+        147,
+        0,
+        190
+      ]
+    },
+    {
       "name": "SenderFeeConfig",
       "discriminator": [
         106,
@@ -824,6 +1405,19 @@
       ]
     },
     {
+      "name": "TreasuryConfig",
+      "discriminator": [
+        124,
+        54,
+        212,
+        227,
+        213,
+        189,
+        168,
+        41
+      ]
+    },
+    {
       "name": "WhitelistEntry",
       "discriminator": [
         51,
@@ -834,6 +1428,47 @@
         192,
         234,
         62
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "FeesWithdrawn",
+      "discriminator": [
+        234,
+        15,
+        0,
+        119,
+        148,
+        241,
+        40,
+        21
+      ]
+    },
+    {
+      "name": "SenderFeeRecipientsConfigured",
+      "discriminator": [
+        232,
+        224,
+        159,
+        251,
+        201,
+        33,
+        45,
+        140
+      ]
+    },
+    {
+      "name": "TransferHookExecuted",
+      "discriminator": [
+        187,
+        164,
+        179,
+        224,
+        22,
+        91,
+        19,
+        0
       ]
     }
   ],
@@ -855,46 +1490,133 @@
     },
     {
       "code": 6003,
-      "name": "Unauthorized",
-      "msg": "Unauthorized. Only the fee config authority or authorized programs can perform this action."
-    },
-    {
-      "code": 6004,
       "name": "ProgramAlreadyAuthorized",
       "msg": "Program is already authorized."
     },
     {
-      "code": 6005,
+      "code": 6004,
       "name": "ProgramNotAuthorized",
       "msg": "Program is not authorized."
     },
     {
-      "code": 6006,
+      "code": 6005,
       "name": "TooManyAuthorizedPrograms",
       "msg": "Too many authorized programs: maximum is 10."
     },
     {
+      "code": 6006,
+      "name": "InvalidAuthority",
+      "msg": "Invalid authority: PDA derivation mismatch."
+    },
+    {
       "code": 6007,
-      "name": "AlreadyDistributed",
-      "msg": "Recipient has already been distributed to - double distribution prevented"
+      "name": "UnauthorizedWhitelist",
+      "msg": "Unauthorized to whitelist: not transfer fee authority or authorized program."
     },
     {
       "code": 6008,
+      "name": "InvalidRecipient",
+      "msg": "Invalid recipient: not in fee_recipients list or treasury."
+    },
+    {
+      "code": 6009,
       "name": "InvalidTokenAccount",
       "msg": "Invalid token account data"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "InvalidMintSpace",
       "msg": "Failed to calculate mint space for extensions"
     },
     {
-      "code": 6010,
-      "name": "InvalidMetadataField",
-      "msg": "Invalid metadata field. Use: name, symbol, or uri"
+      "code": 6011,
+      "name": "UnauthorizedWithdrawal",
+      "msg": "Unauthorized withdrawal - amount exceeds threshold and authority signature required"
+    },
+    {
+      "code": 6012,
+      "name": "UnauthorizedMintAuthority",
+      "msg": "Unauthorized: must be mint authority"
+    },
+    {
+      "code": 6013,
+      "name": "UnauthorizedTransferFeeAuthority",
+      "msg": "Unauthorized: must be transfer fee config authority"
     }
   ],
   "types": [
+    {
+      "name": "AuthorizedPrograms",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "authorized_programs",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeManagerConfig",
+      "docs": [
+        "Configuration for the fee manager",
+        "The fee manager receives all withheld fees and distributes them to recipients"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "docs": [
+              "The mint this configuration is for"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_manager",
+            "docs": [
+              "The fee manager wallet address (privileged operator)",
+              "This wallet receives all fees from the mint and distributes them"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "docs": [
+              "The authority who can update this configuration"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "withdrawal_threshold",
+            "docs": [
+              "Threshold for withdrawals: amounts above this require authority signature",
+              "Below this threshold, anyone can withdraw to fee manager",
+              "Above this threshold, only authority can approve withdrawal"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for PDA derivation"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
     {
       "name": "FeeRecipientInfo",
       "type": {
@@ -907,6 +1629,33 @@
           {
             "name": "split_percentage",
             "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeesWithdrawn",
+      "docs": [
+        "Event emitted when fees are withdrawn to fee manager"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_manager",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -935,10 +1684,91 @@
             }
           },
           {
-            "name": "distributed_recipients",
-            "type": {
-              "vec": "bool"
-            }
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SenderFeeRecipientsConfigured",
+      "docs": [
+        "Event emitted when sender fee recipients are configured"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "sender",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient_count",
+            "type": "u8"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferHookExecuted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "sender_fee_config_pda",
+            "type": "pubkey"
+          },
+          {
+            "name": "send_token_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "sender_owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TreasuryConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
           },
           {
             "name": "bump",

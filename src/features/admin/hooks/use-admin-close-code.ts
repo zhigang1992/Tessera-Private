@@ -57,7 +57,7 @@ export function useAdminCloseCode() {
           adminList: adminListPDA,
           authority: wallet.publicKey,
           referralCode: referralCodePDA,
-        })
+        } as any)
         .rpc()
 
       // Wait for confirmation

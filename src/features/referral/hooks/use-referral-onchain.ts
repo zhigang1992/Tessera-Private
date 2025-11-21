@@ -285,6 +285,9 @@ export function useBindReferralCode() {
         (referralConfig as any).tesseraTokenProgram ?? (referralConfig as any).tessera_token_program
       const tesseraTokenProgramId = rawTokenProgram ? new PublicKey(rawTokenProgram) : getTesseraTokenProgramId()
 
+      // Get authority from referral config for authorized_programs PDA
+      const authority = new PublicKey((referralConfig as any).authority)
+
       // Get optional referrer registration if it exists
       const referrerPubkey = new PublicKey(codeAccount.owner)
       const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey)
@@ -299,6 +302,7 @@ export function useBindReferralCode() {
         referralConfig: referralConfigPda,
         programId: program.programId,
         tesseraTokenProgram: tesseraTokenProgramId,
+        authority, // Pass authority for correct authorized_programs PDA derivation
       })
 
       const txSignature = await program.methods.registerWithReferralCode().accounts(accounts).rpc()

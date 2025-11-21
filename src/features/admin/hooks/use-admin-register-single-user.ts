@@ -108,7 +108,7 @@ export function useAdminRegisterSingleUser() {
           authority: wallet.publicKey,
           payer: wallet.publicKey,
           systemProgram: SystemProgram.programId,
-        })
+        } as any)
         .rpc()
 
       return {

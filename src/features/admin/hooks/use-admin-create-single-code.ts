@@ -60,7 +60,7 @@ export function useAdminCreateSingleCode() {
           authority: wallet.publicKey,
           payer: wallet.publicKey,
           systemProgram: SystemProgram.programId,
-        })
+        } as any)
         .rpc()
 
       // Wait for transaction confirmation

@@ -9,7 +9,7 @@ import { Program, AnchorProvider } from '@coral-xyz/anchor'
 import { Connection, PublicKey, SystemProgram } from '@solana/web3.js'
 import type { WalletContextState } from '@solana/wallet-adapter-react'
 import ReferralSystemIDL from '../idl/referral_system.json'
-import type { ReferralSystem } from '@/generated/referral-system/types'
+import type { TesseraReferrals } from '@/generated/referral-system/types'
 import {
   getRpcEndpoint,
   getReferralProgramId,
@@ -38,7 +38,7 @@ function createReadOnlyWallet(): ReadOnlyWallet {
 export function getReferralProgram(
   connection: Connection,
   wallet?: WalletContextState | null,
-): Program<ReferralSystem> | null {
+): Program<TesseraReferrals> | null {
   try {
     const resolvedWallet = wallet && wallet.publicKey ? (wallet as any) : (createReadOnlyWallet() as any)
 
@@ -51,7 +51,7 @@ export function getReferralProgram(
       },
     )
 
-    const program = new Program<ReferralSystem>(ReferralSystemIDL as ReferralSystem, provider)
+    const program = new Program<TesseraReferrals>(ReferralSystemIDL as TesseraReferrals, provider)
 
     return program
   } catch (error) {
@@ -124,9 +124,14 @@ export function getTesseraFeeConfigPDA(): [PublicKey, number] {
   return PublicKey.findProgramAddressSync([Buffer.from('fee_config')], tesseraProgramId)
 }
 
-export function getAuthorizedProgramsPDA(): [PublicKey, number] {
-  const tesseraProgramId = getTesseraTokenProgramId()
-  return PublicKey.findProgramAddressSync([Buffer.from('authorized_programs')], tesseraProgramId)
+export function getAuthorizedProgramsPDA(authority: PublicKey, programId?: PublicKey): [PublicKey, number] {
+  const tesseraProgramId = programId ?? getTesseraTokenProgramId()
+  return PublicKey.findProgramAddressSync([Buffer.from('authorized_programs'), authority.toBuffer()], tesseraProgramId)
+}
+
+export function getTreasuryConfigPDA(mint: PublicKey, programId?: PublicKey): [PublicKey, number] {
+  const tesseraProgramId = programId ?? getTesseraTokenProgramId()
+  return PublicKey.findProgramAddressSync([Buffer.from('treasury_config'), mint.toBuffer()], tesseraProgramId)
 }
 
 export function getWhitelistEntryPDA(address: PublicKey, programId?: PublicKey): [PublicKey, number] {
@@ -408,6 +413,7 @@ type RegisterWithReferralCodeOptions = {
   programId?: PublicKey
   tesseraTokenProgram?: PublicKey
   tesseraMint?: PublicKey
+  authority?: PublicKey // Authority for authorized_programs PDA (referral config authority)
 }
 
 export function getRegisterWithReferralCodeAccounts(
@@ -424,7 +430,11 @@ export function getRegisterWithReferralCodeAccounts(
   const tesseraTokenProgramId = options.tesseraTokenProgram ?? getTesseraTokenProgramId()
   const tesseraMint = options.tesseraMint ?? getTesseraMintAddress()
   const [whitelistEntryPDA] = getWhitelistEntryPDA(userPubkey, tesseraTokenProgramId)
+  // Use provided authority or fall back to tokenAuthority (though this may not be correct)
+  const authorityForAuthorizedPrograms = options.authority ?? tokenAuthorityPDA
+  const [authorizedProgramsPDA] = getAuthorizedProgramsPDA(authorityForAuthorizedPrograms, tesseraTokenProgramId)
   const [senderFeeConfigPDA] = getSenderFeeConfigPDA(tesseraMint, userPubkey, tesseraTokenProgramId)
+  const [treasuryConfigPDA] = getTreasuryConfigPDA(tesseraMint, tesseraTokenProgramId)
 
   return {
     referralCode: referralCodePDA,
@@ -433,8 +443,10 @@ export function getRegisterWithReferralCodeAccounts(
     tokenAuthority: tokenAuthorityPDA,
     referrerRegistration: options.referrerRegistration ?? null,
     whitelistEntry: whitelistEntryPDA,
+    authorizedPrograms: authorizedProgramsPDA,
     senderFeeConfig: senderFeeConfigPDA,
     tesseraMint: tesseraMint,
+    treasuryConfig: treasuryConfigPDA,
     tesseraTokenProgram: tesseraTokenProgramId,
     user: userPubkey,
     systemProgram: SystemProgram.programId,
