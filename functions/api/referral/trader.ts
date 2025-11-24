@@ -32,9 +32,18 @@ type ReferralCode = {
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const authResult = await optionalAuthenticateRequest(request, env);
-  const walletAddress = authResult.authenticated ? authResult.context.walletAddress : null;
+  let walletAddress = authResult.authenticated ? authResult.context.walletAddress : null;
 
-  // If not authenticated, return default/empty data
+  // Check if wallet address is provided as query parameter for public access
+  const url = new URL(request.url);
+  const publicWalletAddress = url.searchParams.get('wallet');
+
+  // Use public wallet address if not authenticated but provided in query
+  if (!walletAddress && publicWalletAddress) {
+    walletAddress = publicWalletAddress;
+  }
+
+  // If no wallet address available, return default/empty data
   if (!walletAddress) {
     return Response.json({
       walletAddress: null,
@@ -49,8 +58,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     });
   }
 
-  // Only ensure user exists if authenticated
-  await ensureUserExists(walletAddress, env.DB);
+  // Only ensure user exists if authenticated (not for public read-only requests)
+  if (authResult.authenticated) {
+    await ensureUserExists(walletAddress, env.DB);
+  }
 
   // Fetch trader metrics (or return defaults if not yet tracked)
   let metrics = await env.DB.prepare('SELECT * FROM metrics_trader WHERE wallet_address = ?')
@@ -58,12 +69,14 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     .first<TraderMetrics>();
 
   if (!metrics) {
-    // Create default metrics record
-    await env.DB.prepare(
-      'INSERT INTO metrics_trader (wallet_address, trading_volume, fee_rebate_total, trading_points, fee_discount_pct) VALUES (?, 0, 0, 0, 0)',
-    )
-      .bind(walletAddress)
-      .run();
+    // Only create default metrics record if authenticated (not for public read-only requests)
+    if (authResult.authenticated) {
+      await env.DB.prepare(
+        'INSERT INTO metrics_trader (wallet_address, trading_volume, fee_rebate_total, trading_points, fee_discount_pct) VALUES (?, 0, 0, 0, 0)',
+      )
+        .bind(walletAddress)
+        .run();
+    }
 
     metrics = {
       wallet_address: walletAddress,

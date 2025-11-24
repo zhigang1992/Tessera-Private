@@ -232,6 +232,10 @@ export class ReferralApiClient {
     return this.request('/api/referral/trader');
   }
 
+  async getTraderDataPublic(walletAddress: string): Promise<TraderData> {
+    return this.request(`/api/referral/trader?wallet=${encodeURIComponent(walletAddress)}`);
+  }
+
   async bindToReferralCode(referralCode: string): Promise<{ success: boolean; binding: { traderWallet: string; referrerCode: string; referrerWallet: string; boundAt: string } }> {
     return this.request('/api/referral/trader/bind', {
       method: 'POST',
