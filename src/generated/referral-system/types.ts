@@ -2,12 +2,12 @@
  * Program IDL in camelCase format in order to be used in JS/TS.
  *
  * Note that this is only a type helper and is not the actual IDL. The original
- * IDL can be found at `target/idl/tessera_referrals.json`.
+ * IDL can be found at `target/idl/referral_system.json`.
  */
-export type TesseraReferrals = {
+export type ReferralSystem = {
   "address": "5jSqXLX7QFr6ZvvQPLRH7mGhw9P3r96uarkVLy7NEdog",
   "metadata": {
-    "name": "tesseraReferrals",
+    "name": "referralSystem",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Solana referral system with fee reduction and splitting"
@@ -61,6 +61,199 @@ export type TesseraReferrals = {
         {
           "name": "newAdmin",
           "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "adminBatchCreateReferralCodes",
+      "docs": [
+        "Admin: Batch create referral codes for multiple owners",
+        "Only the program authority can batch create referral codes",
+        "Allocates PDA accounts and initializes them in a single transaction"
+      ],
+      "discriminator": [
+        250,
+        229,
+        195,
+        204,
+        33,
+        130,
+        222,
+        23
+      ],
+      "accounts": [
+        {
+          "name": "referralConfig",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "adminList",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "codes",
+          "type": {
+            "vec": "string"
+          }
+        },
+        {
+          "name": "owners",
+          "type": {
+            "vec": "pubkey"
+          }
+        }
+      ]
+    },
+    {
+      "name": "adminBatchRegisterWithReferralCode",
+      "docs": [
+        "Admin: Batch register multiple users with referral codes",
+        "Only the program authority can batch register users"
+      ],
+      "discriminator": [
+        157,
+        52,
+        84,
+        105,
+        208,
+        158,
+        12,
+        66
+      ],
+      "accounts": [
+        {
+          "name": "referralConfig",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "adminList",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "users",
+          "type": {
+            "vec": "pubkey"
+          }
+        },
+        {
+          "name": "referralCodeKeys",
+          "type": {
+            "vec": "pubkey"
+          }
         }
       ]
     },
@@ -450,13 +643,6 @@ export type TesseraReferrals = {
           "writable": true
         },
         {
-          "name": "authorizedPrograms",
-          "docs": [
-            "The authorized programs account from Tessera Token program",
-            "This validates that the referral program is authorized to whitelist"
-          ]
-        },
-        {
           "name": "userAccount",
           "docs": [
             "The user account to register"
@@ -495,59 +681,6 @@ export type TesseraReferrals = {
           "type": "pubkey"
         }
       ]
-    },
-    {
-      "name": "closeReferralConfig",
-      "docs": [
-        "Close the referral config account and reclaim SOL (authority only)",
-        "This is useful for resetting or migrating the referral system"
-      ],
-      "discriminator": [
-        35,
-        87,
-        180,
-        220,
-        36,
-        174,
-        204,
-        207
-      ],
-      "accounts": [
-        {
-          "name": "referralConfig",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  114,
-                  101,
-                  102,
-                  101,
-                  114,
-                  114,
-                  97,
-                  108,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        }
-      ],
-      "args": []
     },
     {
       "name": "createReferralCode",
@@ -824,6 +957,10 @@ export type TesseraReferrals = {
         {
           "name": "tier3SplitPercentage",
           "type": "u16"
+        },
+        {
+          "name": "enableSplitFee",
+          "type": "bool"
         }
       ]
     },
@@ -831,8 +968,8 @@ export type TesseraReferrals = {
       "name": "initializeTokenAuthority",
       "docs": [
         "Initialize the token authority PDA",
-        "This PDA will be used to sign CPI calls to the Tessera Token program",
-        "The referral program will be added to the token program's authorized_programs list"
+        "This PDA will be set as the transfer fee authority on the token mint",
+        "allowing the referral program to make CPI calls without requiring signatures"
       ],
       "discriminator": [
         54,
@@ -1126,6 +1263,13 @@ export type TesseraReferrals = {
           "optional": true
         },
         {
+          "name": "senderFeeConfig",
+          "docs": [
+            "The sender fee config account in the Tessera Token program"
+          ],
+          "writable": true
+        },
+        {
           "name": "whitelistEntry",
           "docs": [
             "The whitelist entry account in the Tessera Token program"
@@ -1135,16 +1279,8 @@ export type TesseraReferrals = {
         {
           "name": "authorizedPrograms",
           "docs": [
-            "The authorized programs account from Tessera Token program",
-            "This validates that the referral program is authorized to whitelist"
+            "The authorized programs account from Tessera Token program"
           ]
-        },
-        {
-          "name": "senderFeeConfig",
-          "docs": [
-            "The sender fee config account in the Tessera Token program"
-          ],
-          "writable": true
         },
         {
           "name": "tesseraMint",
@@ -1155,41 +1291,8 @@ export type TesseraReferrals = {
         {
           "name": "treasuryConfig",
           "docs": [
-            "The treasury config from tessera-token program",
-            "This provides the default treasury address for remaining fee percentage"
-          ],
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  101,
-                  97,
-                  115,
-                  117,
-                  114,
-                  121,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "tesseraMint"
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "tesseraTokenProgram"
-            }
-          }
+            "The treasury config from tessera-token program"
+          ]
         },
         {
           "name": "tesseraTokenProgram",
@@ -1330,6 +1433,185 @@ export type TesseraReferrals = {
         {
           "name": "newTier3SplitPercentage",
           "type": "u16"
+        },
+        {
+          "name": "newEnableSplitFee",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "updateUserFeeConfig",
+      "docs": [
+        "Update fee configuration for a registered user with custom parameters",
+        "This allows overriding the fee configuration for specific users",
+        "New registrations will use the current referral config, but existing users",
+        "can be updated with custom fee reduction and split percentages",
+        "Only the authority can update user fee configurations"
+      ],
+      "discriminator": [
+        80,
+        110,
+        233,
+        148,
+        172,
+        16,
+        154,
+        252
+      ],
+      "accounts": [
+        {
+          "name": "userRegistration",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "referralCode",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  100,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "referral_code.code",
+                "account": "referralCode"
+              }
+            ]
+          }
+        },
+        {
+          "name": "referralConfig",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tesseraMint",
+          "docs": [
+            "The mint for which to configure fees (per-mint configuration)"
+          ]
+        },
+        {
+          "name": "whitelistEntry",
+          "docs": [
+            "The whitelist entry account in the Tessera Token program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "senderFeeConfig",
+          "docs": [
+            "The sender fee config account in the Tessera Token program"
+          ],
+          "writable": true
+        },
+        {
+          "name": "tesseraTokenProgram",
+          "docs": [
+            "The Tessera Token program"
+          ],
+          "address": "TESQvsR4TmYxiroPPQgZpVRoSFG8pru4fsYr67iv6kf"
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "The authority that can set fee configurations in Tessera Token",
+            "Only the referral system authority can update user fee configurations"
+          ],
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "The payer for any account initialization"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "user",
+          "docs": [
+            "The user whose fee configuration is being updated"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "feeReductionPercentage",
+          "type": "u16"
+        },
+        {
+          "name": "ownerSplitPercentage",
+          "type": "u16"
         }
       ]
     }
@@ -1388,19 +1670,6 @@ export type TesseraReferrals = {
       ]
     },
     {
-      "name": "treasuryConfig",
-      "discriminator": [
-        124,
-        54,
-        212,
-        227,
-        213,
-        189,
-        168,
-        41
-      ]
-    },
-    {
       "name": "userRegistration",
       "discriminator": [
         128,
@@ -1411,47 +1680,6 @@ export type TesseraReferrals = {
         20,
         27,
         194
-      ]
-    }
-  ],
-  "events": [
-    {
-      "name": "referralCodeCreated",
-      "discriminator": [
-        44,
-        209,
-        117,
-        94,
-        160,
-        41,
-        194,
-        104
-      ]
-    },
-    {
-      "name": "referralCodeStatusChanged",
-      "discriminator": [
-        134,
-        207,
-        51,
-        234,
-        66,
-        73,
-        0,
-        37
-      ]
-    },
-    {
-      "name": "userRegistered",
-      "discriminator": [
-        21,
-        42,
-        216,
-        163,
-        99,
-        51,
-        200,
-        222
       ]
     }
   ],
@@ -1483,31 +1711,51 @@ export type TesseraReferrals = {
     },
     {
       "code": 6005,
+      "name": "mismatchedBatchLengths",
+      "msg": "Mismatched batch lengths. Codes and owners arrays must have the same length."
+    },
+    {
+      "code": 6006,
+      "name": "invalidBatchSize",
+      "msg": "Invalid batch size. Must be between 1 and 10."
+    },
+    {
+      "code": 6007,
+      "name": "insufficientAccounts",
+      "msg": "Insufficient accounts provided for batch operation."
+    },
+    {
+      "code": 6008,
+      "name": "invalidPda",
+      "msg": "Invalid PDA derivation."
+    },
+    {
+      "code": 6009,
       "name": "adminListFull",
       "msg": "Admin list is full. Maximum 10 admins allowed."
     },
     {
-      "code": 6006,
+      "code": 6010,
       "name": "adminAlreadyExists",
       "msg": "Admin already exists in the list."
     },
     {
-      "code": 6007,
+      "code": 6011,
       "name": "cannotRemovePrimaryAuthority",
       "msg": "Cannot remove the primary authority from the admin list."
     },
     {
-      "code": 6008,
+      "code": 6012,
       "name": "adminNotFound",
       "msg": "Admin not found in the list."
     },
     {
-      "code": 6009,
+      "code": 6013,
       "name": "accountNotInitialized",
       "msg": "Account is not initialized."
     },
     {
-      "code": 6010,
+      "code": 6014,
       "name": "invalidDiscriminator",
       "msg": "Invalid account discriminator. Account type mismatch."
     }
@@ -1564,42 +1812,6 @@ export type TesseraReferrals = {
       }
     },
     {
-      "name": "referralCodeCreated",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "code",
-            "type": "string"
-          },
-          {
-            "name": "owner",
-            "type": "pubkey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "referralCodeStatusChanged",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "code",
-            "type": "string"
-          },
-          {
-            "name": "owner",
-            "type": "pubkey"
-          },
-          {
-            "name": "isActive",
-            "type": "bool"
-          }
-        ]
-      }
-    },
-    {
       "name": "referralConfig",
       "type": {
         "kind": "struct",
@@ -1647,66 +1859,6 @@ export type TesseraReferrals = {
           {
             "name": "bump",
             "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "treasuryConfig",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "treasury",
-            "type": "pubkey"
-          },
-          {
-            "name": "authority",
-            "type": "pubkey"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "userRegistered",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "user",
-            "type": "pubkey"
-          },
-          {
-            "name": "referralCode",
-            "type": "string"
-          },
-          {
-            "name": "referralCodeKey",
-            "type": "pubkey"
-          },
-          {
-            "name": "tier1Referrer",
-            "type": "pubkey"
-          },
-          {
-            "name": "tier2Referrer",
-            "type": "pubkey"
-          },
-          {
-            "name": "tier3Referrer",
-            "type": "pubkey"
-          },
-          {
-            "name": "isNewRegistration",
-            "type": "bool"
           }
         ]
       }
