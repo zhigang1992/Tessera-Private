@@ -15,6 +15,7 @@ import PepeLeft from '@/assets/parallax/pepe-left.png'
 import PepeRight from '@/assets/parallax/pepe-right.png'
 import rectangleBlur from '@/assets/parallax/rectangle-blur.png'
 import rectangle from '@/assets/parallax/rectangle.png'
+import rectangleLeft from '@/assets/parallax/rectangle-left.png'
 
 export default function ReferralFeatureSimple() {
   const { connected, publicKey } = useWallet()
@@ -80,7 +81,7 @@ export default function ReferralFeatureSimple() {
             <span>© 2025 Tessera PE. All rights reserved.</span>
           </div>
           <div className="absolute w-[212px] -right-20 top-[56px] z-20">
-            <img src={rectangle} className='w-full' alt="Rectangle" />
+            <img src={rectangle} className="w-full" alt="Rectangle" />
           </div>
         </div>
 
@@ -103,6 +104,9 @@ export default function ReferralFeatureSimple() {
       </div>
       <div className="absolute w-[312px] left-1/2 bottom-0 z-20">
         <img src={rectangleBlur} alt="Rectangle Blur" />
+      </div>
+      <div className="absolute w-[212px] left-0 bottom-[36%] z-20">
+        <img src={rectangleLeft} className="w-full" alt="Rectangle Left" />
       </div>
     </div>
   )
