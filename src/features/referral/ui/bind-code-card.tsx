@@ -69,7 +69,7 @@ export default function BindCodeCard() {
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-black dark:text-white">Referral code (Who invited you?)</h2>
 
-        <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
+        <Card className="rounded-[8px] border border-[#E4E4E7] bg-[#fff] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
           <CardContent className="flex flex-col gap-5 p-5">
             {isAlreadyBound ? (
               <div className="flex flex-col gap-1">
@@ -103,7 +103,7 @@ export default function BindCodeCard() {
                   </Button>
                 </div>
                 <p className="text-sm text-[#6B7280] dark:text-[#A1A1AA]">
-                  The account linked to this referral code will earn rewards.
+                 The account linked to this referral code will earn rewards proportionate to your trading volume.
                 </p>
               </>
             )}

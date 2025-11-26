@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletDropdown } from '@/components/wallet-dropdown'
-import { ThemeToggleButton } from '@/components/theme-toggle-button'
 import SimpleReferralHeader from './ui/simple-referral-header'
 import HeroSection from './ui/hero-section'
 import BindCodeCard from './ui/bind-code-card'
@@ -74,9 +73,8 @@ export default function ReferralFeatureSimple() {
           )}
 
           {/* Footer */}
-          <div className="mt-8 flex items-center justify-center gap-3 text-center text-xs text-black/50 dark:text-white/50">
+          <div className="mt-8 flex items-center justify-start gap-3 text-center text-xs text-black/50 dark:text-white/50">
             <span>© 2025 Tessera PE. All rights reserved.</span>
-            <ThemeToggleButton />
           </div>
         </div>
 

@@ -8,7 +8,14 @@ import { Copy, Plus, Share2, Loader2, Download, Send, ChevronLeft, ChevronRight 
 import { toast } from 'sonner'
 import { UrlKeyAlertDialog } from './url-key-alert-dialog'
 import { getUrlKeyAlertHandlers } from '../lib/url-key-alert'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { ReferralCode } from '../lib/api-client'
@@ -31,8 +38,8 @@ export default function CreateCodeCard() {
   const trimmedCustomCode = useMemo(() => customCode.trim(), [customCode])
   const normalizedCustomCode = useMemo(() => trimmedCustomCode.toUpperCase(), [trimmedCustomCode])
   const isCustomCodeProvided = trimmedCustomCode.length > 0
-  const isCustomCodeLengthValid = !isCustomCodeProvided ||
-    (trimmedCustomCode.length >= 6 && trimmedCustomCode.length <= 12)
+  const isCustomCodeLengthValid =
+    !isCustomCodeProvided || (trimmedCustomCode.length >= 6 && trimmedCustomCode.length <= 12)
   const isCreatePending = createCodeMutation.isPending || isAuthenticating
   const isCreateDisabled = isCreatePending || (isCustomCodeProvided && !isCustomCodeLengthValid)
   const isShareDialogOpen = shareDialogCode !== null
@@ -224,7 +231,7 @@ export default function CreateCodeCard() {
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   return (
@@ -240,32 +247,25 @@ export default function CreateCodeCard() {
               size="sm"
               className="flex h-10 items-center gap-2 rounded-lg bg-black px-4 text-xs font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
             >
-              {isCreatePending ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <Plus className="h-5 w-5" />
-              )}
+              {isCreatePending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
               {isCreatePending ? 'Creating...' : 'Create new code'}
             </Button>
           )}
         </div>
 
-        <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
-          <CardContent className="flex flex-col gap-5 p-5">
+        <Card className="rounded-[8px] border border-[#E4E4E7] bg-[#fff] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
+          <CardContent className="flex flex-col gap-5 p-4">
+            <h3 className="text-center">Your referral code</h3>
             {hasNoCodes ? (
               /* Empty state */
-              <div className="flex min-h-[200px] items-center justify-center rounded-[16px] border border-dashed border-[#D4D4D8] bg-white px-6 py-10 text-center dark:border-[#3F3F46] dark:bg-[#1F1F23]">
+              <div className="flex min-h-[120px] items-center justify-center bg-[#F7F7FA] px-6 py-10 text-center dark:border-[#3F3F46] dark:bg-[#1F1F23]">
                 <Button
                   onClick={() => setIsCreateDialogOpen(true)}
                   disabled={isCreatePending}
                   size="sm"
                   className="flex h-10 items-center gap-2 rounded-lg bg-black px-6 text-sm font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
                 >
-                  {isCreatePending ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <Plus className="h-5 w-5" />
-                  )}
+                  {isCreatePending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
                   {isCreatePending ? 'Creating...' : 'Create new code to earn Rewards'}
                 </Button>
               </div>
@@ -292,10 +292,9 @@ export default function CreateCodeCard() {
                   {referralCodes.map((code, index) => (
                     <div
                       key={code.id}
-                      className={`flex items-center gap-3 rounded-[16px] px-3 py-4 transition-colors ${index % 2 === 0
-                          ? 'bg-white dark:bg-[#1F1F23]'
-                          : 'bg-[#F1F2F6] dark:bg-[#131318]'
-                        }`}
+                      className={`flex items-center gap-3 rounded-[16px] px-3 py-4 transition-colors ${
+                        index % 2 === 0 ? 'bg-white dark:bg-[#1F1F23]' : 'bg-[#F1F2F6] dark:bg-[#131318]'
+                      }`}
                     >
                       <div className="flex flex-1 items-center gap-2">
                         <span className="text-sm font-semibold uppercase tracking-[0.08em] text-[#111827] dark:text-[#E4E4E7]">
@@ -390,25 +389,16 @@ export default function CreateCodeCard() {
                 }
                 disabled={isCreatePending}
               />
-              <p
-                id="custom-referral-code-helper"
-                className="text-xs text-muted-foreground"
-              >
+              <p id="custom-referral-code-helper" className="text-xs text-muted-foreground">
                 Leave blank to generate a random code.
               </p>
               {isCustomCodeProvided && !isCustomCodeLengthValid && (
-                <p
-                  id="custom-referral-code-error"
-                  className="text-xs font-medium text-destructive"
-                >
+                <p id="custom-referral-code-error" className="text-xs font-medium text-destructive">
                   Custom codes must be between 6 and 12 characters.
                 </p>
               )}
               {formError && !(isCustomCodeProvided && !isCustomCodeLengthValid) && (
-                <p
-                  className="text-xs font-medium text-destructive"
-                  role="alert"
-                >
+                <p className="text-xs font-medium text-destructive" role="alert">
                   {formError}
                 </p>
               )}
@@ -435,18 +425,13 @@ export default function CreateCodeCard() {
         <DialogContent className="max-w-md">
           <DialogHeader className="gap-1 text-left">
             <DialogTitle>Share</DialogTitle>
-            <DialogDescription>
-              Invite users and earn points by sharing your referral code.
-            </DialogDescription>
+            <DialogDescription>Invite users and earn points by sharing your referral code.</DialogDescription>
           </DialogHeader>
 
           {shareDialogCode && (
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-3">
-                <ReferralImagePreview
-                  imageUrl={shareImageUrl}
-                  codeSlug={shareDialogCode.codeSlug}
-                />
+                <ReferralImagePreview imageUrl={shareImageUrl} codeSlug={shareDialogCode.codeSlug} />
 
                 {/* Background carousel navigation */}
                 <div className="flex items-center justify-center gap-3">
@@ -468,10 +453,9 @@ export default function CreateCodeCard() {
                         key={bg}
                         type="button"
                         onClick={() => setSelectedBackground(bg)}
-                        className={`h-2 w-2 rounded-full transition-all ${selectedBackground === bg
-                            ? 'bg-black dark:bg-white w-6'
-                            : 'bg-[#D4D4D8] dark:bg-[#52525B]'
-                          }`}
+                        className={`h-2 w-2 rounded-full transition-all ${
+                          selectedBackground === bg ? 'bg-black dark:bg-white w-6' : 'bg-[#D4D4D8] dark:bg-[#52525B]'
+                        }`}
                         aria-label={`Select background ${bg}`}
                       />
                     ))}
@@ -565,7 +549,11 @@ export default function CreateCodeCard() {
                   className="flex h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-[#E4E4E7] bg-white text-xs font-semibold text-[#111827] hover:bg-[#F4F4F5] dark:border-[#27272A] dark:bg-[#111111] dark:text-white dark:hover:bg-[#1F1F23]"
                 >
                   <svg width="16" height="15" viewBox="0 0 21 20" className="fill-current">
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M17.5739 0L11.6749 6.71331L6.96349 0H0.132941L7.8777 11.0353L0 20H2.9381L9.18215 12.8939L14.1695 20H21L12.9796 8.57219L20.5118 0H17.5739ZM15.4593 17.8844L10.5532 11.0141L9.71346 9.83769L4.23962 2.17192H5.65923L10.3573 8.75137L11.111 9.80694L16.8789 17.8844H15.4593ZM10.0768 11.1605L3.32526 1.70549L9.32304 10.1049L10.0768 11.1605Z" />
+                    <path
+                      fill-rule="evenodd"
+                      clip-rule="evenodd"
+                      d="M17.5739 0L11.6749 6.71331L6.96349 0H0.132941L7.8777 11.0353L0 20H2.9381L9.18215 12.8939L14.1695 20H21L12.9796 8.57219L20.5118 0H17.5739ZM15.4593 17.8844L10.5532 11.0141L9.71346 9.83769L4.23962 2.17192H5.65923L10.3573 8.75137L11.111 9.80694L16.8789 17.8844H15.4593ZM10.0768 11.1605L3.32526 1.70549L9.32304 10.1049L10.0768 11.1605Z"
+                    />
                   </svg>
                   X
                 </Button>
@@ -575,5 +563,5 @@ export default function CreateCodeCard() {
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }
