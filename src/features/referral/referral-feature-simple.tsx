@@ -18,6 +18,7 @@ import rectangle from '@/assets/parallax/rectangle.png'
 import rectangleLeft from '@/assets/parallax/rectangle-left.png'
 import rectangleRight from '@/assets/parallax/rectangle-right.png'
 import rectangleSmall from '@/assets/parallax/rectangle-small.png'
+import { ThemeToggleButton } from '@/components/theme-toggle-button'
 
 export default function ReferralFeatureSimple() {
   const { connected, publicKey } = useWallet()
@@ -51,7 +52,7 @@ export default function ReferralFeatureSimple() {
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-white dark:bg-black sm:pb-24">
       <div className="mx-auto flex w-full max-w-[1366px] flex-col px-0 pt-0 sm:px-6 sm:pt-6 md:px-10 lg:flex-row lg:items-start lg:justify-center lg:gap-6 lg:px-16 lg:pt-10">
-        <div className="relative flex w-full flex-col gap-4 light:bg-[url('/src/assets/content-bg.png')] dark:bg-[#111111] bg-contain bg-repeat py-6 px-4 sm:rounded-2xl sm:px-0 lg:w-[60%] lg:gap-4 lg:p-12">
+        <div className="relative flex w-full flex-col gap-4 bg-[#fefefe] dark:bg-[#111111] bg-contain bg-repeat py-6 px-4 sm:rounded-2xl sm:px-0 lg:w-[60%] lg:gap-4 lg:p-12">
           <SimpleReferralHeader />
 
           <div className="h-px rounded-full bg-[#000] dark:bg-[#27272A]" />
@@ -83,6 +84,7 @@ export default function ReferralFeatureSimple() {
           {/* Footer */}
           <div className="mt-4 flex items-center justify-start gap-3 text-center text-xs text-black/50 dark:text-white/50">
             <span>© 2025 Tessera PE. All rights reserved.</span>
+            <ThemeToggleButton />
           </div>
           <div className="absolute -right-16 top-[56px] z-20 hidden w-[140px] lg:block xl:-right-20 xl:w-[190px]">
             <img src={rectangle} className="w-full" alt="Rectangle" />
