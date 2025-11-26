@@ -49,9 +49,9 @@ export default function ReferralFeatureSimple() {
   }
 
   return (
-    <div className="relative min-h-screen bg-white pb-24 dark:bg-black">
-      <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-12 px-6 pt-6 sm:px-10 lg:flex-row lg:justify-center lg:items-start lg:gap-6 lg:px-16 lg:pt-10">
-        <div className="relative flex w-full lg:w-[66%] flex-col gap-4 lg:gap-4 lg:p-6 bg-[url('/src/assets/content-bg.png')] bg-contain bg-repeat rounded-2xl">
+    <div className="relative min-h-screen overflow-x-hidden bg-white dark:bg-black sm:pb-24">
+      <div className="mx-auto flex w-full max-w-[1480px] flex-col px-0 pt-0 sm:px-6 sm:pt-6 md:px-10 lg:flex-row lg:items-start lg:justify-center lg:gap-6 lg:px-16 lg:pt-10">
+        <div className="relative flex w-full flex-col gap-4 bg-[url('/src/assets/content-bg.png')] bg-contain bg-repeat py-6 px-4 sm:rounded-2xl sm:px-0 lg:w-[66%] lg:gap-4 lg:p-6">
           <SimpleReferralHeader />
 
           <div className="h-px rounded-full bg-[#000] dark:bg-[#27272A]" />
@@ -63,13 +63,15 @@ export default function ReferralFeatureSimple() {
           <div className="h-px rounded-full bg-[#E7E7EA] dark:bg-[#27272A]" />
 
           {!connected || !publicKey ? (
-            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-              <h2 className="text-2xl font-bold text-black dark:text-white">Referral Program</h2>
-              <p className="text-black/50 dark:text-white/50">Connect your wallet to access the referral program</p>
+            <div className="flex min-h-[300px] flex-col items-center justify-center space-y-4 sm:min-h-[400px]">
+              <h2 className="text-xl font-bold text-black dark:text-white sm:text-2xl">Referral Program</h2>
+              <p className="text-center text-sm text-black/50 dark:text-white/50 sm:text-base">
+                Connect your wallet to access the referral program
+              </p>
               <WalletDropdown />
             </div>
           ) : (
-            <div className="flex flex-col gap-10">
+            <div className="flex flex-col gap-6 sm:gap-10">
               {/* Bind referral code section */}
               <BindCodeCard />
 
@@ -79,18 +81,18 @@ export default function ReferralFeatureSimple() {
           )}
 
           {/* Footer */}
-          <div className="mt-8 flex items-center justify-start gap-3 text-center text-xs text-black/50 dark:text-white/50">
+          <div className="mt-4 flex items-center justify-start gap-3 text-center text-xs text-black/50 dark:text-white/50 sm:mt-8">
             <span>© 2025 Tessera PE. All rights reserved.</span>
           </div>
-          <div className="absolute w-[212px] -right-20 top-[56px] z-20">
+          <div className="absolute -right-20 top-[56px] z-20 hidden w-[212px] lg:block">
             <img src={rectangle} className="w-full" alt="Rectangle" />
           </div>
-          <div className="absolute w-[72px] -left-[56px] top-[24%] z-20">
+          <div className="absolute -left-[56px] top-[24%] z-20 hidden w-[72px] lg:block">
             <img src={rectangleSmall} className="w-full" alt="Rectangle Small" />
           </div>
         </div>
 
-        <div className="relative w-full lg:w-[34%] overflow-hidden hidden lg:flex lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)] lg:self-start lg:flex-col lg:gap-4">
+        <div className="relative hidden w-full overflow-hidden lg:flex lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)] lg:w-[34%] lg:flex-col lg:gap-4 lg:self-start">
           {[infoImg1, infoImg2, infoImg3, infoImg4].map((img, index) => (
             <img className="w-full" key={index} src={img} alt={`info-${index + 1}`} />
           ))}
@@ -107,13 +109,13 @@ export default function ReferralFeatureSimple() {
       <div className="fixed bottom-0 right-0 z-10 hidden w-[288px] md:block">
         <img src={PepeRight} alt="Pepe Right" className="h-full w-full object-contain" />
       </div>
-      <div className="absolute w-[312px] left-1/2 bottom-0 z-20">
+      <div className="absolute bottom-0 left-1/2 z-20 hidden w-[312px] md:block">
         <img src={rectangleBlur} alt="Rectangle Blur" />
       </div>
-      <div className="absolute w-[190px] left-0 bottom-[36%] z-20">
+      <div className="absolute bottom-[36%] left-0 z-20 hidden w-[190px] md:block">
         <img src={rectangleLeft} className="w-full" alt="Rectangle Left" />
       </div>
-      <div className="absolute w-[164px] right-0 bottom-[56%] z-20">
+      <div className="absolute bottom-[56%] right-0 z-20 hidden w-[164px] md:block">
         <img src={rectangleRight} className="w-full" alt="Rectangle Right" />
       </div>
     </div>
