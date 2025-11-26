@@ -56,8 +56,12 @@ export default function BindCodeCard() {
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-black dark:text-white">Referral code (Who invited you?)</h2>
         <Card className="rounded-[8px] border border-[#E4E4E7] bg-[#fff] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
-          <CardContent className="flex min-h-[118px] items-center justify-center p-5">
-            <Loader2 className="h-6 w-6 animate-spin text-black/50 dark:text-white/50" />
+          <CardContent className="flex flex-col gap-5 p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
+              <div className="h-[42px] flex-1 animate-pulse rounded-[16px] bg-[#E9ECF2] dark:bg-[#27272A]" />
+              <div className="h-10 w-[120px] animate-pulse rounded-lg bg-[#E9ECF2] dark:bg-[#27272A]" />
+            </div>
+            <div className="h-5 w-3/4 animate-pulse rounded bg-[#E9ECF2] dark:bg-[#27272A]" />
           </CardContent>
         </Card>
       </div>

@@ -23,7 +23,7 @@ export default function ConnectWallet() {
 
   if (connected && publicKey) {
     return (
-      <div className="inline-flex items-center gap-3 px-4 py-2">
+      <div className="inline-flex items-center gap-3 py-2">
         <div className="flex size-10 items-center justify-center rounded-full bg-[#D2FB95]">
           <img src={personIcon} alt="User" className="size-5" />
         </div>

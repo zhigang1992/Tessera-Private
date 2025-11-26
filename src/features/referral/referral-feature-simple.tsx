@@ -51,7 +51,7 @@ export default function ReferralFeatureSimple() {
   return (
     <div className="relative min-h-screen bg-white pb-24 dark:bg-black">
       <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-12 px-6 pt-6 sm:px-10 lg:flex-row lg:justify-center lg:items-start lg:gap-6 lg:px-16 lg:pt-10">
-        <div className="relative flex w-full lg:w-[66%] flex-col gap-6 lg:gap-6 lg:p-6 bg-[url('/src/assets/content-bg.png')] bg-contain bg-repeat rounded-2xl">
+        <div className="relative flex w-full lg:w-[66%] flex-col gap-4 lg:gap-4 lg:p-6 bg-[url('/src/assets/content-bg.png')] bg-contain bg-repeat rounded-2xl">
           <SimpleReferralHeader />
 
           <div className="h-px rounded-full bg-[#000] dark:bg-[#27272A]" />

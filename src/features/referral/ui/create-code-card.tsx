@@ -228,8 +228,11 @@ export default function CreateCodeCard() {
           <h2 className="text-lg font-semibold text-black dark:text-white">My referral codes</h2>
         </div>
         <Card className="rounded-[8px] border border-[#E4E4E7] bg-[#fff] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
-          <CardContent className="flex min-h-[220px] flex-col items-center justify-center gap-5 p-4">
-            <Loader2 className="h-6 w-6 animate-spin text-black/50 dark:text-white/50" />
+          <CardContent className="flex flex-col gap-5 p-4">
+            <h3 className="text-center">Your referral code</h3>
+            <div className="flex min-h-[120px] items-center justify-center bg-[#F7F7FA] px-6 py-10 dark:bg-[#1F1F23]">
+              <Loader2 className="h-6 w-6 animate-spin text-black/50 dark:text-white/50" />
+            </div>
           </CardContent>
         </Card>
       </div>
