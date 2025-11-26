@@ -224,10 +224,12 @@ export default function CreateCodeCard() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-black dark:text-white">My referral codes</h2>
-        <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
-          <CardContent className="p-6">
-            <p className="text-black/50 dark:text-white/50">Loading...</p>
+        <div className="flex items-center justify-between gap-1">
+          <h2 className="text-lg font-semibold text-black dark:text-white">My referral codes</h2>
+        </div>
+        <Card className="rounded-[8px] border border-[#E4E4E7] bg-[#fff] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
+          <CardContent className="flex min-h-[220px] flex-col items-center justify-center gap-5 p-4">
+            <Loader2 className="h-6 w-6 animate-spin text-black/50 dark:text-white/50" />
           </CardContent>
         </Card>
       </div>

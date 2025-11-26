@@ -54,10 +54,10 @@ export default function BindCodeCard() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-3">
-        <h2 className="text-base text-black font-semibold dark:text-white">Referral code (Who invited you?)</h2>
-        <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
-          <CardContent className="p-6">
-            <p className="text-black/50 dark:text-white/50">Loading...</p>
+        <h2 className="text-lg font-semibold text-black dark:text-white">Referral code (Who invited you?)</h2>
+        <Card className="rounded-[8px] border border-[#E4E4E7] bg-[#fff] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
+          <CardContent className="flex min-h-[118px] items-center justify-center p-5">
+            <Loader2 className="h-6 w-6 animate-spin text-black/50 dark:text-white/50" />
           </CardContent>
         </Card>
       </div>
