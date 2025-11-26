@@ -7,7 +7,12 @@ import HeroSection from './ui/hero-section'
 import BindCodeCard from './ui/bind-code-card'
 import CreateCodeCard from './ui/create-code-card'
 import ReferralCodeModal from './ui/referral-code-modal'
-import heroShot from '@/assets/heroShot.png'
+import infoImg1 from '@/assets/info1.png'
+import infoImg2 from '@/assets/info2.png'
+import infoImg3 from '@/assets/info3.png'
+import infoImg4 from '@/assets/info4.png'
+import ConnectWallet from './ui/connect-wallet'
+
 
 export default function ReferralFeatureSimple() {
   const { connected, publicKey } = useWallet()
@@ -41,10 +46,12 @@ export default function ReferralFeatureSimple() {
   return (
     <div className="min-h-screen bg-white pb-12 dark:bg-black">
       <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-12 px-6 pt-6 sm:px-10 lg:flex-row lg:items-start lg:gap-16 lg:px-16 lg:pt-10">
-        <div className="flex w-full lg:max-w-[560px] flex-shrink-0 flex-col gap-6 lg:gap-8">
+        <div className="flex w-full lg:max-w-[560px] flex-shrink-0 flex-col gap-6 lg:gap-8 lg:p-6 bg-[url('/src/assets/content-bg.png')] bg-contain bg-repeat rounded-2xl">
           <SimpleReferralHeader />
 
-          <div className="h-px rounded-full bg-[#E7E7EA] dark:bg-[#27272A]" />
+          <div className="h-px rounded-full bg-[#000] dark:bg-[#27272A]" />
+
+          <ConnectWallet />
 
           <HeroSection />
 
@@ -53,9 +60,7 @@ export default function ReferralFeatureSimple() {
           {!connected || !publicKey ? (
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
               <h2 className="text-2xl font-bold text-black dark:text-white">Referral Program</h2>
-              <p className="text-black/50 dark:text-white/50">
-                Connect your wallet to access the referral program
-              </p>
+              <p className="text-black/50 dark:text-white/50">Connect your wallet to access the referral program</p>
               <WalletDropdown />
             </div>
           ) : (
@@ -75,22 +80,16 @@ export default function ReferralFeatureSimple() {
           </div>
         </div>
 
-        <div className="relative w-full overflow-hidden rounded-[32px] hidden lg:block lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)] lg:flex-1 lg:self-start">
-          <img
-            src={heroShot}
-            alt=""
-            className="h-full w-full object-contain p-6 sm:p-8 lg:p-10"
-          />
+        <div className="relative w-full overflow-hidden hidden lg:flex lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)] lg:flex-1 lg:self-start lg:flex-col lg:gap-4">
+          {[infoImg1, infoImg2, infoImg3, infoImg4].map((img, index) => (
+            <img className="w-[400px]" key={index} src={img} alt={`info-${index + 1}`} />
+          ))}
         </div>
       </div>
 
       {referralCode && (
-        <ReferralCodeModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          referralCode={referralCode}
-        />
+        <ReferralCodeModal isOpen={isModalOpen} onClose={handleCloseModal} referralCode={referralCode} />
       )}
     </div>
-  );
+  )
 }
