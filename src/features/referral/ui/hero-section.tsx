@@ -27,18 +27,18 @@ export default function HeroSection() {
   return (
     <section className="flex flex-col gap-4 sm:gap-6">
       <div className="flex flex-col gap-1 text-black dark:text-white sm:gap-2">
-        <h1 className="text-[32px] font-semibold leading-[1.05] tracking-tight sm:text-[48px] md:text-[54px] lg:text-[60px]">
+        <h1 className="text-[32px] font-semibold leading-[1] tracking-tight sm:text-[48px] md:text-[54px] lg:text-[60px]">
           The first non-KYC
         </h1>
-        <p className="text-[32px] font-semibold leading-[1.05] tracking-tight sm:text-[48px] md:text-[54px] lg:text-[60px]">
+        <p className="text-[32px] font-semibold leading-[1] tracking-tight sm:text-[48px] md:text-[54px] lg:text-[60px]">
           private equity token
         </p>
-        <p className="mt-2 text-base font-semibold leading-[1.2] sm:mt-4 sm:text-lg md:text-[20px]">
+        <p className="mt-2 text-base font-semibold leading-[1] sm:mt-4 sm:text-lg md:text-[20px]">
           Tessera tokens provide 1:1 economic exposure to private equity without the barriers
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1">
+      <div className="flex flex-wrap items-center justify-between gap-1">
         {partners.map((partner, index) => (
           <a
             key={index}
