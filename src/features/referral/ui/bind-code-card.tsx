@@ -92,7 +92,7 @@ export default function BindCodeCard() {
                     onChange={handleInputChange}
                     placeholder="Enter a code"
                     disabled={bindMutation.isPending}
-                    className="h-[42px] rounded-[16px] border-0 bg-[#E9ECF2] px-4 text-base text-[#111111] placeholder:text-[#9CA3AF] focus-visible:border-[#111111]/20 focus-visible:ring-[#111111]/20 dark:bg-[#27272A] dark:text-white dark:placeholder:text-[#71717A]"
+                    className="h-[42px] rounded-lg border-0 bg-[#E9ECF2] px-4 text-base text-[#111111] placeholder:text-[#9CA3AF] focus-visible:border-[#111111]/20 focus-visible:ring-[#111111]/20 dark:bg-[#27272A] dark:text-white dark:placeholder:text-[#71717A]"
                   />
                   <Button
                     onClick={handleBindCode}
