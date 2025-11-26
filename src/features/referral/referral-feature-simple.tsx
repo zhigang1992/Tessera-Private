@@ -14,6 +14,7 @@ import ConnectWallet from './ui/connect-wallet'
 import PepeLeft from '@/assets/parallax/pepe-left.png'
 import PepeRight from '@/assets/parallax/pepe-right.png'
 import rectangleBlur from '@/assets/parallax/rectangle-blur.png'
+import rectangle from '@/assets/parallax/rectangle.png'
 
 export default function ReferralFeatureSimple() {
   const { connected, publicKey } = useWallet()
@@ -47,7 +48,7 @@ export default function ReferralFeatureSimple() {
   return (
     <div className="relative min-h-screen bg-white pb-24 dark:bg-black">
       <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-12 px-6 pt-6 sm:px-10 lg:flex-row lg:justify-center lg:items-start lg:gap-6 lg:px-16 lg:pt-10">
-        <div className="flex w-full lg:w-[66%] flex-col gap-6 lg:gap-6 lg:p-6 bg-[url('/src/assets/content-bg.png')] bg-contain bg-repeat rounded-2xl">
+        <div className="relative flex w-full lg:w-[66%] flex-col gap-6 lg:gap-6 lg:p-6 bg-[url('/src/assets/content-bg.png')] bg-contain bg-repeat rounded-2xl">
           <SimpleReferralHeader />
 
           <div className="h-px rounded-full bg-[#000] dark:bg-[#27272A]" />
@@ -77,6 +78,9 @@ export default function ReferralFeatureSimple() {
           {/* Footer */}
           <div className="mt-8 flex items-center justify-start gap-3 text-center text-xs text-black/50 dark:text-white/50">
             <span>© 2025 Tessera PE. All rights reserved.</span>
+          </div>
+          <div className="absolute w-[212px] -right-20 top-[56px] z-20">
+            <img src={rectangle} className='w-full' alt="Rectangle" />
           </div>
         </div>
 
