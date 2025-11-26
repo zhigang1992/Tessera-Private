@@ -13,8 +13,7 @@ import infoImg4 from '@/assets/info4.png'
 import ConnectWallet from './ui/connect-wallet'
 import PepeLeft from '@/assets/parallax/pepe-left.png'
 import PepeRight from '@/assets/parallax/pepe-right.png'
-
-
+import rectangleBlur from '@/assets/parallax/rectangle-blur.png'
 
 export default function ReferralFeatureSimple() {
   const { connected, publicKey } = useWallet()
@@ -46,7 +45,7 @@ export default function ReferralFeatureSimple() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-12 dark:bg-black">
+    <div className="relative min-h-screen bg-white pb-24 dark:bg-black">
       <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-12 px-6 pt-6 sm:px-10 lg:flex-row lg:justify-center lg:items-start lg:gap-6 lg:px-16 lg:pt-10">
         <div className="flex w-full lg:w-[66%] flex-col gap-6 lg:gap-6 lg:p-6 bg-[url('/src/assets/content-bg.png')] bg-contain bg-repeat rounded-2xl">
           <SimpleReferralHeader />
@@ -98,7 +97,9 @@ export default function ReferralFeatureSimple() {
       <div className="fixed bottom-0 right-0 z-10 hidden w-[288px] md:block">
         <img src={PepeRight} alt="Pepe Right" className="h-full w-full object-contain" />
       </div>
-
+      <div className="absolute w-[312px] left-1/2 bottom-0 z-20">
+        <img src={rectangleBlur} alt="Rectangle Blur" />
+      </div>
     </div>
   )
 }
