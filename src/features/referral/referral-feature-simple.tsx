@@ -16,6 +16,8 @@ import PepeRight from '@/assets/parallax/pepe-right.png'
 import rectangleBlur from '@/assets/parallax/rectangle-blur.png'
 import rectangle from '@/assets/parallax/rectangle.png'
 import rectangleLeft from '@/assets/parallax/rectangle-left.png'
+import rectangleRight from '@/assets/parallax/rectangle-right.png'
+
 
 export default function ReferralFeatureSimple() {
   const { connected, publicKey } = useWallet()
@@ -105,8 +107,11 @@ export default function ReferralFeatureSimple() {
       <div className="absolute w-[312px] left-1/2 bottom-0 z-20">
         <img src={rectangleBlur} alt="Rectangle Blur" />
       </div>
-      <div className="absolute w-[212px] left-0 bottom-[36%] z-20">
+      <div className="absolute w-[190px] left-0 bottom-[36%] z-20">
         <img src={rectangleLeft} className="w-full" alt="Rectangle Left" />
+      </div>
+      <div className="absolute w-[164px] right-0 bottom-[56%] z-20">
+        <img src={rectangleRight} className="w-full" alt="Rectangle Right" />
       </div>
     </div>
   )
