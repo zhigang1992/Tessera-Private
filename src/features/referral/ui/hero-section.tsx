@@ -62,7 +62,7 @@ export default function HeroSection() {
   ]
 
   return (
-    <section className="flex flex-col gap-4 sm:gap-6">
+    <section className="flex flex-col gap-4 sm:gap-5">
       <div className="flex flex-col text-black dark:text-white">
         <h1 className="text-[32px] font-semibold leading-[1] tracking-tight sm:text-[48px] md:text-[54px] lg:text-[60px]">
           The first non-KYC
