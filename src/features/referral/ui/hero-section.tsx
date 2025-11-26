@@ -70,7 +70,7 @@ export default function HeroSection() {
         <p className="text-[32px] font-semibold leading-[1] tracking-tight sm:text-[48px] md:text-[54px] lg:text-[60px]">
           private equity token
         </p>
-        <p className="mt-2 text-base font-semibold leading-[1] sm:mt-4 sm:text-lg md:text-[20px]">
+        <p className="mt-2 text-base font-semibold leading-[1.2] sm:mt-4 sm:text-lg md:text-[20px]">
           Tessera tokens provide 1:1 economic exposure to private equity without the barriers
         </p>
       </div>

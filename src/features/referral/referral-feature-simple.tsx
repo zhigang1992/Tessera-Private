@@ -60,7 +60,7 @@ export default function ReferralFeatureSimple() {
 
           <HeroSection />
 
-          <div className="h-px rounded-full bg-[#E7E7EA] dark:bg-[#27272A]" />
+          <div className="h-px my-4 rounded-full bg-gray-300 dark:bg-[#27272A]" />
 
           {!connected || !publicKey ? (
             <div className="flex min-h-[300px] flex-col items-center justify-center space-y-4 sm:min-h-[400px]">
@@ -92,7 +92,7 @@ export default function ReferralFeatureSimple() {
           </div>
         </div>
 
-        <div className="relative hidden w-full overflow-hidden lg:flex   lg:w-[40%] lg:flex-col lg:gap-4 lg:self-start">
+        <div className="relative hidden w-full overflow-hidden lg:flex lg:w-[40%] lg:flex-col lg:gap-6 lg:self-start">
           {[infoImg1, infoImg2, infoImg3, infoImg4].map((img, index) => (
             <img className="w-full" key={index} src={img} alt={`info-${index + 1}`} />
           ))}

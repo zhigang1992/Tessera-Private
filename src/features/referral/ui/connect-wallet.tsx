@@ -25,7 +25,7 @@ export default function ConnectWallet() {
     return (
       <div className="inline-flex items-center gap-3 py-2">
         <div className="flex size-10 items-center justify-center rounded-full bg-[#D2FB95]">
-          <img src={personIcon} alt="User" className="size-5" />
+          <img src={personIcon} alt="User" className="size-7" />
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-medium text-black">{ellipsify(address, 8)}</span>
