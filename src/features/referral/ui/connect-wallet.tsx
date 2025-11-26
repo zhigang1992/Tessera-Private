@@ -41,10 +41,12 @@ export default function ConnectWallet() {
   }
 
   return (
-    <WalletDropdown
-      triggerVariant="default"
-      triggerSize="lg"
-      triggerClassName="h-11 rounded-full bg-black px-6 text-sm font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
-    />
+    <div>
+      <WalletDropdown
+        triggerVariant="default"
+        triggerSize="lg"
+        triggerClassName="h-11 rounded-full bg-black px-6 text-sm font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+      />
+    </div>
   )
 }
