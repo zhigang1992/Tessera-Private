@@ -84,7 +84,7 @@ export default function ReferralFeatureSimple() {
           <div className="mt-4 flex items-center justify-start gap-3 text-center text-xs text-black/50 dark:text-white/50">
             <span>© 2025 Tessera PE. All rights reserved.</span>
           </div>
-          <div className="absolute -right-20 top-[56px] z-20 hidden w-[212px] lg:block">
+          <div className="absolute -right-20 top-[56px] z-20 hidden w-[190px] lg:block">
             <img src={rectangle} className="w-full" alt="Rectangle" />
           </div>
           <div className="absolute -left-[56px] top-[24%] z-20 hidden w-[72px] lg:block">
@@ -106,13 +106,13 @@ export default function ReferralFeatureSimple() {
       <div className="fixed bottom-0 left-0 z-10 hidden w-[288px] md:block">
         <img src={PepeLeft} alt="Pepe Left" className="h-full w-full object-contain" />
       </div>
-      <div className="fixed bottom-0 right-0 z-10 hidden w-[288px] md:block">
+      <div className="fixed bottom-0 right-0 z-10 hidden w-[266px] md:block">
         <img src={PepeRight} alt="Pepe Right" className="h-full w-full object-contain" />
       </div>
       <div className="absolute bottom-0 left-1/2 z-20 hidden w-[312px] md:block">
         <img src={rectangleBlur} alt="Rectangle Blur" />
       </div>
-      <div className="absolute bottom-[36%] left-0 z-20 hidden w-[190px] md:block">
+      <div className="absolute bottom-[36%] left-0 z-20 hidden w-[186px] md:block">
         <img src={rectangleLeft} className="w-full" alt="Rectangle Left" />
       </div>
       <div className="absolute bottom-[56%] right-0 z-20 hidden w-[164px] md:block">
