@@ -93,8 +93,8 @@ export default function HeroSection() {
         ))}
       </div>
 
-      <div className="flex flex-col gap-3 text-[#4B5563] dark:text-[#D1D5DB] sm:flex-row sm:items-center sm:gap-8">
-        <p className="text-xs leading-relaxed sm:text-sm">
+      <div className="flex flex-col gap-3 text-gray-700 dark:text-gray-400 sm:flex-row sm:items-center sm:gap-8">
+        <p className="text-xs leading-[1.2] sm:text-sm">
           Join our social channels <br className="hidden sm:block" />
           for the latest updates.
         </p>

@@ -106,7 +106,7 @@ export default function BindCodeCard() {
                     {bindMutation.isPending || isAuthenticating ? 'Binding...' : 'Bind Code'}
                   </Button>
                 </div>
-                <p className="text-sm text-[#6B7280] dark:text-[#A1A1AA]">
+                <p className="text-sm text-gray-700 dark:text-gray-400">
                  The account linked to this referral code will earn rewards proportionate to your trading volume.
                 </p>
               </>
