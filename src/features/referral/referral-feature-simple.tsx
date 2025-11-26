@@ -11,6 +11,9 @@ import infoImg2 from '@/assets/info2.png'
 import infoImg3 from '@/assets/info3.png'
 import infoImg4 from '@/assets/info4.png'
 import ConnectWallet from './ui/connect-wallet'
+import PepeLeft from '@/assets/parallax/pepe-left.png'
+import PepeRight from '@/assets/parallax/pepe-right.png'
+
 
 
 export default function ReferralFeatureSimple() {
@@ -88,6 +91,14 @@ export default function ReferralFeatureSimple() {
       {referralCode && (
         <ReferralCodeModal isOpen={isModalOpen} onClose={handleCloseModal} referralCode={referralCode} />
       )}
+
+      <div className="fixed bottom-0 left-0 z-10 hidden w-[288px] md:block">
+        <img src={PepeLeft} alt="Pepe Left" className="h-full w-full object-contain" />
+      </div>
+      <div className="fixed bottom-0 right-0 z-10 hidden w-[288px] md:block">
+        <img src={PepeRight} alt="Pepe Right" className="h-full w-full object-contain" />
+      </div>
+
     </div>
   )
 }
