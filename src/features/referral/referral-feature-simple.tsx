@@ -44,8 +44,8 @@ export default function ReferralFeatureSimple() {
 
   return (
     <div className="min-h-screen bg-white pb-12 dark:bg-black">
-      <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-12 px-6 pt-6 sm:px-10 lg:flex-row lg:items-start lg:gap-16 lg:px-16 lg:pt-10">
-        <div className="flex w-full lg:max-w-[560px] flex-shrink-0 flex-col gap-6 lg:gap-8 lg:p-6 bg-[url('/src/assets/content-bg.png')] bg-contain bg-repeat rounded-2xl">
+      <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-12 px-6 pt-6 sm:px-10 lg:flex-row lg:items-start lg:gap-6 lg:px-16 lg:pt-10">
+        <div className="flex w-full lg:max-w-[776px] flex-shrink-0 flex-col gap-6 lg:gap-8 lg:p-6 bg-[url('/src/assets/content-bg.png')] bg-contain bg-repeat rounded-2xl">
           <SimpleReferralHeader />
 
           <div className="h-px rounded-full bg-[#000] dark:bg-[#27272A]" />
@@ -78,7 +78,7 @@ export default function ReferralFeatureSimple() {
           </div>
         </div>
 
-        <div className="relative w-full overflow-hidden hidden lg:flex lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)] lg:flex-1 lg:self-start lg:flex-col lg:gap-4">
+        <div className="relative w-full overflow-hidden hidden lg:flex lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)] lg:flex-1 lg:self-start lg:flex-col lg:gap-4">
           {[infoImg1, infoImg2, infoImg3, infoImg4].map((img, index) => (
             <img className="w-[400px]" key={index} src={img} alt={`info-${index + 1}`} />
           ))}
