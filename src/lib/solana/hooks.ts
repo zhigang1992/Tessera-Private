@@ -1,7 +1,7 @@
 /**
  * React Hooks for Solana On-Chain Interactions
  *
- * Custom hooks for interacting with the referral system program.
+ * Custom hooks for interacting with the Tessera Referrals program.
  * Integrates with React Query for caching and state management.
  */
 
@@ -217,7 +217,7 @@ export function useRegisterWithReferralCode() {
 
       const referralConfig = await fetchReferralConfig(connection)
       if (!referralConfig) {
-        throw new Error('Referral system is not initialized')
+        throw new Error('Tessera Referrals is not initialized')
       }
 
       const [referralConfigPda] = getReferralConfigPDA(program.programId)

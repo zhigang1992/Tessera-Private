@@ -804,6 +804,10 @@
           "type": "pubkey"
         },
         {
+          "name": "default_treasury",
+          "type": "pubkey"
+        },
+        {
           "name": "default_fee_reduction_percentage",
           "type": "u16"
         },
@@ -971,8 +975,15 @@
     {
       "name": "register_with_referral_code",
       "docs": [
-        "Register a user with a referral code",
-        "Only the program caller (user) can register themselves"
+        "Register a user with a referral code (FULLY MINT-AGNOSTIC)",
+        "This instruction creates the UserRegistration account and SenderFeeConfig.",
+        "Both work across ALL mints - user only needs to register once.",
+        "",
+        "Flow:",
+        "1. User calls this instruction once with any referral code",
+        "2. UserRegistration stores the referral chain (works for all mints)",
+        "3. SenderFeeConfig stores fee recipients (works for all mints)",
+        "4. User can transfer any mint and fees are distributed correctly"
       ],
       "discriminator": [
         53,
@@ -1018,6 +1029,9 @@
         },
         {
           "name": "user_registration",
+          "docs": [
+            "User registration - MINT-AGNOSTIC (no mint in seeds)"
+          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -1120,9 +1134,10 @@
           "optional": true
         },
         {
-          "name": "whitelist_entry",
+          "name": "sender_fee_config",
           "docs": [
-            "The whitelist entry account in the Tessera Token program"
+            "The sender fee config account in the Tessera Token program (MINT-AGNOSTIC)",
+            "PDA: [b\"sender_fee_config\", user.key()]"
           ],
           "writable": true
         },
@@ -1130,60 +1145,8 @@
           "name": "authorized_programs",
           "docs": [
             "The authorized programs account from Tessera Token program",
-            "This validates that the referral program is authorized to whitelist"
+            "This validates that the referral program is authorized"
           ]
-        },
-        {
-          "name": "sender_fee_config",
-          "docs": [
-            "The sender fee config account in the Tessera Token program"
-          ],
-          "writable": true
-        },
-        {
-          "name": "tessera_mint",
-          "docs": [
-            "The mint for which to configure fees (per-mint configuration)"
-          ]
-        },
-        {
-          "name": "treasury_config",
-          "docs": [
-            "The treasury config from tessera-token program",
-            "This provides the default treasury address for remaining fee percentage"
-          ],
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  114,
-                  101,
-                  97,
-                  115,
-                  117,
-                  114,
-                  121,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "tessera_mint"
-              }
-            ],
-            "program": {
-              "kind": "account",
-              "path": "tessera_token_program"
-            }
-          }
         },
         {
           "name": "tessera_token_program",
@@ -1382,19 +1345,6 @@
       ]
     },
     {
-      "name": "TreasuryConfig",
-      "discriminator": [
-        124,
-        54,
-        212,
-        227,
-        213,
-        189,
-        168,
-        41
-      ]
-    },
-    {
       "name": "UserRegistration",
       "discriminator": [
         128,
@@ -1504,6 +1454,11 @@
       "code": 6010,
       "name": "InvalidDiscriminator",
       "msg": "Invalid account discriminator. Account type mismatch."
+    },
+    {
+      "code": 6011,
+      "name": "CannotUseSelfReferralCode",
+      "msg": "Cannot use your own referral code."
     }
   ],
   "types": [
@@ -1607,6 +1562,10 @@
             "type": "pubkey"
           },
           {
+            "name": "default_treasury",
+            "type": "pubkey"
+          },
+          {
             "name": "default_fee_reduction_percentage",
             "type": "u16"
           },
@@ -1636,30 +1595,6 @@
         "fields": [
           {
             "name": "referral_config",
-            "type": "pubkey"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "TreasuryConfig",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "treasury",
-            "type": "pubkey"
-          },
-          {
-            "name": "authority",
             "type": "pubkey"
           },
           {

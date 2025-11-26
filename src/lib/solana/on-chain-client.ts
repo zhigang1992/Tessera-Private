@@ -1,5 +1,5 @@
 /**
- * Solana On-Chain Client for Referral System
+ * Solana On-Chain Client for Tessera Referrals
  *
  * Provides utilities for interacting with the on-chain referral program.
  * Includes PDA derivation, program initialization, and helper functions.
@@ -8,11 +8,11 @@
 import { Program, AnchorProvider } from '@coral-xyz/anchor'
 import { Connection, PublicKey, SystemProgram } from '@solana/web3.js'
 import type { WalletContextState } from '@solana/wallet-adapter-react'
-import ReferralSystemIDL from '../idl/referral_system.json'
-import type { ReferralSystem } from '@/generated/referral-system/types'
+import TesseraReferralsIDL from '../idl/tessera_referrals.json'
+import type { TesseraReferrals } from '@/generated/tessera-referrals/types'
 import {
   getRpcEndpoint,
-  getReferralProgramId,
+  getTesseraReferralsProgramId,
   CONNECTION_CONFIG,
   getTesseraTokenProgramId,
   getTesseraMintAddress,
@@ -33,12 +33,12 @@ function createReadOnlyWallet(): ReadOnlyWallet {
 }
 
 /**
- * Get Anchor program instance for referral system
+ * Get Anchor program instance for Tessera Referrals
  */
-export function getReferralProgram(
+export function getTesseraReferralsProgram(
   connection: Connection,
   wallet?: WalletContextState | null,
-): Program<ReferralSystem> | null {
+): Program<TesseraReferrals> | null {
   try {
     const resolvedWallet = wallet && wallet.publicKey ? (wallet as any) : (createReadOnlyWallet() as any)
 
@@ -51,14 +51,17 @@ export function getReferralProgram(
       },
     )
 
-    const program = new Program<ReferralSystem>(ReferralSystemIDL as ReferralSystem, provider)
+    const program = new Program<TesseraReferrals>(TesseraReferralsIDL as TesseraReferrals, provider)
 
     return program
   } catch (error) {
-    console.error('Failed to initialize referral program:', error)
+    console.error('Failed to initialize tessera referrals program:', error)
     return null
   }
 }
+
+// Backwards compatibility alias
+export const getReferralProgram = getTesseraReferralsProgram
 
 /**
  * Create a new Solana connection
@@ -69,7 +72,7 @@ export function createConnection(): Connection {
 }
 
 function resolveProgramId(programId?: PublicKey): PublicKey {
-  return programId ?? getReferralProgramId()
+  return programId ?? getTesseraReferralsProgramId()
 }
 
 /**
@@ -139,12 +142,14 @@ export function getWhitelistEntryPDA(address: PublicKey, programId?: PublicKey):
   return PublicKey.findProgramAddressSync([Buffer.from('whitelist'), address.toBuffer()], tesseraProgramId)
 }
 
-export function getSenderFeeConfigPDA(mint: PublicKey, sender: PublicKey, programId?: PublicKey): [PublicKey, number] {
+/**
+ * Get sender fee config PDA (mint-agnostic)
+ * Seeds: [b"sender_fee_config", user.key()]
+ * Note: This is mint-agnostic - user only registers once for all mints
+ */
+export function getSenderFeeConfigPDA(sender: PublicKey, programId?: PublicKey): [PublicKey, number] {
   const tesseraProgramId = programId ?? getTesseraTokenProgramId()
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from('sender_fee_config'), mint.toBuffer(), sender.toBuffer()],
-    tesseraProgramId,
-  )
+  return PublicKey.findProgramAddressSync([Buffer.from('sender_fee_config'), sender.toBuffer()], tesseraProgramId)
 }
 
 /**
@@ -430,7 +435,7 @@ export function getRegisterWithReferralCodeAccounts(
   const tesseraTokenProgramId = options.tesseraTokenProgram ?? getTesseraTokenProgramId()
   const tesseraMint = options.tesseraMint ?? getTesseraMintAddress()
   const [whitelistEntryPDA] = getWhitelistEntryPDA(userPubkey, tesseraTokenProgramId)
-  const [senderFeeConfigPDA] = getSenderFeeConfigPDA(tesseraMint, userPubkey, tesseraTokenProgramId)
+  const [senderFeeConfigPDA] = getSenderFeeConfigPDA(userPubkey, tesseraTokenProgramId)
   const [treasuryConfigPDA] = getTreasuryConfigPDA(tesseraMint, tesseraTokenProgramId)
 
   // Use the authority from options, or derive from treasury config authority

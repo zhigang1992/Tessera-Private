@@ -671,7 +671,7 @@
     {
       "name": "remove_sender_fee_config",
       "docs": [
-        "Remove sender fee configuration"
+        "Remove sender fee configuration (MINT-AGNOSTIC)"
       ],
       "discriminator": [
         186,
@@ -713,20 +713,10 @@
               },
               {
                 "kind": "account",
-                "path": "mint"
-              },
-              {
-                "kind": "account",
                 "path": "sender"
               }
             ]
           }
-        },
-        {
-          "name": "mint",
-          "docs": [
-            "The mint for which to remove the sender fee configuration"
-          ]
         },
         {
           "name": "sender",
@@ -737,8 +727,7 @@
         {
           "name": "authority",
           "docs": [
-            "The authority that can remove sender fee config",
-            "Must be the mint's transfer fee authority"
+            "The authority that can remove sender fee config"
           ],
           "writable": true,
           "signer": true
@@ -805,7 +794,8 @@
     {
       "name": "set_sender_fee_recipients",
       "docs": [
-        "Set up fee recipients for a specific sender on a specific mint"
+        "Set up fee recipients for a specific sender (MINT-AGNOSTIC)",
+        "The same fee configuration applies to all mints for this sender"
       ],
       "discriminator": [
         56,
@@ -847,20 +837,10 @@
               },
               {
                 "kind": "account",
-                "path": "mint"
-              },
-              {
-                "kind": "account",
                 "path": "sender"
               }
             ]
           }
-        },
-        {
-          "name": "mint",
-          "docs": [
-            "The mint for which to configure fee recipients"
-          ]
         },
         {
           "name": "sender",
@@ -871,8 +851,7 @@
         {
           "name": "authority",
           "docs": [
-            "The authority that can set fee configurations",
-            "Must be the mint's transfer fee authority"
+            "The authority that can set fee configurations"
           ],
           "signer": true
         },
@@ -1052,6 +1031,64 @@
           "relations": [
             "fee_manager_config"
           ]
+        },
+        {
+          "name": "old_fee_manager_ata",
+          "docs": [
+            "Only required when new_fee_manager is Some"
+          ]
+        },
+        {
+          "name": "old_whitelist_entry",
+          "docs": [
+            "Whitelist entry for the old fee manager's ATA (to be closed if it exists)",
+            "Only required when new_fee_manager is Some"
+          ],
+          "writable": true
+        },
+        {
+          "name": "fee_manager_ata",
+          "docs": [
+            "Only required when new_fee_manager is Some"
+          ]
+        },
+        {
+          "name": "whitelist_entry",
+          "docs": [
+            "Whitelist entry for the new fee manager's ATA",
+            "Only required when new_fee_manager is Some"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  104,
+                  105,
+                  116,
+                  101,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fee_manager_ata"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_2022_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -1666,10 +1703,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "mint",
-            "type": "pubkey"
-          },
-          {
             "name": "sender",
             "type": "pubkey"
           },
@@ -1693,15 +1726,11 @@
     {
       "name": "SenderFeeRecipientsConfigured",
       "docs": [
-        "Event emitted when sender fee recipients are configured"
+        "Event emitted when sender fee recipients are configured (MINT-AGNOSTIC)"
       ],
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "mint",
-            "type": "pubkey"
-          },
           {
             "name": "sender",
             "type": "pubkey"

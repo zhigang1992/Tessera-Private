@@ -276,7 +276,7 @@ export function useBindReferralCode() {
 
       const referralConfig = await fetchReferralConfig(connection)
       if (!referralConfig) {
-        throw new Error('Referral system is not initialized')
+        throw new Error('Tessera Referrals is not initialized')
       }
 
       const [referralConfigPda] = getReferralConfigPDA(program.programId)

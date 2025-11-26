@@ -59,8 +59,8 @@ export function getWsEndpoint(): string {
  */
 export const PROGRAM_IDS = {
   TESSERA_TOKEN: new PublicKey('TESQvsR4TmYxiroPPQgZpVRoSFG8pru4fsYr67iv6kf'),
-  REFERRAL_SYSTEM: new PublicKey('5jSqXLX7QFr6ZvvQPLRH7mGhw9P3r96uarkVLy7NEdog'),
-  AUCTION: new PublicKey('4Edp1p2soByRisvWP7SUA6dmfeZLHqa3UCCsoPm1Ak5R'),
+  TESSERA_REFERRALS: new PublicKey('5jSqXLX7QFr6ZvvQPLRH7mGhw9P3r96uarkVLy7NEdog'),
+  TESSERA_AUCTION: new PublicKey('4Edp1p2soByRisvWP7SUA6dmfeZLHqa3UCCsoPm1Ak5R'),
 } as const
 
 /**
@@ -82,18 +82,24 @@ export function getTesseraTokenProgramId(): PublicKey {
 }
 
 /**
- * Get Referral System program ID
+ * Get Tessera Referrals program ID
  */
-export function getReferralProgramId(): PublicKey {
-  return PROGRAM_IDS.REFERRAL_SYSTEM
+export function getTesseraReferralsProgramId(): PublicKey {
+  return PROGRAM_IDS.TESSERA_REFERRALS
 }
 
+// Backwards compatibility alias
+export const getReferralProgramId = getTesseraReferralsProgramId
+
 /**
- * Get Auction program ID
+ * Get Tessera Auction program ID
  */
-export function getAuctionProgramId(): PublicKey {
-  return PROGRAM_IDS.AUCTION
+export function getTesseraAuctionProgramId(): PublicKey {
+  return PROGRAM_IDS.TESSERA_AUCTION
 }
+
+// Backwards compatibility alias
+export const getAuctionProgramId = getTesseraAuctionProgramId
 
 /**
  * Get Tessera mint address for current network
