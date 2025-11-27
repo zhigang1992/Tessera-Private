@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
+import { motion } from 'framer-motion'
 import { WalletDropdown } from '@/components/wallet-dropdown'
 import SimpleReferralHeader from './ui/simple-referral-header'
 import HeroSection from './ui/hero-section'
@@ -15,10 +16,89 @@ import PepeLeft from '@/assets/parallax/pepe-left.png'
 import PepeRight from '@/assets/parallax/pepe-right.png'
 import rectangleBlur from '@/assets/parallax/rectangle-blur.png'
 import rectangle from '@/assets/parallax/rectangle.png'
-import rectangleLeft from '@/assets/parallax/rectangle-left.png'
-import rectangleRight from '@/assets/parallax/rectangle-right.png'
-import rectangleSmall from '@/assets/parallax/rectangle-small.png'
 import { ThemeToggleButton } from '@/components/theme-toggle-button'
+
+// Pepe breathing - noticeable scale + slight bounce
+const pepeBreathingVariants = {
+  animate: {
+    scale: [1, 1.06, 1],
+    y: [0, -6, 0],
+    transition: {
+      duration: 3,
+      ease: 'easeInOut' as const,
+      repeat: Infinity,
+    },
+  },
+}
+
+// Rectangle floating - dramatic float with rotation
+const rectangleFloatVariants = {
+  animate: {
+    y: [0, -15, 0],
+    rotate: [0, 3, 0, -2, 0],
+    scale: [1, 1.04, 1],
+    transition: {
+      duration: 4,
+      ease: 'easeInOut' as const,
+      repeat: Infinity,
+    },
+  },
+}
+
+// Orbit-like motion for side rectangles
+const orbitLeftVariants = {
+  animate: {
+    x: [0, 8, 0, -4, 0],
+    y: [0, -10, 0, -5, 0],
+    rotate: [0, -5, 0, 3, 0],
+    transition: {
+      duration: 5,
+      ease: 'easeInOut' as const,
+      repeat: Infinity,
+    },
+  },
+}
+
+const orbitRightVariants = {
+  animate: {
+    x: [0, -8, 0, 4, 0],
+    y: [0, -8, 0, -12, 0],
+    rotate: [0, 5, 0, -3, 0],
+    transition: {
+      duration: 6,
+      ease: 'easeInOut' as const,
+      repeat: Infinity,
+    },
+  },
+}
+
+// Pulsing scale for small elements
+const pulseVariants = {
+  animate: {
+    scale: [1, 1.1, 1, 1.05, 1],
+    rotate: [0, 2, 0, -2, 0],
+    transition: {
+      duration: 3.5,
+      ease: 'easeInOut' as const,
+      repeat: Infinity,
+    },
+  },
+}
+
+// Blur rectangle - slow dramatic float
+const blurFloatVariants = {
+  animate: {
+    y: [0, -20, 0],
+    x: [0, 5, 0, -5, 0],
+    scale: [1, 1.08, 1],
+    opacity: [0.8, 1, 0.8],
+    transition: {
+      duration: 6,
+      ease: 'easeInOut' as const,
+      repeat: Infinity,
+    },
+  },
+}
 
 export default function ReferralFeatureSimple() {
   const { connected, publicKey } = useWallet()
@@ -86,12 +166,24 @@ export default function ReferralFeatureSimple() {
             <span>© 2025 Tessera PE. All rights reserved.</span>
             <ThemeToggleButton />
           </div>
-          <div className="absolute -right-16 top-[56px] z-20 hidden w-[140px] lg:block xl:-right-20 xl:w-[190px]">
+
+          {/* Top right rectangle - main cube image */}
+          <motion.div
+            className="absolute -right-16 top-[56px] z-1 hidden w-[140px] lg:block xl:-right-20 xl:w-[190px]"
+            variants={rectangleFloatVariants}
+            animate="animate"
+          >
             <img src={rectangle} className="w-full" alt="Rectangle" />
-          </div>
-          <div className="absolute -left-10 top-[24%] z-20 hidden w-[56px] lg:block xl:-left-[56px] xl:w-[72px]">
-            <img src={rectangleSmall} className="w-full" alt="Rectangle Small" />
-          </div>
+          </motion.div>
+
+          {/* Left small rectangle - reuse main image with transforms */}
+          <motion.div
+            className="absolute -left-10 top-[24%] z-1 hidden w-[56px] lg:block xl:-left-[56px] xl:w-[72px]"
+            variants={pulseVariants}
+            animate="animate"
+          >
+            <img src={rectangle} className="w-full scale-50 rotate-12" alt="Rectangle Small" />
+          </motion.div>
         </div>
 
         <div className="relative hidden w-full overflow-hidden lg:flex lg:w-[40%] lg:flex-col lg:gap-6 lg:self-start">
@@ -105,21 +197,50 @@ export default function ReferralFeatureSimple() {
         <ReferralCodeModal isOpen={isModalOpen} onClose={handleCloseModal} referralCode={referralCode} />
       )}
 
-      <div className="fixed bottom-0 left-0 z-10 hidden w-[180px] md:block lg:w-[220px] xl:w-[288px]">
+      {/* Pepe Left - breathing animation */}
+      <motion.div
+        className="fixed bottom-0 left-0 z-10 hidden w-[180px] origin-bottom md:block lg:w-[220px] xl:w-[288px]"
+        variants={pepeBreathingVariants}
+        animate="animate"
+      >
         <img src={PepeLeft} alt="Pepe Left" className="h-full w-full object-contain" />
-      </div>
-      <div className="fixed bottom-0 right-0 z-10 hidden w-[160px] md:block lg:w-[200px] xl:w-[266px]">
+      </motion.div>
+
+      {/* Pepe Right - breathing animation */}
+      <motion.div
+        className="fixed bottom-0 right-0 z-10 hidden w-[160px] origin-bottom md:block lg:w-[200px] xl:w-[266px]"
+        variants={pepeBreathingVariants}
+        animate="animate"
+      >
         <img src={PepeRight} alt="Pepe Right" className="h-full w-full object-contain" />
-      </div>
-      <div className="absolute bottom-0 left-1/2 z-20 hidden w-[200px] md:block lg:w-[260px] xl:w-[312px]">
+      </motion.div>
+
+      {/* Rectangle Blur - dramatic float at bottom center */}
+      <motion.div
+        className="absolute bottom-0 left-1/2 z-10 hidden w-[200px] -translate-x-1/2 md:block lg:w-[260px] xl:w-[312px]"
+        variants={blurFloatVariants}
+        animate="animate"
+      >
         <img src={rectangleBlur} alt="Rectangle Blur" />
-      </div>
-      <div className="absolute bottom-[36%] left-0 z-20 hidden w-[120px] md:block lg:w-[150px] xl:w-[186px]">
-        <img src={rectangleLeft} className="w-full" alt="Rectangle Left" />
-      </div>
-      <div className="absolute bottom-[56%] right-0 z-20 hidden w-[100px] md:block lg:w-[130px] xl:w-[164px]">
-        <img src={rectangleRight} className="w-full" alt="Rectangle Right" />
-      </div>
+      </motion.div>
+
+      {/* Rectangle Left - reuse main image with rotation/scale */}
+      <motion.div
+        className="absolute bottom-[36%] left-0 z-1 hidden w-[120px] md:block lg:w-[150px] xl:w-[186px]"
+        variants={orbitLeftVariants}
+        animate="animate"
+      >
+        <img src={rectangle} className="w-full rotate-[25deg] scale-75 opacity-90" alt="Rectangle Left" />
+      </motion.div>
+
+      {/* Rectangle Right - reuse main image with rotation/scale */}
+      <motion.div
+        className="absolute bottom-[56%] right-0 z-20 hidden w-[100px] md:block lg:w-[130px] xl:w-[164px]"
+        variants={orbitRightVariants}
+        animate="animate"
+      >
+        <img src={rectangle} className="w-full -rotate-[15deg] scale-[0.6] opacity-85" alt="Rectangle Right" />
+      </motion.div>
     </div>
   )
 }
