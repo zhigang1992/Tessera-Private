@@ -1,5 +1,5 @@
 {
-  "address": "5jSqXLX7QFr6ZvvQPLRH7mGhw9P3r96uarkVLy7NEdog",
+  "address": "HiA4mhg5viZhiPHsJg2rEo2B5L2TNnNkwDi6AzCT9eD4",
   "metadata": {
     "name": "tessera_referrals",
     "version": "0.1.0",
@@ -439,7 +439,16 @@
         {
           "name": "whitelist_entry",
           "docs": [
-            "The whitelist entry account in the Tessera Token program"
+            "The whitelist entry account in the Tessera Token program (MINT-AGNOSTIC)",
+            "PDA: [b\"whitelist\", user_account.key()]"
+          ],
+          "writable": true
+        },
+        {
+          "name": "sender_fee_config",
+          "docs": [
+            "The sender fee config account in the Tessera Token program (MINT-AGNOSTIC)",
+            "PDA: [b\"sender_fee_config\", user_account.key()]"
           ],
           "writable": true
         },
@@ -447,19 +456,13 @@
           "name": "authorized_programs",
           "docs": [
             "The authorized programs account from Tessera Token program",
-            "This validates that the referral program is authorized to whitelist"
+            "This validates that the referral program is authorized"
           ]
         },
         {
           "name": "user_account",
           "docs": [
-            "The user account to register"
-          ]
-        },
-        {
-          "name": "tessera_mint",
-          "docs": [
-            "The Tessera Token mint"
+            "The user account to register (wallet address)"
           ]
         },
         {
@@ -1132,6 +1135,14 @@
             "Optional: The direct referrer's UserRegistration (if they exist in the system)"
           ],
           "optional": true
+        },
+        {
+          "name": "whitelist_entry",
+          "docs": [
+            "The whitelist entry account in the Tessera Token program (MINT-AGNOSTIC)",
+            "PDA: [b\"whitelist\", user.key()]"
+          ],
+          "writable": true
         },
         {
           "name": "sender_fee_config",

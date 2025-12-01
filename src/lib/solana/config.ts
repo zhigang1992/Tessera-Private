@@ -56,10 +56,11 @@ export function getWsEndpoint(): string {
 
 /**
  * Program IDs - Same across all networks
+ * Updated 2024-12-01: Referral program redeployed to new address
  */
 export const PROGRAM_IDS = {
   TESSERA_TOKEN: new PublicKey('TESQvsR4TmYxiroPPQgZpVRoSFG8pru4fsYr67iv6kf'),
-  TESSERA_REFERRALS: new PublicKey('5jSqXLX7QFr6ZvvQPLRH7mGhw9P3r96uarkVLy7NEdog'),
+  TESSERA_REFERRALS: new PublicKey('HiA4mhg5viZhiPHsJg2rEo2B5L2TNnNkwDi6AzCT9eD4'),
   TESSERA_AUCTION: new PublicKey('4Edp1p2soByRisvWP7SUA6dmfeZLHqa3UCCsoPm1Ak5R'),
 } as const
 

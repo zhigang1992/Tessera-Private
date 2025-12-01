@@ -15,7 +15,6 @@ import {
   getTesseraReferralsProgramId,
   CONNECTION_CONFIG,
   getTesseraTokenProgramId,
-  getTesseraMintAddress,
 } from './config'
 
 type ReadOnlyWallet = {
@@ -417,7 +416,6 @@ type RegisterWithReferralCodeOptions = {
   referrerRegistration?: PublicKey | null
   programId?: PublicKey
   tesseraTokenProgram?: PublicKey
-  tesseraMint?: PublicKey
   authority?: PublicKey
 }
 
@@ -433,10 +431,7 @@ export function getRegisterWithReferralCodeAccounts(
   const referralConfigPDA = options.referralConfig ?? defaultReferralConfigPDA
   const [tokenAuthorityPDA] = getTokenAuthorityPDA(referralConfigPDA, programId)
   const tesseraTokenProgramId = options.tesseraTokenProgram ?? getTesseraTokenProgramId()
-  const tesseraMint = options.tesseraMint ?? getTesseraMintAddress()
-  const [whitelistEntryPDA] = getWhitelistEntryPDA(userPubkey, tesseraTokenProgramId)
   const [senderFeeConfigPDA] = getSenderFeeConfigPDA(userPubkey, tesseraTokenProgramId)
-  const [treasuryConfigPDA] = getTreasuryConfigPDA(tesseraMint, tesseraTokenProgramId)
 
   // Use the authority from options, or derive from treasury config authority
   // The authorized_programs PDA is derived using the token program authority's pubkey
@@ -449,11 +444,8 @@ export function getRegisterWithReferralCodeAccounts(
     referralConfig: referralConfigPDA,
     tokenAuthority: tokenAuthorityPDA,
     referrerRegistration: options.referrerRegistration ?? null,
-    whitelistEntry: whitelistEntryPDA,
     senderFeeConfig: senderFeeConfigPDA,
     authorizedPrograms: authorizedProgramsPDA,
-    tesseraMint: tesseraMint,
-    treasuryConfig: treasuryConfigPDA,
     tesseraTokenProgram: tesseraTokenProgramId,
     user: userPubkey,
     systemProgram: SystemProgram.programId,

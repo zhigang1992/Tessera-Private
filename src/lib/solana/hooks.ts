@@ -24,7 +24,6 @@ import {
   checkReferralCodeAvailability,
   shortenAddress,
 } from './on-chain-client'
-import { getTesseraMintAddress } from './config'
 
 /**
  * Query Keys
@@ -152,13 +151,76 @@ export function useCreateReferralCode() {
         throw new Error('Referral code already exists')
       }
 
+      // PRE-FLIGHT CHECK: Verify program is deployed on our connection
+      const programInfo = await connection.getAccountInfo(program.programId)
+      console.log('🔍 Pre-flight check:')
+      console.log('  Program ID:', program.programId.toBase58())
+      console.log('  RPC Endpoint:', connection.rpcEndpoint)
+      console.log('  Program exists:', !!programInfo)
+      console.log('  Program executable:', programInfo?.executable)
+
+      if (!programInfo || !programInfo.executable) {
+        throw new Error(
+          `Program not deployed on ${connection.rpcEndpoint}. ` +
+            `Please ensure your wallet is connected to the same network as the app (devnet).`,
+        )
+      }
+
       // Get accounts
       const accounts = getCreateReferralCodeAccounts(code, wallet.publicKey, program.programId)
 
-      // Send transaction
-      const tx = await program.methods.createReferralCode(code).accounts(accounts).rpc()
+      console.log('🚀 Sending createReferralCode transaction:')
+      console.log('  Code:', code)
+      console.log('  ReferralCode PDA:', accounts.referralCode.toBase58())
+      console.log('  Owner:', accounts.owner.toBase58())
 
-      return { code, txSignature: tx }
+      // Send transaction with skipPreflight to bypass wallet's simulation
+      // This is necessary because Phantom may simulate on a different network than configured
+      try {
+        const tx = await program.methods
+          .createReferralCode(code)
+          .accounts(accounts)
+          .rpc({ skipPreflight: true, commitment: 'confirmed' })
+
+        return { code, txSignature: tx }
+      } catch (sendError: any) {
+        // Extract detailed error information
+        console.error('🔴 Transaction failed:', sendError)
+        console.error('  Error name:', sendError?.name)
+        console.error('  Error message:', sendError?.message)
+        console.error('  Error JSON:', JSON.stringify(sendError, null, 2))
+
+        if (sendError.logs) {
+          console.error('  Transaction logs:', sendError.logs)
+        }
+        if (sendError.getLogs) {
+          try {
+            const logs = await sendError.getLogs()
+            console.error('  Detailed logs:', logs)
+          } catch (e) {
+            console.error('  Could not get logs:', e)
+          }
+        }
+
+        // Check for InstructionError with UnsupportedProgramId
+        const errorJson = JSON.stringify(sendError)
+        const errorStr = sendError?.message || String(sendError)
+        console.error('  Error string check:', errorStr)
+        console.error('  Error JSON check:', errorJson)
+
+        if (
+          errorStr.includes('not deployed') ||
+          errorStr.includes('UnsupportedProgramId') ||
+          errorJson.includes('UnsupportedProgramId') ||
+          errorJson.includes('InvalidProgramId')
+        ) {
+          throw new Error(
+            'Transaction failed: Program not found on the network your wallet is connected to. ' +
+              'Please ensure Phantom is set to Devnet (Settings > Developer Settings > Testnet Mode ON)',
+          )
+        }
+        throw sendError
+      }
     },
     onSuccess: (data) => {
       toast.success(`Code "${data.code}" created! Transaction: ${shortenAddress(data.txSignature)}`)
@@ -221,7 +283,6 @@ export function useRegisterWithReferralCode() {
       }
 
       const [referralConfigPda] = getReferralConfigPDA(program.programId)
-      const tesseraMint = getTesseraMintAddress()
       const tesseraTokenProgramId = new PublicKey(
         (referralConfig as any).tesseraTokenProgram ?? (referralConfig as any).tessera_token_program,
       )
@@ -233,7 +294,6 @@ export function useRegisterWithReferralCode() {
         : null
 
       const accounts = getRegisterWithReferralCodeAccounts(code, wallet.publicKey, {
-        tesseraMint,
         referralConfig: referralConfigPda,
         referrerRegistration: referrerRegistrationPda,
         programId: program.programId,

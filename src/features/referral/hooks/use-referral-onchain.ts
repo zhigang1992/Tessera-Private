@@ -20,7 +20,6 @@ import {
   getReferralConfigPDA,
   getUserRegistrationPDA,
   getRegisterWithReferralCodeAccounts,
-  getTesseraMintAddress,
   getTesseraTokenProgramId,
   shortenAddress,
 } from '@/lib/solana'
@@ -280,7 +279,6 @@ export function useBindReferralCode() {
       }
 
       const [referralConfigPda] = getReferralConfigPDA(program.programId)
-      const tesseraMint = getTesseraMintAddress()
       const rawTokenProgram =
         (referralConfig as any).tesseraTokenProgram ?? (referralConfig as any).tessera_token_program
       const tesseraTokenProgramId = rawTokenProgram ? new PublicKey(rawTokenProgram) : getTesseraTokenProgramId()
@@ -295,17 +293,15 @@ export function useBindReferralCode() {
       // Get accounts with the referrer registration if available
       const accounts = getRegisterWithReferralCodeAccounts(referralCode, wallet.publicKey, {
         referrerRegistration: referrerRegistrationPda,
-        tesseraMint,
         referralConfig: referralConfigPda,
         programId: program.programId,
         tesseraTokenProgram: tesseraTokenProgramId,
       })
 
       console.log('🔍 Register with referral code - accounts:', {
-        tesseraMint: tesseraMint.toBase58(),
         tesseraTokenProgram: tesseraTokenProgramId.toBase58(),
-        treasuryConfig: accounts.treasuryConfig.toBase58(),
         authorizedPrograms: accounts.authorizedPrograms.toBase58(),
+        senderFeeConfig: accounts.senderFeeConfig.toBase58(),
       })
 
       const txSignature = await program.methods.registerWithReferralCode().accounts(accounts).rpc()
