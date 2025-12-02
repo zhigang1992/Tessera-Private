@@ -13,8 +13,14 @@ export const referralKeys = {
 export function useTraderData(walletAddress?: string | null, enabled = true) {
   return useQuery({
     queryKey: [...referralKeys.trader(), walletAddress ?? 'no-wallet'],
-    queryFn: () => apiClient.getTraderData(),
-    enabled,
+    queryFn: () => {
+      // If we have a wallet address but no authentication, use public endpoint
+      if (walletAddress && !apiClient.getToken()) {
+        return apiClient.getTraderDataPublic(walletAddress);
+      }
+      return apiClient.getTraderData();
+    },
+    enabled: enabled && (walletAddress !== undefined), // Enable if wallet is available or undefined
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes - keep data in cache longer
     retry: 1, // Less aggressive retry for read operations that might not be authenticated

@@ -2,12 +2,7 @@ import { createContext, ReactNode, useContext, useMemo } from 'react'
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react'
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
-import {
-  PhantomWalletAdapter,
-  SolflareWalletAdapter,
-  TorusWalletAdapter,
-  UnsafeBurnerWalletAdapter,
-} from '@solana/wallet-adapter-wallets'
+import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets'
 import { clusterApiUrl } from '@solana/web3.js'
 import type { SolanaClient } from 'gill'
 import { createSolanaClient } from 'gill'
@@ -48,8 +43,6 @@ function SolanaProviderInner({ children }: { children: ReactNode }) {
     () => [
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
-      new TorusWalletAdapter(),
-      new UnsafeBurnerWalletAdapter(),
     ],
     [],
   )
