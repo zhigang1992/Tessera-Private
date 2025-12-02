@@ -429,24 +429,19 @@ export function getRegisterWithReferralCodeAccounts(
   const [userRegistrationPDA] = getUserRegistrationPDA(userPubkey, programId)
   const [defaultReferralConfigPDA] = getReferralConfigPDA(programId)
   const referralConfigPDA = options.referralConfig ?? defaultReferralConfigPDA
-  const [tokenAuthorityPDA] = getTokenAuthorityPDA(referralConfigPDA, programId)
-  const tesseraTokenProgramId = options.tesseraTokenProgram ?? getTesseraTokenProgramId()
-  const [senderFeeConfigPDA] = getSenderFeeConfigPDA(userPubkey, tesseraTokenProgramId)
 
-  // Use the authority from options, or derive from treasury config authority
-  // The authorized_programs PDA is derived using the token program authority's pubkey
-  const authority = options.authority ?? new PublicKey('9UHfCynABPyvSeqZfD3E6A3DPt1xfechkRa1xDm6ZRvY') // Devnet deployer
-  const [authorizedProgramsPDA] = getAuthorizedProgramsPDA(authority, tesseraTokenProgramId)
+  // sender_fee_config is derived from REFERRAL program with seeds [b"sender_fee_config", user]
+  const [senderFeeConfigPDA] = PublicKey.findProgramAddressSync(
+    [Buffer.from('sender_fee_config'), userPubkey.toBuffer()],
+    programId,
+  )
 
   return {
     referralCode: referralCodePDA,
     userRegistration: userRegistrationPDA,
     referralConfig: referralConfigPDA,
-    tokenAuthority: tokenAuthorityPDA,
     referrerRegistration: options.referrerRegistration ?? null,
     senderFeeConfig: senderFeeConfigPDA,
-    authorizedPrograms: authorizedProgramsPDA,
-    tesseraTokenProgram: tesseraTokenProgramId,
     user: userPubkey,
     systemProgram: SystemProgram.programId,
   }

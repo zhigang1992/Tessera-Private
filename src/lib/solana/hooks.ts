@@ -24,6 +24,7 @@ import {
   checkReferralCodeAvailability,
   shortenAddress,
 } from './on-chain-client'
+import { getTesseraTokenProgramId } from './config'
 
 /**
  * Query Keys
@@ -283,9 +284,9 @@ export function useRegisterWithReferralCode() {
       }
 
       const [referralConfigPda] = getReferralConfigPDA(program.programId)
-      const tesseraTokenProgramId = new PublicKey(
-        (referralConfig as any).tesseraTokenProgram ?? (referralConfig as any).tessera_token_program,
-      )
+      // Note: tesseraTokenProgram field was removed from ReferralConfig struct
+      // Use the global config function to get the token program ID
+      const tesseraTokenProgramId = getTesseraTokenProgramId()
 
       const referrerPubkey = new PublicKey(codeAccount.owner)
       const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey)
@@ -293,11 +294,24 @@ export function useRegisterWithReferralCode() {
         ? getUserRegistrationPDA(referrerPubkey, program.programId)[0]
         : null
 
+      console.log('🔍 [hooks] Referrer registration check:', {
+        referrerPubkey: referrerPubkey.toBase58(),
+        hasRegistration: !!referrerRegistration,
+        referrerRegistrationPda: referrerRegistrationPda?.toBase58() ?? 'null',
+      })
+
       const accounts = getRegisterWithReferralCodeAccounts(code, wallet.publicKey, {
         referralConfig: referralConfigPda,
         referrerRegistration: referrerRegistrationPda,
         programId: program.programId,
         tesseraTokenProgram: tesseraTokenProgramId,
+      })
+
+      console.log('🔍 [hooks] Register accounts:', {
+        referralCode: accounts.referralCode.toBase58(),
+        referrerRegistration: accounts.referrerRegistration?.toBase58() ?? 'null',
+        senderFeeConfig: accounts.senderFeeConfig.toBase58(),
+        user: accounts.user.toBase58(),
       })
 
       const tx = await program.methods
@@ -359,7 +373,7 @@ export function useReferralTree() {
       if (!registration) return null
 
       const tree = {
-        tier1: registration.owner,
+        tier1: registration.tier1Referrer,
         tier2: registration.tier2Referrer,
         tier3: registration.tier3Referrer,
       }

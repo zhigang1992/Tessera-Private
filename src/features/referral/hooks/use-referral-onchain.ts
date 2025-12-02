@@ -67,7 +67,7 @@ export function useTraderData(walletAddress?: string | null, enabled = true) {
             const codeAccount = await program.account.referralCode.fetch(registration.referralCode)
             referralCode = {
               referrerCode: codeAccount.code,
-              referrerWallet: registration.owner.toBase58(),
+              referrerWallet: registration.tier1Referrer.toBase58(),
               boundAt: null, // Not stored on-chain in current schema
               lastModified: null,
             }
@@ -279,9 +279,9 @@ export function useBindReferralCode() {
       }
 
       const [referralConfigPda] = getReferralConfigPDA(program.programId)
-      const rawTokenProgram =
-        (referralConfig as any).tesseraTokenProgram ?? (referralConfig as any).tessera_token_program
-      const tesseraTokenProgramId = rawTokenProgram ? new PublicKey(rawTokenProgram) : getTesseraTokenProgramId()
+      // Note: tesseraTokenProgram field was removed from ReferralConfig struct
+      // Use the global config function to get the token program ID
+      const tesseraTokenProgramId = getTesseraTokenProgramId()
 
       // Get optional referrer registration if it exists
       const referrerPubkey = new PublicKey(codeAccount.owner)
@@ -289,6 +289,12 @@ export function useBindReferralCode() {
       const referrerRegistrationPda = referrerRegistration
         ? getUserRegistrationPDA(referrerPubkey, program.programId)[0]
         : null
+
+      console.log('🔍 Referrer registration check:', {
+        referrerPubkey: referrerPubkey.toBase58(),
+        hasRegistration: !!referrerRegistration,
+        referrerRegistrationPda: referrerRegistrationPda?.toBase58() ?? 'null',
+      })
 
       // Get accounts with the referrer registration if available
       const accounts = getRegisterWithReferralCodeAccounts(referralCode, wallet.publicKey, {
@@ -299,9 +305,11 @@ export function useBindReferralCode() {
       })
 
       console.log('🔍 Register with referral code - accounts:', {
-        tesseraTokenProgram: tesseraTokenProgramId.toBase58(),
-        authorizedPrograms: accounts.authorizedPrograms.toBase58(),
+        referralCode: accounts.referralCode.toBase58(),
+        userRegistration: accounts.userRegistration.toBase58(),
+        referrerRegistration: accounts.referrerRegistration?.toBase58() ?? 'null',
         senderFeeConfig: accounts.senderFeeConfig.toBase58(),
+        user: accounts.user.toBase58(),
       })
 
       const txSignature = await program.methods.registerWithReferralCode().accounts(accounts).rpc()

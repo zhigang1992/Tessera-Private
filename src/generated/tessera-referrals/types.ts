@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/tessera_referrals.json`.
  */
 export type TesseraReferrals = {
-  "address": "5jSqXLX7QFr6ZvvQPLRH7mGhw9P3r96uarkVLy7NEdog",
+  "address": "HiA4mhg5viZhiPHsJg2rEo2B5L2TNnNkwDi6AzCT9eD4",
   "metadata": {
     "name": "tesseraReferrals",
     "version": "0.1.0",
@@ -15,9 +15,6 @@ export type TesseraReferrals = {
   "instructions": [
     {
       "name": "addAdmin",
-      "docs": [
-        "Add an admin to the admin list"
-      ],
       "discriminator": [
         177,
         236,
@@ -53,36 +50,6 @@ export type TesseraReferrals = {
           }
         },
         {
-          "name": "authority",
-          "signer": true
-        }
-      ],
-      "args": [
-        {
-          "name": "newAdmin",
-          "type": "pubkey"
-        }
-      ]
-    },
-    {
-      "name": "adminCloseReferralCode",
-      "docs": [
-        "Admin: Close a referral code account with incorrect discriminator",
-        "This is a maintenance function to clean up accounts created with wrong discriminators",
-        "Only admins can close accounts, and rent is returned to the authority"
-      ],
-      "discriminator": [
-        141,
-        154,
-        218,
-        171,
-        219,
-        183,
-        7,
-        187
-      ],
-      "accounts": [
-        {
           "name": "referralConfig",
           "pda": {
             "seeds": [
@@ -110,6 +77,65 @@ export type TesseraReferrals = {
           }
         },
         {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "referralConfig"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "newAdmin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "adminCloseReferralCode",
+      "discriminator": [
+        141,
+        154,
+        218,
+        171,
+        219,
+        183,
+        7,
+        187
+      ],
+      "accounts": [
+        {
+          "name": "referralCode",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  100,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "referral_code.code",
+                "account": "referralCode"
+              }
+            ]
+          }
+        },
+        {
           "name": "adminList",
           "pda": {
             "seeds": [
@@ -132,27 +158,15 @@ export type TesseraReferrals = {
           }
         },
         {
-          "name": "authority",
+          "name": "admin",
           "writable": true,
           "signer": true
-        },
-        {
-          "name": "referralCode",
-          "docs": [
-            "The referral code account to close",
-            "We use UncheckedAccount and manually handle closing to avoid discriminator validation"
-          ],
-          "writable": true
         }
       ],
       "args": []
     },
     {
       "name": "adminCreateReferralCode",
-      "docs": [
-        "Admin: Create a referral code for a specified owner address",
-        "Only the program authority can create referral codes on behalf of users"
-      ],
       "discriminator": [
         41,
         77,
@@ -195,33 +209,6 @@ export type TesseraReferrals = {
           }
         },
         {
-          "name": "referralConfig",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  114,
-                  101,
-                  102,
-                  101,
-                  114,
-                  114,
-                  97,
-                  108,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
-              }
-            ]
-          }
-        },
-        {
           "name": "adminList",
           "pda": {
             "seeds": [
@@ -244,12 +231,7 @@ export type TesseraReferrals = {
           }
         },
         {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "payer",
+          "name": "admin",
           "writable": true,
           "signer": true
         },
@@ -271,10 +253,6 @@ export type TesseraReferrals = {
     },
     {
       "name": "adminRegisterWithReferralCode",
-      "docs": [
-        "Admin: Register a user with a referral code",
-        "Only the program authority can register users on their behalf"
-      ],
       "discriminator": [
         146,
         231,
@@ -319,6 +297,9 @@ export type TesseraReferrals = {
         },
         {
           "name": "userRegistration",
+          "docs": [
+            "User registration (mint-agnostic)"
+          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -379,7 +360,54 @@ export type TesseraReferrals = {
           }
         },
         {
+          "name": "referrerRegistration",
+          "docs": [
+            "The direct referrer's registration (if they exist in the system)"
+          ],
+          "optional": true
+        },
+        {
+          "name": "senderFeeConfig",
+          "docs": [
+            "Sender fee config account (mint-agnostic)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  110,
+                  100,
+                  101,
+                  114,
+                  95,
+                  102,
+                  101,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
           "name": "adminList",
+          "docs": [
+            "The admin list account for authorization"
+          ],
           "pda": {
             "seeds": [
               {
@@ -401,82 +429,10 @@ export type TesseraReferrals = {
           }
         },
         {
-          "name": "tokenAuthority",
+          "name": "admin",
           "docs": [
-            "Token authority PDA that signs CPIs to Tessera Token program"
+            "The signer must be in the admin list"
           ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  97,
-                  117,
-                  116,
-                  104,
-                  111,
-                  114,
-                  105,
-                  116,
-                  121
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "referralConfig"
-              }
-            ]
-          }
-        },
-        {
-          "name": "referrerRegistration",
-          "docs": [
-            "Optional: The direct referrer's UserRegistration (if they exist in the system)"
-          ],
-          "optional": true
-        },
-        {
-          "name": "whitelistEntry",
-          "docs": [
-            "The whitelist entry account in the Tessera Token program"
-          ],
-          "writable": true
-        },
-        {
-          "name": "authorizedPrograms",
-          "docs": [
-            "The authorized programs account from Tessera Token program",
-            "This validates that the referral program is authorized to whitelist"
-          ]
-        },
-        {
-          "name": "userAccount",
-          "docs": [
-            "The user account to register"
-          ]
-        },
-        {
-          "name": "tesseraMint",
-          "docs": [
-            "The Tessera Token mint"
-          ]
-        },
-        {
-          "name": "tesseraTokenProgram",
-          "docs": [
-            "The Tessera Token program"
-          ]
-        },
-        {
-          "name": "authority",
-          "writable": true,
           "signer": true
         },
         {
@@ -497,11 +453,84 @@ export type TesseraReferrals = {
       ]
     },
     {
-      "name": "closeReferralConfig",
-      "docs": [
-        "Close the referral config account and reclaim SOL (authority only)",
-        "This is useful for resetting or migrating the referral system"
+      "name": "closeAdminList",
+      "discriminator": [
+        31,
+        89,
+        118,
+        122,
+        34,
+        2,
+        21,
+        235
       ],
+      "accounts": [
+        {
+          "name": "adminList",
+          "docs": [
+            "This allows us to close accounts with outdated/incompatible structures"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "referralConfig",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "referralConfig"
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "closeReferralConfig",
       "discriminator": [
         35,
         87,
@@ -544,17 +573,16 @@ export type TesseraReferrals = {
         {
           "name": "authority",
           "writable": true,
-          "signer": true
+          "signer": true,
+          "relations": [
+            "referralConfig"
+          ]
         }
       ],
       "args": []
     },
     {
       "name": "createReferralCode",
-      "docs": [
-        "Create a referral code for an owner",
-        "Only the program caller (owner) can create referral codes"
-      ],
       "discriminator": [
         206,
         2,
@@ -615,10 +643,6 @@ export type TesseraReferrals = {
     },
     {
       "name": "deactivateReferralCode",
-      "docs": [
-        "Deactivate a referral code (owner only)",
-        "Only the referral code owner can deactivate their code"
-      ],
       "discriminator": [
         210,
         161,
@@ -663,7 +687,6 @@ export type TesseraReferrals = {
         },
         {
           "name": "owner",
-          "writable": true,
           "signer": true,
           "relations": [
             "referralCode"
@@ -673,88 +696,7 @@ export type TesseraReferrals = {
       "args": []
     },
     {
-      "name": "initializeAdminList",
-      "docs": [
-        "Initialize the admin list"
-      ],
-      "discriminator": [
-        202,
-        155,
-        78,
-        226,
-        91,
-        128,
-        203,
-        83
-      ],
-      "accounts": [
-        {
-          "name": "adminList",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  97,
-                  100,
-                  109,
-                  105,
-                  110,
-                  95,
-                  108,
-                  105,
-                  115,
-                  116
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "referralConfig",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  114,
-                  101,
-                  102,
-                  101,
-                  114,
-                  114,
-                  97,
-                  108,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "initializeReferralSystem",
-      "docs": [
-        "Initialize the referral system with authority and configuration"
-      ],
       "discriminator": [
         63,
         171,
@@ -795,6 +737,29 @@ export type TesseraReferrals = {
           }
         },
         {
+          "name": "adminList",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "authority",
           "writable": true,
           "signer": true
@@ -806,16 +771,8 @@ export type TesseraReferrals = {
       ],
       "args": [
         {
-          "name": "tesseraTokenProgram",
+          "name": "defaultFeeRecipient",
           "type": "pubkey"
-        },
-        {
-          "name": "defaultTreasury",
-          "type": "pubkey"
-        },
-        {
-          "name": "defaultFeeReductionPercentage",
-          "type": "u16"
         },
         {
           "name": "tier1SplitPercentage",
@@ -832,99 +789,7 @@ export type TesseraReferrals = {
       ]
     },
     {
-      "name": "initializeTokenAuthority",
-      "docs": [
-        "Initialize the token authority PDA",
-        "This PDA will be used to sign CPI calls to the Tessera Token program",
-        "The referral program will be added to the token program's authorized_programs list"
-      ],
-      "discriminator": [
-        54,
-        198,
-        42,
-        77,
-        164,
-        175,
-        253,
-        107
-      ],
-      "accounts": [
-        {
-          "name": "tokenAuthority",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  116,
-                  111,
-                  107,
-                  101,
-                  110,
-                  95,
-                  97,
-                  117,
-                  116,
-                  104,
-                  111,
-                  114,
-                  105,
-                  116,
-                  121
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "referralConfig"
-              }
-            ]
-          }
-        },
-        {
-          "name": "referralConfig",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  114,
-                  101,
-                  102,
-                  101,
-                  114,
-                  114,
-                  97,
-                  108,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "reactivateReferralCode",
-      "docs": [
-        "Reactivate a referral code (owner only)"
-      ],
       "discriminator": [
         115,
         6,
@@ -969,7 +834,6 @@ export type TesseraReferrals = {
         },
         {
           "name": "owner",
-          "writable": true,
           "signer": true,
           "relations": [
             "referralCode"
@@ -980,17 +844,6 @@ export type TesseraReferrals = {
     },
     {
       "name": "registerWithReferralCode",
-      "docs": [
-        "Register a user with a referral code (FULLY MINT-AGNOSTIC)",
-        "This instruction creates the UserRegistration account and SenderFeeConfig.",
-        "Both work across ALL mints - user only needs to register once.",
-        "",
-        "Flow:",
-        "1. User calls this instruction once with any referral code",
-        "2. UserRegistration stores the referral chain (works for all mints)",
-        "3. SenderFeeConfig stores fee recipients (works for all mints)",
-        "4. User can transfer any mint and fees are distributed correctly"
-      ],
       "discriminator": [
         53,
         111,
@@ -1036,7 +889,7 @@ export type TesseraReferrals = {
         {
           "name": "userRegistration",
           "docs": [
-            "User registration - MINT-AGNOSTIC (no mint in seeds)"
+            "User registration (mint-agnostic)"
           ],
           "writable": true,
           "pda": {
@@ -1098,9 +951,16 @@ export type TesseraReferrals = {
           }
         },
         {
-          "name": "tokenAuthority",
+          "name": "referrerRegistration",
           "docs": [
-            "Token authority PDA that signs CPIs to Tessera Token program"
+            "The direct referrer's registration (if they exist in the system)"
+          ],
+          "optional": true
+        },
+        {
+          "name": "senderFeeConfig",
+          "docs": [
+            "Sender fee config account (mint-agnostic)"
           ],
           "writable": true,
           "pda": {
@@ -1108,58 +968,31 @@ export type TesseraReferrals = {
               {
                 "kind": "const",
                 "value": [
-                  116,
-                  111,
-                  107,
+                  115,
                   101,
                   110,
-                  95,
-                  97,
-                  117,
-                  116,
-                  104,
-                  111,
+                  100,
+                  101,
                   114,
+                  95,
+                  102,
+                  101,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
                   105,
-                  116,
-                  121
+                  103
                 ]
               },
               {
                 "kind": "account",
-                "path": "referralConfig"
+                "path": "user"
               }
             ]
           }
-        },
-        {
-          "name": "referrerRegistration",
-          "docs": [
-            "Optional: The direct referrer's UserRegistration (if they exist in the system)"
-          ],
-          "optional": true
-        },
-        {
-          "name": "senderFeeConfig",
-          "docs": [
-            "The sender fee config account in the Tessera Token program (MINT-AGNOSTIC)",
-            "PDA: [b\"sender_fee_config\", user.key()]"
-          ],
-          "writable": true
-        },
-        {
-          "name": "authorizedPrograms",
-          "docs": [
-            "The authorized programs account from Tessera Token program",
-            "This validates that the referral program is authorized"
-          ]
-        },
-        {
-          "name": "tesseraTokenProgram",
-          "docs": [
-            "The Tessera Token program"
-          ],
-          "address": "TESQvsR4TmYxiroPPQgZpVRoSFG8pru4fsYr67iv6kf"
         },
         {
           "name": "user",
@@ -1175,9 +1008,6 @@ export type TesseraReferrals = {
     },
     {
       "name": "removeAdmin",
-      "docs": [
-        "Remove an admin from the admin list"
-      ],
       "discriminator": [
         74,
         202,
@@ -1213,8 +1043,38 @@ export type TesseraReferrals = {
           }
         },
         {
+          "name": "referralConfig",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "authority",
-          "signer": true
+          "signer": true,
+          "relations": [
+            "referralConfig"
+          ]
         }
       ],
       "args": [
@@ -1225,10 +1085,119 @@ export type TesseraReferrals = {
       ]
     },
     {
-      "name": "updateReferralConfig",
-      "docs": [
-        "Update referral system configuration (authority only)"
+      "name": "updateAuthority",
+      "discriminator": [
+        32,
+        46,
+        64,
+        28,
+        149,
+        75,
+        243,
+        88
       ],
+      "accounts": [
+        {
+          "name": "referralConfig",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "referralConfig"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "newAuthority",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "updateDefaultFeeRecipient",
+      "discriminator": [
+        209,
+        214,
+        57,
+        215,
+        193,
+        198,
+        59,
+        221
+      ],
+      "accounts": [
+        {
+          "name": "referralConfig",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "referralConfig"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "newDefaultFeeRecipient",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "updateReferralConfig",
       "discriminator": [
         129,
         209,
@@ -1270,7 +1239,6 @@ export type TesseraReferrals = {
         },
         {
           "name": "authority",
-          "writable": true,
           "signer": true,
           "relations": [
             "referralConfig"
@@ -1278,10 +1246,6 @@ export type TesseraReferrals = {
         }
       ],
       "args": [
-        {
-          "name": "newFeeReductionPercentage",
-          "type": "u16"
-        },
         {
           "name": "newTier1SplitPercentage",
           "type": "u16"
@@ -1338,16 +1302,16 @@ export type TesseraReferrals = {
       ]
     },
     {
-      "name": "tokenAuthority",
+      "name": "senderFeeConfig",
       "discriminator": [
-        145,
-        159,
-        9,
-        246,
-        161,
-        7,
-        193,
-        203
+        106,
+        0,
+        96,
+        189,
+        100,
+        137,
+        232,
+        90
       ]
     },
     {
@@ -1365,6 +1329,58 @@ export type TesseraReferrals = {
     }
   ],
   "events": [
+    {
+      "name": "adminAdded",
+      "discriminator": [
+        23,
+        13,
+        37,
+        90,
+        130,
+        53,
+        75,
+        251
+      ]
+    },
+    {
+      "name": "adminRemoved",
+      "discriminator": [
+        59,
+        133,
+        36,
+        27,
+        156,
+        79,
+        75,
+        146
+      ]
+    },
+    {
+      "name": "authorityTransferred",
+      "discriminator": [
+        245,
+        109,
+        179,
+        54,
+        135,
+        92,
+        22,
+        64
+      ]
+    },
+    {
+      "name": "defaultFeeRecipientUpdated",
+      "discriminator": [
+        129,
+        122,
+        101,
+        71,
+        40,
+        93,
+        119,
+        246
+      ]
+    },
     {
       "name": "referralCodeCreated",
       "discriminator": [
@@ -1389,6 +1405,19 @@ export type TesseraReferrals = {
         73,
         0,
         37
+      ]
+    },
+    {
+      "name": "tierPercentagesUpdated",
+      "discriminator": [
+        138,
+        114,
+        54,
+        155,
+        120,
+        44,
+        184,
+        233
       ]
     },
     {
@@ -1418,65 +1447,100 @@ export type TesseraReferrals = {
     },
     {
       "code": 6002,
-      "name": "invalidPercentage",
-      "msg": "Invalid percentage. Must be between 0 and 10000 basis points."
+      "name": "cannotUseSelfReferralCode",
+      "msg": "Cannot use your own referral code."
     },
     {
       "code": 6003,
-      "name": "unauthorized",
-      "msg": "Unauthorized. Only the correct authority can perform this action."
+      "name": "userAlreadyRegistered",
+      "msg": "User is already registered."
     },
     {
       "code": 6004,
-      "name": "overflow",
-      "msg": "Overflow occurred during arithmetic operation."
+      "name": "invalidPercentage",
+      "msg": "Invalid percentage. Must be between 0 and 10000 (0-100%)."
     },
     {
       "code": 6005,
-      "name": "adminListFull",
-      "msg": "Admin list is full. Maximum 10 admins allowed."
+      "name": "unauthorized",
+      "msg": "Unauthorized: Signer is not the authority."
     },
     {
       "code": 6006,
-      "name": "adminAlreadyExists",
-      "msg": "Admin already exists in the list."
-    },
-    {
-      "code": 6007,
-      "name": "cannotRemovePrimaryAuthority",
-      "msg": "Cannot remove the primary authority from the admin list."
-    },
-    {
-      "code": 6008,
-      "name": "adminNotFound",
-      "msg": "Admin not found in the list."
-    },
-    {
-      "code": 6009,
       "name": "accountNotInitialized",
       "msg": "Account is not initialized."
     },
     {
-      "code": 6010,
+      "code": 6007,
       "name": "invalidDiscriminator",
-      "msg": "Invalid account discriminator. Account type mismatch."
+      "msg": "Invalid discriminator."
+    },
+    {
+      "code": 6008,
+      "name": "adminAlreadyExists",
+      "msg": "Admin already exists in the list."
+    },
+    {
+      "code": 6009,
+      "name": "adminNotFound",
+      "msg": "Admin not found in the list."
+    },
+    {
+      "code": 6010,
+      "name": "overflow",
+      "msg": "Overflow in calculation."
     },
     {
       "code": 6011,
-      "name": "cannotUseSelfReferralCode",
-      "msg": "Cannot use your own referral code."
+      "name": "adminListFull",
+      "msg": "Admin list is full. Maximum admins reached."
+    },
+    {
+      "code": 6012,
+      "name": "cannotRemovePrimaryAuthority",
+      "msg": "Cannot remove the primary authority from the admin list."
+    },
+    {
+      "code": 6013,
+      "name": "cannotRemoveLastAdmin",
+      "msg": "Cannot remove the last admin. At least one admin must remain."
+    },
+    {
+      "code": 6014,
+      "name": "invalidDefaultRecipient",
+      "msg": "Invalid default fee recipient. Cannot be the default pubkey."
+    },
+    {
+      "code": 6015,
+      "name": "tooManyFeeRecipients",
+      "msg": "Too many fee recipients. Maximum exceeded."
     }
   ],
   "types": [
     {
-      "name": "adminList",
+      "name": "adminAdded",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "authority",
+            "name": "admin",
             "type": "pubkey"
           },
+          {
+            "name": "addedBy",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "adminList",
+      "docs": [
+        "Admin list for privileged operations"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
             "name": "admins",
             "type": {
@@ -1491,7 +1555,85 @@ export type TesseraReferrals = {
       }
     },
     {
+      "name": "adminRemoved",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "removedBy",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "authorityTransferred",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "oldAuthority",
+            "type": "pubkey"
+          },
+          {
+            "name": "newAuthority",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "defaultFeeRecipientUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "oldRecipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "newRecipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "updatedBy",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "feeRecipientInfo",
+      "docs": [
+        "Fee recipient information for distributing fees"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "splitPercentage",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
       "name": "referralCode",
+      "docs": [
+        "Referral code owned by a user"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1556,6 +1698,9 @@ export type TesseraReferrals = {
     },
     {
       "name": "referralConfig",
+      "docs": [
+        "Global referral system configuration"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1564,16 +1709,8 @@ export type TesseraReferrals = {
             "type": "pubkey"
           },
           {
-            "name": "tesseraTokenProgram",
+            "name": "defaultFeeRecipient",
             "type": "pubkey"
-          },
-          {
-            "name": "defaultTreasury",
-            "type": "pubkey"
-          },
-          {
-            "name": "defaultFeeReductionPercentage",
-            "type": "u16"
           },
           {
             "name": "tier1SplitPercentage",
@@ -1595,17 +1732,66 @@ export type TesseraReferrals = {
       }
     },
     {
-      "name": "tokenAuthority",
+      "name": "senderFeeConfig",
+      "docs": [
+        "Sender-specific fee configuration for multi-tier referral distribution"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "referralConfig",
+            "name": "sender",
             "type": "pubkey"
+          },
+          {
+            "name": "feeRecipients",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "feeRecipientInfo"
+                }
+              }
+            }
           },
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "tierPercentagesUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "oldTier1",
+            "type": "u16"
+          },
+          {
+            "name": "newTier1",
+            "type": "u16"
+          },
+          {
+            "name": "oldTier2",
+            "type": "u16"
+          },
+          {
+            "name": "newTier2",
+            "type": "u16"
+          },
+          {
+            "name": "oldTier3",
+            "type": "u16"
+          },
+          {
+            "name": "newTier3",
+            "type": "u16"
+          },
+          {
+            "name": "updatedBy",
+            "type": "pubkey"
           }
         ]
       }
@@ -1648,6 +1834,9 @@ export type TesseraReferrals = {
     },
     {
       "name": "userRegistration",
+      "docs": [
+        "User registration with referral chain"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1660,7 +1849,7 @@ export type TesseraReferrals = {
             "type": "pubkey"
           },
           {
-            "name": "owner",
+            "name": "tier1Referrer",
             "type": "pubkey"
           },
           {
@@ -1670,6 +1859,10 @@ export type TesseraReferrals = {
           {
             "name": "tier3Referrer",
             "type": "pubkey"
+          },
+          {
+            "name": "registrationDate",
+            "type": "i64"
           },
           {
             "name": "isActive",
@@ -1687,3 +1880,4 @@ export type TesseraReferrals = {
 
 // Backwards compatibility alias
 export type ReferralSystem = TesseraReferrals;
+
