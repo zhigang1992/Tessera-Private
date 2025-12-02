@@ -12,24 +12,9 @@ import infoImg2 from '@/assets/info2.png'
 import infoImg3 from '@/assets/info3.png'
 import infoImg4 from '@/assets/info4.png'
 import ConnectWallet from './ui/connect-wallet'
-import PepeLeft from '@/assets/parallax/pepe-left.png'
-import PepeRight from '@/assets/parallax/pepe-right.png'
 import rectangleBlur from '@/assets/parallax/rectangle-blur.png'
 import rectangle from '@/assets/parallax/rectangle.png'
 import { ThemeToggleButton } from '@/components/theme-toggle-button'
-
-// Pepe breathing - noticeable scale + slight bounce
-const pepeBreathingVariants = {
-  animate: {
-    scale: [1, 1.06, 1],
-    y: [0, -6, 0],
-    transition: {
-      duration: 3,
-      ease: 'easeInOut' as const,
-      repeat: Infinity,
-    },
-  },
-}
 
 // Rectangle floating - dramatic float with rotation
 const rectangleFloatVariants = {
@@ -196,25 +181,7 @@ export default function ReferralFeatureSimple() {
       {referralCode && (
         <ReferralCodeModal isOpen={isModalOpen} onClose={handleCloseModal} referralCode={referralCode} />
       )}
-
-      {/* Pepe Left - breathing animation */}
-      <motion.div
-        className="fixed bottom-0 left-0 z-10 hidden w-[180px] origin-bottom md:block lg:w-[220px] xl:w-[288px]"
-        variants={pepeBreathingVariants}
-        animate="animate"
-      >
-        <img src={PepeLeft} alt="Pepe Left" className="h-full w-full object-contain" />
-      </motion.div>
-
-      {/* Pepe Right - breathing animation */}
-      <motion.div
-        className="fixed bottom-0 right-0 z-10 hidden w-[160px] origin-bottom md:block lg:w-[200px] xl:w-[266px]"
-        variants={pepeBreathingVariants}
-        animate="animate"
-      >
-        <img src={PepeRight} alt="Pepe Right" className="h-full w-full object-contain" />
-      </motion.div>
-
+  
       {/* Rectangle Blur - dramatic float at bottom center */}
       <motion.div
         className="absolute bottom-0 left-1/2 z-10 hidden w-[200px] -translate-x-1/2 md:block lg:w-[260px] xl:w-[312px]"
