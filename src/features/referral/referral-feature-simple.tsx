@@ -189,7 +189,7 @@ export default function ReferralFeatureSimple() {
 
           {/* Right rocket - diagonal upward motion */}
           <motion.div
-            className="absolute -right-16 top-16 z-1 hidden w-[100px] md:block lg:-right-20 lg:w-[130px] xl:-right-24 xl:w-[166px]"
+            className="absolute -right-16 -top-4 z-1 -rotate-[6deg] hidden w-[100px] md:block lg:-right-20 lg:w-[130px] xl:-right-24 xl:w-[166px]"
             variants={rocketVariants}
             animate="animate"
           >
