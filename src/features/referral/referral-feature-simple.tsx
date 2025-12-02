@@ -12,30 +12,64 @@ import infoImg2 from '@/assets/info/info2.png'
 import infoImg3 from '@/assets/info/info3.png'
 import infoImg4 from '@/assets/info/info4.png'
 import ConnectWallet from './ui/connect-wallet'
-import rectangleBlur from '@/assets/parallax/rectangle-blur.png'
-import rectangle from '@/assets/parallax/rectangle.png'
+import rectangleTop from '@/assets/parallax/rectangle-top.png'
+import rectangleottom from '@/assets/parallax/rectangle-bottom.png'
+
+import brain from '@/assets/info/brain.png'
+import coin from '@/assets/info/coin.png'
+import rocket from '@/assets/info/rocket.png'
+
 import { ThemeToggleButton } from '@/components/theme-toggle-button'
 
-// Rectangle floating - dramatic float with rotation
-const rectangleFloatVariants = {
+// Rectangle top - gentle float up and down with subtle rotation
+const rectangleTopVariants = {
   animate: {
-    y: [0, -15, 0],
-    rotate: [0, 3, 0, -2, 0],
-    scale: [1, 1.04, 1],
+    y: [0, -12, 0],
+    rotate: [0, 2, 0, -1, 0],
+    scale: [1, 1.03, 1],
     transition: {
-      duration: 4,
+      duration: 4.5,
       ease: 'easeInOut' as const,
       repeat: Infinity,
     },
   },
 }
 
-// Orbit-like motion for side rectangles
-const orbitLeftVariants = {
+// Rectangle bottom - slower, opposite direction movement
+const rectangleBottomVariants = {
   animate: {
-    x: [0, 8, 0, -4, 0],
-    y: [0, -10, 0, -5, 0],
-    rotate: [0, -5, 0, 3, 0],
+    y: [0, 8, 0, -4, 0],
+    x: [0, -3, 0, 3, 0],
+    rotate: [0, -3, 0, 2, 0],
+    transition: {
+      duration: 5.5,
+      ease: 'easeInOut' as const,
+      repeat: Infinity,
+    },
+  },
+}
+
+// Coin - spinning and floating effect
+const coinVariants = {
+  animate: {
+    y: [0, -18, 0],
+    rotateY: [0, 180, 360],
+    scale: [1, 1.05, 1],
+    transition: {
+      duration: 6,
+      ease: 'easeInOut' as const,
+      repeat: Infinity,
+    },
+  },
+}
+
+// Rocket - diagonal upward motion with rotation
+const rocketVariants = {
+  animate: {
+    y: [0, -25, -10, -20, 0],
+    x: [0, 8, 4, 12, 0],
+    rotate: [6, 10, 4, 8, 6],
+    scale: [1, 1.08, 1.04, 1.06, 1],
     transition: {
       duration: 5,
       ease: 'easeInOut' as const,
@@ -44,41 +78,14 @@ const orbitLeftVariants = {
   },
 }
 
-const orbitRightVariants = {
+// Brain - pulsing glow effect with subtle movement
+const brainVariants = {
   animate: {
-    x: [0, -8, 0, 4, 0],
-    y: [0, -8, 0, -12, 0],
-    rotate: [0, 5, 0, -3, 0],
+    y: [0, -10, 0, -5, 0],
+    rotate: [8, 12, 6, 10, 8],
+    scale: [1, 1.06, 1, 1.03, 1],
     transition: {
-      duration: 6,
-      ease: 'easeInOut' as const,
-      repeat: Infinity,
-    },
-  },
-}
-
-// Pulsing scale for small elements
-const pulseVariants = {
-  animate: {
-    scale: [1, 1.1, 1, 1.05, 1],
-    rotate: [0, 2, 0, -2, 0],
-    transition: {
-      duration: 3.5,
-      ease: 'easeInOut' as const,
-      repeat: Infinity,
-    },
-  },
-}
-
-// Blur rectangle - slow dramatic float
-const blurFloatVariants = {
-  animate: {
-    y: [0, -20, 0],
-    x: [0, 5, 0, -5, 0],
-    scale: [1, 1.08, 1],
-    opacity: [0.8, 1, 0.8],
-    transition: {
-      duration: 6,
+      duration: 4,
       ease: 'easeInOut' as const,
       repeat: Infinity,
     },
@@ -152,62 +159,63 @@ export default function ReferralFeatureSimple() {
             <ThemeToggleButton />
           </div>
 
-          {/* Top right rectangle - main cube image */}
+          {/* Top rectangle - gentle floating */}
           <motion.div
-            className="absolute -right-16 top-[56px] z-1 hidden w-[140px] lg:block xl:-right-20 xl:w-[190px]"
-            variants={rectangleFloatVariants}
+            className="absolute left-1/2 -top-[24px] z-1 hidden w-[100px] md:block lg:-top-[32px] lg:w-[120px] xl:w-[146px]"
+            variants={rectangleTopVariants}
             animate="animate"
           >
-            <img src={rectangle} className="w-full" alt="Rectangle" />
+            <img src={rectangleTop} className="w-full" alt="Rectangle Top" />
           </motion.div>
 
-          {/* Left small rectangle - reuse main image with transforms */}
+          {/* Bottom rectangle - slower opposite motion */}
           <motion.div
-            className="absolute -left-10 top-[24%] z-1 hidden w-[56px] lg:block xl:-left-[56px] xl:w-[72px]"
-            variants={pulseVariants}
+            className="absolute right-0 bottom-0 z-1 hidden w-[100px] md:block lg:w-[130px] xl:w-[164px]"
+            variants={rectangleBottomVariants}
             animate="animate"
           >
-            <img src={rectangle} className="w-full scale-50 rotate-12" alt="Rectangle Small" />
+            <img src={rectangleottom} className="w-full" alt="Rectangle Bottom" />
+          </motion.div>
+
+          {/* Left coin - spinning effect */}
+          <motion.div
+            className="absolute -left-8 top-1/2 -translate-y-[36%] z-1 hidden w-[100px] md:block lg:-left-12 lg:w-[120px] xl:-left-24 xl:w-[153px]"
+            variants={coinVariants}
+            animate="animate"
+            style={{ perspective: 1000 }}
+          >
+            <img src={coin} className="w-full" alt="Coin" />
+          </motion.div>
+
+          {/* Right rocket - diagonal upward motion */}
+          <motion.div
+            className="absolute -right-16 top-16 z-1 hidden w-[100px] md:block lg:-right-20 lg:w-[130px] xl:-right-24 xl:w-[166px]"
+            variants={rocketVariants}
+            animate="animate"
+          >
+            <img src={rocket} className="w-full" alt="Rocket" />
           </motion.div>
         </div>
 
-        <div className="relative hidden w-full overflow-hidden lg:flex lg:w-[40%] lg:flex-col lg:gap-6 lg:self-start">
+        <div className="relative hidden w-full  lg:flex lg:w-[40%] lg:flex-col lg:gap-6 lg:self-start">
           {[infoImg1, infoImg2, infoImg3, infoImg4].map((img, index) => (
             <img className="w-full" key={index} src={img} alt={`info-${index + 1}`} />
           ))}
+
+          {/* Brain - pulsing glow effect */}
+          <motion.div
+            className="absolute -right-8 top-1/2 -translate-y-[50%] z-1 hidden w-[120px] md:block lg:-right-12 lg:w-[160px] xl:-right-24 xl:w-[215px]"
+            variants={brainVariants}
+            animate="animate"
+          >
+            <img src={brain} className="w-full" alt="Brain" />
+          </motion.div>
         </div>
       </div>
 
       {referralCode && (
         <ReferralCodeModal isOpen={isModalOpen} onClose={handleCloseModal} referralCode={referralCode} />
       )}
-  
-      {/* Rectangle Blur - dramatic float at bottom center */}
-      <motion.div
-        className="absolute bottom-0 left-1/2 z-10 hidden w-[200px] -translate-x-1/2 md:block lg:w-[260px] xl:w-[312px]"
-        variants={blurFloatVariants}
-        animate="animate"
-      >
-        <img src={rectangleBlur} alt="Rectangle Blur" />
-      </motion.div>
-
-      {/* Rectangle Left - reuse main image with rotation/scale */}
-      <motion.div
-        className="absolute bottom-[36%] left-0 z-1 hidden w-[120px] md:block lg:w-[150px] xl:w-[186px]"
-        variants={orbitLeftVariants}
-        animate="animate"
-      >
-        <img src={rectangle} className="w-full rotate-[25deg] scale-75 opacity-90" alt="Rectangle Left" />
-      </motion.div>
-
-      {/* Rectangle Right - reuse main image with rotation/scale */}
-      <motion.div
-        className="absolute bottom-[56%] right-0 z-20 hidden w-[100px] md:block lg:w-[130px] xl:w-[164px]"
-        variants={orbitRightVariants}
-        animate="animate"
-      >
-        <img src={rectangle} className="w-full -rotate-[15deg] scale-[0.6] opacity-85" alt="Rectangle Right" />
-      </motion.div>
     </div>
   )
 }
