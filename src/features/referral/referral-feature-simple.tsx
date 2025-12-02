@@ -179,7 +179,7 @@ export default function ReferralFeatureSimple() {
 
           {/* Left coin - spinning effect */}
           <motion.div
-            className="absolute -left-8 top-1/2 -translate-y-[36%] z-1 hidden w-[100px] md:block lg:-left-12 lg:w-[120px] xl:-left-24 xl:w-[153px]"
+            className="absolute -left-8 top-1/2 -translate-y-[36%] z-1 hidden w-[100px] md:block lg:-left-12 lg:w-[120px] xl:-left-24 xl:w-[148px]"
             variants={coinVariants}
             animate="animate"
             style={{ perspective: 1000 }}
