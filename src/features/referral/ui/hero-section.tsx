@@ -5,16 +5,6 @@ import spacex from '@/assets/spacex.png'
 
 const socialLinks = [
   {
-    name: 'discord',
-    href: 'https://google.com',
-    ariaLabel: 'Join Tessera on Discord',
-    icon: (
-      <svg className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 19 19" fill="currentColor">
-        <path d="M15.9 3.12A15.68 15.68 0 0 0 12.03 2a.06.06 0 0 0-.06.03c-.17.3-.36.69-.49.99a14.47 14.47 0 0 0-4.34 0 10.09 10.09 0 0 0-.5-.99.06.06 0 0 0-.06-.03c-1.36.23-2.66.64-3.87 1.12a.05.05 0 0 0-.03.02C.37 6.73-.22 10.24.07 13.7a.07.07 0 0 0 .03.04 15.79 15.79 0 0 0 4.75 2.4.06.06 0 0 0 .07-.02c.37-.5.7-1.03.98-1.59a.06.06 0 0 0-.03-.08 10.41 10.41 0 0 1-1.48-.71.06.06 0 0 1 0-.1c.1-.07.2-.15.29-.23a.06.06 0 0 1 .06 0c3.1 1.42 6.46 1.42 9.52 0a.06.06 0 0 1 .06 0c.1.08.2.16.3.23a.06.06 0 0 1 0 .1c-.47.28-.97.51-1.48.7a.06.06 0 0 0-.03.09c.29.56.62 1.09.98 1.59a.06.06 0 0 0 .07.02 15.73 15.73 0 0 0 4.76-2.4.06.06 0 0 0 .03-.04c.34-4.01-.57-7.5-2.42-10.59a.05.05 0 0 0-.02-.02zM6.35 11.71c-.81 0-1.47-.74-1.47-1.65s.65-1.65 1.47-1.65c.82 0 1.48.75 1.47 1.65 0 .91-.65 1.65-1.47 1.65zm6.31 0c-.81 0-1.47-.74-1.47-1.65s.65-1.65 1.47-1.65c.82 0 1.48.75 1.47 1.65 0 .91-.65 1.65-1.47 1.65z" />
-      </svg>
-    ),
-  },
-  {
     name: 'x',
     href: 'https://x.com/tessera_pe',
     ariaLabel: 'Follow Tessera on X',
@@ -65,13 +55,10 @@ export default function HeroSection() {
     <section className="flex flex-col gap-4 sm:gap-5">
       <div className="flex flex-col text-black dark:text-white">
         <h1 className="text-[32px] font-semibold leading-[1] tracking-tight sm:text-[48px] md:text-[54px] lg:text-[60px]">
-          The first non-KYC
+          The first permission-less Private Equity Platform
         </h1>
-        <p className="text-[32px] font-semibold leading-[1] tracking-tight sm:text-[48px] md:text-[54px] lg:text-[60px]">
-          private equity token
-        </p>
         <p className="mt-2 text-base font-semibold leading-[1.2] sm:mt-4 sm:text-lg md:text-[20px]">
-          Tessera tokens provide 1:1 economic exposure to private equity without the barriers
+          Tessera tokens provide 1:1 economic exposure to assets before they IPO
         </p>
       </div>
 
