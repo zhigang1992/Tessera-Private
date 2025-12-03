@@ -16,7 +16,7 @@ interface Env {
 }
 
 const SEO = {
-  title: 'Tessera, _ _ for Everyone',
+  title: 'Tessera, Private Equity for Everyone',
   description: 'Join Tessera with my referral code and get in early first',
   siteName: 'Tessera',
 }
