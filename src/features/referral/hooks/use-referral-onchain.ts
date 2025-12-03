@@ -20,7 +20,6 @@ import {
   getReferralConfigPDA,
   getUserRegistrationPDA,
   getRegisterWithReferralCodeAccounts,
-  getTesseraMintAddress,
   getTesseraTokenProgramId,
   shortenAddress,
 } from '@/lib/solana'
@@ -68,7 +67,7 @@ export function useTraderData(walletAddress?: string | null, enabled = true) {
             const codeAccount = await program.account.referralCode.fetch(registration.referralCode)
             referralCode = {
               referrerCode: codeAccount.code,
-              referrerWallet: registration.owner.toBase58(),
+              referrerWallet: registration.tier1Referrer.toBase58(),
               boundAt: null, // Not stored on-chain in current schema
               lastModified: null,
             }
@@ -276,17 +275,13 @@ export function useBindReferralCode() {
 
       const referralConfig = await fetchReferralConfig(connection)
       if (!referralConfig) {
-        throw new Error('Referral system is not initialized')
+        throw new Error('Tessera Referrals is not initialized')
       }
 
       const [referralConfigPda] = getReferralConfigPDA(program.programId)
-      const tesseraMint = getTesseraMintAddress()
-      const rawTokenProgram =
-        (referralConfig as any).tesseraTokenProgram ?? (referralConfig as any).tessera_token_program
-      const tesseraTokenProgramId = rawTokenProgram ? new PublicKey(rawTokenProgram) : getTesseraTokenProgramId()
-
-      // Get authority from referral config for authorized_programs PDA
-      const authority = new PublicKey((referralConfig as any).authority)
+      // Note: tesseraTokenProgram field was removed from ReferralConfig struct
+      // Use the global config function to get the token program ID
+      const tesseraTokenProgramId = getTesseraTokenProgramId()
 
       // Get optional referrer registration if it exists
       const referrerPubkey = new PublicKey(codeAccount.owner)
@@ -295,14 +290,26 @@ export function useBindReferralCode() {
         ? getUserRegistrationPDA(referrerPubkey, program.programId)[0]
         : null
 
+      console.log('🔍 Referrer registration check:', {
+        referrerPubkey: referrerPubkey.toBase58(),
+        hasRegistration: !!referrerRegistration,
+        referrerRegistrationPda: referrerRegistrationPda?.toBase58() ?? 'null',
+      })
+
       // Get accounts with the referrer registration if available
       const accounts = getRegisterWithReferralCodeAccounts(referralCode, wallet.publicKey, {
         referrerRegistration: referrerRegistrationPda,
-        tesseraMint,
         referralConfig: referralConfigPda,
         programId: program.programId,
         tesseraTokenProgram: tesseraTokenProgramId,
-        authority, // Pass authority for correct authorized_programs PDA derivation
+      })
+
+      console.log('🔍 Register with referral code - accounts:', {
+        referralCode: accounts.referralCode.toBase58(),
+        userRegistration: accounts.userRegistration.toBase58(),
+        referrerRegistration: accounts.referrerRegistration?.toBase58() ?? 'null',
+        senderFeeConfig: accounts.senderFeeConfig.toBase58(),
+        user: accounts.user.toBase58(),
       })
 
       const txSignature = await program.methods.registerWithReferralCode().accounts(accounts).rpc()

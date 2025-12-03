@@ -203,10 +203,15 @@ export default function CreateCodeCard() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-black dark:text-white">My referral codes</h2>
-        <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
-          <CardContent className="p-6">
-            <p className="text-black/50 dark:text-white/50">Loading...</p>
+        <div className="flex items-center justify-between gap-1">
+          <h2 className="text-lg font-semibold text-black dark:text-white">Create my referral code</h2>
+        </div>
+        <Card className="rounded-[8px] border border-[#E4E4E7] bg-[#fff] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
+          <CardContent className="flex flex-col gap-5 p-4">
+            <h3 className="text-center">Your referral code</h3>
+            <div className="flex min-h-[120px] items-center justify-center bg-[#F7F7FA] px-6 py-10 dark:bg-[#1F1F23]">
+              <Loader2 className="h-6 w-6 animate-spin text-black/50 dark:text-white/50" />
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -218,7 +223,7 @@ export default function CreateCodeCard() {
       <div className="flex flex-col gap-3">
         {/* Section header with create button */}
         <div className="flex items-center justify-between gap-1">
-          <h2 className="text-lg font-semibold text-black dark:text-white">My referral codes</h2>
+          <h2 className="text-lg font-semibold text-black dark:text-white">Create my referral code</h2>
           {!hasNoCodes && (
             <Button
               onClick={() => setIsCreateDialogOpen(true)}
@@ -232,11 +237,12 @@ export default function CreateCodeCard() {
           )}
         </div>
 
-        <Card className="rounded-[24px] border border-[#E4E4E7] bg-[#F7F7FA] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
-          <CardContent className="flex flex-col gap-5 p-5">
+        <Card className="rounded-[8px] border border-[#E4E4E7] bg-[#fff] shadow-none dark:border-[#27272A] dark:bg-[#111111]">
+          <CardContent className="flex flex-col gap-5 p-4">
+            <h3 className="text-center">Your referral code</h3>
             {hasNoCodes ? (
               /* Empty state */
-              <div className="flex min-h-[200px] items-center justify-center rounded-[16px] border border-dashed border-[#D4D4D8] bg-white px-6 py-10 text-center dark:border-[#3F3F46] dark:bg-[#1F1F23]">
+              <div className="flex min-h-[120px] items-center justify-center bg-[#F7F7FA] px-6 py-10 text-center dark:border-[#3F3F46] dark:bg-[#1F1F23]">
                 <Button
                   onClick={() => setIsCreateDialogOpen(true)}
                   disabled={isCreatePending}
