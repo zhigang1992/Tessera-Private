@@ -21,40 +21,11 @@ import rocket from '@/assets/info/rocket.png'
 
 import { ThemeToggleButton } from '@/components/theme-toggle-button'
 
-// Rectangle top - gentle float up and down with subtle rotation
+// Rectangle top - very subtle float
 const rectangleTopVariants = {
   animate: {
-    y: [0, -12, 0],
-    rotate: [0, 2, 0, -1, 0],
-    scale: [1, 1.03, 1],
-    transition: {
-      duration: 4.5,
-      ease: 'easeInOut' as const,
-      repeat: Infinity,
-    },
-  },
-}
-
-// Rectangle bottom - slower, opposite direction movement
-const rectangleBottomVariants = {
-  animate: {
-    y: [0, 8, 0, -4, 0],
-    x: [0, -3, 0, 3, 0],
-    rotate: [0, -3, 0, 2, 0],
-    transition: {
-      duration: 5.5,
-      ease: 'easeInOut' as const,
-      repeat: Infinity,
-    },
-  },
-}
-
-// Coin - spinning and floating effect
-const coinVariants = {
-  animate: {
-    y: [0, -18, 0],
-    rotateY: [0, 180, 360],
-    scale: [1, 1.05, 1],
+    y: [0, -4, 0],
+    rotate: [0, 0.5, 0],
     transition: {
       duration: 6,
       ease: 'easeInOut' as const,
@@ -63,13 +34,24 @@ const coinVariants = {
   },
 }
 
-// Rocket - diagonal upward motion with rotation
-const rocketVariants = {
+// Rectangle bottom - very subtle opposite movement
+const rectangleBottomVariants = {
   animate: {
-    y: [0, -25, -10, -20, 0],
-    x: [0, 8, 4, 12, 0],
-    rotate: [6, 10, 4, 8, 6],
-    scale: [1, 1.08, 1.04, 1.06, 1],
+    y: [0, 3, 0],
+    rotate: [0, -0.5, 0],
+    transition: {
+      duration: 7,
+      ease: 'easeInOut' as const,
+      repeat: Infinity,
+    },
+  },
+}
+
+// Coin - subtle floating effect (no spin)
+const coinVariants = {
+  animate: {
+    y: [0, -5, 0],
+    rotate: [0, 1, 0],
     transition: {
       duration: 5,
       ease: 'easeInOut' as const,
@@ -78,14 +60,28 @@ const rocketVariants = {
   },
 }
 
-// Brain - pulsing glow effect with subtle movement
+// Rocket - subtle hover motion
+const rocketVariants = {
+  animate: {
+    y: [0, -6, 0],
+    x: [0, 2, 0],
+    rotate: [6, 7, 6],
+    transition: {
+      duration: 5,
+      ease: 'easeInOut' as const,
+      repeat: Infinity,
+    },
+  },
+}
+
+// Brain - subtle breathing effect
 const brainVariants = {
   animate: {
-    y: [0, -10, 0, -5, 0],
-    rotate: [8, 12, 6, 10, 8],
-    scale: [1, 1.06, 1, 1.03, 1],
+    y: [0, -3, 0],
+    rotate: [8, 9, 8],
+    scale: [1, 1.01, 1],
     transition: {
-      duration: 4,
+      duration: 5,
       ease: 'easeInOut' as const,
       repeat: Infinity,
     },
