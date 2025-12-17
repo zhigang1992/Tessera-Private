@@ -7,7 +7,7 @@ interface TabSwitcherProps {
 
 export function TabSwitcher({ activeTab, onTabChange }: TabSwitcherProps) {
   return (
-    <div className="flex items-center gap-1 rounded-full bg-gray-100 p-1">
+    <div className="inline-flex items-center gap-1 rounded-full bg-gray-100 p-1">
       <button
         onClick={() => onTabChange('affiliates')}
         className={cn(
