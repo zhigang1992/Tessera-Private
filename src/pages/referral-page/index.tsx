@@ -17,17 +17,25 @@ export default function ReferralPage() {
       {/* Tab Switcher */}
       <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {/* Rewards Overview */}
-      <RewardsOverview />
+      {activeTab === 'affiliates' ? (
+        <>
+          {/* Rewards Overview */}
+          <RewardsOverview />
 
-      {/* Referral Tree + Table */}
-      <ReferralTree />
+          {/* Referral Tree + Table */}
+          <ReferralTree />
 
-      {/* Code Section */}
-      <CodeSection />
+          {/* Code Section */}
+          <CodeSection />
 
-      {/* Rules & FAQ */}
-      <RulesFaq />
+          {/* Rules & FAQ */}
+          <RulesFaq />
+        </>
+      ) : (
+        <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-gray-200 bg-white">
+          <p className="text-muted-foreground">Traders content coming soon...</p>
+        </div>
+      )}
     </div>
   )
 }
