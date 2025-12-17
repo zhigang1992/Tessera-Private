@@ -4,6 +4,7 @@ import { TabSwitcher } from './components/tab-switcher'
 import { RewardsOverview } from './components/rewards-overview'
 import { ReferralTree } from './components/referral-tree'
 import { CodeSection } from './components/code-section'
+import { RulesFaq } from './components/rules-faq'
 
 export default function ReferralPage() {
   const [activeTab, setActiveTab] = useState<'affiliates' | 'traders'>('affiliates')
@@ -24,6 +25,9 @@ export default function ReferralPage() {
 
       {/* Code Section */}
       <CodeSection />
+
+      {/* Rules & FAQ */}
+      <RulesFaq />
     </div>
   )
 }
