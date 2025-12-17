@@ -45,7 +45,7 @@ export function RulesFaq() {
   }, [])
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-6">
+    <div id="rules-faq" className="rounded-2xl border border-gray-200 bg-white p-6">
       <h2 className="text-lg font-bold text-black">Rules & FAQ</h2>
 
       <div className="my-4 h-px bg-gray-100" />
