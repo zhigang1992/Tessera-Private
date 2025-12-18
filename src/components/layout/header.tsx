@@ -55,7 +55,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           <div className="flex size-8 items-center justify-center rounded-full bg-[#D2FB95]">
             <img src={personIcon} alt="User" className="size-5" />
           </div>
-          <div className="hidden flex-col sm:flex">
+          <div className="flex flex-col">
             <span className="text-sm font-medium">{ellipsify(address, 4)}</span>
             <button
               onClick={handleDisconnect}
