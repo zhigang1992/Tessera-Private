@@ -160,7 +160,7 @@ export function CodeSection() {
                       <WalletDropdown
                         triggerVariant="default"
                         triggerSize="lg"
-                        triggerClassName="h-11 rounded-full bg-black px-8 text-sm font-medium text-white hover:bg-black/90"
+                        triggerClassName="h-11 rounded-lg bg-black px-8 text-sm font-medium text-white hover:bg-black/90"
                       />
                     </div>
                   </td>
