@@ -234,14 +234,40 @@ export async function getReferralUsersByCode(code: string): Promise<ReferralUser
   return getUsersByCode(code)
 }
 
-export async function createReferralCode(): Promise<ReferralCode> {
+export async function createReferralCode(customCode?: string): Promise<{ success: boolean; code?: ReferralCode; error?: string }> {
   await sleep(800)
+
+  // Validate and check for duplicates if custom code provided
+  if (customCode) {
+    const normalizedCode = customCode.toUpperCase().trim()
+
+    // Check if code already exists
+    const existingCodes = rawReferralCodes.map((c) => c.code.toUpperCase())
+    if (existingCodes.includes(normalizedCode)) {
+      return { success: false, error: 'Code already taken' }
+    }
+
+    return {
+      success: true,
+      code: {
+        code: normalizedCode,
+        totalVolume: 0,
+        tradersReferred: 0,
+        totalRewards: 0,
+      },
+    }
+  }
+
+  // Generate random code
   const newCode = `CODE${Math.random().toString(36).substring(2, 8).toUpperCase()}`
   return {
-    code: newCode,
-    totalVolume: 0,
-    tradersReferred: 0,
-    totalRewards: 0,
+    success: true,
+    code: {
+      code: newCode,
+      totalVolume: 0,
+      tradersReferred: 0,
+      totalRewards: 0,
+    },
   }
 }
 

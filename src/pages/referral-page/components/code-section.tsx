@@ -6,6 +6,7 @@ import { getReferralCodes, getReferralUsersByCode, formatCurrency, formatSOL } f
 import CopyIcon from './_/copy.svg?react'
 import XIcon from './_/x.svg?react'
 import AddIcon from './_/add.svg?react'
+import { CreateReferralCodeModal } from './create-referral-code-modal'
 
 const PAGE_SIZE = 3
 
@@ -13,6 +14,7 @@ export function CodeSection() {
   const [activeTab, setActiveTab] = useState<'code' | 'reward'>('code')
   const [selectedCode, setSelectedCode] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   const { data: codes = [], isLoading: codesLoading } = useQuery({
     queryKey: ['referralCodes'],
@@ -109,7 +111,10 @@ export function CodeSection() {
             Reward distribution
           </button>
         </div>
-        <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-black/80 sm:w-auto">
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-black/80 sm:w-auto"
+        >
           <AddIcon />
           Create new code
         </button>
@@ -292,6 +297,12 @@ export function CodeSection() {
           </table>
         </div>
       )}
+
+      {/* Create Referral Code Modal */}
+      <CreateReferralCodeModal
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+      />
     </div>
   )
 }
