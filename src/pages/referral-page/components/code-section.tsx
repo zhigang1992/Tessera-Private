@@ -1,35 +1,29 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Copy, X, Plus, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-interface ReferralCode {
-  code: string
-  totalVolume: string
-  tradersReferred: number
-  totalRewards: string
-}
-
-interface ReferralUser {
-  email: string
-  dateJoined: string
-  type: string
-  pointsEarned: number
-  rewardEarned: string
-}
-
-const mockCodes: ReferralCode[] = [
-  { code: 'JFHDKSKL9', totalVolume: '$3,029,483.00', tradersReferred: 100, totalRewards: '$2,939.00' },
-  { code: 'JFHDKSKL1', totalVolume: '$3,029,483.00', tradersReferred: 100, totalRewards: '$2,939.00' },
-  { code: 'JFHDKSKL2', totalVolume: '$3,029,483.00', tradersReferred: 100, totalRewards: '$2,939.00' },
-]
-
-const mockUsers: ReferralUser[] = [
-  { email: 'm****@hotmain.com', dateJoined: 'Dec 12, 2025', type: 'L1', pointsEarned: 0, rewardEarned: '0 SOL' },
-]
+import { getReferralCodes, getReferralUsersByCode, formatCurrency, formatSOL } from '@/services'
 
 export function CodeSection() {
   const [activeTab, setActiveTab] = useState<'code' | 'reward'>('code')
-  const [selectedCode, setSelectedCode] = useState<string | null>('JFHDKSKL2')
+  const [selectedCode, setSelectedCode] = useState<string | null>(null)
+
+  const { data: codes = [], isLoading: codesLoading } = useQuery({
+    queryKey: ['referralCodes'],
+    queryFn: getReferralCodes,
+  })
+
+  const { data: users = [], isLoading: usersLoading } = useQuery({
+    queryKey: ['referralUsers', selectedCode],
+    queryFn: () => getReferralUsersByCode(selectedCode!),
+    enabled: !!selectedCode,
+  })
+
+  useEffect(() => {
+    if (codes.length > 0 && !selectedCode) {
+      setSelectedCode(codes[0].code)
+    }
+  }, [codes, selectedCode])
 
   return (
     <div className="space-y-4">
@@ -86,31 +80,39 @@ export function CodeSection() {
               </tr>
             </thead>
             <tbody>
-              {mockCodes.map((row) => (
-                <tr
-                  key={row.code}
-                  onClick={() => setSelectedCode(row.code)}
-                  className={cn(
-                    'cursor-pointer border-b border-gray-50 last:border-0 transition-colors',
-                    selectedCode === row.code ? 'bg-[#D2FB95]' : 'hover:bg-gray-50'
-                  )}
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-black">{row.code}</span>
-                      <button className="text-muted-foreground hover:text-black">
-                        <Copy className="h-4 w-4" />
-                      </button>
-                      <button className="text-muted-foreground hover:text-black">
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
+              {codesLoading ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-4 text-center text-muted-foreground">
+                    Loading...
                   </td>
-                  <td className="px-6 py-4 text-black">{row.totalVolume}</td>
-                  <td className="px-6 py-4 text-black">{row.tradersReferred}</td>
-                  <td className="px-6 py-4 text-black">{row.totalRewards}</td>
                 </tr>
-              ))}
+              ) : (
+                codes.map((row) => (
+                  <tr
+                    key={row.code}
+                    onClick={() => setSelectedCode(row.code)}
+                    className={cn(
+                      'cursor-pointer border-b border-gray-50 last:border-0 transition-colors',
+                      selectedCode === row.code ? 'bg-[#D2FB95]' : 'hover:bg-gray-50'
+                    )}
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-black">{row.code}</span>
+                        <button className="text-muted-foreground hover:text-black">
+                          <Copy className="h-4 w-4" />
+                        </button>
+                        <button className="text-muted-foreground hover:text-black">
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-black">{formatCurrency(row.totalVolume)}</td>
+                    <td className="px-6 py-4 text-black">{row.tradersReferred}</td>
+                    <td className="px-6 py-4 text-black">{formatSOL(row.totalRewards)}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
 
@@ -139,7 +141,7 @@ export function CodeSection() {
           <div className="mb-4 flex items-center gap-2">
             <span className="text-lg font-bold text-black">{selectedCode}</span>
             <span className="flex items-center gap-1 text-sm text-muted-foreground">
-              (<User className="h-4 w-4" /> 9)
+              (<User className="h-4 w-4" /> {users.length})
             </span>
           </div>
 
@@ -164,15 +166,29 @@ export function CodeSection() {
               </tr>
             </thead>
             <tbody>
-              {mockUsers.map((user, i) => (
-                <tr key={i} className="border-b border-gray-50 last:border-0">
-                  <td className="py-4 text-black">{user.email}</td>
-                  <td className="py-4 text-muted-foreground">{user.dateJoined}</td>
-                  <td className="py-4 text-muted-foreground">{user.type}</td>
-                  <td className="py-4 text-black">{user.pointsEarned}</td>
-                  <td className="py-4 text-black">{user.rewardEarned}</td>
+              {usersLoading ? (
+                <tr>
+                  <td colSpan={5} className="py-4 text-center text-muted-foreground">
+                    Loading...
+                  </td>
                 </tr>
-              ))}
+              ) : users.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-4 text-center text-muted-foreground">
+                    No users found
+                  </td>
+                </tr>
+              ) : (
+                users.map((user) => (
+                  <tr key={user.id} className="border-b border-gray-50 last:border-0">
+                    <td className="py-4 text-black">{user.email}</td>
+                    <td className="py-4 text-muted-foreground">{user.dateJoined}</td>
+                    <td className="py-4 text-muted-foreground">{user.layer}</td>
+                    <td className="py-4 text-black">{user.pointsEarned.toLocaleString()}</td>
+                    <td className="py-4 text-black">{formatSOL(user.rewardEarned)}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

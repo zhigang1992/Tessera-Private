@@ -1,19 +1,14 @@
+import { useQuery } from '@tanstack/react-query'
 import { User } from 'lucide-react'
 import treeImg from './_/tree.png'
-
-interface TraderLayer {
-  layer: string
-  tradersReferred: number
-  points: number
-}
-
-const mockData: TraderLayer[] = [
-  { layer: 'L1', tradersReferred: 12, points: 123 },
-  { layer: 'L2', tradersReferred: 123, points: 123 },
-  { layer: 'L3', tradersReferred: 1234, points: 123 },
-]
+import { getTraderLayers } from '@/services'
 
 export function ReferralTree() {
+  const { data = [], isLoading } = useQuery({
+    queryKey: ['traderLayers'],
+    queryFn: getTraderLayers,
+  })
+
   return (
     <div className="flex rounded-2xl overflow-hidden p-4 bg-white gap-6">
       {/* Tree Visualization */}
@@ -40,18 +35,26 @@ export function ReferralTree() {
             </tr>
           </thead>
           <tbody>
-            {mockData.map((row) => (
-              <tr key={row.layer} className="border-b border-gray-50 last:border-0">
-                <td className="py-4 font-medium text-black">{row.layer}</td>
-                <td className="py-4">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <User className="h-4 w-4" />
-                    {row.tradersReferred}
-                  </div>
+            {isLoading ? (
+              <tr>
+                <td colSpan={3} className="py-4 text-center text-muted-foreground">
+                  Loading...
                 </td>
-                <td className="py-4 font-medium text-black">{row.points}</td>
               </tr>
-            ))}
+            ) : (
+              data.map((row) => (
+                <tr key={row.layer} className="border-b border-gray-50 last:border-0">
+                  <td className="py-4 font-medium text-black">{row.layer}</td>
+                  <td className="py-4">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <User className="h-4 w-4" />
+                      {row.tradersReferred}
+                    </div>
+                  </td>
+                  <td className="py-4 font-medium text-black">{row.points}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
