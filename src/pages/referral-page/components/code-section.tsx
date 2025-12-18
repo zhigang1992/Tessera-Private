@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Plus, User, ChevronLeft, ChevronRight } from 'lucide-react'
+import { User, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getReferralCodes, getReferralUsersByCode, formatCurrency, formatSOL } from '@/services'
 import CopyIcon from './_/copy.svg?react'
 import XIcon from './_/x.svg?react'
+import AddIcon from './_/add.svg?react'
 
 const PAGE_SIZE = 3
 
@@ -93,9 +94,7 @@ export function CodeSection() {
             onClick={() => setActiveTab('code')}
             className={cn(
               'rounded-md px-4 py-2 text-sm font-medium transition-colors',
-              activeTab === 'code'
-                ? 'bg-white text-black shadow-sm'
-                : 'text-muted-foreground hover:text-black'
+              activeTab === 'code' ? 'bg-white text-black shadow-sm' : 'text-muted-foreground hover:text-black',
             )}
           >
             Code
@@ -104,16 +103,14 @@ export function CodeSection() {
             onClick={() => setActiveTab('reward')}
             className={cn(
               'rounded-md px-4 py-2 text-sm font-medium transition-colors',
-              activeTab === 'reward'
-                ? 'bg-white text-black shadow-sm'
-                : 'text-muted-foreground hover:text-black'
+              activeTab === 'reward' ? 'bg-white text-black shadow-sm' : 'text-muted-foreground hover:text-black',
             )}
           >
             Reward distribution
           </button>
         </div>
-        <button className="flex w-full items-center justify-center gap-2 rounded-full bg-black px-4 py-2 text-sm font-medium text-white hover:bg-black/80 sm:w-auto">
-          <Plus className="h-4 w-4" />
+        <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-black/80 sm:w-auto">
+          <AddIcon />
           Create new code
         </button>
       </div>
@@ -141,7 +138,10 @@ export function CodeSection() {
             <tbody>
               {codesLoading ? (
                 <tr>
-                  <td colSpan={4} className="px-3 lg:px-6 py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground">
+                  <td
+                    colSpan={4}
+                    className="px-3 lg:px-6 py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground"
+                  >
                     Loading...
                   </td>
                 </tr>
@@ -152,7 +152,7 @@ export function CodeSection() {
                     onClick={() => setSelectedCode(row.code)}
                     className={cn(
                       'cursor-pointer border-b border-gray-50 last:border-0 transition-colors',
-                      selectedCode === row.code ? 'bg-[#D2FB95]' : 'hover:bg-gray-50'
+                      selectedCode === row.code ? 'bg-[#D2FB95]' : 'hover:bg-gray-50',
                     )}
                   >
                     <td className="px-3 lg:px-6 py-3 lg:py-4">
@@ -174,9 +174,13 @@ export function CodeSection() {
                         </button>
                       </div>
                     </td>
-                    <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">{formatCurrency(row.totalVolume)}</td>
+                    <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">
+                      {formatCurrency(row.totalVolume)}
+                    </td>
                     <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">{row.tradersReferred}</td>
-                    <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">{formatSOL(row.totalRewards)}</td>
+                    <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">
+                      {formatSOL(row.totalRewards)}
+                    </td>
                   </tr>
                 ))
               )}
@@ -191,9 +195,7 @@ export function CodeSection() {
                 disabled={currentPage === 1}
                 className={cn(
                   'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
-                  currentPage === 1
-                    ? 'text-gray-300 cursor-not-allowed'
-                    : 'text-muted-foreground hover:bg-gray-100'
+                  currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-muted-foreground hover:bg-gray-100',
                 )}
               >
                 <ChevronLeft className="h-3 w-3 lg:h-4 lg:w-4" />
@@ -210,7 +212,7 @@ export function CodeSection() {
                       ? 'bg-black text-white'
                       : typeof page === 'number'
                         ? 'text-muted-foreground hover:bg-gray-100'
-                        : 'text-muted-foreground cursor-default'
+                        : 'text-muted-foreground cursor-default',
                   )}
                 >
                   {page}
@@ -224,7 +226,7 @@ export function CodeSection() {
                   'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
                   currentPage === totalPages
                     ? 'text-gray-300 cursor-not-allowed'
-                    : 'text-muted-foreground hover:bg-gray-100'
+                    : 'text-muted-foreground hover:bg-gray-100',
                 )}
               >
                 <ChevronRight className="h-3 w-3 lg:h-4 lg:w-4" />
@@ -253,9 +255,7 @@ export function CodeSection() {
                 <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
                   Date Joined
                 </th>
-                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
-                  Type
-                </th>
+                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">Type</th>
                 <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
                   Points Earned
                 </th>
