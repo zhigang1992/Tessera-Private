@@ -96,7 +96,7 @@ export function CreateReferralCodeModal({ open, onOpenChange }: CreateReferralCo
             {mutation.isPending ? 'Creating...' : 'Enter a code'}
           </button>
 
-          {error && <p className="text-center text-sm text-[#E11D48]">{error}</p>}
+          {error && <p className="text-center text-sm text-[#C20E4D]">{error}</p>}
         </div>
       </DialogContent>
     </Dialog>
