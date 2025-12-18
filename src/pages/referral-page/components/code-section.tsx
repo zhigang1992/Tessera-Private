@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Copy, X, Plus, User } from 'lucide-react'
+import { Copy, X, Plus, User, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getReferralCodes, getReferralUsersByCode, formatCurrency, formatSOL } from '@/services'
+
+const PAGE_SIZE = 3
 
 export function CodeSection() {
   const [activeTab, setActiveTab] = useState<'code' | 'reward'>('code')
   const [selectedCode, setSelectedCode] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const { data: codes = [], isLoading: codesLoading } = useQuery({
     queryKey: ['referralCodes'],
@@ -19,23 +22,52 @@ export function CodeSection() {
     enabled: !!selectedCode,
   })
 
+  // Pagination logic
+  const totalPages = Math.ceil(codes.length / PAGE_SIZE)
+  const paginatedCodes = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE
+    return codes.slice(start, start + PAGE_SIZE)
+  }, [codes, currentPage])
+
+  // Generate page numbers to display
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1)
+    }
+
+    const pages: (number | string)[] = []
+    if (currentPage <= 4) {
+      pages.push(1, 2, 3, 4, 5, '...', totalPages)
+    } else if (currentPage >= totalPages - 3) {
+      pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages)
+    } else {
+      pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages)
+    }
+    return pages
+  }, [currentPage, totalPages])
+
   useEffect(() => {
     if (codes.length > 0 && !selectedCode) {
       setSelectedCode(codes[0].code)
     }
   }, [codes, selectedCode])
 
+  // Reset page when codes change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [codes.length])
+
   return (
     <div className="space-y-4">
       {/* Tab Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-6">
+        <div className="inline-flex items-center gap-1 rounded-xl px-2 py-1.5">
           <button
             onClick={() => setActiveTab('code')}
             className={cn(
-              'pb-2 text-sm font-medium transition-colors',
+              'rounded-md px-4 py-2 text-sm font-medium transition-colors',
               activeTab === 'code'
-                ? 'border-b-2 border-black text-black'
+                ? 'bg-white text-black shadow-sm'
                 : 'text-muted-foreground hover:text-black'
             )}
           >
@@ -44,9 +76,9 @@ export function CodeSection() {
           <button
             onClick={() => setActiveTab('reward')}
             className={cn(
-              'pb-2 text-sm font-medium transition-colors',
+              'rounded-md px-4 py-2 text-sm font-medium transition-colors',
               activeTab === 'reward'
-                ? 'border-b-2 border-black text-black'
+                ? 'bg-white text-black shadow-sm'
                 : 'text-muted-foreground hover:text-black'
             )}
           >
@@ -87,7 +119,7 @@ export function CodeSection() {
                   </td>
                 </tr>
               ) : (
-                codes.map((row) => (
+                paginatedCodes.map((row) => (
                   <tr
                     key={row.code}
                     onClick={() => setSelectedCode(row.code)}
@@ -117,21 +149,53 @@ export function CodeSection() {
           </table>
 
           {/* Pagination */}
-          <div className="flex items-center justify-center gap-2 border-t border-gray-100 px-6 py-4">
-            {[1, 2, 3, 4, 5, '...', 10].map((page, i) => (
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 border-t border-gray-100 px-6 py-4">
               <button
-                key={i}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
                 className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-lg text-sm',
-                  page === 1
-                    ? 'bg-black text-white'
+                  currentPage === 1
+                    ? 'text-gray-300 cursor-not-allowed'
                     : 'text-muted-foreground hover:bg-gray-100'
                 )}
               >
-                {page}
+                <ChevronLeft className="h-4 w-4" />
               </button>
-            ))}
-          </div>
+
+              {pageNumbers.map((page, i) => (
+                <button
+                  key={i}
+                  onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                  disabled={typeof page !== 'number'}
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-lg text-sm',
+                    page === currentPage
+                      ? 'bg-black text-white'
+                      : typeof page === 'number'
+                        ? 'text-muted-foreground hover:bg-gray-100'
+                        : 'text-muted-foreground cursor-default'
+                  )}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className={cn(
+                  'flex h-8 w-8 items-center justify-center rounded-lg text-sm',
+                  currentPage === totalPages
+                    ? 'text-gray-300 cursor-not-allowed'
+                    : 'text-muted-foreground hover:bg-gray-100'
+                )}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
       )}
 
