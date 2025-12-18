@@ -244,7 +244,7 @@ export function CodeSection() {
       {/* Selected Code Details */}
       {selectedCode && (
         <div className="rounded-2xl bg-white p-3 lg:p-6 overflow-x-auto">
-          <div className="mb-3 lg:mb-4 flex items-center gap-2">
+          <div className="mb-3 lg:mb-4 flex items-center gap-2 justify-center">
             <span className="text-base lg:text-lg font-bold text-black">{selectedCode}</span>
             <span className="flex items-center gap-1 text-xs lg:text-sm text-muted-foreground">
               (<User className="h-3.5 w-3.5 lg:h-4 lg:w-4" /> {users.length})
