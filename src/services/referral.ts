@@ -31,6 +31,32 @@ export interface ReferralUser {
   referredBy?: string // referrer's user id
 }
 
+// Traders tab types
+export interface TradersOverviewData {
+  tradingVolume: number
+  activeReferralCode: string | null
+  tradingPoints: number
+}
+
+export interface TradingHistoryItem {
+  id: string
+  token: string
+  tokenIcon?: string
+  amountIn: string
+  amountOut: string
+  type: 'Buy' | 'Sell'
+  account: string
+  time: string
+}
+
+export interface TradingHistoryResponse {
+  items: TradingHistoryItem[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
 // ============ Raw Mock Data (simulating backend raw data) ============
 
 // Raw referral code data
@@ -223,6 +249,59 @@ export async function deleteReferralCode(code: string): Promise<boolean> {
   await sleep(300)
   console.log(`Deleting code: ${code}`)
   return true
+}
+
+// ============ Traders Tab Data ============
+
+const tradersOverviewData: TradersOverviewData = {
+  tradingVolume: 100,
+  activeReferralCode: 'jfhdkskl9',
+  tradingPoints: 100000,
+}
+
+// Generate mock trading history data
+const generateTradingHistory = (): TradingHistoryItem[] => {
+  const items: TradingHistoryItem[] = []
+  for (let i = 1; i <= 100; i++) {
+    items.push({
+      id: `trade-${i}`,
+      token: 'T-SPACEX',
+      amountIn: '1,000 USDC',
+      amountOut: '300.2 T-SPACEX',
+      type: 'Buy',
+      account: '0xA8D0...6006',
+      time: 'Today at 3:20 PM',
+    })
+  }
+  return items
+}
+
+const rawTradingHistory = generateTradingHistory()
+
+// ============ Traders Tab API Functions ============
+
+export async function getTradersOverview(): Promise<TradersOverviewData> {
+  await sleep(400)
+  return tradersOverviewData
+}
+
+export async function getTradingHistory(
+  page: number = 1,
+  pageSize: number = 10
+): Promise<TradingHistoryResponse> {
+  await sleep(500)
+  const start = (page - 1) * pageSize
+  const items = rawTradingHistory.slice(start, start + pageSize)
+  const total = rawTradingHistory.length
+  const totalPages = Math.ceil(total / pageSize)
+
+  return {
+    items,
+    total,
+    page,
+    pageSize,
+    totalPages,
+  }
 }
 
 // ============ Export Helper Functions (for formatting in components) ============

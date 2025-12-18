@@ -5,6 +5,9 @@ import { RewardsOverview } from './components/rewards-overview'
 import { ReferralTree } from './components/referral-tree'
 import { CodeSection } from './components/code-section'
 import { RulesFaq } from './components/rules-faq'
+import { TradersOverview } from './components/traders-overview'
+import { TradingHistory } from './components/trading-history'
+import { TradersRulesFaq } from './components/traders-rules-faq'
 
 export default function ReferralPage() {
   const [activeTab, setActiveTab] = useState<'affiliates' | 'traders'>('affiliates')
@@ -32,9 +35,16 @@ export default function ReferralPage() {
           <RulesFaq />
         </>
       ) : (
-        <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-gray-200 bg-white">
-          <p className="text-muted-foreground">Traders content coming soon...</p>
-        </div>
+        <>
+          {/* Traders Overview */}
+          <TradersOverview />
+
+          {/* Trading History */}
+          <TradingHistory />
+
+          {/* Rules & FAQ */}
+          <TradersRulesFaq />
+        </>
       )}
     </div>
   )
