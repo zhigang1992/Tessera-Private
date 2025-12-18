@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { User, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getReferralCodes, getReferralUsersByCode, formatCurrency, formatSOL } from '@/services'
+import { WalletDropdown } from '@/components/wallet-dropdown'
 import CopyIcon from './_/copy.svg?react'
 import XIcon from './_/x.svg?react'
 import AddIcon from './_/add.svg?react'
@@ -11,6 +13,7 @@ import { CreateReferralCodeModal } from './create-referral-code-modal'
 const PAGE_SIZE = 3
 
 export function CodeSection() {
+  const { connected } = useWallet()
   const [activeTab, setActiveTab] = useState<'code' | 'reward'>('code')
   const [selectedCode, setSelectedCode] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -148,6 +151,27 @@ export function CodeSection() {
                     className="px-3 lg:px-6 py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground"
                   >
                     Loading...
+                  </td>
+                </tr>
+              ) : !connected ? (
+                <tr>
+                  <td colSpan={4} className="py-12">
+                    <div className="flex justify-center">
+                      <WalletDropdown
+                        triggerVariant="default"
+                        triggerSize="lg"
+                        triggerClassName="h-11 rounded-full bg-black px-8 text-sm font-medium text-white hover:bg-black/90"
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ) : codes.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="py-12 text-center text-sm text-muted-foreground"
+                  >
+                    No Referral Code
                   </td>
                 </tr>
               ) : (
