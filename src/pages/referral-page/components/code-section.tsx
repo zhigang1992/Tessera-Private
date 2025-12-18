@@ -1,8 +1,10 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Copy, X, Plus, User, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, User, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getReferralCodes, getReferralUsersByCode, formatCurrency, formatSOL } from '@/services'
+import CopyIcon from './_/copy.svg?react'
+import XIcon from './_/x.svg?react'
 
 const PAGE_SIZE = 3
 
@@ -45,6 +47,31 @@ export function CodeSection() {
     }
     return pages
   }, [currentPage, totalPages])
+
+  const handleCopyCode = useCallback((e: React.MouseEvent, code: string) => {
+    e.stopPropagation()
+    navigator.clipboard.writeText(code)
+  }, [])
+
+  const handleShareOnX = useCallback((e: React.MouseEvent, code: string) => {
+    e.stopPropagation()
+    const text = `Check out this referral code: ${code}`
+    window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank')
+  }, [])
+
+  const handlePrevPage = useCallback(() => {
+    setCurrentPage((p) => Math.max(1, p - 1))
+  }, [])
+
+  const handleNextPage = useCallback(() => {
+    setCurrentPage((p) => Math.min(totalPages, p + 1))
+  }, [totalPages])
+
+  const handlePageClick = useCallback((page: number | string) => {
+    if (typeof page === 'number') {
+      setCurrentPage(page)
+    }
+  }, [])
 
   useEffect(() => {
     if (codes.length > 0 && !selectedCode) {
@@ -131,11 +158,19 @@ export function CodeSection() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-black">{row.code}</span>
-                        <button className="text-muted-foreground hover:text-black">
-                          <Copy className="h-4 w-4" />
+                        <button
+                          onClick={(e) => handleCopyCode(e, row.code)}
+                          className="text-muted-foreground hover:text-black"
+                          title="Copy code"
+                        >
+                          <CopyIcon className="h-4 w-4" />
                         </button>
-                        <button className="text-muted-foreground hover:text-black">
-                          <X className="h-4 w-4" />
+                        <button
+                          onClick={(e) => handleShareOnX(e, row.code)}
+                          className="text-muted-foreground hover:text-black"
+                          title="Share on X"
+                        >
+                          <XIcon className="h-4 w-4" />
                         </button>
                       </div>
                     </td>
@@ -152,7 +187,7 @@ export function CodeSection() {
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 border-t border-gray-100 px-6 py-4">
               <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                onClick={handlePrevPage}
                 disabled={currentPage === 1}
                 className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-lg text-sm',
@@ -167,7 +202,7 @@ export function CodeSection() {
               {pageNumbers.map((page, i) => (
                 <button
                   key={i}
-                  onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                  onClick={() => handlePageClick(page)}
                   disabled={typeof page !== 'number'}
                   className={cn(
                     'flex h-8 w-8 items-center justify-center rounded-lg text-sm',
@@ -183,7 +218,7 @@ export function CodeSection() {
               ))}
 
               <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                onClick={handleNextPage}
                 disabled={currentPage === totalPages}
                 className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-lg text-sm',
