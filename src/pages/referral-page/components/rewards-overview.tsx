@@ -14,7 +14,7 @@ export function RewardsOverview() {
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#fff] to-[#D2FB95] p-6 h-full">
         <div className="relative z-10">
           <p className="text-sm text-black/60">Rewards</p>
-          <p className="text-4xl font-bold text-black">
+          <p className="text-4xl font-bold text-black font-inria">
             {isLoading ? '—' : formatSOL(data?.rewards ?? 0)}
           </p>
         </div>
