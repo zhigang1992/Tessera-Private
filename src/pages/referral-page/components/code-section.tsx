@@ -87,7 +87,7 @@ export function CodeSection() {
   return (
     <div className="space-y-4">
       {/* Tab Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="inline-flex items-center gap-1 rounded-xl px-2 py-1.5">
           <button
             onClick={() => setActiveTab('code')}
@@ -112,7 +112,7 @@ export function CodeSection() {
             Reward distribution
           </button>
         </div>
-        <button className="flex items-center gap-2 rounded-full bg-black px-4 py-2 text-sm font-medium text-white hover:bg-black/80">
+        <button className="flex w-full items-center justify-center gap-2 rounded-full bg-black px-4 py-2 text-sm font-medium text-white hover:bg-black/80 sm:w-auto">
           <Plus className="h-4 w-4" />
           Create new code
         </button>
@@ -120,8 +120,8 @@ export function CodeSection() {
 
       {/* Code Table */}
       {activeTab === 'code' && (
-        <div className="rounded-2xl bg-white">
-          <table className="w-full">
+        <div className="rounded-2xl bg-white overflow-x-auto">
+          <table className="w-full min-w-[600px]">
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">
@@ -236,7 +236,7 @@ export function CodeSection() {
 
       {/* Selected Code Details */}
       {selectedCode && (
-        <div className="rounded-2xl bg-white p-6">
+        <div className="rounded-2xl bg-white p-4 lg:p-6 overflow-x-auto">
           <div className="mb-4 flex items-center gap-2">
             <span className="text-lg font-bold text-black">{selectedCode}</span>
             <span className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -244,7 +244,7 @@ export function CodeSection() {
             </span>
           </div>
 
-          <table className="w-full">
+          <table className="w-full min-w-[600px]">
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="pb-4 text-left text-sm font-medium text-muted-foreground">

@@ -9,7 +9,7 @@ export function RewardsOverview() {
   })
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 h-[128px]">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:h-[128px]">
       {/* Rewards Card */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#fff] to-[#D2FB95] p-6 h-full">
         <div className="relative z-10">
@@ -19,7 +19,7 @@ export function RewardsOverview() {
           </p>
         </div>
         {/* Money Stack Illustration */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+        <div className="absolute top-1/2 -translate-y-1/2 right-4">
           <MoneyIcon />
         </div>
       </div>

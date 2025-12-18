@@ -10,16 +10,16 @@ export function ReferralTree() {
   })
 
   return (
-    <div className="flex rounded-2xl overflow-hidden p-4 bg-white gap-6">
+    <div className="flex flex-col lg:flex-row rounded-2xl overflow-hidden p-4 bg-white gap-4 lg:gap-6">
       {/* Tree Visualization */}
-      <div className="flex items-center justify-center p-6">
-        <img className='w-[288px] h-[202px]' src={treeImg} />
+      <div className="flex items-center justify-center p-4 lg:p-6">
+        <img className="w-full max-w-[288px] h-auto lg:w-[288px] lg:h-[202px]" src={treeImg} />
       </div>
 
-      <div className='w-[1px] bg-[#D9D9D9]' />
+      <div className="h-[1px] lg:h-auto lg:w-[1px] bg-[#D9D9D9]" />
 
       {/* Data Table */}
-      <div className="p-6 flex-1">
+      <div className="p-4 lg:p-6 flex-1 overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-100">

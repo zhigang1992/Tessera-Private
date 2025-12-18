@@ -45,13 +45,13 @@ export function RulesFaq() {
   }, [])
 
   return (
-    <div id="rules-faq" className="rounded-2xl bg-white p-6">
+    <div id="rules-faq" className="rounded-2xl bg-white p-4 lg:p-6">
       <h2 className="text-lg font-bold text-black">Rules & FAQ</h2>
 
       <div className="my-4 h-px bg-gray-100" />
 
       <div
-        className="prose prose-sm max-w-none text-muted-foreground prose-headings:text-black prose-strong:text-black prose-table:text-sm"
+        className="prose prose-sm max-w-none text-muted-foreground prose-headings:text-black prose-strong:text-black prose-table:text-sm overflow-x-auto"
         dangerouslySetInnerHTML={{ __html: htmlContent }}
       />
     </div>
