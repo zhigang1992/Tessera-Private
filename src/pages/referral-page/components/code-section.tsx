@@ -120,7 +120,7 @@ export function CodeSection() {
 
       {/* Code Table */}
       {activeTab === 'code' && (
-        <div className="rounded-2xl border border-gray-200 bg-white">
+        <div className="rounded-2xl bg-white">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100">
@@ -236,7 +236,7 @@ export function CodeSection() {
 
       {/* Selected Code Details */}
       {selectedCode && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-6">
+        <div className="rounded-2xl bg-white p-6">
           <div className="mb-4 flex items-center gap-2">
             <span className="text-lg font-bold text-black">{selectedCode}</span>
             <span className="flex items-center gap-1 text-sm text-muted-foreground">
