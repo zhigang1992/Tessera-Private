@@ -88,8 +88,10 @@ export function TradingHistory() {
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-3 lg:px-6 py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground">
-                  No trading history
+                <td colSpan={5} className="p-4">
+                  <div className="flex items-center justify-center rounded-lg bg-gray-50 py-16">
+                    <span className="text-sm text-muted-foreground">No Discount Distribution</span>
+                  </div>
                 </td>
               </tr>
             ) : (
