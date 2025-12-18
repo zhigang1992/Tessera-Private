@@ -121,19 +121,19 @@ export function CodeSection() {
       {/* Code Table */}
       {activeTab === 'code' && (
         <div className="rounded-2xl bg-white overflow-x-auto">
-          <table className="w-full min-w-[600px]">
+          <table className="w-full min-w-[550px]">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">
+                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
                   Referral Code
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">
+                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
                   Total Volume
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">
+                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
                   Traders Referred
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">
+                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
                   Total Rewards
                 </th>
               </tr>
@@ -141,7 +141,7 @@ export function CodeSection() {
             <tbody>
               {codesLoading ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-4 text-center text-muted-foreground">
+                  <td colSpan={4} className="px-3 lg:px-6 py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground">
                     Loading...
                   </td>
                 </tr>
@@ -155,28 +155,28 @@ export function CodeSection() {
                       selectedCode === row.code ? 'bg-[#D2FB95]' : 'hover:bg-gray-50'
                     )}
                   >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-black">{row.code}</span>
+                    <td className="px-3 lg:px-6 py-3 lg:py-4">
+                      <div className="flex items-center gap-1.5 lg:gap-2">
+                        <span className="text-xs lg:text-sm font-medium text-black">{row.code}</span>
                         <button
                           onClick={(e) => handleCopyCode(e, row.code)}
                           className="text-muted-foreground hover:text-black"
                           title="Copy code"
                         >
-                          <CopyIcon className="h-4 w-4" />
+                          <CopyIcon className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                         </button>
                         <button
                           onClick={(e) => handleShareOnX(e, row.code)}
                           className="text-muted-foreground hover:text-black"
                           title="Share on X"
                         >
-                          <XIcon className="h-4 w-4" />
+                          <XIcon className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                         </button>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-black">{formatCurrency(row.totalVolume)}</td>
-                    <td className="px-6 py-4 text-black">{row.tradersReferred}</td>
-                    <td className="px-6 py-4 text-black">{formatSOL(row.totalRewards)}</td>
+                    <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">{formatCurrency(row.totalVolume)}</td>
+                    <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">{row.tradersReferred}</td>
+                    <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">{formatSOL(row.totalRewards)}</td>
                   </tr>
                 ))
               )}
@@ -185,18 +185,18 @@ export function CodeSection() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 border-t border-gray-100 px-6 py-4">
+            <div className="flex items-center justify-center gap-1 lg:gap-2 border-t border-gray-100 px-3 lg:px-6 py-3 lg:py-4">
               <button
                 onClick={handlePrevPage}
                 disabled={currentPage === 1}
                 className={cn(
-                  'flex h-8 w-8 items-center justify-center rounded-lg text-sm',
+                  'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
                   currentPage === 1
                     ? 'text-gray-300 cursor-not-allowed'
                     : 'text-muted-foreground hover:bg-gray-100'
                 )}
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-3 w-3 lg:h-4 lg:w-4" />
               </button>
 
               {pageNumbers.map((page, i) => (
@@ -205,7 +205,7 @@ export function CodeSection() {
                   onClick={() => handlePageClick(page)}
                   disabled={typeof page !== 'number'}
                   className={cn(
-                    'flex h-8 w-8 items-center justify-center rounded-lg text-sm',
+                    'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
                     page === currentPage
                       ? 'bg-black text-white'
                       : typeof page === 'number'
@@ -221,13 +221,13 @@ export function CodeSection() {
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
                 className={cn(
-                  'flex h-8 w-8 items-center justify-center rounded-lg text-sm',
+                  'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
                   currentPage === totalPages
                     ? 'text-gray-300 cursor-not-allowed'
                     : 'text-muted-foreground hover:bg-gray-100'
                 )}
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-3 w-3 lg:h-4 lg:w-4" />
               </button>
             </div>
           )}
@@ -236,30 +236,30 @@ export function CodeSection() {
 
       {/* Selected Code Details */}
       {selectedCode && (
-        <div className="rounded-2xl bg-white p-4 lg:p-6 overflow-x-auto">
-          <div className="mb-4 flex items-center gap-2">
-            <span className="text-lg font-bold text-black">{selectedCode}</span>
-            <span className="flex items-center gap-1 text-sm text-muted-foreground">
-              (<User className="h-4 w-4" /> {users.length})
+        <div className="rounded-2xl bg-white p-3 lg:p-6 overflow-x-auto">
+          <div className="mb-3 lg:mb-4 flex items-center gap-2">
+            <span className="text-base lg:text-lg font-bold text-black">{selectedCode}</span>
+            <span className="flex items-center gap-1 text-xs lg:text-sm text-muted-foreground">
+              (<User className="h-3.5 w-3.5 lg:h-4 lg:w-4" /> {users.length})
             </span>
           </div>
 
-          <table className="w-full min-w-[600px]">
+          <table className="w-full min-w-[550px]">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="pb-4 text-left text-sm font-medium text-muted-foreground">
+                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
                   Email/Wallet
                 </th>
-                <th className="pb-4 text-left text-sm font-medium text-muted-foreground">
+                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
                   Date Joined
                 </th>
-                <th className="pb-4 text-left text-sm font-medium text-muted-foreground">
+                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
                   Type
                 </th>
-                <th className="pb-4 text-left text-sm font-medium text-muted-foreground">
+                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
                   Points Earned
                 </th>
-                <th className="pb-4 text-left text-sm font-medium text-muted-foreground">
+                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
                   Reward Earned
                 </th>
               </tr>
@@ -267,24 +267,24 @@ export function CodeSection() {
             <tbody>
               {usersLoading ? (
                 <tr>
-                  <td colSpan={5} className="py-4 text-center text-muted-foreground">
+                  <td colSpan={5} className="py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground">
                     Loading...
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-4 text-center text-muted-foreground">
+                  <td colSpan={5} className="py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground">
                     No users found
                   </td>
                 </tr>
               ) : (
                 users.map((user) => (
                   <tr key={user.id} className="border-b border-gray-50 last:border-0">
-                    <td className="py-4 text-black">{user.email}</td>
-                    <td className="py-4 text-muted-foreground">{user.dateJoined}</td>
-                    <td className="py-4 text-muted-foreground">{user.layer}</td>
-                    <td className="py-4 text-black">{user.pointsEarned.toLocaleString()}</td>
-                    <td className="py-4 text-black">{formatSOL(user.rewardEarned)}</td>
+                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-black">{user.email}</td>
+                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-muted-foreground">{user.dateJoined}</td>
+                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-muted-foreground">{user.layer}</td>
+                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-black">{user.pointsEarned.toLocaleString()}</td>
+                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-black">{formatSOL(user.rewardEarned)}</td>
                   </tr>
                 ))
               )}

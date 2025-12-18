@@ -65,52 +65,52 @@ export function TradingHistory() {
   return (
     <div className="rounded-2xl bg-white overflow-hidden">
       <div className="p-4 lg:p-6">
-        <h2 className="text-lg text-black">Trading History</h2>
+        <h2 className="text-base md:text-lg text-black">Trading History</h2>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[700px]">
+        <table className="w-full min-w-[600px]">
           <thead>
             <tr className="border-b border-gray-100">
-              <th className="px-4 lg:px-6 py-3 text-left text-sm font-medium text-muted-foreground">Token</th>
-              <th className="px-4 lg:px-6 py-3 text-left text-sm font-medium text-muted-foreground">Amount</th>
-              <th className="px-4 lg:px-6 py-3 text-left text-sm font-medium text-muted-foreground">Type</th>
-              <th className="px-4 lg:px-6 py-3 text-left text-sm font-medium text-muted-foreground">Account</th>
-              <th className="px-4 lg:px-6 py-3 text-left text-sm font-medium text-muted-foreground">Time</th>
+              <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs lg:text-sm font-medium text-muted-foreground">Token</th>
+              <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs lg:text-sm font-medium text-muted-foreground">Amount</th>
+              <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs lg:text-sm font-medium text-muted-foreground">Type</th>
+              <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs lg:text-sm font-medium text-muted-foreground">Account</th>
+              <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs lg:text-sm font-medium text-muted-foreground">Time</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={5} className="px-4 lg:px-6 py-4 text-center text-muted-foreground">
+                <td colSpan={5} className="px-3 lg:px-6 py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground">
                   Loading...
                 </td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 lg:px-6 py-4 text-center text-muted-foreground">
+                <td colSpan={5} className="px-3 lg:px-6 py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground">
                   No trading history
                 </td>
               </tr>
             ) : (
               items.map((item) => (
                 <tr key={item.id} className="border-b border-gray-50 last:border-0">
-                  <td className="px-4 lg:px-6 py-4">
-                    <div className="flex items-center gap-2">
+                  <td className="px-3 lg:px-6 py-3 lg:py-4">
+                    <div className="flex items-center gap-1.5 lg:gap-2">
                       {getTokenIcon(item.token)}
-                      <span className="font-medium text-black">{item.token}</span>
+                      <span className="text-xs lg:text-sm font-medium text-black">{item.token}</span>
                     </div>
                   </td>
-                  <td className="px-4 lg:px-6 py-4">
-                    <div className="flex items-center gap-1 text-black">
+                  <td className="px-3 lg:px-6 py-3 lg:py-4">
+                    <div className="flex items-center gap-1 text-xs lg:text-sm text-black">
                       <span>{item.amountIn}</span>
                       <ArrowRightIcon />
                       <span>{item.amountOut}</span>
                     </div>
                   </td>
-                  <td className="px-4 lg:px-6 py-4 text-black">{item.type}</td>
-                  <td className="px-4 lg:px-6 py-4 text-black">{item.account}</td>
-                  <td className="px-4 lg:px-6 py-4 text-black">{item.time}</td>
+                  <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">{item.type}</td>
+                  <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">{item.account}</td>
+                  <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">{item.time}</td>
                 </tr>
               ))
             )}
@@ -120,16 +120,16 @@ export function TradingHistory() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 border-t border-gray-100 px-4 lg:px-6 py-4">
+        <div className="flex items-center justify-center gap-1 lg:gap-2 border-t border-gray-100 px-3 lg:px-6 py-3 lg:py-4">
           <button
             onClick={handlePrevPage}
             disabled={currentPage === 1}
             className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-lg text-sm',
+              'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
               currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-muted-foreground hover:bg-gray-100',
             )}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3 w-3 lg:h-4 lg:w-4" />
           </button>
 
           {pageNumbers.map((page, i) => (
@@ -138,7 +138,7 @@ export function TradingHistory() {
               onClick={() => handlePageClick(page)}
               disabled={typeof page !== 'number'}
               className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-lg text-sm',
+                'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
                 page === currentPage
                   ? 'bg-black text-white'
                   : typeof page === 'number'
@@ -154,13 +154,13 @@ export function TradingHistory() {
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
             className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-lg text-sm',
+              'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
               currentPage === totalPages
                 ? 'text-gray-300 cursor-not-allowed'
                 : 'text-muted-foreground hover:bg-gray-100',
             )}
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3 w-3 lg:h-4 lg:w-4" />
           </button>
         </div>
       )}
