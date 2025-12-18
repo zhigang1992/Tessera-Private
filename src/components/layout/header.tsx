@@ -1,20 +1,39 @@
-import { ChevronDown, Menu, User } from 'lucide-react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
+import { useCallback } from 'react'
+import { Menu } from 'lucide-react'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import TesseraLogo from './_/terrera-logo.svg?react'
 import { Link } from 'react-router'
+import { Button } from '@/components/ui/button'
+import personIcon from '@/assets/person.png'
+
+function ellipsify(str = '', len = 4, delimiter = '...') {
+  const strLen = str.length
+  const limit = len * 2 + delimiter.length
+  return strLen >= limit ? `${str.substring(0, len)}${delimiter}${str.substring(strLen - len, strLen)}` : str
+}
 
 interface HeaderProps {
-  username?: string
   onMenuClick?: () => void
 }
 
-export function Header({ username = 'user884792103', onMenuClick }: HeaderProps) {
+export function Header({ onMenuClick }: HeaderProps) {
+  const { connected, publicKey, disconnect } = useWallet()
+  const { setVisible } = useWalletModal()
+  const address = publicKey?.toBase58() ?? ''
+
+  const handleDisconnect = useCallback(async () => {
+    try {
+      await disconnect()
+    } catch (error) {
+      console.error('Failed to disconnect wallet', error)
+    }
+  }, [disconnect])
+
+  const handleOpenModal = useCallback(() => {
+    setVisible(true)
+  }, [setVisible])
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-white px-4 dark:bg-[#111111] lg:justify-end lg:px-6">
       {/* Mobile: hamburger menu and logo */}
@@ -30,29 +49,30 @@ export function Header({ username = 'user884792103', onMenuClick }: HeaderProps)
         </Link>
       </div>
 
-      {/* User dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="flex items-center gap-2 hover:bg-accent"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#D5F53D]">
-              <User className="h-4 w-4 text-black" />
-            </div>
-            <div className="hidden flex-col items-start sm:flex">
-              <span className="text-xs text-muted-foreground">My account</span>
-              <span className="text-sm font-medium">{username}</span>
-            </div>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem>Profile</DropdownMenuItem>
-          <DropdownMenuItem>Settings</DropdownMenuItem>
-          <DropdownMenuItem>Logout</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* Wallet connection */}
+      {connected && publicKey ? (
+        <div className="inline-flex items-center gap-3">
+          <div className="flex size-8 items-center justify-center rounded-full bg-[#D2FB95]">
+            <img src={personIcon} alt="User" className="size-5" />
+          </div>
+          <div className="hidden flex-col sm:flex">
+            <span className="text-sm font-medium">{ellipsify(address, 4)}</span>
+            <button
+              onClick={handleDisconnect}
+              className="cursor-pointer text-left text-xs text-muted-foreground hover:text-foreground"
+            >
+              Disconnect
+            </button>
+          </div>
+        </div>
+      ) : (
+        <Button
+          onClick={handleOpenModal}
+          className="h-9 rounded-full bg-black px-4 text-sm font-medium text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+        >
+          Select Wallet
+        </Button>
+      )}
     </header>
   )
 }
