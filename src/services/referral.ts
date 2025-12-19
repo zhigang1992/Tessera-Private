@@ -158,7 +158,7 @@ const codeUserMapping: Record<string, string[]> = {
 // ============ Helper Functions (calculation logic) ============
 
 function formatCurrency(value: number): string {
-  return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return `$ ${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 function formatSOL(value: number): string {

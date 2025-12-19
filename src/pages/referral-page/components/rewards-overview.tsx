@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import MoneyIcon from './_/money.svg?react'
-import { getRewardsOverview, formatSOL } from '@/services'
+import { getRewardsOverview, formatCurrency } from '@/services'
 
 export function RewardsOverview() {
   const { data, isLoading } = useQuery({
@@ -15,7 +15,7 @@ export function RewardsOverview() {
         <div className="relative z-10">
           <p className="text-xs md:text-sm text-black/60">Rewards</p>
           <p className="text-2xl md:text-4xl font-bold text-black font-inria">
-            {isLoading ? '—' : formatSOL(data?.rewards ?? 0)}
+            {isLoading ? '—' : formatCurrency(data?.rewards ?? 0)}
           </p>
         </div>
         {/* Money Stack Illustration */}
