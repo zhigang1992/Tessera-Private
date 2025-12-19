@@ -107,12 +107,12 @@ export function CodeSection() {
   return (
     <div className="space-y-4">
       {/* Tab Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="inline-flex items-center gap-1 rounded-xl px-2 py-1.5">
+      <div className="flex items-center justify-between">
+        <div className="inline-flex items-center gap-0.5 sm:gap-1 rounded-xl px-1 sm:px-2 py-1.5">
           <button
             onClick={() => setActiveTab('code')}
             className={cn(
-              'rounded-md px-4 py-2 text-sm font-medium transition-colors',
+              'rounded-md px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors',
               activeTab === 'code' ? 'bg-white text-black shadow-sm' : 'text-muted-foreground hover:text-black',
             )}
           >
@@ -121,7 +121,7 @@ export function CodeSection() {
           <button
             onClick={() => setActiveTab('reward')}
             className={cn(
-              'rounded-md px-4 py-2 text-sm font-medium transition-colors',
+              'rounded-md px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors',
               activeTab === 'reward' ? 'bg-white text-black shadow-sm' : 'text-muted-foreground hover:text-black',
             )}
           >
@@ -130,10 +130,10 @@ export function CodeSection() {
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-black/80 sm:w-auto"
+          className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg bg-black px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-black/80"
         >
-          <AddIcon />
-          Create new code
+          <AddIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <span className="sm:inline">Create new code</span>
         </button>
       </div>
 
