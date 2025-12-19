@@ -4,25 +4,10 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { cn } from '@/lib/utils'
 import { getTradingLeaderboard, getCurrentUserTradingRank } from '@/services'
 import { Pagination } from '@/components/ui/pagination'
-import RankOneIcon from './_/rank-one.svg?react'
-import RankTwoIcon from './_/rank-two.svg?react'
-import RankThreeIcon from './_/rank-three.svg?react'
+import { getMedalIcon } from './_/getMedalIcon'
+
 
 const PAGE_SIZE = 10
-
-const getMedalIcon = (rank: number) => {
-  switch (rank) {
-    case 1:
-      return <RankOneIcon className="h-3 w-3" />
-    case 2:
-      return <RankTwoIcon className="h-3 w-3" />
-    case 3:
-      return <RankThreeIcon className="h-3 w-3" />
-    default:
-      return null
-  }
-}
-
 export function TradingLeaderboard() {
   const { publicKey } = useWallet()
   const walletAddress = publicKey?.toBase58()
@@ -78,11 +63,13 @@ export function TradingLeaderboard() {
               return (
                 <tr
                   key={row.rank}
-                  className={cn('border-b border-gray-50 last:border-0', isCurrentUser && 'bg-[#D2FB95]')}
+                  className={cn('border-b border-gray-50 last:border-0', isCurrentUser && 'bg-[#FAFFBD]')}
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-black">#{row.rank}</span>
+                      <span className={cn('text-sm font-medium text-black', row.rank <= 3 && 'font-bold')}>
+                        #{row.rank}
+                      </span>
                       {medal && <span>{medal}</span>}
                       {isCurrentUser && (
                         <span className="rounded bg-black px-1.5 py-0.5 text-xs font-medium text-white">You</span>
@@ -90,7 +77,7 @@ export function TradingLeaderboard() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-black">{row.user}</td>
-                  <td className="px-6 py-4 text-sm font-medium text-[#16A34A]">{formatCurrency(row.tradingVolume)}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-[#2B664B]">{formatCurrency(row.tradingVolume)}</td>
                   <td className="px-6 py-4 text-sm text-black">{row.tradingPoints.toLocaleString()}</td>
                   <td className="px-6 py-4 text-sm text-black">${row.feeRebates}</td>
                 </tr>

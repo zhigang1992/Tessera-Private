@@ -5,24 +5,10 @@ import { User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getReferralLeaderboard, getCurrentUserReferralRank } from '@/services'
 import { Pagination } from '@/components/ui/pagination'
-import RankOneIcon from './_/rank-one.svg?react'
-import RankTwoIcon from './_/rank-two.svg?react'
-import RankThreeIcon from './_/rank-three.svg?react'
+import { getMedalIcon } from './_/getMedalIcon'
+import PersonIcon from './_/person.svg?react'
 
 const PAGE_SIZE = 10
-
-const getMedalIcon = (rank: number) => {
-  switch (rank) {
-    case 1:
-      return <RankOneIcon className="h-3 w-3" />
-    case 2:
-      return <RankTwoIcon className="h-3 w-3" />
-    case 3:
-      return <RankThreeIcon className="h-3 w-3" />
-    default:
-      return null
-  }
-}
 
 export function ReferralLeaderboard() {
   const { publicKey } = useWallet()
@@ -75,11 +61,11 @@ export function ReferralLeaderboard() {
               return (
                 <tr
                   key={row.rank}
-                  className={cn('border-b border-gray-50 last:border-0', isCurrentUser && 'bg-[#D2FB95]')}
+                  className={cn('border-b border-gray-50 last:border-0', isCurrentUser && 'bg-[#FAFFBD]')}
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-black">#{row.rank}</span>
+                      <span className={cn('text-sm font-medium text-black', row.rank <= 3 && 'font-bold')}>#{row.rank}</span>
                       {medal && <span>{medal}</span>}
                       {isCurrentUser && (
                         <span className="rounded bg-black px-1.5 py-0.5 text-xs font-medium text-white">You</span>
@@ -88,8 +74,8 @@ export function ReferralLeaderboard() {
                   </td>
                   <td className="px-6 py-4 text-sm text-black">{row.user}</td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-1.5 text-sm font-medium text-[#16A34A]">
-                      <User className="h-4 w-4" />
+                    <div className="flex items-center gap-1.5 text-sm font-medium text-[#2B664B]">
+                      <PersonIcon className="h-6 w-6" />
                       {row.traderReferral.toLocaleString()}
                     </div>
                   </td>
