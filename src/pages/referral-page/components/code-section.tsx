@@ -1,34 +1,41 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { User, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getReferralCodes, getReferralUsersByCode, formatCurrency, formatSOL } from '@/services'
+import { formatCurrency, formatSOL } from '@/services'
 import { WalletDropdown } from '@/components/wallet-dropdown'
 import CopyIcon from './_/copy.svg?react'
 import XIcon from './_/x.svg?react'
 import AddIcon from './_/add.svg?react'
 import { CreateReferralCodeModal } from './create-referral-code-modal'
+import { useAffiliateData } from '@/features/referral/hooks/use-referral-queries'
 
 const PAGE_SIZE = 3
 
 export function CodeSection() {
-  const { connected } = useWallet()
+  const { connected, publicKey } = useWallet()
+  const walletAddress = publicKey?.toBase58()
   const [activeTab, setActiveTab] = useState<'code' | 'reward'>('code')
   const [selectedCode, setSelectedCode] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
-  const { data: codes = [], isLoading: codesLoading } = useQuery({
-    queryKey: ['referralCodes'],
-    queryFn: getReferralCodes,
-  })
+  const { data: affiliateData, isLoading: codesLoading } = useAffiliateData(connected, walletAddress)
 
-  const { data: users = [], isLoading: usersLoading } = useQuery({
-    queryKey: ['referralUsers', selectedCode],
-    queryFn: () => getReferralUsersByCode(selectedCode!),
-    enabled: !!selectedCode,
-  })
+  // Transform affiliate data to match the expected format
+  const codes = useMemo(() => {
+    if (!affiliateData?.referralCodes) return []
+    return affiliateData.referralCodes.map((code) => ({
+      code: code.codeSlug,
+      totalVolume: 0, // This data is not available from affiliate endpoint
+      tradersReferred: code.referredTraderCount,
+      totalRewards: 0, // This data is not available from affiliate endpoint
+    }))
+  }, [affiliateData])
+
+  // For now, users list is not available from the API, so we use empty array
+  const users: Array<{ id: string; email: string; dateJoined: string; layer: string; pointsEarned: number; rewardEarned: number }> = []
+  const usersLoading = false
 
   // Pagination logic
   const totalPages = Math.ceil(codes.length / PAGE_SIZE)
