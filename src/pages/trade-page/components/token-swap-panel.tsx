@@ -95,7 +95,7 @@ export function TokenSwapPanel({ onTokenChange }: TokenSwapPanelProps) {
     <div className="rounded-2xl p-6 py-8 bg-gradient-to-b from-white to-[#d2fb95]">
       <div className="relative flex flex-col gap-4">
         {/* Selling Input */}
-        <div className="bg-white border border-[#dddbd0] rounded-lg px-4 pt-2 pb-4 overflow-hidden">
+        <div className="bg-white border border-[#dddbd0] rounded-lg px-4 pt-2 pb-4">
           <p className="text-sm font-bold text-black/30 leading-5">Selling</p>
           <div className="flex items-center justify-between mt-1.5">
             <div className="relative">
@@ -149,7 +149,7 @@ export function TokenSwapPanel({ onTokenChange }: TokenSwapPanelProps) {
         </button>
 
         {/* Buying Input */}
-        <div className="bg-white border border-[#dddbd0] rounded-lg px-4 pt-2 pb-4 overflow-hidden">
+        <div className="bg-white border border-[#dddbd0] rounded-lg px-4 pt-2 pb-4">
           <p className="text-sm font-bold text-black/30 leading-5">Buying</p>
           <div className="flex items-center justify-between mt-1.5">
             <div className="relative">
