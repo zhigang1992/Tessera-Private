@@ -3,7 +3,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { useQuery } from '@tanstack/react-query'
 import { User, Share2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCurrency, formatSOL, getReferralUsersByCode } from '@/services'
+import { formatCurrency, getReferralUsersByCode } from '@/services'
 import { WalletDropdown } from '@/components/wallet-dropdown'
 import { Pagination } from '@/components/ui/pagination'
 import CopyIcon from './_/copy.svg?react'
@@ -199,7 +199,7 @@ export function CodeSection() {
                     </td>
                     <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">{row.tradersReferred}</td>
                     <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">
-                      {formatSOL(row.totalRewards)}
+                      {formatCurrency(row.totalRewards)}
                     </td>
                     <td className="px-3 lg:px-6 py-3 lg:py-4 text-right">
                       <button
@@ -247,9 +247,6 @@ export function CodeSection() {
                 </th>
                 <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">Type</th>
                 <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
-                  Points Earned
-                </th>
-                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
                   Reward Earned
                 </th>
               </tr>
@@ -257,13 +254,13 @@ export function CodeSection() {
             <tbody>
               {usersLoading ? (
                 <tr>
-                  <td colSpan={5} className="py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground">
+                  <td colSpan={4} className="py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground">
                     Loading...
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground">
+                  <td colSpan={4} className="py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground">
                     No users found
                   </td>
                 </tr>
@@ -273,8 +270,13 @@ export function CodeSection() {
                     <td className="py-3 lg:py-4 text-xs lg:text-sm text-black">{user.email}</td>
                     <td className="py-3 lg:py-4 text-xs lg:text-sm text-muted-foreground">{user.dateJoined}</td>
                     <td className="py-3 lg:py-4 text-xs lg:text-sm text-muted-foreground">{user.layer}</td>
-                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-black">{user.pointsEarned.toLocaleString()}</td>
-                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-black">{formatSOL(user.rewardEarned)}</td>
+                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-black">
+                      <div className="flex flex-col gap-0.5">
+                        {user.rewards.map((reward, idx) => (
+                          <span key={idx}>{reward.amount} {reward.token}</span>
+                        ))}
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
