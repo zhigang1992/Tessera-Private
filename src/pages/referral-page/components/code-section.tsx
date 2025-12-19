@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { User, ChevronLeft, ChevronRight, Share2 } from 'lucide-react'
+import { User, Share2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatSOL } from '@/services'
 import { WalletDropdown } from '@/components/wallet-dropdown'
+import { Pagination } from '@/components/ui/pagination'
 import CopyIcon from './_/copy.svg?react'
 import XIcon from './_/x.svg?react'
 import AddIcon from './_/add.svg?react'
@@ -46,23 +47,6 @@ export function CodeSection() {
     return codes.slice(start, start + PAGE_SIZE)
   }, [codes, currentPage])
 
-  // Generate page numbers to display
-  const pageNumbers = useMemo(() => {
-    if (totalPages <= 7) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1)
-    }
-
-    const pages: (number | string)[] = []
-    if (currentPage <= 4) {
-      pages.push(1, 2, 3, 4, 5, '...', totalPages)
-    } else if (currentPage >= totalPages - 3) {
-      pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages)
-    } else {
-      pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages)
-    }
-    return pages
-  }, [currentPage, totalPages])
-
   const handleCopyCode = useCallback((e: React.MouseEvent, code: string) => {
     e.stopPropagation()
     navigator.clipboard.writeText(code)
@@ -77,20 +61,6 @@ export function CodeSection() {
   const handleOpenShareModal = useCallback((e: React.MouseEvent, code: string) => {
     e.stopPropagation()
     setShareModalCode(code)
-  }, [])
-
-  const handlePrevPage = useCallback(() => {
-    setCurrentPage((p) => Math.max(1, p - 1))
-  }, [])
-
-  const handleNextPage = useCallback(() => {
-    setCurrentPage((p) => Math.min(totalPages, p + 1))
-  }, [totalPages])
-
-  const handlePageClick = useCallback((page: number | string) => {
-    if (typeof page === 'number') {
-      setCurrentPage(page)
-    }
   }, [])
 
   useEffect(() => {
@@ -243,51 +213,12 @@ export function CodeSection() {
           </table>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-1 lg:gap-2 border-t border-gray-100 px-3 lg:px-6 py-3 lg:py-4">
-              <button
-                onClick={handlePrevPage}
-                disabled={currentPage === 1}
-                className={cn(
-                  'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
-                  currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-muted-foreground hover:bg-gray-100',
-                )}
-              >
-                <ChevronLeft className="h-3 w-3 lg:h-4 lg:w-4" />
-              </button>
-
-              {pageNumbers.map((page, i) => (
-                <button
-                  key={i}
-                  onClick={() => handlePageClick(page)}
-                  disabled={typeof page !== 'number'}
-                  className={cn(
-                    'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
-                    page === currentPage
-                      ? 'bg-black text-white'
-                      : typeof page === 'number'
-                        ? 'text-muted-foreground hover:bg-gray-100'
-                        : 'text-muted-foreground cursor-default',
-                  )}
-                >
-                  {page}
-                </button>
-              ))}
-
-              <button
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages}
-                className={cn(
-                  'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
-                  currentPage === totalPages
-                    ? 'text-gray-300 cursor-not-allowed'
-                    : 'text-muted-foreground hover:bg-gray-100',
-                )}
-              >
-                <ChevronRight className="h-3 w-3 lg:h-4 lg:w-4" />
-              </button>
-            </div>
-          )}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            className="border-t border-gray-100 px-3 lg:px-6 py-3 lg:py-4"
+          />
         </div>
       )}
 
