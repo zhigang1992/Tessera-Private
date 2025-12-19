@@ -49,7 +49,7 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
         horzLines: { color: 'rgba(0, 0, 0, 0.05)', style: 1 },
       },
       width: chartContainerRef.current.clientWidth,
-      height: 220,
+      height: 180,
       rightPriceScale: {
         borderVisible: false,
         scaleMargins: { top: 0.1, bottom: 0.1 },
@@ -79,8 +79,8 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
     seriesRef.current = lineSeries
 
     const handleResize = () => {
-      if (chartContainerRef.current) {
-        chart.applyOptions({ width: chartContainerRef.current.clientWidth })
+      if (chartContainerRef.current && chartRef.current) {
+        chartRef.current.applyOptions({ width: chartContainerRef.current.clientWidth })
       }
     }
 
@@ -104,21 +104,21 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
   }, [priceHistory])
 
   return (
-    <div className="rounded-2xl p-6 bg-gradient-to-b from-white to-[#d2fb95]">
+    <div className="rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-white to-[#d2fb95]">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2.5">
-          <TokenSpacexIcon className="w-12 h-12" />
-          <span className="text-base font-extrabold text-black">{token?.name ?? tokenSymbol}</span>
+      <div className="flex items-center justify-between mb-4 lg:mb-6">
+        <div className="flex items-center gap-2 lg:gap-2.5">
+          <TokenSpacexIcon className="w-10 h-10 lg:w-12 lg:h-12" />
+          <span className="text-sm lg:text-base font-extrabold text-black">{token?.name ?? tokenSymbol}</span>
         </div>
         <div className="text-right">
-          <div className="text-[28px] font-bold text-[#111]">
+          <div className="text-xl lg:text-[28px] font-bold text-[#111]">
             ${token?.price.toFixed(2) ?? '0.00'}
           </div>
-          <div className="flex items-center justify-end gap-1 text-xs">
+          <div className="flex items-center justify-end gap-1 text-[10px] lg:text-xs">
             <span className={isPositive ? 'text-[#269700]' : 'text-red-500'}>
               {isPositive ? '▲' : '▼'} ${Math.abs(token?.priceChange24h ?? 0).toFixed(2)} (
-              {Math.abs(token?.priceChangePercent24h ?? 0).toFixed(4)}%)
+              {Math.abs(token?.priceChangePercent24h ?? 0).toFixed(2)}%)
             </span>
             <span className="text-[#999]">24H</span>
           </div>
@@ -129,12 +129,12 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
       <div ref={chartContainerRef} className="w-full" />
 
       {/* Time Range Tabs */}
-      <div className="flex items-center justify-between gap-1 p-1 mt-6 bg-black/10 rounded-lg">
+      <div className="flex items-center justify-between gap-0.5 lg:gap-1 p-1 mt-4 lg:mt-6 bg-black/10 rounded-lg">
         {timeRanges.map((range) => (
           <button
             key={range}
             onClick={() => setSelectedRange(range)}
-            className={`flex-1 py-1 px-3 text-xs font-medium rounded transition-all ${
+            className={`flex-1 py-1 px-1.5 lg:px-3 text-[10px] lg:text-xs font-medium rounded transition-all ${
               selectedRange === range ? 'bg-white text-black shadow-sm' : 'text-black hover:bg-white/50'
             }`}
           >

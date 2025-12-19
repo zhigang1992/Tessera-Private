@@ -18,61 +18,63 @@ export function TradeHistory() {
   const items = data?.items ?? []
 
   return (
-    <div className="rounded-2xl bg-white px-3.5 py-6">
-      <div className="flex flex-col gap-2.5">
-        {/* Header */}
-        <div className="flex items-center gap-2.5 px-2.5 text-xs text-zinc-500">
-          <div className="w-[180px]">Token</div>
-          <div className="w-[250px]">Amount</div>
-          <div className="flex-1">Type</div>
-          <div className="flex-1">Account</div>
-          <div className="flex-1">Time</div>
-        </div>
+    <div className="rounded-2xl bg-white px-3.5 py-4 lg:py-6">
+      <div className="overflow-x-auto">
+        <div className="flex flex-col gap-2.5 min-w-[600px]">
+          {/* Header */}
+          <div className="flex items-center gap-2.5 px-2.5 text-xs text-zinc-500">
+            <div className="w-[140px] lg:w-[180px]">Token</div>
+            <div className="w-[180px] lg:w-[250px]">Amount</div>
+            <div className="w-[60px] lg:flex-1">Type</div>
+            <div className="w-[100px] lg:flex-1">Account</div>
+            <div className="w-[120px] lg:flex-1">Time</div>
+          </div>
 
-        {/* Divider */}
-        <div className="px-2.5">
-          <div className="h-px bg-black/15" />
-        </div>
+          {/* Divider */}
+          <div className="px-2.5">
+            <div className="h-px bg-black/15" />
+          </div>
 
-        {/* List */}
-        <div className="flex flex-col gap-1">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <span className="text-sm text-gray-500">Loading...</span>
-            </div>
-          ) : items.length === 0 ? (
-            <div className="flex items-center justify-center py-8">
-              <span className="text-sm text-gray-500">No trade history</span>
-            </div>
-          ) : (
-            items.map((item, index) => (
-              <div
-                key={item.id}
-                className={`flex items-center gap-2.5 p-2.5 rounded ${
-                  index % 2 === 0 ? 'bg-zinc-50' : ''
-                }`}
-              >
-                <div className="w-[180px]">
-                  <div className="flex items-center gap-1.5">
-                    <TokenSpacexIcon className="w-6 h-6" />
-                    <span className="text-sm font-semibold text-[#404040] uppercase">{item.token}</span>
-                  </div>
-                </div>
-                <div className="w-[250px] flex items-center gap-1 text-sm">
-                  <span className="text-black">{item.amountIn}</span>
-                  <span className={item.type === 'Buy' ? 'text-[#06a800]' : 'text-red-500'}>→</span>
-                  <span className="text-black">{item.amountOut}</span>
-                </div>
-                <div className="flex-1">
-                  <span className={`text-sm ${item.type === 'Buy' ? 'text-[#06a800]' : 'text-red-500'}`}>
-                    {item.type}
-                  </span>
-                </div>
-                <div className="flex-1 text-sm text-black">{item.account}</div>
-                <div className="flex-1 text-sm text-black">{item.time}</div>
+          {/* List */}
+          <div className="flex flex-col gap-1">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <span className="text-sm text-gray-500">Loading...</span>
               </div>
-            ))
-          )}
+            ) : items.length === 0 ? (
+              <div className="flex items-center justify-center py-8">
+                <span className="text-sm text-gray-500">No trade history</span>
+              </div>
+            ) : (
+              items.map((item, index) => (
+                <div
+                  key={item.id}
+                  className={`flex items-center gap-2.5 p-2.5 rounded ${
+                    index % 2 === 0 ? 'bg-zinc-50' : ''
+                  }`}
+                >
+                  <div className="w-[140px] lg:w-[180px]">
+                    <div className="flex items-center gap-1.5">
+                      <TokenSpacexIcon className="w-5 h-5 lg:w-6 lg:h-6" />
+                      <span className="text-xs lg:text-sm font-semibold text-[#404040] uppercase">{item.token}</span>
+                    </div>
+                  </div>
+                  <div className="w-[180px] lg:w-[250px] flex items-center gap-1 text-xs lg:text-sm">
+                    <span className="text-black">{item.amountIn}</span>
+                    <span className={item.type === 'Buy' ? 'text-[#06a800]' : 'text-red-500'}>→</span>
+                    <span className="text-black">{item.amountOut}</span>
+                  </div>
+                  <div className="w-[60px] lg:flex-1">
+                    <span className={`text-xs lg:text-sm ${item.type === 'Buy' ? 'text-[#06a800]' : 'text-red-500'}`}>
+                      {item.type}
+                    </span>
+                  </div>
+                  <div className="w-[100px] lg:flex-1 text-xs lg:text-sm text-black">{item.account}</div>
+                  <div className="w-[120px] lg:flex-1 text-xs lg:text-sm text-black">{item.time}</div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 
