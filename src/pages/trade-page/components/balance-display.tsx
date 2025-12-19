@@ -1,11 +1,17 @@
+import { useQuery } from '@tanstack/react-query'
+import { getTokenBalance } from '@/services'
 import TokenUsdcIcon from './_/token-usdc.svg?react'
 
 interface BalanceDisplayProps {
-  balance?: number
   tokenSymbol?: string
 }
 
-export function BalanceDisplay({ balance = 2399.89, tokenSymbol = 'USDC' }: BalanceDisplayProps) {
+export function BalanceDisplay({ tokenSymbol = 'USDC' }: BalanceDisplayProps) {
+  const { data: balance = 0 } = useQuery({
+    queryKey: ['tokenBalance', tokenSymbol],
+    queryFn: () => getTokenBalance(tokenSymbol),
+  })
+
   return (
     <div className="flex items-center justify-between p-6 rounded-2xl bg-white">
       <span className="text-sm text-black">Balance:</span>

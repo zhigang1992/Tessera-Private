@@ -1,9 +1,17 @@
+import { useState, useCallback } from 'react'
 import { PriceChart } from './components/price-chart'
 import { TokenSwapPanel } from './components/token-swap-panel'
 import { BalanceDisplay } from './components/balance-display'
 import { TradeHistory } from './components/trade-history'
+import type { Token } from '@/services'
 
 export default function TradePage() {
+  const [selectedToken, setSelectedToken] = useState<Token | null>(null)
+
+  const handleTokenChange = useCallback((token: Token) => {
+    setSelectedToken(token)
+  }, [])
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -14,12 +22,12 @@ export default function TradePage() {
         <div className="flex gap-6">
           {/* Left: Price Chart */}
           <div className="flex-1">
-            <PriceChart />
+            <PriceChart tokenSymbol={selectedToken?.symbol ?? 'T-SpaceX'} />
           </div>
 
           {/* Right: Swap Panel + Balance */}
           <div className="flex-1 flex flex-col gap-2.5">
-            <TokenSwapPanel />
+            <TokenSwapPanel onTokenChange={handleTokenChange} />
             <BalanceDisplay />
           </div>
         </div>

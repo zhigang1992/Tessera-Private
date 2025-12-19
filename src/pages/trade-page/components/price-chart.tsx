@@ -1,80 +1,40 @@
 import { useEffect, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { createChart, ColorType, LineSeries } from 'lightweight-charts'
-import type { IChartApi, ISeriesApi, LineData, Time } from 'lightweight-charts'
+import type { IChartApi, LineData, Time } from 'lightweight-charts'
+import { getPriceHistory, getTokenBySymbol } from '@/services'
 import TokenSpacexIcon from './_/token-spacex.svg?react'
 
 type TimeRange = '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL'
 
 interface PriceChartProps {
-  tokenName?: string
-  tokenPrice?: number
-  priceChange?: number
-  priceChangePercent?: number
+  tokenSymbol?: string
 }
 
-// Generate mock data for the chart
-function generateMockData(range: TimeRange): LineData<Time>[] {
-  const data: LineData<Time>[] = []
-  const now = new Date()
-  let points = 100
-  let intervalMs = 3 * 60 * 60 * 1000 // 3 hours
-
-  switch (range) {
-    case '1D':
-      points = 24
-      intervalMs = 60 * 60 * 1000 // 1 hour
-      break
-    case '1W':
-      points = 7 * 24
-      intervalMs = 60 * 60 * 1000 // 1 hour
-      break
-    case '1M':
-      points = 30
-      intervalMs = 24 * 60 * 60 * 1000 // 1 day
-      break
-    case '3M':
-      points = 90
-      intervalMs = 24 * 60 * 60 * 1000 // 1 day
-      break
-    case '1Y':
-      points = 365
-      intervalMs = 24 * 60 * 60 * 1000 // 1 day
-      break
-    case 'ALL':
-      points = 500
-      intervalMs = 24 * 60 * 60 * 1000 // 1 day
-      break
-  }
-
-  let price = 440
-  for (let i = points; i >= 0; i--) {
-    const time = new Date(now.getTime() - i * intervalMs)
-    price = price + (Math.random() - 0.48) * 3
-    price = Math.max(435, Math.min(455, price))
-    data.push({
-      time: (time.getTime() / 1000) as Time,
-      value: price,
-    })
-  }
-
-  return data
-}
-
-export function PriceChart({
-  tokenName = 'T-SpaceX',
-  tokenPrice = 449.94,
-  priceChange = 2.74,
-  priceChangePercent = 0.6203,
-}: PriceChartProps) {
+export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const seriesRef = useRef<ISeriesApi<'Line'> | any>(null)
+  const seriesRef = useRef<any>(null)
   const [selectedRange, setSelectedRange] = useState<TimeRange>('1D')
 
   const timeRanges: TimeRange[] = ['1D', '1W', '1M', '3M', '1Y', 'ALL']
-  const isPositive = priceChange >= 0
 
+  // Fetch token info
+  const { data: token } = useQuery({
+    queryKey: ['token', tokenSymbol],
+    queryFn: () => getTokenBySymbol(tokenSymbol),
+  })
+
+  // Fetch price history
+  const { data: priceHistory } = useQuery({
+    queryKey: ['priceHistory', tokenSymbol, selectedRange],
+    queryFn: () => getPriceHistory(tokenSymbol, selectedRange),
+  })
+
+  const isPositive = (token?.priceChange24h ?? 0) >= 0
+
+  // Initialize chart
   useEffect(() => {
     if (!chartContainerRef.current) return
 
@@ -115,8 +75,6 @@ export function PriceChart({
       crosshairMarkerVisible: false,
     })
 
-    lineSeries.setData(generateMockData(selectedRange))
-
     chartRef.current = chart
     seriesRef.current = lineSeries
 
@@ -134,11 +92,16 @@ export function PriceChart({
     }
   }, [])
 
+  // Update chart data when price history changes
   useEffect(() => {
-    if (seriesRef.current) {
-      seriesRef.current.setData(generateMockData(selectedRange))
+    if (seriesRef.current && priceHistory) {
+      const chartData: LineData<Time>[] = priceHistory.map((point) => ({
+        time: point.time as Time,
+        value: point.value,
+      }))
+      seriesRef.current.setData(chartData)
     }
-  }, [selectedRange])
+  }, [priceHistory])
 
   return (
     <div className="rounded-2xl p-6 bg-gradient-to-b from-white to-[#d2fb95]">
@@ -146,13 +109,16 @@ export function PriceChart({
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2.5">
           <TokenSpacexIcon className="w-12 h-12" />
-          <span className="text-base font-extrabold text-black">{tokenName}</span>
+          <span className="text-base font-extrabold text-black">{token?.name ?? tokenSymbol}</span>
         </div>
         <div className="text-right">
-          <div className="text-[28px] font-bold text-[#111]">${tokenPrice.toFixed(2)}</div>
+          <div className="text-[28px] font-bold text-[#111]">
+            ${token?.price.toFixed(2) ?? '0.00'}
+          </div>
           <div className="flex items-center justify-end gap-1 text-xs">
             <span className={isPositive ? 'text-[#269700]' : 'text-red-500'}>
-              {isPositive ? '▲' : '▼'} ${Math.abs(priceChange).toFixed(2)} ({priceChangePercent.toFixed(4)}%)
+              {isPositive ? '▲' : '▼'} ${Math.abs(token?.priceChange24h ?? 0).toFixed(2)} (
+              {Math.abs(token?.priceChangePercent24h ?? 0).toFixed(4)}%)
             </span>
             <span className="text-[#999]">24H</span>
           </div>
@@ -169,9 +135,7 @@ export function PriceChart({
             key={range}
             onClick={() => setSelectedRange(range)}
             className={`flex-1 py-1 px-3 text-xs font-medium rounded transition-all ${
-              selectedRange === range
-                ? 'bg-white text-black shadow-sm'
-                : 'text-black hover:bg-white/50'
+              selectedRange === range ? 'bg-white text-black shadow-sm' : 'text-black hover:bg-white/50'
             }`}
           >
             {range}
