@@ -1,3 +1,4 @@
 export { default as ReferralPage } from './referral-page'
 export { default as LeaderboardPage } from './leaderboard-page'
 export { default as PlaceholderPage } from './placeholder-page'
+export { default as TradePage } from './trade-page'
