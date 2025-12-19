@@ -19,8 +19,8 @@ export function RewardsOverview() {
           </p>
         </div>
         {/* Money Stack Illustration */}
-        <div className="absolute top-1/2 -translate-y-1/2 right-4">
-          <MoneyIcon />
+        <div className="absolute top-1/2 -translate-y-1/2 right-6">
+          <MoneyIcon className="h-16 w-16 md:h-auto md:w-auto" />
         </div>
       </div>
 

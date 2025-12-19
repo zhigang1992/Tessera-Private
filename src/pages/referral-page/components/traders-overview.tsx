@@ -19,8 +19,8 @@ export function TradersOverview() {
           </p>
         </div>
         {/* Money Stack Illustration */}
-        <div className="absolute top-1/2 -translate-y-1/2 right-4">
-          <CmputedIcon />
+        <div className="absolute top-1/2 -translate-y-1/2 right-6">
+          <CmputedIcon className="h-16 w-16 md:h-auto md:w-auto" />
         </div>
       </div>
 
