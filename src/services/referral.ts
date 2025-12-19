@@ -166,7 +166,10 @@ function formatSOL(value: number): string {
 }
 
 function getUsersByCode(code: string): ReferralUser[] {
-  const userIds = codeUserMapping[code] || []
+  // Case-insensitive lookup
+  const normalizedCode = code.toUpperCase()
+  const matchingKey = Object.keys(codeUserMapping).find((key) => key.toUpperCase() === normalizedCode)
+  const userIds = matchingKey ? codeUserMapping[matchingKey] : []
   return rawUsers.filter((u) => userIds.includes(u.id))
 }
 
@@ -229,9 +232,10 @@ export async function getReferralCodes(): Promise<ReferralCode[]> {
   return rawReferralCodes.map((rc) => calculateCodeStats(rc.code))
 }
 
-export async function getReferralUsersByCode(code: string): Promise<ReferralUser[]> {
+export async function getReferralUsersByCode(_code: string): Promise<ReferralUser[]> {
   await sleep(300)
-  return getUsersByCode(code)
+  // Return first 6 users as mock data for any code
+  return rawUsers.slice(0, 6)
 }
 
 export async function createReferralCode(customCode?: string): Promise<{ success: boolean; code?: ReferralCode; error?: string }> {

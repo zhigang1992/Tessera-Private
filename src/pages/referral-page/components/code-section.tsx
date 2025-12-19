@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
+import { useQuery } from '@tanstack/react-query'
 import { User, Share2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCurrency, formatSOL } from '@/services'
+import { formatCurrency, formatSOL, getReferralUsersByCode } from '@/services'
 import { WalletDropdown } from '@/components/wallet-dropdown'
 import { Pagination } from '@/components/ui/pagination'
 import CopyIcon from './_/copy.svg?react'
@@ -36,9 +37,12 @@ export function CodeSection() {
     }))
   }, [affiliateData])
 
-  // For now, users list is not available from the API, so we use empty array
-  const users: Array<{ id: string; email: string; dateJoined: string; layer: string; pointsEarned: number; rewardEarned: number }> = []
-  const usersLoading = false
+  // Fetch users for selected code
+  const { data: users = [], isLoading: usersLoading } = useQuery({
+    queryKey: ['referralUsers', selectedCode],
+    queryFn: () => getReferralUsersByCode(selectedCode!),
+    enabled: !!selectedCode,
+  })
 
   // Pagination logic
   const totalPages = Math.ceil(codes.length / PAGE_SIZE)
