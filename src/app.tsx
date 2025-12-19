@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import { AppProviders } from '@/components/app-providers.tsx'
 import { MainLayout } from '@/components/layout'
-import { ReferralPage, LeaderboardPage, PlaceholderPage, TradePage } from '@/pages'
+import { ReferralPage, LeaderboardPage, PlaceholderPage, TradePage, DashboardPage } from '@/pages'
 import ReferralFeatureSimple from '@/features/referral/referral-feature-simple'
 
 export function App() {
@@ -16,7 +16,7 @@ export function App() {
             <Route path="/referral-simple" element={<ReferralFeatureSimple />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/trade" element={<TradePage />} />
-            <Route path="/dashboard" element={<PlaceholderPage title="Dashboard" />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/support" element={<PlaceholderPage title="Support" />} />
           </Routes>
         </MainLayout>
