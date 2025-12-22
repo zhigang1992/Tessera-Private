@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { User } from 'lucide-react'
-import treeImg from './_/tree.png'
+import TreeIcon from './_/tree.svg?react'
 import { getTraderLayers } from '@/services'
 
 export function ReferralTree() {
@@ -12,8 +12,8 @@ export function ReferralTree() {
   return (
     <div className="flex flex-col lg:flex-row rounded-2xl overflow-hidden p-4 bg-white dark:bg-card gap-4 lg:gap-6">
       {/* Tree Visualization */}
-      <div className="flex items-center justify-center p-4 lg:p-6">
-        <img className="w-full max-w-[288px] h-auto lg:w-[288px] lg:h-[202px]" src={treeImg} />
+      <div className="flex items-center justify-center p-4 lg:p-6 text-foreground">
+        <TreeIcon className="w-full max-w-[288px] h-auto lg:w-[288px] lg:h-[202px]" />
       </div>
 
       <div className="h-[1px] lg:h-auto lg:w-[1px] bg-[#D9D9D9] dark:bg-border" />
