@@ -1,21 +1,21 @@
-import type { D1Database, KVNamespace, PagesFunction, R2Bucket } from '@cloudflare/workers-types';
-import QRCode from 'qrcode-svg';
+import type { D1Database, KVNamespace, PagesFunction, R2Bucket } from '@cloudflare/workers-types'
+import QRCode from 'qrcode-svg'
 
 type Env = {
-  DB: D1Database;
-  SESSION_KV: KVNamespace;
-  REFERRAL_IMAGES: R2Bucket;
-  CLOUDFLARE_ACCOUNT_ID: string;
-  CLOUDFLARE_API_TOKEN: string;
-};
+  DB: D1Database
+  SESSION_KV: KVNamespace
+  REFERRAL_IMAGES: R2Bucket
+  CLOUDFLARE_ACCOUNT_ID: string
+  CLOUDFLARE_API_TOKEN: string
+}
 
 interface BrowserRenderingResponse {
-  success: boolean;
+  success: boolean
   result: {
-    screenshot: string; // Base64 encoded
-    content: string;
-  };
-  errors?: Array<{ message: string }>;
+    screenshot: string // Base64 encoded
+    content: string
+  }
+  errors?: Array<{ message: string }>
 }
 
 /**
@@ -30,8 +30,8 @@ function generateQRCodeSVG(text: string): string {
     color: '#000000',
     background: 'transparent',
     ecl: 'M',
-  });
-  return qr.svg();
+  })
+  return qr.svg()
 }
 
 /**
@@ -40,9 +40,9 @@ function generateQRCodeSVG(text: string): string {
  */
 function generateShareCardHTML(code: string, _origin: string, backgroundNumber: number): string {
   // Generate the referral URL for QR code
-  const referralUrl = `https://tessera.fun/?code=${code}`;
-  const qrCodeSVG = generateQRCodeSVG(referralUrl);
-  const backgroundUrl = `https://r2.tessera.fun/bg_${backgroundNumber}.png`;
+  const referralUrl = `https://tessera.fun/?code=${code}`
+  const qrCodeSVG = generateQRCodeSVG(referralUrl)
+  const backgroundUrl = `https://r2.tessera.fun/bg_${backgroundNumber}.png`
 
   return `
 <!DOCTYPE html>
@@ -174,64 +174,52 @@ function generateShareCardHTML(code: string, _origin: string, backgroundNumber: 
   </div>
 </body>
 </html>
-  `.trim();
+  `.trim()
 }
 
 /**
  * API endpoint to generate referral code share images
- * GET /api/referral/image?code=XXXXX
+ * GET /api/referral/image?code=XXXXX&bg=1-6
  *
  * This endpoint generates a share image for a referral code by:
- * 1. Checking if the code exists in the database
+ * 1. Validating the code format (6-12 alphanumeric characters)
  * 2. Checking if an image already exists in R2 storage
- * 3. If not, using Cloudflare Browser Rendering API to capture the share modal
+ * 3. If not, using Cloudflare Browser Rendering API to render the share card
  * 4. Saving and returning the image
  */
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
-  const url = new URL(request.url);
-  const code = url.searchParams.get('code');
+  const url = new URL(request.url)
+  const code = url.searchParams.get('code')
 
   if (!code) {
     return new Response(JSON.stringify({ error: 'Missing code parameter' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
-    });
+    })
   }
 
-  // Validate code format (alphanumeric, 4-10 chars)
-  if (!/^[a-zA-Z0-9]{4,10}$/.test(code)) {
-    return new Response(JSON.stringify({ error: 'Invalid code format' }), {
+  // Validate code format (alphanumeric, 6-12 chars)
+  if (!/^[a-zA-Z0-9]{6,12}$/.test(code)) {
+    return new Response(JSON.stringify({ error: 'Invalid code format. Code must be 6-12 alphanumeric characters.' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
-    });
+    })
   }
 
   // Parse and validate background number (1-6, default to 1)
-  const bgParam = url.searchParams.get('bg');
-  let backgroundNumber = 1;
+  const bgParam = url.searchParams.get('bg')
+  let backgroundNumber = 1
   if (bgParam) {
-    const parsed = parseInt(bgParam, 10);
+    const parsed = parseInt(bgParam, 10)
     if (!isNaN(parsed) && parsed >= 1 && parsed <= 6) {
-      backgroundNumber = parsed;
+      backgroundNumber = parsed
     }
   }
 
   try {
-    // Check if the referral code exists in the database
-    const referralCode = await env.DB.prepare('SELECT code_slug FROM referral_codes WHERE code_slug = ?')
-      .bind(code)
-      .first();
-
-    if (!referralCode) {
-      return new Response(JSON.stringify({ error: 'Referral code not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
     // Check if image already exists in R2
-    const imageKey = `referral-${code}-bg${backgroundNumber}.png`;
-    const existingImage = await env.REFERRAL_IMAGES.get(imageKey);
+    const imageKey = `referral-${code}-bg${backgroundNumber}.png`
+    const existingImage = await env.REFERRAL_IMAGES.get(imageKey)
 
     if (existingImage) {
       // Return cached image
@@ -240,35 +228,35 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
           'Content-Type': 'image/png',
           'Cache-Control': 'public, max-age=31536000, immutable', // Cache for 1 year
         },
-      });
+      })
     }
 
     // Generate new image using Browser Rendering API
-    const accountId = env.CLOUDFLARE_ACCOUNT_ID;
-    const apiToken = env.CLOUDFLARE_API_TOKEN;
+    const accountId = env.CLOUDFLARE_ACCOUNT_ID
+    const apiToken = env.CLOUDFLARE_API_TOKEN
 
     if (!accountId || !apiToken) {
-      console.error('Missing CLOUDFLARE_ACCOUNT_ID or CLOUDFLARE_API_TOKEN');
+      console.error('Missing CLOUDFLARE_ACCOUNT_ID or CLOUDFLARE_API_TOKEN')
       return new Response(JSON.stringify({ error: 'Server configuration error' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
-      });
+      })
     }
 
     // Get the origin from the request to construct the share URL
-    const origin = url.origin;
+    const origin = url.origin
 
     // Create HTML content for the share card
     // We always use HTML rendering instead of URL to have full control
-    const htmlContent = generateShareCardHTML(code, origin, backgroundNumber);
+    const htmlContent = generateShareCardHTML(code, origin, backgroundNumber)
 
     // Call Browser Rendering API
-    const browserRenderingUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/browser-rendering/snapshot`;
+    const browserRenderingUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/browser-rendering/snapshot`
 
     const renderResponse = await fetch(browserRenderingUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiToken}`,
+        Authorization: `Bearer ${apiToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -286,43 +274,37 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
           timeout: 15000,
         },
       }),
-    });
+    })
 
     if (!renderResponse.ok) {
-      const errorText = await renderResponse.text();
-      console.error('Browser Rendering API error:', errorText);
-      return new Response(
-        JSON.stringify({ error: 'Failed to generate image', details: errorText }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      );
+      const errorText = await renderResponse.text()
+      console.error('Browser Rendering API error:', errorText)
+      return new Response(JSON.stringify({ error: 'Failed to generate image', details: errorText }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      })
     }
 
-    const renderData = (await renderResponse.json()) as BrowserRenderingResponse;
+    const renderData = (await renderResponse.json()) as BrowserRenderingResponse
 
     if (!renderData.success || !renderData.result?.screenshot) {
-      console.error('Browser Rendering API returned unsuccessful response:', renderData);
-      return new Response(
-        JSON.stringify({ error: 'Failed to generate screenshot', details: renderData.errors }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      );
+      console.error('Browser Rendering API returned unsuccessful response:', renderData)
+      return new Response(JSON.stringify({ error: 'Failed to generate screenshot', details: renderData.errors }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      })
     }
 
     // Decode base64 screenshot
-    const screenshotBase64 = renderData.result.screenshot;
-    const screenshotBuffer = Uint8Array.from(atob(screenshotBase64), (c) => c.charCodeAt(0));
+    const screenshotBase64 = renderData.result.screenshot
+    const screenshotBuffer = Uint8Array.from(atob(screenshotBase64), (c) => c.charCodeAt(0))
 
     // Save to R2
     await env.REFERRAL_IMAGES.put(imageKey, screenshotBuffer, {
       httpMetadata: {
         contentType: 'image/png',
       },
-    });
+    })
 
     // Return the generated image
     return new Response(screenshotBuffer, {
@@ -330,9 +312,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
         'Content-Type': 'image/png',
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
-    });
+    })
   } catch (error) {
-    console.error('Error generating referral image:', error);
+    console.error('Error generating referral image:', error)
     return new Response(
       JSON.stringify({
         error: 'Internal server error',
@@ -342,6 +324,6 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
       },
-    );
+    )
   }
-};
+}

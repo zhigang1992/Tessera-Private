@@ -1,15 +1,15 @@
-import type { KVNamespace, D1Database } from '@cloudflare/workers-types';
-import { getSessionRecord, readBearerToken, type SessionRecord } from './session';
+import type { KVNamespace, D1Database } from '@cloudflare/workers-types'
+import { getSessionRecord, readBearerToken, type SessionRecord } from './session'
 
 export type AuthenticatedContext = {
-  session: SessionRecord;
-  walletAddress: string;
-};
+  session: SessionRecord
+  walletAddress: string
+}
 
 type Env = {
-  DB: D1Database;
-  SESSION_KV: KVNamespace;
-};
+  DB: D1Database
+  SESSION_KV: KVNamespace
+}
 
 /**
  * Middleware to authenticate requests using Bearer token from Authorization header.
@@ -19,22 +19,22 @@ export async function authenticateRequest(
   request: Request,
   env: Env,
 ): Promise<{ authenticated: false; error: Response } | { authenticated: true; context: AuthenticatedContext }> {
-  const token = readBearerToken(request);
+  const token = readBearerToken(request)
 
   if (!token) {
     return {
       authenticated: false,
       error: Response.json({ error: 'Missing authorization token' }, { status: 401 }),
-    };
+    }
   }
 
-  const session = await getSessionRecord(token, env.SESSION_KV);
+  const session = await getSessionRecord(token, env.SESSION_KV)
 
   if (!session) {
     return {
       authenticated: false,
       error: Response.json({ error: 'Invalid or expired session' }, { status: 401 }),
-    };
+    }
   }
 
   return {
@@ -43,7 +43,7 @@ export async function authenticateRequest(
       session,
       walletAddress: session.walletAddress,
     },
-  };
+  }
 }
 
 /**
@@ -55,22 +55,22 @@ export async function optionalAuthenticateRequest(
   request: Request,
   env: Env,
 ): Promise<{ authenticated: false; context: null } | { authenticated: true; context: AuthenticatedContext }> {
-  const token = readBearerToken(request);
+  const token = readBearerToken(request)
 
   if (!token) {
     return {
       authenticated: false,
       context: null,
-    };
+    }
   }
 
-  const session = await getSessionRecord(token, env.SESSION_KV);
+  const session = await getSessionRecord(token, env.SESSION_KV)
 
   if (!session) {
     return {
       authenticated: false,
       context: null,
-    };
+    }
   }
 
   return {
@@ -79,7 +79,7 @@ export async function optionalAuthenticateRequest(
       session,
       walletAddress: session.walletAddress,
     },
-  };
+  }
 }
 
 /**
@@ -88,7 +88,9 @@ export async function optionalAuthenticateRequest(
  */
 export async function ensureUserExists(walletAddress: string, db: D1Database): Promise<void> {
   await db
-    .prepare("INSERT INTO users (wallet_address) VALUES (?) ON CONFLICT(wallet_address) DO UPDATE SET updated_at = datetime('now')")
+    .prepare(
+      "INSERT INTO users (wallet_address) VALUES (?) ON CONFLICT(wallet_address) DO UPDATE SET updated_at = datetime('now')",
+    )
     .bind(walletAddress)
-    .run();
+    .run()
 }

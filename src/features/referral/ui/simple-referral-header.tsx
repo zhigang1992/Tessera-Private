@@ -1,5 +1,25 @@
+import { Link } from 'react-router'
+
+function LeaderboardIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <path d="M3 3V21H21V19H5V3H3Z" />
+      <path d="M7 14H9V18H7V14Z" />
+      <path d="M11 10H13V18H11V10Z" />
+      <path d="M15 6H17V18H15V6Z" />
+      <path d="M19 12H21V18H19V12Z" />
+    </svg>
+  )
+}
+
 export default function SimpleReferralHeader() {
-  
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center">
@@ -16,6 +36,13 @@ export default function SimpleReferralHeader() {
           />
         </svg>
       </div>
+      <Link
+        to="/leaderboard"
+        className="flex items-center gap-2 text-sm font-medium text-[#333333] dark:text-white/70 hover:text-black dark:hover:text-white transition-colors"
+      >
+        <LeaderboardIcon className="w-6 h-6" />
+        <span>Leaderboard &gt;</span>
+      </Link>
     </div>
   )
 }

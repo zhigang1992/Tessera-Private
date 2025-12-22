@@ -1,55 +1,44 @@
-import { useState } from 'react';
-import { useTraderData, useBindReferralCode } from '../hooks/use-referral-queries';
-import { useReferralAuth } from '../hooks/use-referral-auth';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Loader2 } from 'lucide-react';
-import { UrlKeyAlertDialog } from './url-key-alert-dialog';
-import { getUrlKeyAlertHandlers } from '../lib/url-key-alert';
+import { useState } from 'react'
+import { useTraderData, useBindReferralCode } from '../hooks/use-referral-onchain'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function BindCodeCard() {
-  const bindMutation = useBindReferralCode();
-  const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert, walletAddress } =
-    useReferralAuth();
-  const { data: traderData, isLoading } = useTraderData(walletAddress);
+  const { connected, publicKey } = useWallet()
+  const walletAddress = publicKey?.toBase58()
+  const bindMutation = useBindReferralCode()
+  const { data: traderData, isLoading } = useTraderData(walletAddress, connected)
 
-  const handleUrlKeyConfirm = async () => {
-    const handlers = getUrlKeyAlertHandlers();
-    if (handlers?.handleConfirm) {
-      await handlers.handleConfirm();
-    }
-  };
-
-  const handleUrlKeyCancel = () => {
-    const handlers = getUrlKeyAlertHandlers();
-    if (handlers?.handleCancel) {
-      handlers.handleCancel();
-    }
-  };
-
-  const [referralCodeInput, setReferralCodeInput] = useState('');
-  const activeReferralCode = traderData?.referral?.referrerCode;
-  const isAlreadyBound = Boolean(activeReferralCode);
+  const [referralCodeInput, setReferralCodeInput] = useState('')
+  const activeReferralCode = traderData?.referral?.referrerCode
+  const isAlreadyBound = Boolean(activeReferralCode)
 
   const handleBindCode = async () => {
-    if (!referralCodeInput.trim()) return;
+    if (!referralCodeInput.trim()) return
 
-    // If not authenticated, require sign message first
-    if (!isAuthenticated) {
-      const signedIn = await authenticate();
-      if (!signedIn) return;
+    if (!connected) {
+      toast.error('Please connect your wallet first')
+      return
     }
 
-    await bindMutation.mutateAsync(referralCodeInput.toUpperCase());
-    setReferralCodeInput('');
-  };
+    try {
+      await bindMutation.mutateAsync(referralCodeInput.toUpperCase())
+      setReferralCodeInput('')
+    } catch (error) {
+      // Error already handled by mutation
+      console.error('Bind code error:', error)
+    }
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Convert to uppercase and limit to reasonable length
-    const value = e.target.value.toUpperCase().slice(0, 20);
-    setReferralCodeInput(value);
-  };
+    const value = e.target.value.toUpperCase().slice(0, 20)
+    setReferralCodeInput(value)
+  }
 
   if (isLoading) {
     return (
@@ -65,7 +54,7 @@ export default function BindCodeCard() {
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   return (
@@ -77,12 +66,8 @@ export default function BindCodeCard() {
           <CardContent className="flex flex-col gap-5 p-5">
             {isAlreadyBound ? (
               <div className="flex flex-col gap-1">
-                <p className="text-sm font-medium uppercase text-[#6B7280] dark:text-[#A1A1AA]">
-                  Active referral code
-                </p>
-                <p className="text-2xl font-semibold text-[#111111] dark:text-white">
-                  {activeReferralCode}
-                </p>
+                <p className="text-sm font-medium uppercase text-[#6B7280] dark:text-[#A1A1AA]">Active referral code</p>
+                <p className="text-2xl font-semibold text-[#111111] dark:text-white">{activeReferralCode}</p>
               </div>
             ) : (
               <>
@@ -96,14 +81,12 @@ export default function BindCodeCard() {
                   />
                   <Button
                     onClick={handleBindCode}
-                    disabled={!referralCodeInput.trim() || bindMutation.isPending || isAuthenticating}
+                    disabled={!connected || !referralCodeInput.trim() || bindMutation.isPending}
                     size="lg"
                     className="flex h-10 items-center gap-2 rounded-lg bg-black px-6 text-sm font-semibold text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
                   >
-                    {(bindMutation.isPending || isAuthenticating) && (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    )}
-                    {bindMutation.isPending || isAuthenticating ? 'Binding...' : 'Bind Code'}
+                    {bindMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {bindMutation.isPending ? 'Binding...' : 'Bind Code'}
                   </Button>
                 </div>
                 <p className="text-sm text-gray-700 dark:text-gray-400">
@@ -114,12 +97,6 @@ export default function BindCodeCard() {
           </CardContent>
         </Card>
       </div>
-      <UrlKeyAlertDialog
-        open={showUrlKeyAlert}
-        onOpenChange={setShowUrlKeyAlert}
-        onConfirm={handleUrlKeyConfirm}
-        onCancel={handleUrlKeyCancel}
-      />
     </>
-  );
+  )
 }

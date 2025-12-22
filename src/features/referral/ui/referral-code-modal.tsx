@@ -1,20 +1,12 @@
 import { useCallback } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Card, CardContent } from '@/components/ui/card'
 import { WalletDropdown } from '@/components/wallet-dropdown'
 import { Loader2, UserIcon } from 'lucide-react'
-import { useBindReferralCode } from '../hooks/use-referral-queries'
-import { useReferralAuth } from '../hooks/use-referral-auth'
-import { UrlKeyAlertDialog } from './url-key-alert-dialog'
+import { useBindReferralCode } from '../hooks/use-referral-onchain'
 import { toast } from 'sonner'
-import { getUrlKeyAlertHandlers } from '../lib/url-key-alert'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 
 interface ReferralCodeModalProps {
@@ -28,7 +20,7 @@ export default function ReferralCodeModal({ isOpen, onClose, referralCode }: Ref
   const accountAddress = publicKey?.toBase58()
   const bindMutation = useBindReferralCode()
   const hasAccount = Boolean(connected && accountAddress)
-  const {visible} = useWalletModal()
+  const { visible } = useWalletModal()
 
   const handleChangeCode = () => {
     onClose()
@@ -44,13 +36,19 @@ export default function ReferralCodeModal({ isOpen, onClose, referralCode }: Ref
 
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#D2FB95]">
-              {connected ? <UserIcon className="h-6 w-6 text-[#979797]" /> : <div className="h-6 w-6 rounded-full bg-[#979797]" />}
+              {connected ? (
+                <UserIcon className="h-6 w-6 text-[#979797]" />
+              ) : (
+                <div className="h-6 w-6 rounded-full bg-[#979797]" />
+              )}
             </div>
             <div className="flex-1">
               {connected ? (
                 <div>
                   <div className="text-sm font-medium text-black">
-                    {accountAddress ? `${accountAddress.slice(0, 10)}...${accountAddress.slice(-8)}` : 'Wallet Connected'}
+                    {accountAddress
+                      ? `${accountAddress.slice(0, 10)}...${accountAddress.slice(-8)}`
+                      : 'Wallet Connected'}
                   </div>
                   <button
                     className="text-xs text-black/50 hover:text-black"
@@ -103,7 +101,7 @@ export default function ReferralCodeModal({ isOpen, onClose, referralCode }: Ref
 
 interface ReferralCodeModalConnectedProps {
   referralCode: string
-  bindReferralCode: (referralCode: string) => Promise<unknown>
+  bindReferralCode: (referralCode: string) => Promise<{ code: string; txSignature: string }>
   bindPending: boolean
   accountAddress: string
   onClose: () => void
@@ -116,22 +114,6 @@ function ReferralCodeModalConnected({
   accountAddress,
   onClose,
 }: ReferralCodeModalConnectedProps) {
-  const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert } = useReferralAuth()
-
-  const handleUrlKeyConfirm = useCallback(async () => {
-    const handlers = getUrlKeyAlertHandlers()
-    if (handlers?.handleConfirm) {
-      await handlers.handleConfirm()
-    }
-  }, [])
-
-  const handleUrlKeyCancel = useCallback(() => {
-    const handlers = getUrlKeyAlertHandlers()
-    if (handlers?.handleCancel) {
-      handlers.handleCancel()
-    }
-  }, [])
-
   const handleBindReferralCode = useCallback(async () => {
     if (!accountAddress) {
       toast.error('Please connect your wallet first')
@@ -143,36 +125,29 @@ function ReferralCodeModalConnected({
       return
     }
 
-    if (!isAuthenticated) {
-      const signedIn = await authenticate()
-      if (!signedIn) return
-    }
+    const normalizedCode = referralCode.trim().toUpperCase()
 
     try {
-      await bindReferralCode(referralCode.toUpperCase())
+      await bindReferralCode(normalizedCode)
       onClose()
     } catch (error) {
       console.error('Failed to bind referral code', error)
     }
-  }, [accountAddress, authenticate, bindReferralCode, isAuthenticated, onClose, referralCode])
+  }, [accountAddress, bindReferralCode, onClose, referralCode])
+
+  const isProcessing = bindPending
+  const buttonLabel = bindPending ? 'Binding...' : 'Bind Referral Code'
 
   return (
     <>
       <Button
         onClick={handleBindReferralCode}
-        disabled={bindPending || isAuthenticating}
+        disabled={isProcessing}
         className="flex w-full items-center gap-2 rounded-lg bg-black py-3 text-sm font-medium text-white hover:bg-black/90 disabled:opacity-50"
       >
-        {(bindPending || isAuthenticating) && <Loader2 className="h-4 w-4 animate-spin" />}
-        {bindPending || isAuthenticating ? 'Binding...' : 'Bind Referral Code'}
+        {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
+        {buttonLabel}
       </Button>
-
-      <UrlKeyAlertDialog
-        open={showUrlKeyAlert}
-        onOpenChange={setShowUrlKeyAlert}
-        onConfirm={handleUrlKeyConfirm}
-        onCancel={handleUrlKeyCancel}
-      />
     </>
   )
 }

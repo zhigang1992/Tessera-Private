@@ -5,6 +5,7 @@ This document explains how to set up and use the referral image generation API t
 ## Overview
 
 The `/api/referral/image` endpoint generates social media share images for referral codes. It:
+
 - Validates the referral code exists in the database
 - Checks for cached images in R2 storage
 - Generates new images using Cloudflare Browser Rendering API
@@ -17,6 +18,7 @@ The `/api/referral/image` endpoint generates social media share images for refer
    - [Enable Browser Rendering](https://developers.cloudflare.com/browser-rendering/)
 
 2. **R2 Bucket created**
+
    ```bash
    wrangler r2 bucket create tessera-referral-images
    ```
@@ -28,6 +30,7 @@ The `/api/referral/image` endpoint generates social media share images for refer
 ## Setup Steps
 
 ### 1. Create R2 Bucket
+
 ```bash
 wrangler r2 bucket create tessera-referral-images
 ```
@@ -35,12 +38,14 @@ wrangler r2 bucket create tessera-referral-images
 ### 2. Set Environment Variables
 
 For local development, create a `.dev.vars` file:
+
 ```env
 CLOUDFLARE_ACCOUNT_ID=your-account-id-here
 CLOUDFLARE_API_TOKEN=your-api-token-here
 ```
 
 For production, set secrets using wrangler:
+
 ```bash
 wrangler pages secret put CLOUDFLARE_ACCOUNT_ID
 # Enter your account ID when prompted
@@ -50,6 +55,7 @@ wrangler pages secret put CLOUDFLARE_API_TOKEN
 ```
 
 ### 3. Find Your Account ID
+
 ```bash
 # Option 1: Using wrangler
 wrangler whoami
@@ -62,14 +68,17 @@ wrangler whoami
 ## API Usage
 
 ### Endpoint
+
 ```
 GET /api/referral/image?code={REFERRAL_CODE}
 ```
 
 ### Parameters
+
 - `code` (required): The referral code (4-10 alphanumeric characters)
 
 ### Response
+
 - **Success**: Returns PNG image with `Content-Type: image/png`
 - **Cached**: Images are cached in R2 with 1-year browser cache
 - **Error**: Returns JSON with error details
@@ -87,10 +96,10 @@ GET /api/referral/image?code={REFERRAL_CODE}
 
 ```javascript
 // In JavaScript
-const imageUrl = `/api/referral/image?code=${referralCode}`;
+const imageUrl = `/api/referral/image?code=${referralCode}`
 
 // For Twitter Web Intent
-const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(imageUrl)}`;
+const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(imageUrl)}`
 ```
 
 ## How It Works
@@ -111,23 +120,25 @@ const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(t
 ### Modify the Share Component
 
 You'll need to update your frontend to:
+
 1. Accept a `share_modal=true` query parameter
 2. Automatically open the share modal when this parameter is present
 3. Style the modal for screenshot capture
 
 Example implementation:
+
 ```typescript
 // In your App or Share component
 useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.location.search)
   if (params.get('share_modal') === 'true') {
-    const code = params.get('code');
+    const code = params.get('code')
     if (code) {
       // Open share modal with this code
-      openShareModal(code);
+      openShareModal(code)
     }
   }
-}, []);
+}, [])
 ```
 
 ## Cost Considerations
@@ -140,15 +151,18 @@ useEffect(() => {
 ## Troubleshooting
 
 ### "Server configuration error"
+
 - Check that `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` are set correctly
 - Verify the API token has Browser Rendering permissions
 
 ### "Failed to generate image"
+
 - Check Browser Rendering API quota/limits
 - Verify the share modal URL is accessible
 - Check Browser Rendering API status on Cloudflare Dashboard
 
 ### Images not updating
+
 - Images are cached permanently in R2
 - To regenerate an image, delete it from R2:
   ```bash
@@ -158,11 +172,13 @@ useEffect(() => {
 ## Testing Locally
 
 1. Start the dev server:
+
    ```bash
    bun run dev
    ```
 
 2. Start Cloudflare Pages dev server:
+
    ```bash
    bun run cf:dev
    ```

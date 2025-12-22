@@ -3,6 +3,9 @@ import { AppProviders } from '@/components/app-providers.tsx'
 import { MainLayout } from '@/components/layout'
 import { ReferralPage, LeaderboardPage, PlaceholderPage, TradePage, DashboardPage } from '@/pages'
 import ReferralFeatureSimple from '@/features/referral/referral-feature-simple'
+import { MigrationPage } from '@/features/admin/pages/MigrationPage'
+import { AuctionListPage } from '@/features/auction/pages/AuctionListPage'
+import { AuctionDetailPage } from '@/features/auction/pages/AuctionDetailPage'
 
 export function App() {
   return (
@@ -18,6 +21,9 @@ export function App() {
             <Route path="/trade" element={<TradePage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/support" element={<PlaceholderPage title="Support" />} />
+            <Route path="/admin/migration" element={<MigrationPage />} />
+            <Route path="/auctions" element={<AuctionListPage />} />
+            <Route path="/auctions/:auctionId" element={<AuctionDetailPage />} />
           </Routes>
         </MainLayout>
       </BrowserRouter>

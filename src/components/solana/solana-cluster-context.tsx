@@ -19,13 +19,7 @@ const STORAGE_KEY = 'solana-cluster-id'
 
 const SolanaClusterContext = createContext<SolanaClusterContextValue | null>(null)
 
-export function SolanaClusterProvider({
-  clusters,
-  children,
-}: {
-  clusters: SolanaCluster[]
-  children: ReactNode
-}) {
+export function SolanaClusterProvider({ clusters, children }: { clusters: SolanaCluster[]; children: ReactNode }) {
   const defaultCluster = clusters[0]
   const [clusterId, setClusterId] = useState<SolanaClusterId>(() => {
     if (typeof window === 'undefined') {

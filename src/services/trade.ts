@@ -310,9 +310,9 @@ export interface SwapResult {
 }
 
 export async function executeSwap(
-  fromToken: string,
-  toToken: string,
-  fromAmount: number
+  _fromToken: string,
+  _toToken: string,
+  _fromAmount: number
 ): Promise<SwapResult> {
   await sleep(1500) // Simulate transaction time
 
