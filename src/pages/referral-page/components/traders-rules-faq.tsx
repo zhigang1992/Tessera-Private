@@ -45,13 +45,13 @@ export function TradersRulesFaq() {
   }, [])
 
   return (
-    <div id="rules-faq" className="rounded-2xl bg-white p-4 lg:p-6">
-      <h2 className="text-lg font-bold text-black">Rules & FAQ</h2>
+    <div id="rules-faq" className="rounded-2xl bg-white dark:bg-card p-4 lg:p-6">
+      <h2 className="text-lg font-bold text-foreground">Rules & FAQ</h2>
 
-      <div className="my-4 h-px bg-gray-100" />
+      <div className="my-4 h-px bg-gray-100 dark:bg-border" />
 
       <div
-        className="prose prose-sm max-w-none text-muted-foreground prose-headings:text-black prose-strong:text-black prose-table:text-sm overflow-x-auto"
+        className="prose prose-sm max-w-none text-muted-foreground prose-headings:text-foreground prose-strong:text-foreground prose-table:text-sm dark:prose-invert overflow-x-auto"
         dangerouslySetInnerHTML={{ __html: htmlContent }}
       />
     </div>

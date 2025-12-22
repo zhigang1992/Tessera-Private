@@ -31,15 +31,15 @@ export function TradingHistory() {
   const items = data?.items ?? []
 
   return (
-    <div className="rounded-2xl bg-white overflow-hidden">
+    <div className="rounded-2xl bg-white dark:bg-card overflow-hidden">
       <div className="p-4 lg:p-6">
-        <h2 className="text-base md:text-lg text-black">Trading History</h2>
+        <h2 className="text-base md:text-lg text-foreground">Trading History</h2>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[600px]">
           <thead>
-            <tr className="border-b border-gray-100">
+            <tr className="border-b border-gray-100 dark:border-border">
               <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs lg:text-sm font-medium text-muted-foreground">Token</th>
               <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs lg:text-sm font-medium text-muted-foreground">Amount</th>
               <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs lg:text-sm font-medium text-muted-foreground">Type</th>
@@ -57,30 +57,30 @@ export function TradingHistory() {
             ) : items.length === 0 ? (
               <tr>
                 <td colSpan={5} className="p-4">
-                  <div className="flex items-center justify-center rounded-lg bg-gray-50 py-16">
+                  <div className="flex items-center justify-center rounded-lg bg-gray-50 dark:bg-muted py-16">
                     <span className="text-sm text-muted-foreground">No Discount Distribution</span>
                   </div>
                 </td>
               </tr>
             ) : (
               items.map((item) => (
-                <tr key={item.id} className="border-b border-gray-50 last:border-0">
+                <tr key={item.id} className="border-b border-gray-50 dark:border-border/50 last:border-0">
                   <td className="px-3 lg:px-6 py-3 lg:py-4">
                     <div className="flex items-center gap-1.5 lg:gap-2">
                       {getTokenIcon(item.token)}
-                      <span className="text-xs lg:text-sm font-medium text-black">{item.token}</span>
+                      <span className="text-xs lg:text-sm font-medium text-foreground">{item.token}</span>
                     </div>
                   </td>
                   <td className="px-3 lg:px-6 py-3 lg:py-4">
-                    <div className="flex items-center gap-1 text-xs lg:text-sm text-black">
+                    <div className="flex items-center gap-1 text-xs lg:text-sm text-foreground">
                       <span>{item.amountIn}</span>
                       <ArrowRightIcon />
                       <span>{item.amountOut}</span>
                     </div>
                   </td>
-                  <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">{item.type}</td>
-                  <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">{item.account}</td>
-                  <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-black">{item.time}</td>
+                  <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-foreground">{item.type}</td>
+                  <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-foreground">{item.account}</td>
+                  <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-foreground">{item.time}</td>
                 </tr>
               ))
             )}
@@ -93,7 +93,7 @@ export function TradingHistory() {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
-        className="border-t border-gray-100 px-3 lg:px-6 py-3 lg:py-4"
+        className="border-t border-gray-100 dark:border-border px-3 lg:px-6 py-3 lg:py-4"
       />
     </div>
   )

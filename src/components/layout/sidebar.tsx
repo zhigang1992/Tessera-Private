@@ -100,7 +100,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   onClick={onClose}
                   className={cn(
                     'flex items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium transition-colors',
-                    isActive ? 'bg-[#D2FB95] text-black' : 'text-black hover:bg-accent hover:text-accent-foreground',
+                    isActive ? 'bg-[#D2FB95] text-black' : 'text-foreground hover:bg-accent hover:text-accent-foreground',
                   )}
                 >
                   <item.icon className="h-6 w-6" />

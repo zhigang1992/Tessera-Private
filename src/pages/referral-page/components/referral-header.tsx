@@ -3,10 +3,10 @@ import { HelpCircle } from 'lucide-react'
 export function ReferralHeader() {
   return (
     <div className="flex items-center justify-between">
-      <h1 className="text-2xl font-bold text-black">Referral</h1>
+      <h1 className="text-2xl font-bold text-foreground">Referral</h1>
       <a
         href="#rules-faq"
-        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-black"
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <HelpCircle className="h-4 w-4" />
         Rules & FAQ

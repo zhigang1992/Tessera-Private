@@ -55,7 +55,7 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
         disabled={currentPage === 1}
         className={cn(
           'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
-          currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-muted-foreground hover:bg-gray-100',
+          currentPage === 1 ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'text-muted-foreground hover:bg-gray-100 dark:hover:bg-muted',
         )}
       >
         <ChevronLeft className="h-3 w-3 lg:h-4 lg:w-4" />
@@ -69,9 +69,9 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
           className={cn(
             'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
             page === currentPage
-              ? 'bg-black text-white'
+              ? 'bg-black dark:bg-white text-white dark:text-black'
               : typeof page === 'number'
-                ? 'text-muted-foreground hover:bg-gray-100'
+                ? 'text-muted-foreground hover:bg-gray-100 dark:hover:bg-muted'
                 : 'text-muted-foreground cursor-default',
           )}
         >
@@ -84,7 +84,7 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
         disabled={currentPage === totalPages}
         className={cn(
           'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
-          currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-muted-foreground hover:bg-gray-100',
+          currentPage === totalPages ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'text-muted-foreground hover:bg-gray-100 dark:hover:bg-muted',
         )}
       >
         <ChevronRight className="h-3 w-3 lg:h-4 lg:w-4" />

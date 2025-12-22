@@ -117,7 +117,7 @@ export function CreateReferralCodeModal({ open, onOpenChange }: CreateReferralCo
                 }
                 disabled={isCreatePending}
                 className={cn(
-                  'w-full rounded-lg bg-gray-100 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground',
+                  'w-full rounded-lg bg-gray-100 dark:bg-muted px-4 py-3 text-sm outline-none placeholder:text-muted-foreground',
                   'disabled:cursor-not-allowed disabled:opacity-50',
                 )}
               />
