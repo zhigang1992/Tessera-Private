@@ -104,7 +104,7 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
   }, [priceHistory])
 
   return (
-    <div className="rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-white to-[#d2fb95]">
+    <div className="rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1a2e0a] dark:to-[#D2FB95]">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 lg:mb-6">
         <div className="flex items-center gap-2 lg:gap-2.5">

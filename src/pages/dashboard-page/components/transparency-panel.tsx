@@ -68,24 +68,24 @@ export function TransparencyPanel() {
       {/* Top Row - Two Panels Side by Side */}
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
         {/* Custodian Attestations Panel */}
-        <div className="flex-1 bg-white rounded-2xl p-4 lg:p-6">
+        <div className="flex-1 bg-white dark:bg-card rounded-2xl p-4 lg:p-6">
           <div className="flex flex-col gap-4 lg:gap-6">
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
               <div>
-                <h3 className="text-lg font-normal text-black">Custodian Attestations</h3>
-                <p className="text-xs text-zinc-500">Last Updated: {transparencyData?.lastUpdated}</p>
+                <h3 className="text-lg font-normal text-foreground">Custodian Attestations</h3>
+                <p className="text-xs text-muted-foreground">Last Updated: {transparencyData?.lastUpdated}</p>
               </div>
               {/* Year Filter Tabs */}
-              <div className="flex items-center gap-1 p-1 bg-zinc-200 rounded-lg w-fit">
+              <div className="flex items-center gap-1 p-1 bg-zinc-200 dark:bg-[#27272A] rounded-lg w-fit">
                 {(['all', 2025, 2024] as YearFilter[]).map((year) => (
                   <button
                     key={year}
                     onClick={() => setYearFilter(year)}
                     className={`px-4 lg:px-6 py-1 text-xs font-medium rounded transition-all ${
                       yearFilter === year
-                        ? 'bg-white text-black shadow-sm'
-                        : 'text-black hover:bg-white/50'
+                        ? 'bg-white dark:bg-[#3F3F46] text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {year === 'all' ? 'All' : year}
@@ -102,7 +102,7 @@ export function TransparencyPanel() {
                     <a
                       key={attestation.id}
                       href={attestation.url}
-                      className="flex-1 flex items-center justify-between p-2 bg-[#f0ffda] rounded text-xs text-black hover:bg-[#e5f5cc] transition-colors"
+                      className="flex-1 flex items-center justify-between p-2 bg-[#f0ffda] dark:bg-[#2a3d1a] rounded text-xs text-black dark:text-foreground hover:bg-[#e5f5cc] dark:hover:bg-[#3a4d2a] transition-colors"
                     >
                       <span>
                         {attestation.month} {attestation.year}
@@ -118,13 +118,13 @@ export function TransparencyPanel() {
         </div>
 
         {/* Proof of Reserves Panel */}
-        <div className="flex-1 bg-white rounded-2xl p-4 lg:p-6">
+        <div className="flex-1 bg-white dark:bg-card rounded-2xl p-4 lg:p-6">
           <div className="flex flex-col gap-4 lg:gap-6">
             {/* Header */}
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-lg font-normal text-black">Proof of Reserves</h3>
-                <p className="text-xs text-zinc-500">Last Updated: {proofOfReserves?.lastUpdated}</p>
+                <h3 className="text-lg font-normal text-foreground">Proof of Reserves</h3>
+                <p className="text-xs text-muted-foreground">Last Updated: {proofOfReserves?.lastUpdated}</p>
               </div>
               <button className="text-xs text-[#06a800] hover:underline">Learn More</button>
             </div>
@@ -133,18 +133,18 @@ export function TransparencyPanel() {
             <div className="flex flex-col gap-1.5">
               {/* Date Header */}
               <div className="py-1.5">
-                <span className="text-sm font-semibold text-black">{proofOfReserves?.date}</span>
+                <span className="text-sm font-semibold text-foreground">{proofOfReserves?.date}</span>
               </div>
-              <div className="h-px bg-black/15" />
+              <div className="h-px bg-black/15 dark:bg-border" />
 
               {/* Table Header */}
-              <div className="flex items-center gap-2.5 px-2.5 py-1 text-xs text-zinc-500">
+              <div className="flex items-center gap-2.5 px-2.5 py-1 text-xs text-muted-foreground">
                 <div className="flex-1">Auditor</div>
                 <div className="flex-1">Overcollateralized</div>
                 <div className="flex-1">Delta-Neutral</div>
               </div>
               <div className="px-2.5">
-                <div className="h-px bg-black/15" />
+                <div className="h-px bg-black/15 dark:bg-border" />
               </div>
 
               {/* Table Rows */}
@@ -153,23 +153,23 @@ export function TransparencyPanel() {
                   <div
                     key={verification.auditor}
                     className={`flex items-center gap-2.5 p-2.5 rounded ${
-                      index % 2 === 0 ? 'bg-zinc-50' : ''
+                      index % 2 === 0 ? 'bg-zinc-50 dark:bg-muted' : ''
                     }`}
                   >
                     <div className="flex-1">
-                      <span className="text-sm font-semibold text-[#404040]">
+                      <span className="text-sm font-semibold text-foreground">
                         {verification.auditor}
                       </span>
                     </div>
                     <div className="flex-1 flex items-center gap-1.5">
-                      <CheckCircleIcon className="w-4 h-4 text-black" />
-                      <span className="text-sm text-black">
+                      <CheckCircleIcon className="w-4 h-4 text-foreground" />
+                      <span className="text-sm text-foreground">
                         {verification.overcollateralized ? 'Yes' : 'No'}
                       </span>
                     </div>
                     <div className="flex-1 flex items-center gap-1.5">
-                      <CheckCircleIcon className="w-4 h-4 text-black" />
-                      <span className="text-sm text-black">
+                      <CheckCircleIcon className="w-4 h-4 text-foreground" />
+                      <span className="text-sm text-foreground">
                         {verification.deltaNeutral ? 'Yes' : 'No'}
                       </span>
                     </div>
@@ -187,10 +187,10 @@ export function TransparencyPanel() {
       </div>
 
       {/* Third Party Data Links Panel */}
-      <div className="bg-white rounded-2xl p-4 lg:p-6">
+      <div className="bg-white dark:bg-card rounded-2xl p-4 lg:p-6">
         <div className="flex flex-col gap-4 lg:gap-6">
           {/* Header */}
-          <h3 className="text-lg font-normal text-black">Independent Third Party Data Links</h3>
+          <h3 className="text-lg font-normal text-foreground">Independent Third Party Data Links</h3>
 
           {/* Links Grid */}
           <div className="flex flex-col gap-2">
@@ -200,7 +200,7 @@ export function TransparencyPanel() {
                   <a
                     key={link.id}
                     href={link.url}
-                    className="flex-1 flex items-center justify-between p-2 bg-[#f0ffda] rounded text-xs text-black hover:bg-[#e5f5cc] transition-colors"
+                    className="flex-1 flex items-center justify-between p-2 bg-[#f0ffda] dark:bg-[#2a3d1a] rounded text-xs text-black dark:text-foreground hover:bg-[#e5f5cc] dark:hover:bg-[#3a4d2a] transition-colors"
                   >
                     <span>{link.name}</span>
                     <ArrowOutwardIcon className="w-4 h-4" />

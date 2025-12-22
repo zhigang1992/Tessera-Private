@@ -13,11 +13,11 @@ export function BalanceDisplay({ tokenSymbol = 'USDC' }: BalanceDisplayProps) {
   })
 
   return (
-    <div className="flex items-center justify-between p-6 rounded-2xl bg-white">
-      <span className="text-sm text-black">Balance:</span>
+    <div className="flex items-center justify-between p-6 rounded-2xl bg-white dark:bg-card">
+      <span className="text-sm text-foreground">Balance:</span>
       <div className="flex items-center gap-1.5">
         <TokenUsdcIcon className="w-6 h-6" />
-        <span className="text-sm font-medium text-black">
+        <span className="text-sm font-medium text-foreground">
           {balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       </div>

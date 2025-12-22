@@ -100,7 +100,7 @@ export function DashboardPriceChart() {
   }, [priceHistory])
 
   return (
-    <div className="rounded-2xl p-4 lg:p-6 lg:px-6 lg:py-10 bg-gradient-to-b from-white to-[#d2fb95]">
+    <div className="rounded-2xl p-4 lg:p-6 lg:px-6 lg:py-10 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1a2e0a] dark:to-[#D2FB95]">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 lg:mb-6">
         <div className="flex items-center gap-4">

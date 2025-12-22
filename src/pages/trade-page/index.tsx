@@ -15,7 +15,7 @@ export default function TradePage() {
   return (
     <div className="flex flex-col gap-4 lg:gap-6">
       {/* Header */}
-      <h1 className="text-xl lg:text-2xl font-bold text-black">Trade</h1>
+      <h1 className="text-xl lg:text-2xl font-bold text-foreground">Trade</h1>
 
       {/* Main Section - Stack on mobile, side by side on desktop */}
       <div className="flex flex-col gap-4 lg:gap-5">

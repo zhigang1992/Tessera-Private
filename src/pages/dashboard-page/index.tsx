@@ -14,7 +14,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-4 lg:gap-6">
       {/* Header */}
-      <h1 className="text-xl lg:text-2xl font-bold text-black">Dashboard</h1>
+      <h1 className="text-xl lg:text-2xl font-bold text-foreground">Dashboard</h1>
 
       {/* Tabs */}
       <DashboardTabs activeTab={activeTab} onTabChange={setActiveTab} />

@@ -31,10 +31,10 @@ export function TradingLeaderboard() {
   }
 
   return (
-    <div className="rounded-2xl bg-white overflow-x-auto">
+    <div className="rounded-2xl bg-white dark:bg-card overflow-x-auto">
       <table className="w-full min-w-[700px]">
         <thead>
-          <tr className="border-b border-gray-100">
+          <tr className="border-b border-gray-100 dark:border-border">
             <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">Rank (Top100)</th>
             <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">User</th>
             <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">Trading Vol.</th>
@@ -63,23 +63,23 @@ export function TradingLeaderboard() {
               return (
                 <tr
                   key={row.rank}
-                  className={cn('border-b border-gray-50 last:border-0', isCurrentUser && 'bg-[#FAFFBD]')}
+                  className={cn('border-b border-gray-50 dark:border-border last:border-0', isCurrentUser && 'bg-[#FAFFBD] dark:bg-[#3d4a1a]')}
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <span className={cn('text-sm font-medium text-black', row.rank <= 3 && 'font-bold')}>
+                      <span className={cn('text-sm font-medium text-foreground', row.rank <= 3 && 'font-bold')}>
                         #{row.rank}
                       </span>
                       {medal && <span>{medal}</span>}
                       {isCurrentUser && (
-                        <span className="rounded bg-black px-1.5 py-0.5 text-xs font-medium text-white">You</span>
+                        <span className="rounded bg-black dark:bg-white px-1.5 py-0.5 text-xs font-medium text-white dark:text-black">You</span>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-black">{row.user}</td>
-                  <td className="px-6 py-4 text-sm font-bold text-[#2B664B]">{formatCurrency(row.tradingVolume)}</td>
-                  <td className="px-6 py-4 text-sm text-black">{row.tradingPoints.toLocaleString()}</td>
-                  <td className="px-6 py-4 text-sm text-black">${row.feeRebates}</td>
+                  <td className="px-6 py-4 text-sm text-foreground">{row.user}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-[#2B664B] dark:text-[#7dd889]">{formatCurrency(row.tradingVolume)}</td>
+                  <td className="px-6 py-4 text-sm text-foreground">{row.tradingPoints.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-sm text-foreground">${row.feeRebates}</td>
                 </tr>
               )
             })
@@ -92,7 +92,7 @@ export function TradingLeaderboard() {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
-        className="border-t border-gray-100 px-6 py-4"
+        className="border-t border-gray-100 dark:border-border px-6 py-4"
       />
     </div>
   )

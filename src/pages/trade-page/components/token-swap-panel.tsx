@@ -92,35 +92,35 @@ export function TokenSwapPanel({ onTokenChange }: TokenSwapPanelProps) {
     : '$0'
 
   return (
-    <div className="rounded-2xl p-4 lg:p-6 py-6 lg:py-8 bg-gradient-to-b from-white to-[#d2fb95]">
+    <div className="rounded-2xl p-4 lg:p-6 py-6 lg:py-8 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1a2e0a] dark:to-[#D2FB95]">
       <div className="relative flex flex-col gap-3 lg:gap-4">
         {/* Selling Input */}
-        <div className="bg-white border border-[#dddbd0] rounded-lg px-3 lg:px-4 pt-2 pb-3 lg:pb-4">
-          <p className="text-xs lg:text-sm font-bold text-black/30 leading-5">Selling</p>
+        <div className="bg-white dark:bg-card border border-[#dddbd0] dark:border-border rounded-lg px-3 lg:px-4 pt-2 pb-3 lg:pb-4">
+          <p className="text-xs lg:text-sm font-bold text-black/30 dark:text-muted-foreground leading-5">Selling</p>
           <div className="flex items-center justify-between mt-1 lg:mt-1.5">
             <div className="relative">
               <button
                 onClick={() => setShowSellingDropdown(!showSellingDropdown)}
-                className="flex items-center gap-1.5 lg:gap-2.5 border border-[#dddbd0] rounded-md px-2 lg:px-3 py-1.5 lg:py-2 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-1.5 lg:gap-2.5 border border-[#dddbd0] dark:border-border rounded-md px-2 lg:px-3 py-1.5 lg:py-2 hover:bg-gray-50 dark:hover:bg-muted transition-colors"
               >
                 <TokenIcon symbol={sellingTokenSymbol} className="w-6 h-6 lg:w-8 lg:h-8" />
                 <div className="flex items-center gap-0.5 lg:gap-1">
-                  <span className="text-base lg:text-xl font-semibold text-black">{sellingTokenSymbol}</span>
+                  <span className="text-base lg:text-xl font-semibold text-foreground">{sellingTokenSymbol}</span>
                   <ChevronDownIcon className="w-3 h-3 lg:w-4 lg:h-4 opacity-50" />
                 </div>
               </button>
               {showSellingDropdown && (
-                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 min-w-[180px] lg:min-w-[200px] max-h-[250px] lg:max-h-[300px] overflow-y-auto">
+                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-card border border-gray-200 dark:border-border rounded-lg shadow-lg z-20 min-w-[180px] lg:min-w-[200px] max-h-[250px] lg:max-h-[300px] overflow-y-auto">
                   {tokens.map((token) => (
                     <button
                       key={token.symbol}
                       onClick={() => handleSelectSellingToken(token)}
-                      className="w-full flex items-center gap-2 px-2.5 lg:px-3 py-2 hover:bg-gray-50 transition-colors"
+                      className="w-full flex items-center gap-2 px-2.5 lg:px-3 py-2 hover:bg-gray-50 dark:hover:bg-muted transition-colors"
                     >
                       <TokenIcon symbol={token.symbol} className="w-5 h-5 lg:w-6 lg:h-6" />
                       <div className="text-left">
-                        <div className="text-xs lg:text-sm font-medium text-black">{token.symbol}</div>
-                        <div className="text-[10px] lg:text-xs text-gray-500">{token.name}</div>
+                        <div className="text-xs lg:text-sm font-medium text-foreground">{token.symbol}</div>
+                        <div className="text-[10px] lg:text-xs text-muted-foreground">{token.name}</div>
                       </div>
                     </button>
                   ))}
@@ -134,9 +134,9 @@ export function TokenSwapPanel({ onTokenChange }: TokenSwapPanelProps) {
                 value={sellingAmount}
                 onChange={(e) => handleSellingAmountChange(e.target.value)}
                 placeholder="0.00"
-                className="text-2xl lg:text-4xl font-semibold text-black text-right bg-transparent outline-none w-24 lg:w-32 placeholder:text-black/20"
+                className="text-2xl lg:text-4xl font-semibold text-foreground text-right bg-transparent outline-none w-24 lg:w-32 placeholder:text-muted-foreground"
               />
-              <p className="text-xs lg:text-sm text-black/30">{sellingUsdValue}</p>
+              <p className="text-xs lg:text-sm text-muted-foreground">{sellingUsdValue}</p>
             </div>
           </div>
         </div>
@@ -144,40 +144,40 @@ export function TokenSwapPanel({ onTokenChange }: TokenSwapPanelProps) {
         {/* Swap Button */}
         <button
           onClick={handleSwapTokens}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white border border-[#dddbd0] rounded-full p-1.5 lg:p-2 hover:bg-gray-50 transition-colors z-10"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-card border border-[#dddbd0] dark:border-border rounded-full p-1.5 lg:p-2 hover:bg-gray-50 dark:hover:bg-muted transition-colors z-10"
         >
           <SwapIcon className="w-4 h-4 lg:w-5 lg:h-5 rotate-90" />
         </button>
 
         {/* Buying Input */}
-        <div className="bg-white border border-[#dddbd0] rounded-lg px-3 lg:px-4 pt-2 pb-3 lg:pb-4">
-          <p className="text-xs lg:text-sm font-bold text-black/30 leading-5">Buying</p>
+        <div className="bg-white dark:bg-card border border-[#dddbd0] dark:border-border rounded-lg px-3 lg:px-4 pt-2 pb-3 lg:pb-4">
+          <p className="text-xs lg:text-sm font-bold text-black/30 dark:text-muted-foreground leading-5">Buying</p>
           <div className="flex items-center justify-between mt-1 lg:mt-1.5">
             <div className="relative">
               <button
                 onClick={() => setShowBuyingDropdown(!showBuyingDropdown)}
-                className="flex items-center gap-1.5 lg:gap-2.5 border border-[#dddbd0] rounded-md px-2 lg:px-3 py-1.5 lg:py-2 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-1.5 lg:gap-2.5 border border-[#dddbd0] dark:border-border rounded-md px-2 lg:px-3 py-1.5 lg:py-2 hover:bg-gray-50 dark:hover:bg-muted transition-colors"
               >
                 <TokenIcon symbol={buyingTokenSymbol} className="w-6 h-6 lg:w-8 lg:h-8" />
                 <div className="flex items-center gap-0.5 lg:gap-1">
-                  <span className="text-base lg:text-xl font-semibold text-black">{buyingTokenSymbol}</span>
+                  <span className="text-base lg:text-xl font-semibold text-foreground">{buyingTokenSymbol}</span>
                   <ChevronDownIcon className="w-3 h-3 lg:w-4 lg:h-4 opacity-50" />
                 </div>
               </button>
               {showBuyingDropdown && (
-                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 min-w-[180px] lg:min-w-[200px] max-h-[250px] lg:max-h-[300px] overflow-y-auto">
+                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-card border border-gray-200 dark:border-border rounded-lg shadow-lg z-20 min-w-[180px] lg:min-w-[200px] max-h-[250px] lg:max-h-[300px] overflow-y-auto">
                   {tokens
                     .filter((t) => t.symbol !== 'USDC')
                     .map((token) => (
                       <button
                         key={token.symbol}
                         onClick={() => handleSelectBuyingToken(token)}
-                        className="w-full flex items-center gap-2 px-2.5 lg:px-3 py-2 hover:bg-gray-50 transition-colors"
+                        className="w-full flex items-center gap-2 px-2.5 lg:px-3 py-2 hover:bg-gray-50 dark:hover:bg-muted transition-colors"
                       >
                         <TokenIcon symbol={token.symbol} className="w-5 h-5 lg:w-6 lg:h-6" />
                         <div className="text-left">
-                          <div className="text-xs lg:text-sm font-medium text-black">{token.symbol}</div>
-                          <div className="text-[10px] lg:text-xs text-gray-500">{token.name}</div>
+                          <div className="text-xs lg:text-sm font-medium text-foreground">{token.symbol}</div>
+                          <div className="text-[10px] lg:text-xs text-muted-foreground">{token.name}</div>
                         </div>
                       </button>
                     ))}
@@ -190,16 +190,16 @@ export function TokenSwapPanel({ onTokenChange }: TokenSwapPanelProps) {
                 value={buyingAmount}
                 readOnly
                 placeholder="0"
-                className="text-2xl lg:text-4xl font-semibold text-black/20 text-right bg-transparent outline-none w-24 lg:w-32 placeholder:text-black/20"
+                className="text-2xl lg:text-4xl font-semibold text-muted-foreground text-right bg-transparent outline-none w-24 lg:w-32 placeholder:text-muted-foreground"
               />
-              <p className="text-xs lg:text-sm text-black/30">{buyingUsdValue}</p>
+              <p className="text-xs lg:text-sm text-muted-foreground">{buyingUsdValue}</p>
             </div>
           </div>
         </div>
 
         {/* Buy Button */}
         <button
-          className="w-full h-12 lg:h-14 bg-black text-white text-base lg:text-lg font-semibold rounded-lg hover:bg-black/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-12 lg:h-14 bg-black dark:bg-white text-white dark:text-black text-base lg:text-lg font-semibold rounded-lg hover:bg-black/90 dark:hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={!sellingAmount || parseFloat(sellingAmount) <= 0}
         >
           {sellingTokenSymbol === 'USDC' ? 'Buy' : 'Sell'}

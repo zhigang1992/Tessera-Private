@@ -9,14 +9,9 @@ export function MyBalanceCard() {
   })
 
   return (
-    <div
-      className="rounded-2xl p-4 flex flex-col lg:flex-row gap-2.5"
-      style={{
-        background: 'linear-gradient(180deg, #ffffff 0%, #d2fb95 100%)',
-      }}
-    >
+    <div className="rounded-2xl p-4 flex flex-col lg:flex-row gap-2.5 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1a2e0a] dark:to-[#D2FB95]">
       {/* My Balance */}
-      <div className="bg-white/50 rounded-lg px-4 lg:px-6 py-4 w-full lg:w-[240px]">
+      <div className="bg-white/50 dark:bg-black/20 rounded-lg px-4 lg:px-6 py-4 w-full lg:w-[240px]">
         <p className="text-sm font-medium text-black leading-5">My Balance</p>
         <p className="text-2xl lg:text-3xl font-semibold text-black leading-9">
           ${userDashboard?.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) ?? '0.00'}
@@ -24,7 +19,7 @@ export function MyBalanceCard() {
       </div>
 
       {/* Token Info */}
-      <div className="flex-1 bg-white/50 rounded-lg px-4 lg:px-6 py-4">
+      <div className="flex-1 bg-white/50 dark:bg-black/20 rounded-lg px-4 lg:px-6 py-4">
         <div className="flex flex-col gap-2.5">
           {/* Token Header */}
           <div className="flex items-center gap-2.5">
