@@ -13,8 +13,8 @@ export function RewardsOverview() {
       {/* Rewards Card */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#fff] to-[#D2FB95] dark:from-[#2a3a1a] dark:to-[#D2FB95] p-4 md:p-6 h-full">
         <div className="relative z-10">
-          <p className="text-xs md:text-sm text-black/60">Rewards</p>
-          <p className="text-2xl md:text-4xl font-bold text-black font-inria">
+          <p className="text-xs md:text-sm text-black/60 dark:text-[#D2D2D2]">Rewards</p>
+          <p className="text-2xl md:text-4xl font-bold text-black font-inria dark:text-white">
             {isLoading ? '—' : formatCurrency(data?.rewards ?? 0)}
           </p>
         </div>

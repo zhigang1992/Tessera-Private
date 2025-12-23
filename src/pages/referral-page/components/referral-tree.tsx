@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { User } from 'lucide-react'
 import TreeIcon from './_/tree.svg?react'
 import DarkTreeIcon from './_/dark-tree.svg?react'
+import DarkdUser from './_/person.svg?react'
 import { getTraderLayers } from '@/services'
 
 export function ReferralTree() {
@@ -46,14 +47,15 @@ export function ReferralTree() {
             ) : (
               data.map((row) => (
                 <tr key={row.layer} className="border-b border-gray-50 dark:border-[#27272A]/50 last:border-0">
-                  <td className="py-4 font-medium text-foreground">{row.layer}</td>
+                  <td className="py-4 font-medium text-foreground dark:text-[#D2D2D2]">{row.layer}</td>
                   <td className="py-4">
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <User className="h-4 w-4" />
+                      <User className="h-6 w-6 dark:hidden" />
+                      <DarkdUser className="h-6 w-6 hidden dark:block" />
                       {row.tradersReferred}
                     </div>
                   </td>
-                  <td className="py-4 font-medium text-foreground">{row.points}</td>
+                  <td className="py-4 font-medium text-foreground dark:text-[#D2D2D2]">{row.points}</td>
                 </tr>
               ))
             )}
