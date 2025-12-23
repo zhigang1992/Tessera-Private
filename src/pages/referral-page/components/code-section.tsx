@@ -118,19 +118,19 @@ export function CodeSection() {
           <table className="w-full min-w-[550px]">
             <thead>
               <tr className="border-b border-gray-100 dark:border-[#27272A]">
-                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
+                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Referral Code
                 </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
+                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Total Volume
                 </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
+                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Traders Referred
                 </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
+                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Total Rewards
                 </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-4 text-right text-xs lg:text-sm font-medium text-muted-foreground">
+                <th className="px-3 lg:px-6 py-2 lg:py-4 text-right text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Action
                 </th>
               </tr>
@@ -195,17 +195,17 @@ export function CodeSection() {
                         </button>
                       </div>
                     </td>
-                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>
+                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-sm lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>
                       {formatCurrency(row.totalVolume)}
                     </td>
-                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>{row.tradersReferred}</td>
-                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>
+                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-sm lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>{row.tradersReferred}</td>
+                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-sm lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>
                       {formatCurrency(row.totalRewards)}
                     </td>
                     <td className="px-3 lg:px-6 py-3 lg:py-4 text-right">
                       <button
                         onClick={(e) => handleOpenShareModal(e, row.code)}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-xs font-medium text-white hover:bg-black/80 transition-colors"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-black/80 transition-colors"
                       >
                         <Share2 className="h-3.5 w-3.5" />
                         Share
@@ -240,14 +240,14 @@ export function CodeSection() {
           <table className="w-full min-w-[550px]">
             <thead>
               <tr className="border-b border-gray-100 dark:border-[#27272A]">
-                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
+                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Email/Wallet
                 </th>
-                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
+                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Date Joined
                 </th>
-                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">Type</th>
-                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
+                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">Type</th>
+                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Reward Earned
                 </th>
               </tr>
@@ -268,10 +268,10 @@ export function CodeSection() {
               ) : (
                 users.map((user) => (
                   <tr key={user.id} className="border-b border-gray-50 dark:border-[#27272A]/50 last:border-0">
-                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-foreground dark:text-[#D2D2D2]">{user.email}</td>
-                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-muted-foreground dark:text-[#D2D2D2]">{user.dateJoined}</td>
-                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-muted-foreground dark:text-[#D2D2D2]">{user.layer}</td>
-                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-foreground dark:text-[#D2D2D2]">
+                    <td className="py-3 lg:py-4 text-sm lg:text-sm text-foreground dark:text-[#D2D2D2]">{user.email}</td>
+                    <td className="py-3 lg:py-4 text-sm lg:text-sm text-muted-foreground dark:text-[#D2D2D2]">{user.dateJoined}</td>
+                    <td className="py-3 lg:py-4 text-sm lg:text-sm text-muted-foreground dark:text-[#D2D2D2]">{user.layer}</td>
+                    <td className="py-3 lg:py-4 text-sm lg:text-sm text-foreground dark:text-[#D2D2D2]">
                       <div className="flex flex-col gap-0.5">
                         {user.rewards.map((reward, idx) => (
                           <span key={idx}>{reward.amount} {reward.token}</span>
