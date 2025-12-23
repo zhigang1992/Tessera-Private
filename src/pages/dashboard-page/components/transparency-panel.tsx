@@ -68,24 +68,24 @@ export function TransparencyPanel() {
       {/* Top Row - Two Panels Side by Side */}
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
         {/* Custodian Attestations Panel */}
-        <div className="flex-1 bg-white dark:bg-card rounded-2xl p-4 lg:p-6">
+        <div className="flex-1 bg-white dark:bg-[#1e1f20] rounded-2xl p-4 lg:p-6">
           <div className="flex flex-col gap-4 lg:gap-6">
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
               <div>
-                <h3 className="text-lg font-normal text-foreground">Custodian Attestations</h3>
-                <p className="text-xs text-muted-foreground">Last Updated: {transparencyData?.lastUpdated}</p>
+                <h3 className="text-lg font-normal text-foreground dark:text-white">Custodian Attestations</h3>
+                <p className="text-xs text-muted-foreground dark:text-white">Last Updated: {transparencyData?.lastUpdated}</p>
               </div>
               {/* Year Filter Tabs */}
-              <div className="flex items-center gap-1 p-1 bg-zinc-200 dark:bg-[#27272A] rounded-lg w-fit">
+              <div className="flex items-center gap-1 p-1 bg-zinc-200 dark:bg-[#141516] rounded-lg w-fit">
                 {(['all', 2025, 2024] as YearFilter[]).map((year) => (
                   <button
                     key={year}
                     onClick={() => setYearFilter(year)}
                     className={`px-4 lg:px-6 py-1 text-xs font-medium rounded transition-all ${
                       yearFilter === year
-                        ? 'bg-white dark:bg-[#3F3F46] text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
+                        ? 'bg-white dark:bg-[#323334] text-foreground dark:text-white shadow-sm'
+                        : 'text-muted-foreground dark:text-white/50 hover:text-foreground'
                     }`}
                   >
                     {year === 'all' ? 'All' : year}
@@ -102,7 +102,7 @@ export function TransparencyPanel() {
                     <a
                       key={attestation.id}
                       href={attestation.url}
-                      className="flex-1 flex items-center justify-between p-2 bg-[#f0ffda] dark:bg-[#2a3d1a] rounded text-xs text-black dark:text-foreground hover:bg-[#e5f5cc] dark:hover:bg-[#3a4d2a] transition-colors"
+                      className="flex-1 flex items-center justify-between p-2 bg-[#f0ffda] dark:bg-[rgba(210,251,149,0.2)] rounded text-xs text-black dark:text-white hover:bg-[#e5f5cc] dark:hover:bg-[rgba(210,251,149,0.3)] transition-colors"
                     >
                       <span>
                         {attestation.month} {attestation.year}
@@ -118,58 +118,56 @@ export function TransparencyPanel() {
         </div>
 
         {/* Proof of Reserves Panel */}
-        <div className="flex-1 bg-white dark:bg-card rounded-2xl p-4 lg:p-6">
+        <div className="flex-1 bg-white dark:bg-[#1e1f20] rounded-2xl p-4 lg:p-6">
           <div className="flex flex-col gap-4 lg:gap-6">
             {/* Header */}
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-lg font-normal text-foreground">Proof of Reserves</h3>
-                <p className="text-xs text-muted-foreground">Last Updated: {proofOfReserves?.lastUpdated}</p>
+                <h3 className="text-lg font-normal text-foreground dark:text-[#d2d2d2]">Proof of Reserves</h3>
+                <p className="text-xs text-muted-foreground dark:text-[#d2d2d2]">Last Updated: {proofOfReserves?.lastUpdated}</p>
               </div>
-              <button className="text-xs text-[#06a800] hover:underline">Learn More</button>
+              <button className="text-xs text-[#06a800] dark:text-[#d2fb95] hover:underline">Learn More</button>
             </div>
 
             {/* Verification Table */}
             <div className="flex flex-col gap-1.5">
               {/* Date Header */}
               <div className="py-1.5">
-                <span className="text-sm font-semibold text-foreground">{proofOfReserves?.date}</span>
+                <span className="text-sm font-semibold text-foreground dark:text-[#d2d2d2]">{proofOfReserves?.date}</span>
               </div>
-              <div className="h-px bg-black/15 dark:bg-border" />
+              <div className="h-px bg-black/15 dark:bg-[#d2d2d2]/15" />
 
               {/* Table Header */}
-              <div className="flex items-center gap-2.5 px-2.5 py-1 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2.5 px-2.5 py-1 text-xs text-muted-foreground dark:text-[#d2d2d2]">
                 <div className="flex-1">Auditor</div>
                 <div className="flex-1">Overcollateralized</div>
                 <div className="flex-1">Delta-Neutral</div>
               </div>
               <div className="px-2.5">
-                <div className="h-px bg-black/15 dark:bg-border" />
+                <div className="h-px bg-black/15 dark:bg-[#d2d2d2]/15" />
               </div>
 
               {/* Table Rows */}
               <div className="flex flex-col gap-1">
-                {proofOfReserves?.verifications.map((verification, index) => (
+                {proofOfReserves?.verifications.map((verification) => (
                   <div
                     key={verification.auditor}
-                    className={`flex items-center gap-2.5 p-2.5 rounded ${
-                      index % 2 === 0 ? 'bg-zinc-50 dark:bg-muted' : ''
-                    }`}
+                    className="flex items-center gap-2.5 p-2.5 rounded bg-zinc-50 dark:bg-[#323334]"
                   >
                     <div className="flex-1">
-                      <span className="text-sm font-semibold text-foreground">
+                      <span className="text-sm font-semibold text-foreground dark:text-white">
                         {verification.auditor}
                       </span>
                     </div>
                     <div className="flex-1 flex items-center gap-1.5">
-                      <CheckCircleIcon className="w-4 h-4 text-foreground" />
-                      <span className="text-sm text-foreground">
+                      <CheckCircleIcon className="w-4 h-4 text-foreground dark:text-[#d2d2d2]" />
+                      <span className="text-sm text-foreground dark:text-[#d2d2d2]">
                         {verification.overcollateralized ? 'Yes' : 'No'}
                       </span>
                     </div>
                     <div className="flex-1 flex items-center gap-1.5">
-                      <CheckCircleIcon className="w-4 h-4 text-foreground" />
-                      <span className="text-sm text-foreground">
+                      <CheckCircleIcon className="w-4 h-4 text-foreground dark:text-[#d2d2d2]" />
+                      <span className="text-sm text-foreground dark:text-[#d2d2d2]">
                         {verification.deltaNeutral ? 'Yes' : 'No'}
                       </span>
                     </div>
@@ -179,7 +177,7 @@ export function TransparencyPanel() {
 
               {/* See All Link */}
               <div className="flex justify-center py-1.5">
-                <button className="text-xs text-[#06a800] hover:underline">See All</button>
+                <button className="text-xs text-[#06a800] dark:text-[#d2fb95] hover:underline">See All</button>
               </div>
             </div>
           </div>
@@ -187,10 +185,10 @@ export function TransparencyPanel() {
       </div>
 
       {/* Third Party Data Links Panel */}
-      <div className="bg-white dark:bg-card rounded-2xl p-4 lg:p-6">
+      <div className="bg-white dark:bg-[#1e1f20] rounded-2xl p-4 lg:p-6">
         <div className="flex flex-col gap-4 lg:gap-6">
           {/* Header */}
-          <h3 className="text-lg font-normal text-foreground">Independent Third Party Data Links</h3>
+          <h3 className="text-lg font-normal text-foreground dark:text-white">Independent Third Party Data Links</h3>
 
           {/* Links Grid */}
           <div className="flex flex-col gap-2">
@@ -200,7 +198,7 @@ export function TransparencyPanel() {
                   <a
                     key={link.id}
                     href={link.url}
-                    className="flex-1 flex items-center justify-between p-2 bg-[#f0ffda] dark:bg-[#2a3d1a] rounded text-xs text-black dark:text-foreground hover:bg-[#e5f5cc] dark:hover:bg-[#3a4d2a] transition-colors"
+                    className="flex-1 flex items-center justify-between p-2 bg-[#f0ffda] dark:bg-[rgba(210,251,149,0.2)] rounded text-xs text-black dark:text-white hover:bg-[#e5f5cc] dark:hover:bg-[rgba(210,251,149,0.3)] transition-colors"
                   >
                     <span>{link.name}</span>
                     <ArrowOutwardIcon className="w-4 h-4" />

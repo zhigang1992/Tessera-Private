@@ -9,26 +9,26 @@ export function MyBalanceCard() {
   })
 
   return (
-    <div className="rounded-2xl p-4 flex flex-col lg:flex-row gap-2.5 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1a2e0a] dark:to-[#D2FB95]">
+    <div className="rounded-2xl p-4 flex flex-col lg:flex-row gap-2.5 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95]">
       {/* My Balance */}
-      <div className="bg-white/50 dark:bg-black/20 rounded-lg px-4 lg:px-6 py-4 w-full lg:w-[240px]">
-        <p className="text-sm font-medium text-black leading-5">My Balance</p>
-        <p className="text-2xl lg:text-3xl font-semibold text-black leading-9">
+      <div className="bg-white/50 dark:bg-black/10 rounded-lg px-4 lg:px-6 py-4 w-full lg:w-[240px]">
+        <p className="text-sm font-medium text-black dark:text-[#d2d2d2] leading-5">My Balance</p>
+        <p className="text-2xl lg:text-3xl font-semibold text-black dark:text-white leading-9">
           ${userDashboard?.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) ?? '0.00'}
         </p>
       </div>
 
       {/* Token Info */}
-      <div className="flex-1 bg-white/50 dark:bg-black/20 rounded-lg px-4 lg:px-6 py-4">
+      <div className="flex-1 bg-white/50 dark:bg-black/10 rounded-lg px-4 lg:px-6 py-4">
         <div className="flex flex-col gap-2.5">
           {/* Token Header */}
           <div className="flex items-center gap-2.5">
             <TokenSpacexIcon className="w-14 h-14 lg:w-[72px] lg:h-[72px]" />
             <div className="flex flex-col">
-              <p className="text-sm font-bold text-black leading-5">
+              <p className="text-sm font-bold text-black dark:text-[#d2d2d2] leading-5">
                 {userDashboard?.tokenName ?? 'T-SpaceX Token'}
               </p>
-              <p className="text-2xl lg:text-3xl font-semibold text-black leading-9">
+              <p className="text-2xl lg:text-3xl font-semibold text-black dark:text-white leading-9">
                 {userDashboard?.tokenBalance.toFixed(2) ?? '0.00'}
               </p>
             </div>
@@ -37,7 +37,7 @@ export function MyBalanceCard() {
           {/* Health Factor */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-black">Health Factor</span>
+              <span className="text-sm font-medium text-black dark:text-white">Health Factor</span>
               <svg
                 className="w-6 h-6"
                 viewBox="0 0 24 24"

@@ -28,15 +28,15 @@ export function ReferralLeaderboard() {
   const totalPages = data?.totalPages ?? 1
 
   return (
-    <div className="rounded-2xl bg-white dark:bg-card overflow-x-auto">
+    <div className="rounded-2xl bg-white dark:bg-[#1e1f20] overflow-x-auto">
       <table className="w-full min-w-[700px]">
         <thead>
-          <tr className="border-b border-gray-100 dark:border-border">
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">Rank (Top100)</th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">User</th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">Trader Referral</th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">Trading Points</th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">Fee Rewards</th>
+          <tr className="border-b border-gray-100 dark:border-[#d2d2d2]/15">
+            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Rank (Top100)</th>
+            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">User</th>
+            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Trader Referral</th>
+            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Trading Points</th>
+            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Fee Rewards</th>
           </tr>
         </thead>
         <tbody>
@@ -60,26 +60,31 @@ export function ReferralLeaderboard() {
               return (
                 <tr
                   key={row.rank}
-                  className={cn('border-b border-gray-50 dark:border-border last:border-0', isCurrentUser && 'bg-[#FAFFBD] dark:bg-[#3d4a1a]')}
+                  className={cn(
+                    'last:border-0',
+                    isCurrentUser
+                      ? 'bg-[#FAFFBD]'
+                      : row.rank % 2 === 1 ? 'bg-zinc-50 dark:bg-[#323334]' : 'dark:bg-[#1e1f20]'
+                  )}
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <span className={cn('text-sm font-medium text-foreground', row.rank <= 3 && 'font-bold')}>#{row.rank}</span>
+                      <span className={cn('text-sm font-medium', row.rank <= 3 && 'font-bold', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>#{row.rank}</span>
                       {medal && <span>{medal}</span>}
                       {isCurrentUser && (
-                        <span className="rounded bg-black dark:bg-white px-1.5 py-0.5 text-xs font-medium text-white dark:text-black">You</span>
+                        <span className="rounded bg-black px-1.5 py-0.5 text-xs font-medium text-white">You</span>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-foreground">{row.user}</td>
+                  <td className={cn('px-6 py-4 text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>{row.user}</td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-1.5 text-sm font-medium text-[#2B664B] dark:text-[#7dd889]">
+                    <div className={cn('flex items-center gap-1.5 text-sm font-medium', isCurrentUser ? 'text-black' : 'text-[#2B664B] dark:text-[#d2fb95]')}>
                       <PersonIcon className="h-6 w-6" />
                       {row.traderReferral.toLocaleString()}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-foreground">{row.tradingPoints.toLocaleString()}</td>
-                  <td className="px-6 py-4 text-sm text-foreground">${row.feeRewards}</td>
+                  <td className={cn('px-6 py-4 text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>{row.tradingPoints.toLocaleString()}</td>
+                  <td className={cn('px-6 py-4 text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>${row.feeRewards}</td>
                 </tr>
               )
             })
@@ -92,7 +97,7 @@ export function ReferralLeaderboard() {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
-        className="border-t border-gray-100 dark:border-border px-6 py-4"
+        className="border-t border-gray-100 dark:border-[#d2d2d2]/15 px-6 py-4"
       />
     </div>
   )
