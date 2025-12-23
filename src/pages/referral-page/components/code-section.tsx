@@ -12,6 +12,7 @@ import AddIcon from './_/add.svg?react'
 import { CreateReferralCodeModal } from './create-referral-code-modal'
 import { ShareReferralCodeModal } from './share-referral-code-modal'
 import { useAffiliateData } from '@/features/referral/hooks/use-referral-queries'
+import DardUser from './_/person.svg?react'
 
 const PAGE_SIZE = 3
 
@@ -177,28 +178,28 @@ export function CodeSection() {
                   >
                     <td className="px-3 lg:px-6 py-3 lg:py-4">
                       <div className="flex items-center gap-1.5 lg:gap-2">
-                        <span className={cn("text-xs lg:text-sm font-medium", selectedCode === row.code ? "text-black" : "text-foreground")}>{row.code}</span>
+                        <span className={cn("text-xs lg:text-sm font-medium", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>{row.code}</span>
                         <button
                           onClick={(e) => handleCopyCode(e, row.code)}
-                          className={cn("hover:text-foreground", selectedCode === row.code ? "text-black/60 hover:text-black" : "text-muted-foreground")}
+                          className={cn("hover:text-foreground", selectedCode === row.code ? "text-black/60 hover:text-black" : "text-muted-foreground dark:text-[#D2D2D2]")}
                           title="Copy code"
                         >
                           <CopyIcon className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                         </button>
                         <button
                           onClick={(e) => handleShareOnX(e, row.code)}
-                          className={cn("hover:text-foreground", selectedCode === row.code ? "text-black/60 hover:text-black" : "text-muted-foreground")}
+                          className={cn("hover:text-foreground", selectedCode === row.code ? "text-black/60 hover:text-black" : "text-muted-foreground dark:text-[#D2D2D2]")}
                           title="Share on X"
                         >
                           <XIcon className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                         </button>
                       </div>
                     </td>
-                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground")}>
+                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>
                       {formatCurrency(row.totalVolume)}
                     </td>
-                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground")}>{row.tradersReferred}</td>
-                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground")}>
+                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>{row.tradersReferred}</td>
+                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>
                       {formatCurrency(row.totalRewards)}
                     </td>
                     <td className="px-3 lg:px-6 py-3 lg:py-4 text-right">
@@ -230,9 +231,9 @@ export function CodeSection() {
       {selectedCode && (
         <div className="rounded-2xl bg-white dark:bg-[#18181B] p-3 lg:p-6 overflow-x-auto">
           <div className="mb-3 lg:mb-4 flex items-center gap-2 justify-center">
-            <span className="text-base lg:text-lg font-bold text-foreground">{selectedCode}</span>
+            <span className="text-base lg:text-lg font-bold text-foreground dark:text-[#D2D2D2]">{selectedCode}</span>
             <span className="flex items-center gap-1 text-xs lg:text-sm text-muted-foreground">
-              (<User className="h-3.5 w-3.5 lg:h-4 lg:w-4" /> {users.length})
+              (<User className="h-3.5 w-3.5 lg:h-4 lg:w-4 dark:hidden" /><DardUser className="h-3.5 w-3.5 lg:h-4 lg:w-4 hidden dark:block" />  {users.length})
             </span>
           </div>
 
@@ -267,10 +268,10 @@ export function CodeSection() {
               ) : (
                 users.map((user) => (
                   <tr key={user.id} className="border-b border-gray-50 dark:border-[#27272A]/50 last:border-0">
-                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-foreground">{user.email}</td>
-                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-muted-foreground">{user.dateJoined}</td>
-                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-muted-foreground">{user.layer}</td>
-                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-foreground">
+                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-foreground dark:text-[#D2D2D2]">{user.email}</td>
+                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-muted-foreground dark:text-[#D2D2D2]">{user.dateJoined}</td>
+                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-muted-foreground dark:text-[#D2D2D2]">{user.layer}</td>
+                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-foreground dark:text-[#D2D2D2]">
                       <div className="flex flex-col gap-0.5">
                         {user.rewards.map((reward, idx) => (
                           <span key={idx}>{reward.amount} {reward.token}</span>

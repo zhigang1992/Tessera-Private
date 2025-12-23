@@ -46,12 +46,12 @@ export function RulesFaq() {
 
   return (
     <div id="rules-faq" className="rounded-2xl bg-white dark:bg-[#18181B] p-4 lg:p-6">
-      <h2 className="text-lg font-bold text-foreground">Rules & FAQ</h2>
+      <h2 className="text-lg font-bold text-foreground dark:text-[#D2D2D2]">Rules & FAQ</h2>
 
       <div className="my-4 h-px bg-gray-100 dark:bg-[#27272A]" />
 
       <div
-        className="prose prose-sm max-w-none text-muted-foreground prose-headings:text-foreground prose-strong:text-foreground prose-table:text-sm dark:prose-invert overflow-x-auto"
+        className="prose prose-sm max-w-none text-muted-foreground dark:text-[#D2D2D2] prose-headings:text-foreground dark:prose-headings:text-[#D2D2D2] prose-strong:text-foreground dark:prose-strong:text-[#D2D2D2] prose-table:text-sm dark:prose-invert overflow-x-auto"
         dangerouslySetInnerHTML={{ __html: htmlContent }}
       />
     </div>
