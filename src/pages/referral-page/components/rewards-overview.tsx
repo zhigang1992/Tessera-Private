@@ -11,7 +11,7 @@ export function RewardsOverview() {
   return (
     <div className="grid grid-cols-1 gap-3 md:gap-4 md:grid-cols-2 md:h-[128px]">
       {/* Rewards Card */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#fff] to-[#D2FB95] dark:from-[#1a2e0a] dark:to-[#D2FB95] p-4 md:p-6 h-full">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#fff] to-[#D2FB95] dark:from-[#2a3a1a] dark:to-[#D2FB95] p-4 md:p-6 h-full">
         <div className="relative z-10">
           <p className="text-xs md:text-sm text-black/60">Rewards</p>
           <p className="text-2xl md:text-4xl font-bold text-black font-inria">
@@ -25,7 +25,7 @@ export function RewardsOverview() {
       </div>
 
       {/* Referral Points Card */}
-      <div className="rounded-2xl bg-white dark:bg-card p-4 md:p-6">
+      <div className="rounded-2xl bg-white dark:bg-[#18181B] p-4 md:p-6">
         <p className="text-xs md:text-sm text-muted-foreground">Referral Points</p>
         <p className="mt-1 md:mt-2 text-xl md:text-2xl font-bold text-foreground">
           {isLoading ? '—' : (data?.referralPoints?.toLocaleString() ?? '—')}
