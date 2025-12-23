@@ -69,7 +69,7 @@ export function ReferralLeaderboard() {
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <span className={cn('text-sm font-medium', row.rank <= 3 && 'font-bold', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>#{row.rank}</span>
+                      <span className={cn('text-sm font-medium', row.rank <= 3 && 'font-bold', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>{row.rank}</span>
                       {medal && <span>{medal}</span>}
                       {isCurrentUser && (
                         <span className="rounded bg-black px-1.5 py-0.5 text-xs font-medium text-white">You</span>
