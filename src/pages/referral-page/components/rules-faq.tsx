@@ -1,78 +1,24 @@
-import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { CollapsibleFaq, type FaqItem } from '@/components/ui/collapsible-faq'
 
-const faqItems = [
+const faqItems: FaqItem[] = [
   {
-    question: 'How do I get my referral code?',
-    answer: 'Click the "Create new code" button above to generate your unique referral code.',
+    question: 'Is there a minimum volume for trades to be displayed or hidden?',
+    answer: 'We display all referees\' trading activity regardless of the traded size.',
   },
   {
-    question: 'When will I receive my rewards?',
-    answer: 'Rewards are distributed weekly every Monday at 00:00 UTC.',
+    question: 'If a trade involves swapping multiple assets, how is it displayed?',
+    answer: 'It displays the starting asset to the final asset without showing the assets involved in between.',
   },
   {
-    question: 'Is there a limit to how many people I can refer?',
-    answer: 'No, there is no limit! The more you refer, the more you earn.',
+    question: 'Do you separate trades between traders referred from L1s, L2s, and L3s?',
+    answer: 'We display all trades executed by your referees without separating their referral tiers.',
   },
   {
-    question: 'How It Works',
-    answer: '1. Share your referral code with friends and family\n2. Earn rewards when they sign up and trade\n3. Track your progress in the dashboard',
-  },
-  {
-    question: 'What is the reward structure?',
-    answer: 'L1 (Direct referral): 10% commission\nL2 (Referral of referral): 5% commission\nL3 (Third level): 2% commission',
+    question: 'Do you display activities outside of trading?',
+    answer: 'If your referee transfers their tokens to another address or used DeFi-related activities, we will still display that under the Trading History.\n\nHowever, subsequent transactions from the new address will not be recorded if they are outside of the referral system or beyond L3.',
   },
 ]
 
 export function RulesFaq() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
-
-  const toggleItem = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index)
-  }
-
-  return (
-    <div id="rules-faq" className="rounded-2xl bg-white dark:bg-[#18181B] p-4 lg:p-6">
-      <h2 className="text-lg font-bold text-foreground dark:text-[#D2D2D2]">Rules & FAQ</h2>
-
-      <div className="my-4 h-px bg-gray-100 dark:bg-[#27272A]" />
-
-      <div className="space-y-2">
-        {faqItems.map((item, index) => (
-          <div
-            key={index}
-            className="rounded-lg border border-gray-100 dark:border-[#27272A] overflow-hidden"
-          >
-            <button
-              onClick={() => toggleItem(index)}
-              className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-[#27272A]"
-            >
-              <span className="text-sm font-medium text-foreground dark:text-[#D2D2D2]">
-                {item.question}
-              </span>
-              <ChevronDown
-                className={cn(
-                  'h-4 w-4 text-muted-foreground dark:text-[#71717A] transition-transform duration-200',
-                  openIndex === index && 'rotate-180'
-                )}
-              />
-            </button>
-            <div
-              className={cn(
-                'grid transition-all duration-300 ease-in-out',
-                openIndex === index ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-              )}
-            >
-              <div className="overflow-hidden">
-                <div className="px-4 pb-4 pt-4 text-sm text-muted-foreground dark:text-[#A1A1AA] whitespace-pre-line leading-relaxed">
-                  {item.answer}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+  return <CollapsibleFaq id="rules-faq" items={faqItems} />
 }
