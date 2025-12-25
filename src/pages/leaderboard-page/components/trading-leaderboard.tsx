@@ -31,15 +31,15 @@ export function TradingLeaderboard() {
   }
 
   return (
-    <div className="rounded-2xl bg-white dark:bg-card overflow-x-auto">
+    <div className="rounded-2xl bg-white dark:bg-[#1e1f20] overflow-x-auto">
       <table className="w-full min-w-[700px]">
         <thead>
-          <tr className="border-b border-gray-100 dark:border-border">
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">Rank (Top100)</th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">User</th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">Trading Vol.</th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">Trading Points</th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground">Fee Rebates</th>
+          <tr className="border-b border-gray-100 dark:border-[#d2d2d2]/15">
+            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Rank (Top100)</th>
+            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">User</th>
+            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Trading Vol.</th>
+            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Trading Points</th>
+            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Fee Rebates</th>
           </tr>
         </thead>
         <tbody>
@@ -63,23 +63,28 @@ export function TradingLeaderboard() {
               return (
                 <tr
                   key={row.rank}
-                  className={cn('border-b border-gray-50 dark:border-border last:border-0', isCurrentUser && 'bg-[#FAFFBD] dark:bg-[#3d4a1a]')}
+                  className={cn(
+                    'last:border-0',
+                    isCurrentUser
+                      ? 'bg-[#FAFFBD]'
+                      : row.rank % 2 === 1 ? 'bg-zinc-50 dark:bg-[#323334]' : 'dark:bg-[#1e1f20]'
+                  )}
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <span className={cn('text-sm font-medium text-foreground', row.rank <= 3 && 'font-bold')}>
-                        #{row.rank}
+                      <span className={cn('text-sm font-medium', row.rank <= 3 && 'font-bold', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>
+                        {row.rank}
                       </span>
                       {medal && <span>{medal}</span>}
                       {isCurrentUser && (
-                        <span className="rounded bg-black dark:bg-white px-1.5 py-0.5 text-xs font-medium text-white dark:text-black">You</span>
+                        <span className="rounded bg-black px-1.5 py-0.5 text-xs font-medium text-white">You</span>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-foreground">{row.user}</td>
-                  <td className="px-6 py-4 text-sm font-bold text-[#2B664B] dark:text-[#7dd889]">{formatCurrency(row.tradingVolume)}</td>
-                  <td className="px-6 py-4 text-sm text-foreground">{row.tradingPoints.toLocaleString()}</td>
-                  <td className="px-6 py-4 text-sm text-foreground">${row.feeRebates}</td>
+                  <td className={cn('px-6 py-4 text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>{row.user}</td>
+                  <td className={cn('px-6 py-4 text-sm font-bold', isCurrentUser ? 'text-black' : 'text-[#2B664B] dark:text-[#d2fb95]')}>{formatCurrency(row.tradingVolume)}</td>
+                  <td className={cn('px-6 py-4 text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>{row.tradingPoints.toLocaleString()}</td>
+                  <td className={cn('px-6 py-4 text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>${row.feeRebates}</td>
                 </tr>
               )
             })
@@ -92,7 +97,7 @@ export function TradingLeaderboard() {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
-        className="border-t border-gray-100 dark:border-border px-6 py-4"
+        className="border-t border-gray-100 dark:border-[#d2d2d2]/15 px-6 py-4"
       />
     </div>
   )

@@ -100,19 +100,19 @@ export function DashboardPriceChart() {
   }, [priceHistory])
 
   return (
-    <div className="rounded-2xl p-4 lg:p-6 lg:px-6 lg:py-10 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1a2e0a] dark:to-[#D2FB95]">
+    <div className="rounded-2xl p-4 lg:p-6 lg:px-6 lg:py-10 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95]">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 lg:mb-6">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2.5">
             <TokenSpacexIcon className="w-10 h-10 lg:w-12 lg:h-12" />
-            <span className="text-sm lg:text-base font-extrabold text-black">
+            <span className="text-sm lg:text-base font-extrabold text-black dark:text-[#d2d2d2]">
               {tokenInfo?.name ?? 'T-SpaceX'}
             </span>
           </div>
           <div className="h-10 w-px bg-black/50 hidden lg:block" />
           <div className="flex flex-col">
-            <div className="text-xl lg:text-[28px] font-bold text-[#111]">
+            <div className="text-xl lg:text-[28px] font-bold text-[#111] dark:text-white">
               ${tokenInfo?.price.toFixed(2) ?? '0.00'}
             </div>
             <div className="flex items-center gap-1 text-[10px] lg:text-xs">
@@ -120,7 +120,7 @@ export function DashboardPriceChart() {
                 {isPositive ? '▲' : '▼'} ${Math.abs(tokenInfo?.priceChange24h ?? 0).toFixed(2)} (
                 {Math.abs(tokenInfo?.priceChangePercent24h ?? 0).toFixed(2)}%)
               </span>
-              <span className="text-black">24H</span>
+              <span className="text-black dark:text-[#d2d2d2]">24H</span>
             </div>
           </div>
         </div>
@@ -132,7 +132,7 @@ export function DashboardPriceChart() {
               key={range}
               onClick={() => setSelectedRange(range)}
               className={`py-1 px-3 lg:px-6 text-[10px] lg:text-xs font-medium rounded transition-all ${
-                selectedRange === range ? 'bg-white text-black shadow-sm' : 'text-black hover:bg-white/50'
+                selectedRange === range ? 'bg-white dark:bg-black text-black dark:text-white shadow-sm' : 'text-black hover:bg-white/50'
               }`}
             >
               {range}

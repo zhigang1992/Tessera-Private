@@ -31,7 +31,7 @@ export function TradingHistory() {
   const items = data?.items ?? []
 
   return (
-    <div className="rounded-2xl bg-white dark:bg-card overflow-hidden">
+    <div className="rounded-2xl bg-white dark:bg-[#18181B] overflow-hidden">
       <div className="p-4 lg:p-6">
         <h2 className="text-base md:text-lg text-foreground">Trading History</h2>
       </div>
@@ -39,7 +39,7 @@ export function TradingHistory() {
       <div className="overflow-x-auto">
         <table className="w-full min-w-[600px]">
           <thead>
-            <tr className="border-b border-gray-100 dark:border-border">
+            <tr className="border-b border-gray-100 dark:border-[#27272A]">
               <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs lg:text-sm font-medium text-muted-foreground">Token</th>
               <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs lg:text-sm font-medium text-muted-foreground">Amount</th>
               <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs lg:text-sm font-medium text-muted-foreground">Type</th>
@@ -57,14 +57,14 @@ export function TradingHistory() {
             ) : items.length === 0 ? (
               <tr>
                 <td colSpan={5} className="p-4">
-                  <div className="flex items-center justify-center rounded-lg bg-gray-50 dark:bg-muted py-16">
+                  <div className="flex items-center justify-center rounded-lg bg-gray-50 dark:bg-[#27272A] py-16">
                     <span className="text-sm text-muted-foreground">No Discount Distribution</span>
                   </div>
                 </td>
               </tr>
             ) : (
               items.map((item) => (
-                <tr key={item.id} className="border-b border-gray-50 dark:border-border/50 last:border-0">
+                <tr key={item.id} className="border-b border-gray-50 dark:border-[#27272A]/50 last:border-0">
                   <td className="px-3 lg:px-6 py-3 lg:py-4">
                     <div className="flex items-center gap-1.5 lg:gap-2">
                       {getTokenIcon(item.token)}
@@ -93,7 +93,7 @@ export function TradingHistory() {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
-        className="border-t border-gray-100 dark:border-border px-3 lg:px-6 py-3 lg:py-4"
+        className="border-t border-gray-100 dark:border-[#27272A] px-3 lg:px-6 py-3 lg:py-4"
       />
     </div>
   )

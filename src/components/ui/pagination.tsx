@@ -69,10 +69,10 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
           className={cn(
             'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
             page === currentPage
-              ? 'bg-black dark:bg-white text-white dark:text-black'
+              ? 'bg-black dark:bg-[#d2d2d2] text-white dark:text-black'
               : typeof page === 'number'
-                ? 'text-muted-foreground hover:bg-gray-100 dark:hover:bg-muted'
-                : 'text-muted-foreground cursor-default',
+                ? 'text-muted-foreground dark:text-[#d2d2d2] hover:bg-gray-100 dark:bg-black/40 dark:hover:bg-black/50'
+                : 'text-muted-foreground dark:text-[#d2d2d2] dark:bg-black/40 cursor-default',
           )}
         >
           {page}

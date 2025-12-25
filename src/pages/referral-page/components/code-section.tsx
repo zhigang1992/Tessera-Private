@@ -12,6 +12,7 @@ import AddIcon from './_/add.svg?react'
 import { CreateReferralCodeModal } from './create-referral-code-modal'
 import { ShareReferralCodeModal } from './share-referral-code-modal'
 import { useAffiliateData } from '@/features/referral/hooks/use-referral-queries'
+import DardUser from './_/person.svg?react'
 
 const PAGE_SIZE = 3
 
@@ -82,12 +83,12 @@ export function CodeSection() {
     <div className="space-y-4">
       {/* Tab Header */}
       <div className="flex items-center justify-between">
-        <div className="inline-flex items-center gap-0.5 sm:gap-1 rounded-xl px-1 sm:px-2 py-1.5">
+        <div className="inline-flex items-center gap-0.5 sm:gap-1 rounded-xl px-1 sm:px-2 py-1.5 dark:bg-[#1E1F20]">
           <button
             onClick={() => setActiveTab('code')}
             className={cn(
               'rounded-md px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors',
-              activeTab === 'code' ? 'bg-white dark:bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+              activeTab === 'code' ? 'bg-white dark:bg-[#3F3F46] text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
             )}
           >
             Code
@@ -96,7 +97,7 @@ export function CodeSection() {
             onClick={() => setActiveTab('reward')}
             className={cn(
               'rounded-md px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors',
-              activeTab === 'reward' ? 'bg-white dark:bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+              activeTab === 'reward' ? 'bg-white dark:bg-[#3F3F46] text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
             )}
           >
             Reward distribution
@@ -104,7 +105,7 @@ export function CodeSection() {
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg bg-black dark:bg-white px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/80"
+          className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg bg-black dark:bg-[#D2D2D2] px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/80"
         >
           <AddIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           <span className="sm:inline">Create new code</span>
@@ -113,23 +114,23 @@ export function CodeSection() {
 
       {/* Code Table */}
       {activeTab === 'code' && (
-        <div className="rounded-2xl bg-white dark:bg-card overflow-x-auto">
+        <div className="rounded-2xl bg-white dark:bg-[#18181B] overflow-x-auto">
           <table className="w-full min-w-[550px]">
             <thead>
-              <tr className="border-b border-gray-100 dark:border-border">
-                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
+              <tr className="border-b border-gray-100 dark:border-[#27272A]">
+                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Referral Code
                 </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
+                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Total Volume
                 </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
+                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Traders Referred
                 </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
+                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Total Rewards
                 </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-4 text-right text-xs lg:text-sm font-medium text-muted-foreground">
+                <th className="px-3 lg:px-6 py-2 lg:py-4 text-right text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Action
                 </th>
               </tr>
@@ -171,40 +172,40 @@ export function CodeSection() {
                     key={row.code}
                     onClick={() => setSelectedCode(row.code)}
                     className={cn(
-                      'cursor-pointer border-b border-gray-50 dark:border-border/50 last:border-0 transition-colors',
-                      selectedCode === row.code ? 'bg-[#D2FB95] text-black' : 'hover:bg-gray-50 dark:hover:bg-muted',
+                      'cursor-pointer border-b border-gray-50 dark:border-[#27272A]/50 last:border-0 transition-colors',
+                      selectedCode === row.code ? 'bg-[#D2FB95] text-black' : 'hover:bg-gray-50 dark:hover:bg-[#27272A]',
                     )}
                   >
                     <td className="px-3 lg:px-6 py-3 lg:py-4">
                       <div className="flex items-center gap-1.5 lg:gap-2">
-                        <span className={cn("text-xs lg:text-sm font-medium", selectedCode === row.code ? "text-black" : "text-foreground")}>{row.code}</span>
+                        <span className={cn("text-xs lg:text-sm font-medium", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>{row.code}</span>
                         <button
                           onClick={(e) => handleCopyCode(e, row.code)}
-                          className={cn("hover:text-foreground", selectedCode === row.code ? "text-black/60 hover:text-black" : "text-muted-foreground")}
+                          className={cn("hover:text-foreground", selectedCode === row.code ? "text-black/60 hover:text-black" : "text-muted-foreground dark:text-[#D2D2D2]")}
                           title="Copy code"
                         >
                           <CopyIcon className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                         </button>
                         <button
                           onClick={(e) => handleShareOnX(e, row.code)}
-                          className={cn("hover:text-foreground", selectedCode === row.code ? "text-black/60 hover:text-black" : "text-muted-foreground")}
+                          className={cn("hover:text-foreground", selectedCode === row.code ? "text-black/60 hover:text-black" : "text-muted-foreground dark:text-[#D2D2D2]")}
                           title="Share on X"
                         >
                           <XIcon className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                         </button>
                       </div>
                     </td>
-                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground")}>
+                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-sm lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>
                       {formatCurrency(row.totalVolume)}
                     </td>
-                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground")}>{row.tradersReferred}</td>
-                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground")}>
+                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-sm lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>{row.tradersReferred}</td>
+                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-sm lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>
                       {formatCurrency(row.totalRewards)}
                     </td>
                     <td className="px-3 lg:px-6 py-3 lg:py-4 text-right">
                       <button
                         onClick={(e) => handleOpenShareModal(e, row.code)}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-xs font-medium text-white hover:bg-black/80 transition-colors"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-black/80 transition-colors"
                       >
                         <Share2 className="h-3.5 w-3.5" />
                         Share
@@ -221,32 +222,32 @@ export function CodeSection() {
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
-            className="border-t border-gray-100 dark:border-border px-3 lg:px-6 py-3 lg:py-4"
+            className="border-t border-gray-100 dark:border-[#27272A] px-3 lg:px-6 py-3 lg:py-4"
           />
         </div>
       )}
 
       {/* Selected Code Details */}
       {selectedCode && (
-        <div className="rounded-2xl bg-white dark:bg-card p-3 lg:p-6 overflow-x-auto">
+        <div className="rounded-2xl bg-white dark:bg-[#18181B] p-3 lg:p-6 overflow-x-auto">
           <div className="mb-3 lg:mb-4 flex items-center gap-2 justify-center">
-            <span className="text-base lg:text-lg font-bold text-foreground">{selectedCode}</span>
+            <span className="text-base lg:text-lg font-bold text-foreground dark:text-[#D2D2D2]">{selectedCode}</span>
             <span className="flex items-center gap-1 text-xs lg:text-sm text-muted-foreground">
-              (<User className="h-3.5 w-3.5 lg:h-4 lg:w-4" /> {users.length})
+              (<User className="h-3.5 w-3.5 lg:h-4 lg:w-4 dark:hidden" /><DardUser className="h-3.5 w-3.5 lg:h-4 lg:w-4 hidden dark:block" />  {users.length})
             </span>
           </div>
 
           <table className="w-full min-w-[550px]">
             <thead>
-              <tr className="border-b border-gray-100 dark:border-border">
-                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
+              <tr className="border-b border-gray-100 dark:border-[#27272A]">
+                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Email/Wallet
                 </th>
-                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
+                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Date Joined
                 </th>
-                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">Type</th>
-                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-medium text-muted-foreground">
+                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">Type</th>
+                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
                   Reward Earned
                 </th>
               </tr>
@@ -266,11 +267,11 @@ export function CodeSection() {
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-50 dark:border-border/50 last:border-0">
-                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-foreground">{user.email}</td>
-                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-muted-foreground">{user.dateJoined}</td>
-                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-muted-foreground">{user.layer}</td>
-                    <td className="py-3 lg:py-4 text-xs lg:text-sm text-foreground">
+                  <tr key={user.id} className="border-b border-gray-50 dark:border-[#27272A]/50 last:border-0">
+                    <td className="py-3 lg:py-4 text-sm lg:text-sm text-foreground dark:text-[#D2D2D2]">{user.email}</td>
+                    <td className="py-3 lg:py-4 text-sm lg:text-sm text-muted-foreground dark:text-[#D2D2D2]">{user.dateJoined}</td>
+                    <td className="py-3 lg:py-4 text-sm lg:text-sm text-muted-foreground dark:text-[#D2D2D2]">{user.layer}</td>
+                    <td className="py-3 lg:py-4 text-sm lg:text-sm text-foreground dark:text-[#D2D2D2]">
                       <div className="flex flex-col gap-0.5">
                         {user.rewards.map((reward, idx) => (
                           <span key={idx}>{reward.amount} {reward.token}</span>

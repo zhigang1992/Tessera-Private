@@ -104,15 +104,15 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
   }, [priceHistory])
 
   return (
-    <div className="rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1a2e0a] dark:to-[#D2FB95]">
+    <div className="rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95]">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 lg:mb-6">
         <div className="flex items-center gap-2 lg:gap-2.5">
           <TokenSpacexIcon className="w-10 h-10 lg:w-12 lg:h-12" />
-          <span className="text-sm lg:text-base font-extrabold text-black">{token?.name ?? tokenSymbol}</span>
+          <span className="text-sm lg:text-base font-extrabold text-black dark:text-[#d2d2d2]">{token?.name ?? tokenSymbol}</span>
         </div>
         <div className="text-right">
-          <div className="text-xl lg:text-[28px] font-bold text-[#111]">
+          <div className="text-xl lg:text-[28px] font-bold text-[#111] dark:text-white">
             ${token?.price.toFixed(2) ?? '0.00'}
           </div>
           <div className="flex items-center justify-end gap-1 text-[10px] lg:text-xs">
@@ -120,7 +120,7 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
               {isPositive ? '▲' : '▼'} ${Math.abs(token?.priceChange24h ?? 0).toFixed(2)} (
               {Math.abs(token?.priceChangePercent24h ?? 0).toFixed(2)}%)
             </span>
-            <span className="text-[#999]">24H</span>
+            <span className="text-[#999] dark:text-[#d2d2d2]">24H</span>
           </div>
         </div>
       </div>
@@ -135,7 +135,7 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
             key={range}
             onClick={() => setSelectedRange(range)}
             className={`flex-1 py-1 px-1.5 lg:px-3 text-[10px] lg:text-xs font-medium rounded transition-all ${
-              selectedRange === range ? 'bg-white text-black shadow-sm' : 'text-black hover:bg-white/50'
+              selectedRange === range ? 'bg-white dark:bg-black text-black dark:text-white shadow-sm' : 'text-black hover:bg-white/50'
             }`}
           >
             {range}

@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { User } from 'lucide-react'
 import TreeIcon from './_/tree.svg?react'
+import DarkTreeIcon from './_/dark-tree.svg?react'
+import DarkdUser from './_/person.svg?react'
 import { getTraderLayers } from '@/services'
 
 export function ReferralTree() {
@@ -10,19 +12,20 @@ export function ReferralTree() {
   })
 
   return (
-    <div className="flex flex-col lg:flex-row rounded-2xl overflow-hidden p-4 bg-white dark:bg-card gap-4 lg:gap-6">
+    <div className="flex flex-col lg:flex-row rounded-2xl overflow-hidden p-4 bg-white dark:bg-[#18181B] gap-4 lg:gap-6">
       {/* Tree Visualization */}
       <div className="flex items-center justify-center p-4 lg:p-6 text-foreground">
-        <TreeIcon className="w-full max-w-[288px] h-auto lg:w-[288px] lg:h-[202px]" />
+        <TreeIcon className="w-full max-w-[288px] h-auto lg:w-[288px] lg:h-[202px] dark:hidden" />
+        <DarkTreeIcon className="w-full max-w-[288px] h-auto lg:w-[288px] lg:h-[202px] hidden dark:block" />
       </div>
 
-      <div className="h-[1px] lg:h-auto lg:w-[1px] bg-[#D9D9D9] dark:bg-border" />
+      <div className="h-[1px] lg:h-auto lg:w-[1px] bg-[#D9D9D9] dark:bg-[#27272A]" />
 
       {/* Data Table */}
       <div className="p-4 lg:p-6 flex-1 overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-100 dark:border-border">
+            <tr className="border-b border-gray-100 dark:border-[#27272A]">
               <th className="pb-4 text-left text-sm font-medium text-muted-foreground">
                 Trader Layers
               </th>
@@ -43,15 +46,16 @@ export function ReferralTree() {
               </tr>
             ) : (
               data.map((row) => (
-                <tr key={row.layer} className="border-b border-gray-50 dark:border-border/50 last:border-0">
-                  <td className="py-4 font-medium text-foreground">{row.layer}</td>
+                <tr key={row.layer} className="border-b border-gray-50 dark:border-[#27272A]/50 last:border-0">
+                  <td className="py-4 font-medium text-foreground dark:text-[#D2D2D2]">{row.layer}</td>
                   <td className="py-4">
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <User className="h-4 w-4" />
+                      <User className="h-6 w-6 dark:hidden" />
+                      <DarkdUser className="h-6 w-6 hidden dark:block" />
                       {row.tradersReferred}
                     </div>
                   </td>
-                  <td className="py-4 font-medium text-foreground">{row.points}</td>
+                  <td className="py-4 font-medium text-foreground dark:text-[#D2D2D2]">{row.points}</td>
                 </tr>
               ))
             )}
