@@ -172,8 +172,8 @@ export function TokenSwapPanel() {
                 </button>
               )}
             </div>
-            <div className="flex items-center justify-between mt-1 lg:mt-1.5">
-              <div className="flex items-center gap-1.5 lg:gap-2.5 border border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)] rounded-md px-2 lg:px-3 py-1.5 lg:py-2">
+            <div className="flex items-center gap-3 mt-1 lg:mt-1.5">
+              <div className="flex-shrink-0 flex items-center gap-1.5 lg:gap-2.5 border border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)] rounded-md px-2 lg:px-3 py-1.5 lg:py-2">
                 {sellingToken === 'USDC' ? (
                   <TokenUsdcIcon className="w-6 h-6 lg:w-8 lg:h-8" />
                 ) : (
@@ -183,16 +183,14 @@ export function TokenSwapPanel() {
                   {sellingToken}
                 </span>
               </div>
-              <div className="text-right">
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={inputAmount}
-                  onChange={(e) => handleInputChange(e.target.value)}
-                  placeholder="0.00"
-                  className="text-2xl lg:text-4xl font-semibold text-foreground dark:text-white text-right bg-transparent outline-none w-24 lg:w-32 placeholder:text-muted-foreground"
-                />
-              </div>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={inputAmount}
+                onChange={(e) => handleInputChange(e.target.value)}
+                placeholder="0.00"
+                className="flex-1 min-w-0 text-2xl lg:text-4xl font-semibold text-foreground dark:text-white text-right bg-transparent outline-none placeholder:text-muted-foreground"
+              />
             </div>
           </div>
 
@@ -217,8 +215,8 @@ export function TokenSwapPanel() {
               </span>
             )}
           </div>
-          <div className="flex items-center justify-between mt-1 lg:mt-1.5">
-            <div className="flex items-center gap-1.5 lg:gap-2.5 border border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)] rounded-md px-2 lg:px-3 py-1.5 lg:py-2">
+          <div className="flex items-center gap-3 mt-1 lg:mt-1.5">
+            <div className="flex-shrink-0 flex items-center gap-1.5 lg:gap-2.5 border border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)] rounded-md px-2 lg:px-3 py-1.5 lg:py-2">
               {buyingToken === 'USDC' ? (
                 <TokenUsdcIcon className="w-6 h-6 lg:w-8 lg:h-8" />
               ) : (
@@ -228,15 +226,13 @@ export function TokenSwapPanel() {
                 {buyingToken}
               </span>
             </div>
-            <div className="text-right">
-              <input
-                type="text"
-                value={isLoading ? '...' : outputAmount}
-                readOnly
-                placeholder="0"
-                className="text-2xl lg:text-4xl font-semibold text-muted-foreground dark:text-white text-right bg-transparent outline-none w-24 lg:w-32 placeholder:text-muted-foreground"
-              />
-            </div>
+            <input
+              type="text"
+              value={isLoading ? '...' : outputAmount}
+              readOnly
+              placeholder="0"
+              className="flex-1 min-w-0 text-2xl lg:text-4xl font-semibold text-foreground dark:text-white text-right bg-transparent outline-none placeholder:text-muted-foreground"
+            />
           </div>
         </div>
 
