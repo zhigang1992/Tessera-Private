@@ -146,7 +146,7 @@ export function TokenSwapPanel() {
   }
 
   return (
-    <div className="rounded-2xl p-4 lg:p-6 py-6 lg:py-8 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95]">
+    <div className="h-full rounded-2xl p-4 lg:p-6 py-6 lg:py-8 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95]">
       {/* Network indicator */}
       <div className="flex justify-end mb-2">
         <span className="text-xs px-2 py-1 rounded bg-black/10 dark:bg-white/10 text-muted-foreground">
