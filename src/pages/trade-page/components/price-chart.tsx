@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createChart, ColorType, LineSeries } from 'lightweight-charts'
 import type { IChartApi, LineData, Time } from 'lightweight-charts'
-import { getPriceHistory, getTokenBySymbol } from '@/services'
-import TokenSpacexIcon from './_/token-spacex.svg?react'
+import { getPriceHistory, getTokenPrice } from '@/services/coingecko'
+import TokenSolIcon from './_/token-sol.svg?react'
 
 type TimeRange = '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL'
 
@@ -11,7 +11,7 @@ interface PriceChartProps {
   tokenSymbol?: string
 }
 
-export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
+export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -20,16 +20,19 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
 
   const timeRanges: TimeRange[] = ['1D', '1W', '1M', '3M', '1Y', 'ALL']
 
-  // Fetch token info
+  // Fetch token price info from CoinGecko
   const { data: token } = useQuery({
-    queryKey: ['token', tokenSymbol],
-    queryFn: () => getTokenBySymbol(tokenSymbol),
+    queryKey: ['tokenPrice', tokenSymbol],
+    queryFn: () => getTokenPrice(tokenSymbol),
+    refetchInterval: 60000, // Refresh every minute
+    staleTime: 30000, // Consider data stale after 30 seconds
   })
 
-  // Fetch price history
+  // Fetch price history from CoinGecko
   const { data: priceHistory } = useQuery({
     queryKey: ['priceHistory', tokenSymbol, selectedRange],
     queryFn: () => getPriceHistory(tokenSymbol, selectedRange),
+    staleTime: 60000, // Cache for 1 minute
   })
 
   const isPositive = (token?.priceChange24h ?? 0) >= 0
@@ -108,12 +111,12 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-4 lg:mb-6">
         <div className="flex items-center gap-2 lg:gap-2.5">
-          <TokenSpacexIcon className="w-10 h-10 lg:w-12 lg:h-12" />
-          <span className="text-sm lg:text-base font-extrabold text-black dark:text-[#d2d2d2]">{token?.name ?? tokenSymbol}</span>
+          <TokenSolIcon className="w-10 h-10 lg:w-12 lg:h-12" />
+          <span className="text-sm lg:text-base font-extrabold text-black dark:text-[#d2d2d2]">{token?.symbol ?? tokenSymbol}</span>
         </div>
         <div className="text-right">
           <div className="text-xl lg:text-[28px] font-bold text-[#111] dark:text-white">
-            ${token?.price.toFixed(2) ?? '0.00'}
+            ${token?.price?.toFixed(2) ?? '0.00'}
           </div>
           <div className="flex items-center justify-end gap-1 text-[10px] lg:text-xs">
             <span className={isPositive ? 'text-[#269700]' : 'text-red-500'}>
