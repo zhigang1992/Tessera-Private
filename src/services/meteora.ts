@@ -169,9 +169,14 @@ export class MeteoraClient {
     const quote = await pool.swapQuote(amount, swapForY, new BN(slippageBps), binArrays)
 
     // Get decimals for formatting
-    const getDecimals = (token: { decimal?: number; decimals?: number }) => token.decimal ?? token.decimals ?? 9
-    const inDecimals = swapForY ? getDecimals(pool.tokenX as { decimal?: number; decimals?: number }) : getDecimals(pool.tokenY as { decimal?: number; decimals?: number })
-    const outDecimals = swapForY ? getDecimals(pool.tokenY as { decimal?: number; decimals?: number }) : getDecimals(pool.tokenX as { decimal?: number; decimals?: number })
+    // Note: We use known decimals from pool config because SDK token objects
+    // may not expose decimals correctly. For SOL-USDC pool:
+    // - tokenX (SOL) = 9 decimals
+    // - tokenY (USDC) = 6 decimals
+    const tokenXDecimals = MAINNET_POOLS['SOL-USDC'].tokenX.decimals // SOL = 9
+    const tokenYDecimals = MAINNET_POOLS['SOL-USDC'].tokenY.decimals // USDC = 6
+    const inDecimals = swapForY ? tokenXDecimals : tokenYDecimals
+    const outDecimals = swapForY ? tokenYDecimals : tokenXDecimals
 
     // Format amounts
     const inAmountFormatted = this.formatAmount(quote.consumedInAmount, inDecimals)
