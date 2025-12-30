@@ -7,8 +7,8 @@
  */
 
 import { useState, useCallback, useMemo } from 'react'
-import { useConnection, useWallet } from '@solana/wallet-adapter-react'
-import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { Connection, PublicKey, LAMPORTS_PER_SOL, clusterApiUrl } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress } from '@solana/spl-token'
 import {
   MeteoraClient,
@@ -17,6 +17,9 @@ import {
   type MeteoraSwapQuote,
   type PoolInfo,
 } from '@/services/meteora'
+
+// Get mainnet RPC URL from environment or use default
+const MAINNET_RPC_URL = import.meta.env.VITE_MAINNET_RPC_URL || clusterApiUrl('mainnet-beta')
 
 // Direction: USDC -> SOL (buy SOL) or SOL -> USDC (sell SOL)
 export type SwapDirection = 'USDC_TO_SOL' | 'SOL_TO_USDC'
@@ -51,7 +54,6 @@ const SOL_DECIMALS = MAINNET_POOLS['SOL-USDC'].tokenX.decimals
 const USDC_DECIMALS = MAINNET_POOLS['SOL-USDC'].tokenY.decimals
 
 export function useMeteoraSwap(): UseMeteoraSwapReturn {
-  const { connection } = useConnection()
   const wallet = useWallet()
 
   // State
@@ -63,10 +65,16 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
   const [usdcBalance, setUsdcBalance] = useState<string | null>(null)
   const [solBalance, setSolBalance] = useState<string | null>(null)
 
-  // Create client - always mainnet for now
+  // Create a dedicated mainnet connection for swap operations
+  // This is separate from the wallet adapter connection which may be on devnet
+  const mainnetConnection = useMemo(() => {
+    return new Connection(MAINNET_RPC_URL, 'confirmed')
+  }, [])
+
+  // Create client with mainnet connection
   const client = useMemo(() => {
-    return createMeteoraClient(connection, 'mainnet-beta')
-  }, [connection])
+    return createMeteoraClient(mainnetConnection, 'mainnet-beta')
+  }, [mainnetConnection])
 
   // Load pool info
   const loadPool = useCallback(async () => {
@@ -83,7 +91,7 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
     }
   }, [client])
 
-  // Refresh token balances
+  // Refresh token balances from mainnet
   const refreshBalances = useCallback(async () => {
     if (!wallet.publicKey) {
       setUsdcBalance(null)
@@ -92,21 +100,21 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
     }
 
     try {
-      // Get USDC balance
+      // Get USDC balance on mainnet
       try {
         const usdcMintPubkey = new PublicKey(USDC_MINT)
         const ata = await getAssociatedTokenAddress(usdcMintPubkey, wallet.publicKey)
-        const account = await getAccount(connection, ata)
+        const account = await getAccount(mainnetConnection, ata)
         const usdcFormatted = (Number(account.amount) / 10 ** USDC_DECIMALS).toFixed(2)
         setUsdcBalance(usdcFormatted)
       } catch {
-        // Token account doesn't exist
+        // Token account doesn't exist on mainnet
         setUsdcBalance('0.00')
       }
 
-      // Get native SOL balance
+      // Get native SOL balance on mainnet
       try {
-        const balance = await connection.getBalance(wallet.publicKey)
+        const balance = await mainnetConnection.getBalance(wallet.publicKey)
         const solFormatted = (balance / LAMPORTS_PER_SOL).toFixed(4)
         setSolBalance(solFormatted)
       } catch {
@@ -115,7 +123,7 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
     } catch (err) {
       console.error('Failed to fetch balances:', err)
     }
-  }, [connection, wallet.publicKey])
+  }, [mainnetConnection, wallet.publicKey])
 
   // Get swap quote
   // In the pool: tokenX = SOL, tokenY = USDC
@@ -178,17 +186,17 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
           wallet.publicKey
         )
 
-        // Set recent blockhash and fee payer
-        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash()
+        // Set recent blockhash and fee payer using mainnet connection
+        const { blockhash, lastValidBlockHeight } = await mainnetConnection.getLatestBlockhash()
         swapTx.recentBlockhash = blockhash
         swapTx.feePayer = wallet.publicKey
 
-        // Sign and send
+        // Sign and send to mainnet
         const signed = await wallet.signTransaction(swapTx)
-        const signature = await connection.sendRawTransaction(signed.serialize())
+        const signature = await mainnetConnection.sendRawTransaction(signed.serialize())
 
-        // Confirm transaction
-        await connection.confirmTransaction({
+        // Confirm transaction on mainnet
+        await mainnetConnection.confirmTransaction({
           signature,
           blockhash,
           lastValidBlockHeight,
@@ -208,7 +216,7 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
         setIsLoading(false)
       }
     },
-    [client, connection, wallet, refreshBalances]
+    [client, mainnetConnection, wallet, refreshBalances]
   )
 
   // Clear error
