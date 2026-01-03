@@ -13,7 +13,7 @@ export function ReferralTree() {
     <div className="flex flex-col lg:flex-row lg:items-stretch items-center rounded-[16px] bg-white dark:bg-[#18181B] px-4 lg:px-6 py-4 gap-4 lg:gap-6">
       {/* Tree Visualization */}
       <div className="flex items-center justify-center shrink-0">
-        <TreeIcon className="w-full max-w-[200px] lg:max-w-[260px] h-auto" />
+        <TreeIcon className="w-full max-w-[200px] lg:max-w-[260px] h-auto text-zinc-900 dark:text-zinc-100" />
       </div>
 
       {/* Divider */}
