@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { Trophy, Award } from 'lucide-react'
+import { Trophy} from 'lucide-react'
 import { getRewardsOverview, formatCurrency } from '@/services'
+import AwardIcon from './_/award.svg?react'
 
 export function RewardsOverview() {
   const { data, isLoading } = useQuery({
@@ -22,14 +23,14 @@ export function RewardsOverview() {
       </div>
 
       {/* Referral Points Card */}
-      <div className="flex-1 flex items-center justify-between bg-white dark:bg-[#18181B] rounded-[16px] px-4 py-6">
+      <div className="flex-1 flex items-center justify-between bg-white rounded-[16px] px-4 py-6">
         <div className="flex flex-col gap-[5px]">
-          <p className="text-[12px] text-zinc-900 dark:text-zinc-400">Referral Points</p>
-          <p className="text-[40px] font-light text-zinc-900 dark:text-white font-martian leading-none">
+          <p className="text-[12px] text-zinc-900">Referral Points</p>
+          <p className="text-[40px] font-light text-zinc-900 font-martian leading-none">
             {isLoading ? '—' : (data?.referralPoints?.toLocaleString() ?? '0')}
           </p>
         </div>
-        <Award className="size-14 text-zinc-700 dark:text-zinc-400 shrink-0" strokeWidth={1.5} />
+        <AwardIcon className="size-14 text-zinc-700 shrink-0" />
       </div>
     </div>
   )
