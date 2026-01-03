@@ -114,175 +114,216 @@ export function CodeSection() {
 
       {/* Code Table */}
       {activeTab === 'code' && (
-        <div className="rounded-2xl bg-white dark:bg-[#18181B] overflow-x-auto">
-          <table className="w-full min-w-[550px]">
-            <thead>
-              <tr className="border-b border-gray-100 dark:border-[#27272A]">
-                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
-                  Referral Code
-                </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
-                  Total Volume
-                </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
-                  Traders Referred
-                </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
-                  Total Rewards
-                </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-4 text-right text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {codesLoading ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-3 lg:px-6 py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground"
-                  >
-                    Loading...
-                  </td>
-                </tr>
-              ) : !connected ? (
-                <tr>
-                  <td colSpan={5} className="py-12">
-                    <div className="flex justify-center">
-                      <WalletDropdown
-                        triggerVariant="default"
-                        triggerSize="lg"
-                        triggerClassName="h-11 rounded-lg bg-black px-8 text-sm font-medium text-white hover:bg-black/90"
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ) : codes.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="py-12 text-center text-sm text-muted-foreground"
-                  >
-                    No Referral Code
-                  </td>
-                </tr>
-              ) : (
-                paginatedCodes.map((row) => (
-                  <tr
-                    key={row.code}
-                    onClick={() => setSelectedCode(row.code)}
-                    className={cn(
-                      'cursor-pointer border-b border-gray-50 dark:border-[#27272A]/50 last:border-0 transition-colors',
-                      selectedCode === row.code ? 'bg-[#D2FB95] text-black' : 'hover:bg-gray-50 dark:hover:bg-[#27272A]',
-                    )}
-                  >
-                    <td className="px-3 lg:px-6 py-3 lg:py-4">
-                      <div className="flex items-center gap-1.5 lg:gap-2">
-                        <span className={cn("text-xs lg:text-sm font-medium", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>{row.code}</span>
-                        <button
-                          onClick={(e) => handleCopyCode(e, row.code)}
-                          className={cn("hover:text-foreground", selectedCode === row.code ? "text-black/60 hover:text-black" : "text-muted-foreground dark:text-[#D2D2D2]")}
-                          title="Copy code"
-                        >
-                          <CopyIcon className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
-                        </button>
-                        <button
-                          onClick={(e) => handleShareOnX(e, row.code)}
-                          className={cn("hover:text-foreground", selectedCode === row.code ? "text-black/60 hover:text-black" : "text-muted-foreground dark:text-[#D2D2D2]")}
-                          title="Share on X"
-                        >
-                          <XIcon className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
-                        </button>
-                      </div>
-                    </td>
-                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-sm lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>
-                      {formatCurrency(row.totalVolume)}
-                    </td>
-                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-sm lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>{row.tradersReferred}</td>
-                    <td className={cn("px-3 lg:px-6 py-3 lg:py-4 text-sm lg:text-sm", selectedCode === row.code ? "text-black" : "text-foreground dark:text-[#D2D2D2]")}>
-                      {formatCurrency(row.totalRewards)}
-                    </td>
-                    <td className="px-3 lg:px-6 py-3 lg:py-4 text-right">
+        <div className="rounded-[16px] bg-white dark:bg-[#18181B] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px] overflow-x-auto">
+          {/* Header - hidden on mobile */}
+          <div className="hidden lg:flex items-center gap-[10px] px-[10px]">
+            <div className="w-[240px] text-[12px] leading-4 text-zinc-500">Referral Code</div>
+            <div className="flex-1 text-[12px] leading-4 text-zinc-500">Total Volume</div>
+            <div className="flex-1 text-[12px] leading-4 text-zinc-500">Traders Referred</div>
+            <div className="flex-1 text-[12px] leading-4 text-zinc-500">Total Rewards</div>
+          </div>
+
+          {/* Divider - hidden on mobile */}
+          <div className="hidden lg:block px-[10px]">
+            <div className="h-px bg-black/15 dark:bg-white/15" />
+          </div>
+
+          {/* Rows */}
+          <div className="flex flex-col gap-[5px]">
+            {codesLoading ? (
+              <div className="p-[10px] text-center text-[14px] text-muted-foreground">
+                Loading...
+              </div>
+            ) : !connected ? (
+              <div className="py-12 flex justify-center">
+                <WalletDropdown
+                  triggerVariant="default"
+                  triggerSize="lg"
+                  triggerClassName="h-11 rounded-lg bg-black px-8 text-sm font-medium text-white hover:bg-black/90"
+                />
+              </div>
+            ) : codes.length === 0 ? (
+              <div className="p-4">
+                <div className="flex items-center justify-center rounded-lg bg-zinc-50 dark:bg-[#27272A] py-16">
+                  <span className="text-[14px] text-muted-foreground">No Referral Code</span>
+                </div>
+              </div>
+            ) : (
+              paginatedCodes.map((row, index) => (
+                <div
+                  key={row.code}
+                  onClick={() => setSelectedCode(row.code)}
+                  className={cn(
+                    'flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-[10px] p-3 lg:p-[10px] rounded-lg lg:rounded-none cursor-pointer transition-colors',
+                    selectedCode === row.code
+                      ? 'bg-[#d2fb95]'
+                      : index % 2 === 0
+                        ? 'bg-zinc-50 dark:bg-zinc-800/50'
+                        : 'bg-white dark:bg-transparent'
+                  )}
+                >
+                  {/* Mobile: Code with actions */}
+                  <div className="flex items-center justify-between lg:w-[240px] lg:gap-[5px]">
+                    <div className="flex items-center gap-[5px]">
+                      <span className="text-[14px] font-semibold text-[#404040] dark:text-zinc-300 uppercase">
+                        {row.code}
+                      </span>
                       <button
-                        onClick={(e) => handleOpenShareModal(e, row.code)}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-black/80 transition-colors"
+                        onClick={(e) => handleCopyCode(e, row.code)}
+                        className="text-zinc-400 hover:text-zinc-600"
+                        title="Copy code"
                       >
-                        <Share2 className="h-3.5 w-3.5" />
-                        Share
+                        <CopyIcon className="size-4" />
                       </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                      <button
+                        onClick={(e) => handleShareOnX(e, row.code)}
+                        className="text-zinc-400 hover:text-zinc-600"
+                        title="Share on X"
+                      >
+                        <XIcon className="size-4" />
+                      </button>
+                    </div>
+                    {/* Mobile: Share button */}
+                    <button
+                      onClick={(e) => handleOpenShareModal(e, row.code)}
+                      className="lg:hidden inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-black/80 transition-colors"
+                    >
+                      <Share2 className="size-3.5" />
+                      Share
+                    </button>
+                  </div>
+                  {/* Mobile: Stats grid */}
+                  <div className="grid grid-cols-3 gap-2 lg:contents">
+                    <div className="flex flex-col lg:flex-1">
+                      <span className="text-[10px] text-zinc-500 lg:hidden">Volume</span>
+                      <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-white">
+                        {formatCurrency(row.totalVolume)}
+                      </span>
+                    </div>
+                    <div className="flex flex-col lg:flex-1">
+                      <span className="text-[10px] text-zinc-500 lg:hidden">Referred</span>
+                      <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-white">
+                        {row.tradersReferred}
+                      </span>
+                    </div>
+                    <div className="flex flex-col lg:flex-1">
+                      <span className="text-[10px] text-zinc-500 lg:hidden">Rewards</span>
+                      <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-white">
+                        {formatCurrency(row.totalRewards)}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Desktop: Share button */}
+                  <div className="hidden lg:block shrink-0">
+                    <button
+                      onClick={(e) => handleOpenShareModal(e, row.code)}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-black/80 transition-colors"
+                    >
+                      <Share2 className="size-3.5" />
+                      Share
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
 
           {/* Pagination */}
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
-            className="border-t border-gray-100 dark:border-[#27272A] px-3 lg:px-6 py-3 lg:py-4"
+            className="justify-center"
           />
         </div>
       )}
 
       {/* Selected Code Details */}
       {selectedCode && (
-        <div className="rounded-2xl bg-white dark:bg-[#18181B] p-3 lg:p-6 overflow-x-auto">
-          <div className="mb-3 lg:mb-4 flex items-center gap-2 justify-center">
-            <span className="text-base lg:text-lg font-bold text-foreground dark:text-[#D2D2D2]">{selectedCode}</span>
-            <span className="flex items-center gap-1 text-xs lg:text-sm text-muted-foreground">
-              (<PersonIcon className="h-3.5 w-3.5 lg:h-4 lg:w-4" /> {users.length})
+        <div className="rounded-[16px] bg-white dark:bg-[#18181B] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px]">
+          {/* Title */}
+          <div className="flex items-center gap-2 lg:gap-[10px] justify-center">
+            <span className="text-base lg:text-[18px] font-semibold text-foreground dark:text-[#D2D2D2] uppercase">{selectedCode}</span>
+            <span className="flex items-center text-[12px] font-semibold text-[#404040] dark:text-zinc-400 uppercase">
+              (<PersonIcon className="size-4" />{users.length})
             </span>
           </div>
 
-          <table className="w-full min-w-[550px]">
-            <thead>
-              <tr className="border-b border-gray-100 dark:border-[#27272A]">
-                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
-                  Email/Wallet
-                </th>
-                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
-                  Date Joined
-                </th>
-                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">Type</th>
-                <th className="pb-2 lg:pb-4 text-left text-xs lg:text-sm font-normal text-muted-foreground dark:text-[#71717A]">
-                  Reward Earned
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {usersLoading ? (
-                <tr>
-                  <td colSpan={4} className="py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground">
-                    Loading...
-                  </td>
-                </tr>
-              ) : users.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="py-3 lg:py-4 text-center text-xs lg:text-sm text-muted-foreground">
-                    No users found
-                  </td>
-                </tr>
-              ) : (
-                users.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-50 dark:border-[#27272A]/50 last:border-0">
-                    <td className="py-3 lg:py-4 text-sm lg:text-sm text-foreground dark:text-[#D2D2D2]">{user.email}</td>
-                    <td className="py-3 lg:py-4 text-sm lg:text-sm text-muted-foreground dark:text-[#D2D2D2]">{user.dateJoined}</td>
-                    <td className="py-3 lg:py-4 text-sm lg:text-sm text-muted-foreground dark:text-[#D2D2D2]">{user.layer}</td>
-                    <td className="py-3 lg:py-4 text-sm lg:text-sm text-foreground dark:text-[#D2D2D2]">
-                      <div className="flex flex-col gap-0.5">
+          {/* Header - hidden on mobile */}
+          <div className="hidden lg:flex items-center gap-[10px] px-[10px]">
+            <div className="w-[480px] text-[12px] leading-4 text-zinc-500">Email/Wallet</div>
+            <div className="flex-1 text-[12px] leading-4 text-zinc-500">Date Joined</div>
+            <div className="w-[64px] text-[12px] leading-4 text-zinc-500">Type</div>
+            <div className="flex-1 text-[12px] leading-4 text-zinc-500">Reward Earned</div>
+          </div>
+
+          {/* Divider - hidden on mobile */}
+          <div className="hidden lg:block px-[10px]">
+            <div className="h-px bg-black/15 dark:bg-white/15" />
+          </div>
+
+          {/* Rows */}
+          <div className="flex flex-col gap-[5px]">
+            {usersLoading ? (
+              <div className="p-[10px] text-center text-[14px] text-muted-foreground">
+                Loading...
+              </div>
+            ) : users.length === 0 ? (
+              <div className="p-4">
+                <div className="flex items-center justify-center rounded-lg bg-zinc-50 dark:bg-[#27272A] py-16">
+                  <span className="text-[14px] text-muted-foreground">No users found</span>
+                </div>
+              </div>
+            ) : (
+              users.map((user, index) => (
+                <div
+                  key={user.id}
+                  className={`flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-[10px] p-3 lg:p-[10px] rounded-lg lg:rounded-none ${
+                    index % 2 === 0 ? 'bg-zinc-50 dark:bg-zinc-800/50' : 'bg-white dark:bg-transparent'
+                  }`}
+                >
+                  {/* Email/Wallet */}
+                  <div className="lg:w-[480px]">
+                    <span className="text-[10px] text-zinc-500 lg:hidden">Email/Wallet</span>
+                    <div className="text-[13px] lg:text-[14px] font-semibold text-[#404040] dark:text-zinc-300 break-all">
+                      {user.email}
+                    </div>
+                  </div>
+                  {/* Mobile: Stats grid */}
+                  <div className="grid grid-cols-3 gap-2 lg:contents">
+                    <div className="flex flex-col lg:flex-1">
+                      <span className="text-[10px] text-zinc-500 lg:hidden">Date Joined</span>
+                      <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-white">
+                        {user.dateJoined}
+                      </span>
+                    </div>
+                    <div className="flex flex-col lg:w-[64px]">
+                      <span className="text-[10px] text-zinc-500 lg:hidden">Type</span>
+                      <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-white">
+                        {user.layer}
+                      </span>
+                    </div>
+                    <div className="flex flex-col lg:flex-1">
+                      <span className="text-[10px] text-zinc-500 lg:hidden">Rewards</span>
+                      <div className="flex flex-col gap-1 lg:gap-[10px] text-[12px] lg:text-[14px] leading-5 text-black dark:text-white">
                         {user.rewards.map((reward, idx) => (
                           <span key={idx}>{reward.amount} {reward.token}</span>
                         ))}
                       </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={1}
+            totalPages={Math.ceil(users.length / 10)}
+            onPageChange={() => {}}
+            className="justify-center"
+          />
         </div>
       )}
 
