@@ -88,7 +88,7 @@ export function CodeSection() {
             onClick={() => setActiveTab('code')}
             className={cn(
               'rounded-md px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors',
-              activeTab === 'code' ? 'bg-white dark:bg-[#3F3F46] text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+              activeTab === 'code' ? 'bg-white dark:bg-[#323334] text-foreground dark:text-[#d2d2d2] shadow-sm' : 'text-muted-foreground dark:text-[#d2d2d2]/50 hover:text-foreground',
             )}
           >
             Code
@@ -97,7 +97,7 @@ export function CodeSection() {
             onClick={() => setActiveTab('reward')}
             className={cn(
               'rounded-md px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors',
-              activeTab === 'reward' ? 'bg-white dark:bg-[#3F3F46] text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+              activeTab === 'reward' ? 'bg-white dark:bg-[#323334] text-foreground dark:text-[#d2d2d2] shadow-sm' : 'text-muted-foreground dark:text-[#d2d2d2]/50 hover:text-foreground',
             )}
           >
             Reward distribution
@@ -114,7 +114,7 @@ export function CodeSection() {
 
       {/* Code Table */}
       {activeTab === 'code' && (
-        <div className="rounded-[16px] bg-white dark:bg-[#18181B] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px] overflow-x-auto">
+        <div className="rounded-[16px] bg-white dark:bg-[#1e1f20] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px] overflow-x-auto">
           {/* Header - hidden on mobile */}
           <div className="hidden lg:flex items-center gap-[10px] px-[10px]">
             <div className="w-[240px] text-[12px] leading-4 text-zinc-500">Referral Code</div>
@@ -158,26 +158,35 @@ export function CodeSection() {
                     selectedCode === row.code
                       ? 'bg-[#d2fb95]'
                       : index % 2 === 0
-                        ? 'bg-zinc-50 dark:bg-zinc-800/50'
+                        ? 'bg-zinc-50 dark:bg-[#323334]'
                         : 'bg-white dark:bg-transparent'
                   )}
                 >
                   {/* Mobile: Code with actions */}
                   <div className="flex items-center justify-between lg:w-[240px] lg:gap-[5px]">
                     <div className="flex items-center gap-[5px]">
-                      <span className="text-[14px] font-semibold text-[#404040] dark:text-zinc-300 uppercase">
+                      <span className={cn(
+                        "text-[14px] font-semibold uppercase",
+                        selectedCode === row.code ? "text-black" : "text-[#404040] dark:text-[#d2d2d2]"
+                      )}>
                         {row.code}
                       </span>
                       <button
                         onClick={(e) => handleCopyCode(e, row.code)}
-                        className="text-zinc-400 hover:text-zinc-600"
+                        className={cn(
+                          "hover:text-zinc-600",
+                          selectedCode === row.code ? "text-black/60" : "text-zinc-400"
+                        )}
                         title="Copy code"
                       >
                         <CopyIcon className="size-4" />
                       </button>
                       <button
                         onClick={(e) => handleShareOnX(e, row.code)}
-                        className="text-zinc-400 hover:text-zinc-600"
+                        className={cn(
+                          "hover:text-zinc-600",
+                          selectedCode === row.code ? "text-black/60" : "text-zinc-400"
+                        )}
                         title="Share on X"
                       >
                         <XIcon className="size-4" />
@@ -195,20 +204,38 @@ export function CodeSection() {
                   {/* Mobile: Stats grid */}
                   <div className="grid grid-cols-3 gap-2 lg:contents">
                     <div className="flex flex-col lg:flex-1">
-                      <span className="text-[10px] text-zinc-500 lg:hidden">Volume</span>
-                      <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-white">
+                      <span className={cn(
+                        "text-[10px] lg:hidden",
+                        selectedCode === row.code ? "text-black/60" : "text-zinc-500"
+                      )}>Volume</span>
+                      <span className={cn(
+                        "text-[12px] lg:text-[14px] leading-5",
+                        selectedCode === row.code ? "text-black" : "text-black dark:text-[#d2d2d2]"
+                      )}>
                         {formatCurrency(row.totalVolume)}
                       </span>
                     </div>
                     <div className="flex flex-col lg:flex-1">
-                      <span className="text-[10px] text-zinc-500 lg:hidden">Referred</span>
-                      <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-white">
+                      <span className={cn(
+                        "text-[10px] lg:hidden",
+                        selectedCode === row.code ? "text-black/60" : "text-zinc-500"
+                      )}>Referred</span>
+                      <span className={cn(
+                        "text-[12px] lg:text-[14px] leading-5",
+                        selectedCode === row.code ? "text-black" : "text-black dark:text-[#d2d2d2]"
+                      )}>
                         {row.tradersReferred}
                       </span>
                     </div>
                     <div className="flex flex-col lg:flex-1">
-                      <span className="text-[10px] text-zinc-500 lg:hidden">Rewards</span>
-                      <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-white">
+                      <span className={cn(
+                        "text-[10px] lg:hidden",
+                        selectedCode === row.code ? "text-black/60" : "text-zinc-500"
+                      )}>Rewards</span>
+                      <span className={cn(
+                        "text-[12px] lg:text-[14px] leading-5",
+                        selectedCode === row.code ? "text-black" : "text-black dark:text-[#d2d2d2]"
+                      )}>
                         {formatCurrency(row.totalRewards)}
                       </span>
                     </div>
@@ -240,11 +267,11 @@ export function CodeSection() {
 
       {/* Selected Code Details */}
       {selectedCode && (
-        <div className="rounded-[16px] bg-white dark:bg-[#18181B] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px]">
+        <div className="rounded-[16px] bg-white dark:bg-[#1e1f20] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px]">
           {/* Title */}
           <div className="flex items-center gap-2 lg:gap-[10px] justify-center">
-            <span className="text-base lg:text-[18px] font-semibold text-foreground dark:text-[#D2D2D2] uppercase">{selectedCode}</span>
-            <span className="flex items-center text-[12px] font-semibold text-[#404040] dark:text-zinc-400 uppercase">
+            <span className="text-base lg:text-[18px] font-semibold text-foreground dark:text-[#d2d2d2] uppercase">{selectedCode}</span>
+            <span className="flex items-center text-[12px] font-semibold text-[#404040] dark:text-[#d2d2d2] uppercase">
               (<PersonIcon className="size-4" />{users.length})
             </span>
           </div>
@@ -279,13 +306,13 @@ export function CodeSection() {
                 <div
                   key={user.id}
                   className={`flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-[10px] p-3 lg:p-[10px] rounded-lg lg:rounded-none ${
-                    index % 2 === 0 ? 'bg-zinc-50 dark:bg-zinc-800/50' : 'bg-white dark:bg-transparent'
+                    index % 2 === 0 ? 'bg-zinc-50 dark:bg-[#323334]' : 'bg-white dark:bg-transparent'
                   }`}
                 >
                   {/* Email/Wallet */}
                   <div className="lg:w-[480px]">
                     <span className="text-[10px] text-zinc-500 lg:hidden">Email/Wallet</span>
-                    <div className="text-[13px] lg:text-[14px] font-semibold text-[#404040] dark:text-zinc-300 break-all">
+                    <div className="text-[13px] lg:text-[14px] font-semibold text-[#404040] dark:text-[#d2d2d2] break-all">
                       {user.email}
                     </div>
                   </div>
@@ -293,19 +320,19 @@ export function CodeSection() {
                   <div className="grid grid-cols-3 gap-2 lg:contents">
                     <div className="flex flex-col lg:flex-1">
                       <span className="text-[10px] text-zinc-500 lg:hidden">Date Joined</span>
-                      <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-white">
+                      <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-[#d2d2d2]">
                         {user.dateJoined}
                       </span>
                     </div>
                     <div className="flex flex-col lg:w-[64px]">
                       <span className="text-[10px] text-zinc-500 lg:hidden">Type</span>
-                      <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-white">
+                      <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-[#d2d2d2]">
                         {user.layer}
                       </span>
                     </div>
                     <div className="flex flex-col lg:flex-1">
                       <span className="text-[10px] text-zinc-500 lg:hidden">Rewards</span>
-                      <div className="flex flex-col gap-1 lg:gap-[10px] text-[12px] lg:text-[14px] leading-5 text-black dark:text-white">
+                      <div className="flex flex-col gap-1 lg:gap-[10px] text-[12px] lg:text-[14px] leading-5 text-black dark:text-[#d2d2d2]">
                         {user.rewards.map((reward, idx) => (
                           <span key={idx}>{reward.amount} {reward.token}</span>
                         ))}
