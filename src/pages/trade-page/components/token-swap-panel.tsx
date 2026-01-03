@@ -1,221 +1,272 @@
-import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { getTokens, getSwapQuote, type Token } from '@/services'
+import { useState, useEffect, useCallback } from 'react'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { useWalletModal } from '@solana/wallet-adapter-react-ui'
+import { useMeteoraSwap, type SwapDirection } from '@/hooks/use-meteora-swap'
+import { getExplorerUrl } from '@/lib/solana/config'
 import TokenUsdcIcon from './_/token-usdc.svg?react'
-import TokenSpacexIcon from './_/token-spacex.svg?react'
+import TokenSolIcon from './_/token-sol.svg?react'
 import SwapIcon from './_/swap-icon.svg?react'
-import ChevronDownIcon from './_/chevron-down.svg?react'
+import { toast } from 'sonner'
 
-interface TokenSwapPanelProps {
-  onTokenChange?: (token: Token) => void
-}
+export function TokenSwapPanel() {
+  const wallet = useWallet()
+  const { setVisible } = useWalletModal()
 
-// Token icon mapping
-function TokenIcon({ symbol, className }: { symbol: string; className?: string }) {
-  const symbolLower = symbol.toLowerCase()
-  if (symbolLower === 'usdc') {
-    return <TokenUsdcIcon className={className} />
-  }
-  // Default to SpaceX icon for all tokenized assets
-  return <TokenSpacexIcon className={className} />
-}
+  const {
+    isLoading,
+    error,
+    quote,
+    txSignature,
+    usdcBalance,
+    solBalance,
+    loadPool,
+    getQuote,
+    executeSwap,
+    refreshBalances,
+    clearError,
+  } = useMeteoraSwap()
 
-export function TokenSwapPanel({ onTokenChange }: TokenSwapPanelProps) {
-  const [sellingTokenSymbol, setSellingTokenSymbol] = useState('USDC')
-  const [buyingTokenSymbol, setBuyingTokenSymbol] = useState('T-SpaceX')
-  const [sellingAmount, setSellingAmount] = useState('')
-  const [showSellingDropdown, setShowSellingDropdown] = useState(false)
-  const [showBuyingDropdown, setShowBuyingDropdown] = useState(false)
+  // Default: USDC -> SOL (buying SOL)
+  const [direction, setDirection] = useState<SwapDirection>('USDC_TO_SOL')
+  const [inputAmount, setInputAmount] = useState('')
+  const [isSwapping, setIsSwapping] = useState(false)
 
-  // Fetch tokens list
-  const { data: tokens = [] } = useQuery({
-    queryKey: ['tokens'],
-    queryFn: getTokens,
-  })
+  // Derived state
+  const isBuying = direction === 'USDC_TO_SOL' // Buying SOL with USDC
+  const sellingToken = isBuying ? 'USDC' : 'SOL'
+  const buyingToken = isBuying ? 'SOL' : 'USDC'
+  const sellingBalance = isBuying ? usdcBalance : solBalance
+  const buyingBalance = isBuying ? solBalance : usdcBalance
 
-  // Get swap quote
-  const { data: quote } = useQuery({
-    queryKey: ['swapQuote', sellingTokenSymbol, buyingTokenSymbol, sellingAmount],
-    queryFn: () => getSwapQuote(sellingTokenSymbol, buyingTokenSymbol, parseFloat(sellingAmount) || 0),
-    enabled: !!sellingAmount && parseFloat(sellingAmount) > 0,
-  })
-
-  const sellingToken = tokens.find((t) => t.symbol === sellingTokenSymbol)
-  const buyingToken = tokens.find((t) => t.symbol === buyingTokenSymbol)
-
-  // Notify parent when buying token changes
+  // Load pool and balances on mount
   useEffect(() => {
-    if (buyingToken && onTokenChange) {
-      onTokenChange(buyingToken)
-    }
-  }, [buyingToken, onTokenChange])
+    loadPool()
+  }, [loadPool])
 
-  const handleSwapTokens = () => {
-    const tempSymbol = sellingTokenSymbol
-    setSellingTokenSymbol(buyingTokenSymbol)
-    setBuyingTokenSymbol(tempSymbol)
-    setSellingAmount('')
+  // Refresh balances when wallet changes
+  useEffect(() => {
+    if (wallet.publicKey) {
+      refreshBalances()
+    }
+  }, [wallet.publicKey, refreshBalances])
+
+  // Get quote when input changes (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (inputAmount && parseFloat(inputAmount) > 0) {
+        getQuote(inputAmount, direction)
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [inputAmount, direction, getQuote])
+
+  // Show error toast
+  useEffect(() => {
+    if (error) {
+      toast.error(error)
+      clearError()
+    }
+  }, [error, clearError])
+
+  // Show success toast
+  useEffect(() => {
+    if (txSignature) {
+      const explorerUrl = getExplorerUrl(txSignature, 'tx')
+      toast.success(
+        <div>
+          Swap successful!{' '}
+          <a
+            href={explorerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            View on Explorer
+          </a>
+        </div>
+      )
+    }
+  }, [txSignature])
+
+  const handleSwapDirection = () => {
+    setDirection((prev) => (prev === 'USDC_TO_SOL' ? 'SOL_TO_USDC' : 'USDC_TO_SOL'))
+    setInputAmount('')
   }
 
-  const handleSellingAmountChange = (value: string) => {
+  const handleInputChange = (value: string) => {
     // Only allow numbers and decimal point
     if (value === '' || /^\d*\.?\d*$/.test(value)) {
-      setSellingAmount(value)
+      setInputAmount(value)
     }
   }
 
-  const handleSelectSellingToken = (token: Token) => {
-    if (token.symbol === buyingTokenSymbol) {
-      setBuyingTokenSymbol(sellingTokenSymbol)
+  const handleMaxClick = () => {
+    if (sellingBalance) {
+      setInputAmount(sellingBalance)
     }
-    setSellingTokenSymbol(token.symbol)
-    setShowSellingDropdown(false)
-    setSellingAmount('')
   }
 
-  const handleSelectBuyingToken = (token: Token) => {
-    if (token.symbol === sellingTokenSymbol) {
-      setSellingTokenSymbol(buyingTokenSymbol)
+  const handleSwap = useCallback(async () => {
+    if (!quote) return
+
+    setIsSwapping(true)
+    try {
+      await executeSwap(quote, direction)
+      setInputAmount('')
+    } finally {
+      setIsSwapping(false)
     }
-    setBuyingTokenSymbol(token.symbol)
-    setShowBuyingDropdown(false)
-    setSellingAmount('')
+  }, [quote, direction, executeSwap])
+
+  const outputAmount = quote?.outAmountFormatted ?? '0'
+  const minOutput = quote?.minOutAmountFormatted ?? '0'
+  const rate = quote?.rate ?? '0'
+
+  // Button state
+  const isWalletConnected = wallet.connected
+  const hasValidInput = inputAmount && parseFloat(inputAmount) > 0
+  const hasQuote = !!quote
+  const isDisabled = !isWalletConnected || !hasValidInput || !hasQuote || isLoading || isSwapping
+
+  const getButtonText = () => {
+    if (!isWalletConnected) return 'Connect Wallet'
+    if (isSwapping) return 'Swapping...'
+    if (isLoading) return 'Loading...'
+    if (!hasValidInput) return 'Enter amount'
+    return isBuying ? 'Buy SOL' : 'Sell SOL'
   }
 
-  const sellingUsdValue = sellingAmount && sellingToken
-    ? `$${(parseFloat(sellingAmount) * sellingToken.price).toFixed(2)}`
-    : '$0'
-
-  const buyingAmount = quote?.toAmount?.toFixed(4) ?? '0'
-  const buyingUsdValue = quote && buyingToken
-    ? `$${(quote.toAmount * buyingToken.price).toFixed(2)}`
-    : '$0'
+  const handleButtonClick = () => {
+    if (!isWalletConnected) {
+      setVisible(true)
+    } else {
+      handleSwap()
+    }
+  }
 
   return (
-    <div className="rounded-2xl p-4 lg:p-6 py-6 lg:py-8 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95]">
-      <div className="relative flex flex-col gap-3 lg:gap-4">
-        {/* Selling Input */}
-        <div className="bg-white dark:bg-[rgba(0,0,0,0.5)] border border-[#dddbd0] dark:border-[#393b3d] rounded-lg px-3 lg:px-4 pt-2 pb-3 lg:pb-4">
-          <p className="text-xs lg:text-sm font-bold text-black/30 dark:text-[#d2d2d2]/30 leading-5">Selling</p>
-          <div className="flex items-center justify-between mt-1 lg:mt-1.5">
-            <div className="relative">
-              <button
-                onClick={() => setShowSellingDropdown(!showSellingDropdown)}
-                className="flex items-center gap-1.5 lg:gap-2.5 border border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)] rounded-md px-2 lg:px-3 py-1.5 lg:py-2 hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
-              >
-                <TokenIcon symbol={sellingTokenSymbol} className="w-6 h-6 lg:w-8 lg:h-8" />
-                <div className="flex items-center gap-0.5 lg:gap-1">
-                  <span className="text-base lg:text-xl font-semibold text-foreground dark:text-[#d2d2d2]">{sellingTokenSymbol}</span>
-                  <ChevronDownIcon className="w-3 h-3 lg:w-4 lg:h-4 opacity-50" />
-                </div>
-              </button>
-              {showSellingDropdown && (
-                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-card border border-gray-200 dark:border-border rounded-lg shadow-lg z-20 min-w-[180px] lg:min-w-[200px] max-h-[250px] lg:max-h-[300px] overflow-y-auto">
-                  {tokens.map((token) => (
-                    <button
-                      key={token.symbol}
-                      onClick={() => handleSelectSellingToken(token)}
-                      className="w-full flex items-center gap-2 px-2.5 lg:px-3 py-2 hover:bg-gray-50 dark:hover:bg-muted transition-colors"
-                    >
-                      <TokenIcon symbol={token.symbol} className="w-5 h-5 lg:w-6 lg:h-6" />
-                      <div className="text-left">
-                        <div className="text-xs lg:text-sm font-medium text-foreground">{token.symbol}</div>
-                        <div className="text-[10px] lg:text-xs text-muted-foreground">{token.name}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+    <div className="h-full rounded-2xl p-4 lg:p-6 py-6 lg:py-8 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95]">
+      {/* Network indicator */}
+      <div className="flex justify-end mb-2">
+        <span className="text-xs px-2 py-1 rounded bg-black/10 dark:bg-white/10 text-muted-foreground">
+          Mainnet
+        </span>
+      </div>
+
+      <div className="flex flex-col gap-3 lg:gap-4">
+        {/* Token Input Blocks with centered swap button */}
+        <div className="relative">
+          {/* Selling Input */}
+          <div className="bg-white dark:bg-[rgba(0,0,0,0.5)] border border-[#dddbd0] dark:border-[#393b3d] rounded-lg px-3 lg:px-4 pt-2 pb-3 lg:pb-4">
+            <div className="flex justify-between items-center">
+              <p className="text-xs lg:text-sm font-bold text-black/30 dark:text-[#d2d2d2]/30 leading-5">
+                Selling
+              </p>
+              {sellingBalance && (
+                <button
+                  onClick={handleMaxClick}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Balance: {sellingBalance} {sellingToken}
+                </button>
               )}
             </div>
-            <div className="text-right">
+            <div className="flex items-center gap-3 mt-1 lg:mt-1.5">
+              <div className="flex-shrink-0 flex items-center gap-1.5 lg:gap-2.5 border border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)] rounded-md px-2 lg:px-3 py-1.5 lg:py-2">
+                {sellingToken === 'USDC' ? (
+                  <TokenUsdcIcon className="w-6 h-6 lg:w-8 lg:h-8" />
+                ) : (
+                  <TokenSolIcon className="w-6 h-6 lg:w-8 lg:h-8" />
+                )}
+                <span className="text-base lg:text-xl font-semibold text-foreground dark:text-[#d2d2d2]">
+                  {sellingToken}
+                </span>
+              </div>
               <input
                 type="text"
                 inputMode="decimal"
-                value={sellingAmount}
-                onChange={(e) => handleSellingAmountChange(e.target.value)}
+                value={inputAmount}
+                onChange={(e) => handleInputChange(e.target.value)}
                 placeholder="0.00"
-                className="text-2xl lg:text-4xl font-semibold text-foreground dark:text-white text-right bg-transparent outline-none w-24 lg:w-32 placeholder:text-muted-foreground"
+                className="flex-1 min-w-0 text-2xl lg:text-4xl font-semibold text-foreground dark:text-white text-right bg-transparent outline-none placeholder:text-muted-foreground"
               />
-              <p className="text-xs lg:text-sm text-muted-foreground dark:text-[#d2d2d2]/30">{sellingUsdValue}</p>
             </div>
           </div>
-        </div>
 
-        {/* Swap Button */}
-        <button
-          onClick={handleSwapTokens}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-black border border-[#dddbd0] dark:border-[#393b3d] rounded-full p-1.5 lg:p-2 hover:bg-gray-50 dark:hover:bg-black/80 transition-colors z-10"
-        >
-          <SwapIcon className="w-4 h-4 lg:w-5 lg:h-5 rotate-90 dark:text-[#d2d2d2]" />
-        </button>
+          {/* Swap Button - positioned between the two input blocks */}
+          <button
+            onClick={handleSwapDirection}
+            className="absolute left-1/2 top-full -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-black border border-[#dddbd0] dark:border-[#393b3d] rounded-full p-1.5 lg:p-2 hover:bg-gray-50 dark:hover:bg-black/80 transition-colors z-10"
+          >
+            <SwapIcon className="w-4 h-4 lg:w-5 lg:h-5 rotate-90 dark:text-[#d2d2d2]" />
+          </button>
+        </div>
 
         {/* Buying Input */}
         <div className="bg-white dark:bg-[rgba(0,0,0,0.5)] border border-[#dddbd0] dark:border-[#393b3d] rounded-lg px-3 lg:px-4 pt-2 pb-3 lg:pb-4">
-          <p className="text-xs lg:text-sm font-bold text-black/30 dark:text-[#d2d2d2]/30 leading-5">Buying</p>
-          <div className="flex items-center justify-between mt-1 lg:mt-1.5">
-            <div className="relative">
-              <button
-                onClick={() => setShowBuyingDropdown(!showBuyingDropdown)}
-                className="flex items-center gap-1.5 lg:gap-2.5 border border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)] rounded-md px-2 lg:px-3 py-1.5 lg:py-2 hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
-              >
-                <TokenIcon symbol={buyingTokenSymbol} className="w-6 h-6 lg:w-8 lg:h-8" />
-                <div className="flex items-center gap-0.5 lg:gap-1">
-                  <span className="text-base lg:text-xl font-semibold text-foreground dark:text-[#d2d2d2]">{buyingTokenSymbol}</span>
-                  <ChevronDownIcon className="w-3 h-3 lg:w-4 lg:h-4 opacity-50" />
-                </div>
-              </button>
-              {showBuyingDropdown && (
-                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-card border border-gray-200 dark:border-border rounded-lg shadow-lg z-20 min-w-[180px] lg:min-w-[200px] max-h-[250px] lg:max-h-[300px] overflow-y-auto">
-                  {tokens
-                    .filter((t) => t.symbol !== 'USDC')
-                    .map((token) => (
-                      <button
-                        key={token.symbol}
-                        onClick={() => handleSelectBuyingToken(token)}
-                        className="w-full flex items-center gap-2 px-2.5 lg:px-3 py-2 hover:bg-gray-50 dark:hover:bg-muted transition-colors"
-                      >
-                        <TokenIcon symbol={token.symbol} className="w-5 h-5 lg:w-6 lg:h-6" />
-                        <div className="text-left">
-                          <div className="text-xs lg:text-sm font-medium text-foreground">{token.symbol}</div>
-                          <div className="text-[10px] lg:text-xs text-muted-foreground">{token.name}</div>
-                        </div>
-                      </button>
-                    ))}
-                </div>
+          <div className="flex justify-between items-center">
+            <p className="text-xs lg:text-sm font-bold text-black/30 dark:text-[#d2d2d2]/30 leading-5">
+              Buying
+            </p>
+            {buyingBalance && (
+              <span className="text-xs text-muted-foreground">
+                Balance: {buyingBalance} {buyingToken}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3 mt-1 lg:mt-1.5">
+            <div className="flex-shrink-0 flex items-center gap-1.5 lg:gap-2.5 border border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)] rounded-md px-2 lg:px-3 py-1.5 lg:py-2">
+              {buyingToken === 'USDC' ? (
+                <TokenUsdcIcon className="w-6 h-6 lg:w-8 lg:h-8" />
+              ) : (
+                <TokenSolIcon className="w-6 h-6 lg:w-8 lg:h-8" />
               )}
+              <span className="text-base lg:text-xl font-semibold text-foreground dark:text-[#d2d2d2]">
+                {buyingToken}
+              </span>
             </div>
-            <div className="text-right">
-              <input
-                type="text"
-                value={buyingAmount}
-                readOnly
-                placeholder="0"
-                className="text-2xl lg:text-4xl font-semibold text-muted-foreground dark:text-white text-right bg-transparent outline-none w-24 lg:w-32 placeholder:text-muted-foreground"
-              />
-              <p className="text-xs lg:text-sm text-muted-foreground dark:text-[#d2d2d2]/30">{buyingUsdValue}</p>
-            </div>
+            <input
+              type="text"
+              value={isLoading ? '...' : outputAmount}
+              readOnly
+              placeholder="0"
+              className="flex-1 min-w-0 text-2xl lg:text-4xl font-semibold text-foreground dark:text-white text-right bg-transparent outline-none placeholder:text-muted-foreground"
+            />
           </div>
         </div>
 
-        {/* Buy Button */}
+        {/* Swap Info */}
+        {quote && hasValidInput && (
+          <div className="bg-white/50 dark:bg-black/30 rounded-lg px-3 py-2 text-xs space-y-1">
+            <div className="flex justify-between text-muted-foreground">
+              <span>Rate</span>
+              <span>
+                1 {sellingToken} = {rate} {buyingToken}
+              </span>
+            </div>
+            <div className="flex justify-between text-muted-foreground">
+              <span>Min. received</span>
+              <span>
+                {minOutput} {buyingToken}
+              </span>
+            </div>
+            <div className="flex justify-between text-muted-foreground">
+              <span>Slippage</span>
+              <span>1%</span>
+            </div>
+          </div>
+        )}
+
+        {/* Action Button */}
         <button
+          onClick={handleButtonClick}
+          disabled={isWalletConnected && isDisabled}
           className="w-full h-12 lg:h-14 bg-black dark:bg-white text-white dark:text-black text-base lg:text-lg font-semibold rounded-lg hover:bg-black/90 dark:hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={!sellingAmount || parseFloat(sellingAmount) <= 0}
         >
-          {sellingTokenSymbol === 'USDC' ? 'Buy' : 'Sell'}
+          {getButtonText()}
         </button>
       </div>
-
-      {/* Click outside to close dropdowns */}
-      {(showSellingDropdown || showBuyingDropdown) && (
-        <div
-          className="fixed inset-0 z-10"
-          onClick={() => {
-            setShowSellingDropdown(false)
-            setShowBuyingDropdown(false)
-          }}
-        />
-      )}
     </div>
   )
 }

@@ -1,35 +1,40 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createChart, ColorType, LineSeries } from 'lightweight-charts'
 import type { IChartApi, LineData, Time } from 'lightweight-charts'
-import { getPriceHistory, getTokenBySymbol } from '@/services'
-import TokenSpacexIcon from './_/token-spacex.svg?react'
-
-type TimeRange = '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL'
+import { getPriceHistory, getTokenPrice } from '@/services/coingecko'
+import TokenSolIcon from './_/token-sol.svg?react'
 
 interface PriceChartProps {
   tokenSymbol?: string
 }
 
-export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
+export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const seriesRef = useRef<any>(null)
-  const [selectedRange, setSelectedRange] = useState<TimeRange>('1D')
 
-  const timeRanges: TimeRange[] = ['1D', '1W', '1M', '3M', '1Y', 'ALL']
-
-  // Fetch token info
+  // Fetch token price info from CoinGecko
+  // Using aggressive caching to avoid rate limiting (free tier: ~10 calls/minute)
   const { data: token } = useQuery({
-    queryKey: ['token', tokenSymbol],
-    queryFn: () => getTokenBySymbol(tokenSymbol),
+    queryKey: ['tokenPrice', tokenSymbol],
+    queryFn: () => getTokenPrice(tokenSymbol),
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+    staleTime: 2 * 60 * 1000, // Consider data stale after 2 minutes
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    retry: false, // Don't retry on failure (avoid rate limit)
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   })
 
-  // Fetch price history
+  // Fetch 1D price history from CoinGecko
   const { data: priceHistory } = useQuery({
-    queryKey: ['priceHistory', tokenSymbol, selectedRange],
-    queryFn: () => getPriceHistory(tokenSymbol, selectedRange),
+    queryKey: ['priceHistory', tokenSymbol, '1D'],
+    queryFn: () => getPriceHistory(tokenSymbol, '1D'),
+    staleTime: 5 * 60 * 1000, // Consider data stale after 5 minutes
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    retry: false, // Don't retry on failure (avoid rate limit)
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   })
 
   const isPositive = (token?.priceChange24h ?? 0) >= 0
@@ -43,6 +48,7 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#111',
         fontFamily: 'Inter, sans-serif',
+        attributionLogo: false,
       },
       grid: {
         vertLines: { visible: false },
@@ -104,16 +110,18 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
   }, [priceHistory])
 
   return (
-    <div className="rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95]">
+    <div className="h-full rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95]">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 lg:mb-6">
         <div className="flex items-center gap-2 lg:gap-2.5">
-          <TokenSpacexIcon className="w-10 h-10 lg:w-12 lg:h-12" />
-          <span className="text-sm lg:text-base font-extrabold text-black dark:text-[#d2d2d2]">{token?.name ?? tokenSymbol}</span>
+          <TokenSolIcon className="w-10 h-10 lg:w-12 lg:h-12" />
+          <span className="text-sm lg:text-base font-extrabold text-black dark:text-[#d2d2d2]">
+            {token?.symbol ?? tokenSymbol}
+          </span>
         </div>
         <div className="text-right">
           <div className="text-xl lg:text-[28px] font-bold text-[#111] dark:text-white">
-            ${token?.price.toFixed(2) ?? '0.00'}
+            ${token?.price?.toFixed(2) ?? '0.00'}
           </div>
           <div className="flex items-center justify-end gap-1 text-[10px] lg:text-xs">
             <span className={isPositive ? 'text-[#269700]' : 'text-red-500'}>
@@ -127,21 +135,6 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX' }: PriceChartProps) {
 
       {/* Chart */}
       <div ref={chartContainerRef} className="w-full" />
-
-      {/* Time Range Tabs */}
-      <div className="flex items-center justify-between gap-0.5 lg:gap-1 p-1 mt-4 lg:mt-6 bg-black/10 rounded-lg">
-        {timeRanges.map((range) => (
-          <button
-            key={range}
-            onClick={() => setSelectedRange(range)}
-            className={`flex-1 py-1 px-1.5 lg:px-3 text-[10px] lg:text-xs font-medium rounded transition-all ${
-              selectedRange === range ? 'bg-white dark:bg-black text-black dark:text-white shadow-sm' : 'text-black hover:bg-white/50'
-            }`}
-          >
-            {range}
-          </button>
-        ))}
-      </div>
     </div>
   )
 }
