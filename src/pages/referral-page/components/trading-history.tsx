@@ -30,9 +30,9 @@ export function TradingHistory() {
   const items = data?.items ?? []
 
   return (
-    <div className="rounded-[16px] bg-white dark:bg-[#18181B] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px]">
+    <div className="rounded-[16px] bg-white dark:bg-[#1e1f20] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px]">
       {/* Title */}
-      <h2 className="text-base lg:text-[18px] leading-7 text-foreground px-1 lg:px-0">Trading History</h2>
+      <h2 className="text-base lg:text-[18px] leading-7 text-foreground dark:text-[#d2d2d2] px-1 lg:px-0">Trading History</h2>
 
       {/* Table */}
       <div className="flex flex-col gap-[10px]">
@@ -67,36 +67,36 @@ export function TradingHistory() {
               <div
                 key={item.id}
                 className={`flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-[10px] p-3 lg:p-[10px] rounded-lg lg:rounded-none ${
-                  index % 2 === 0 ? 'bg-zinc-50 dark:bg-zinc-800/50' : ''
+                  index % 2 === 0 ? 'bg-zinc-50 dark:bg-[#323334]' : ''
                 }`}
               >
                 {/* Token with Amount (mobile: row, desktop: separate) */}
                 <div className="flex items-center justify-between lg:contents">
                   <div className="lg:w-[180px] flex items-center gap-[5px]">
                     {getTokenIcon(item.token)}
-                    <span className="text-[14px] font-semibold text-[#404040] dark:text-zinc-300 uppercase">
+                    <span className="text-[14px] font-semibold text-[#404040] dark:text-[#d2d2d2] uppercase">
                       {item.token}
                     </span>
                   </div>
                   <div className="lg:w-[250px] flex items-center gap-[5px] text-[12px] lg:text-[14px] leading-5">
-                    <span className="text-black dark:text-white">{item.amountIn}</span>
+                    <span className="text-black dark:text-[#d2d2d2]">{item.amountIn}</span>
                     <span className="text-[#06a800]">→</span>
-                    <span className="text-black dark:text-white">{item.amountOut}</span>
+                    <span className="text-black dark:text-[#d2d2d2]">{item.amountOut}</span>
                   </div>
                 </div>
                 {/* Mobile: Stats grid */}
                 <div className="grid grid-cols-3 gap-2 lg:contents">
                   <div className="flex flex-col lg:flex-1">
                     <span className="text-[10px] text-zinc-500 lg:hidden">Type</span>
-                    <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-white">{item.type}</span>
+                    <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-[#d2d2d2]">{item.type}</span>
                   </div>
                   <div className="flex flex-col lg:flex-1">
                     <span className="text-[10px] text-zinc-500 lg:hidden">Account</span>
-                    <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-white truncate">{item.account}</span>
+                    <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-[#d2d2d2] truncate">{item.account}</span>
                   </div>
                   <div className="flex flex-col lg:flex-1">
                     <span className="text-[10px] text-zinc-500 lg:hidden">Time</span>
-                    <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-white">{item.time}</span>
+                    <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-[#d2d2d2]">{item.time}</span>
                   </div>
                 </div>
               </div>
