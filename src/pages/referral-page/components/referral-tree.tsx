@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import TreeIcon from './_/tree.svg?react'
-import DarkTreeIcon from './_/dark-tree.svg?react'
 import PersonIcon from './_/person.svg?react'
 import { getTraderLayers } from '@/services'
 
@@ -11,15 +10,14 @@ export function ReferralTree() {
   })
 
   return (
-    <div className="flex flex-col lg:flex-row items-center rounded-[16px] bg-white dark:bg-[#18181B] px-4 lg:px-6 py-4 gap-4 lg:gap-6">
+    <div className="flex flex-col lg:flex-row lg:items-stretch items-center rounded-[16px] bg-white dark:bg-[#18181B] px-4 lg:px-6 py-4 gap-4 lg:gap-6">
       {/* Tree Visualization */}
       <div className="flex items-center justify-center shrink-0">
-        <TreeIcon className="w-full max-w-[200px] lg:max-w-[260px] h-auto dark:hidden" />
-        <DarkTreeIcon className="w-full max-w-[200px] lg:max-w-[260px] h-auto hidden dark:block" />
+        <TreeIcon className="w-full max-w-[200px] lg:max-w-[260px] h-auto" />
       </div>
 
       {/* Divider */}
-      <div className="w-full h-px lg:w-px lg:h-full lg:self-stretch bg-[#D9D9D9] dark:bg-[#27272A]" />
+      <div className="w-full h-px lg:w-px lg:h-auto bg-[#D9D9D9] dark:bg-[#27272A]" />
 
       {/* Data Table */}
       <div className="flex-1 flex flex-col gap-[10px] min-w-0 w-full">
