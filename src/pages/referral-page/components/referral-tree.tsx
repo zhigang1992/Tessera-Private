@@ -10,14 +10,14 @@ export function ReferralTree() {
   })
 
   return (
-    <div className="flex flex-col lg:flex-row lg:items-stretch items-center rounded-[16px] bg-white dark:bg-[#18181B] px-4 lg:px-6 py-4 gap-4 lg:gap-6">
+    <div className="flex flex-col lg:flex-row lg:items-stretch items-center rounded-[16px] bg-white dark:bg-[#1e1f20] px-4 lg:px-6 py-4 gap-4 lg:gap-6">
       {/* Tree Visualization */}
       <div className="flex items-center justify-center shrink-0">
         <TreeIcon className="w-full max-w-[200px] lg:max-w-[260px] h-auto text-zinc-900 dark:text-zinc-100" />
       </div>
 
       {/* Divider */}
-      <div className="w-full h-px lg:w-px lg:h-auto bg-[#D9D9D9] dark:bg-[#27272A]" />
+      <div className="w-full h-px lg:w-px lg:h-auto bg-[#D9D9D9]" />
 
       {/* Data Table */}
       <div className="flex-1 flex flex-col gap-[10px] min-w-0 w-full">
@@ -39,17 +39,17 @@ export function ReferralTree() {
               <div
                 key={row.layer}
                 className={`flex justify-between items-center px-2 lg:px-[10px] rounded-md lg:rounded-none ${
-                  index % 2 === 0 ? 'bg-zinc-50 dark:bg-zinc-800/50 py-2' : 'py-3 lg:py-4'
+                  index % 2 === 0 ? 'bg-zinc-50 dark:bg-[#323334] py-2' : 'py-3 lg:py-4'
                 }`}
               >
-                <span className="flex-1 text-[13px] lg:text-[14px] font-semibold text-zinc-900 dark:text-zinc-200">
+                <span className="flex-1 text-[13px] lg:text-[14px] font-semibold text-zinc-900 dark:text-[#d2d2d2]">
                   {row.layer}
                 </span>
                 <div className="flex-1 flex items-center justify-center lg:justify-start gap-[5px]">
-                  <PersonIcon className="size-5 lg:size-6 text-zinc-500" />
-                  <span className="text-[13px] lg:text-[14px] text-zinc-500">{row.tradersReferred}</span>
+                  <PersonIcon className="size-5 lg:size-6 text-zinc-500 dark:text-white" />
+                  <span className="text-[13px] lg:text-[14px] text-zinc-500 dark:text-[#d2d2d2]">{row.tradersReferred}</span>
                 </div>
-                <span className="flex-1 text-[13px] lg:text-[14px] text-zinc-900 dark:text-zinc-200 text-right lg:text-left">
+                <span className="flex-1 text-[13px] lg:text-[14px] text-zinc-900 dark:text-[#d2d2d2] text-right lg:text-left">
                   {row.points}
                 </span>
               </div>
