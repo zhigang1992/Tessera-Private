@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useQuery } from '@tanstack/react-query'
-import { User, Share2 } from 'lucide-react'
+import { Share2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, getReferralUsersByCode } from '@/services'
 import { WalletDropdown } from '@/components/wallet-dropdown'
@@ -9,10 +9,10 @@ import { Pagination } from '@/components/ui/pagination'
 import CopyIcon from './_/copy.svg?react'
 import XIcon from './_/x.svg?react'
 import AddIcon from './_/add.svg?react'
+import PersonIcon from './_/person.svg?react'
 import { CreateReferralCodeModal } from './create-referral-code-modal'
 import { ShareReferralCodeModal } from './share-referral-code-modal'
 import { useAffiliateData } from '@/features/referral/hooks/use-referral-queries'
-import DardUser from './_/person.svg?react'
 
 const PAGE_SIZE = 3
 
@@ -233,7 +233,7 @@ export function CodeSection() {
           <div className="mb-3 lg:mb-4 flex items-center gap-2 justify-center">
             <span className="text-base lg:text-lg font-bold text-foreground dark:text-[#D2D2D2]">{selectedCode}</span>
             <span className="flex items-center gap-1 text-xs lg:text-sm text-muted-foreground">
-              (<User className="h-3.5 w-3.5 lg:h-4 lg:w-4 dark:hidden" /><DardUser className="h-3.5 w-3.5 lg:h-4 lg:w-4 hidden dark:block" />  {users.length})
+              (<PersonIcon className="h-3.5 w-3.5 lg:h-4 lg:w-4" /> {users.length})
             </span>
           </div>
 

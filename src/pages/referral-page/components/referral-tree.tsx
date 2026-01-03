@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { User } from 'lucide-react'
 import TreeIcon from './_/tree.svg?react'
 import DarkTreeIcon from './_/dark-tree.svg?react'
-import DarkdUser from './_/person.svg?react'
+import PersonIcon from './_/person.svg?react'
 import { getTraderLayers } from '@/services'
 
 export function ReferralTree() {
@@ -12,55 +11,53 @@ export function ReferralTree() {
   })
 
   return (
-    <div className="flex flex-col lg:flex-row rounded-2xl overflow-hidden p-4 bg-white dark:bg-[#18181B] gap-4 lg:gap-6">
+    <div className="flex flex-col lg:flex-row items-center rounded-[16px] bg-white dark:bg-[#18181B] px-6 py-4 gap-6">
       {/* Tree Visualization */}
-      <div className="flex items-center justify-center p-4 lg:p-6 text-foreground">
-        <TreeIcon className="w-full max-w-[288px] h-auto lg:w-[288px] lg:h-[202px] dark:hidden" />
-        <DarkTreeIcon className="w-full max-w-[288px] h-auto lg:w-[288px] lg:h-[202px] hidden dark:block" />
+      <div className="flex items-center justify-center shrink-0">
+        <TreeIcon className="w-full max-w-[260px] h-auto dark:hidden" />
+        <DarkTreeIcon className="w-full max-w-[260px] h-auto hidden dark:block" />
       </div>
 
-      <div className="h-[1px] lg:h-auto lg:w-[1px] bg-[#D9D9D9] dark:bg-[#27272A]" />
+      {/* Divider */}
+      <div className="w-full h-px lg:w-px lg:h-full lg:self-stretch bg-[#D9D9D9] dark:bg-[#27272A]" />
 
       {/* Data Table */}
-      <div className="p-4 lg:p-6 flex-1 overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-100 dark:border-[#27272A]">
-              <th className="pb-4 text-left text-sm font-medium text-muted-foreground">
-                Trader Layers
-              </th>
-              <th className="pb-4 text-left text-sm font-medium text-muted-foreground">
-                Traders Referred
-              </th>
-              <th className="pb-4 text-left text-sm font-medium text-muted-foreground">
-                Points
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={3} className="py-4 text-center text-muted-foreground">
-                  Loading...
-                </td>
-              </tr>
-            ) : (
-              data.map((row) => (
-                <tr key={row.layer} className="border-b border-gray-50 dark:border-[#27272A]/50 last:border-0">
-                  <td className="py-4 font-medium text-foreground dark:text-[#D2D2D2]">{row.layer}</td>
-                  <td className="py-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <User className="h-6 w-6 dark:hidden" />
-                      <DarkdUser className="h-6 w-6 hidden dark:block" />
-                      {row.tradersReferred}
-                    </div>
-                  </td>
-                  <td className="py-4 font-medium text-foreground dark:text-[#D2D2D2]">{row.points}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="flex-1 flex flex-col gap-[10px] min-w-0 w-full">
+        {/* Header */}
+        <div className="flex justify-between px-[10px] text-[12px] text-zinc-500">
+          <span className="flex-1">Trader Layers</span>
+          <span className="flex-1">Traders Referred</span>
+          <span className="flex-1">Points</span>
+        </div>
+
+        {/* Rows */}
+        <div className="flex flex-col">
+          {isLoading ? (
+            <div className="px-[10px] py-4 text-center text-muted-foreground">
+              Loading...
+            </div>
+          ) : (
+            data.map((row, index) => (
+              <div
+                key={row.layer}
+                className={`flex justify-between items-center px-[10px] ${
+                  index % 2 === 0 ? 'bg-zinc-50 dark:bg-zinc-800/50 py-2' : 'py-4'
+                }`}
+              >
+                <span className="flex-1 text-[14px] font-semibold text-zinc-900 dark:text-zinc-200">
+                  {row.layer}
+                </span>
+                <div className="flex-1 flex items-center gap-[5px]">
+                  <PersonIcon className="size-6 text-zinc-500" />
+                  <span className="text-[14px] text-zinc-500">{row.tradersReferred}</span>
+                </div>
+                <span className="flex-1 text-[14px] text-zinc-900 dark:text-zinc-200">
+                  {row.points}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   )
