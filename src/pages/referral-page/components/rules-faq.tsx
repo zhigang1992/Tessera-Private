@@ -1,4 +1,4 @@
-import { Smile, ShieldCheck, CreditCard, Mail } from 'lucide-react'
+import { Smile, ShieldCheck, CreditCard, Mail, Globe, Clock } from 'lucide-react'
 import { CollapsibleFaq, type FaqCategory } from '@/components/ui/collapsible-faq'
 
 const faqCategories: FaqCategory[] = [
@@ -28,7 +28,7 @@ const faqCategories: FaqCategory[] = [
       {
         question: 'Are Tessera tokens supported on popular DEX aggregators?',
         answer: 'Yes, most Token-2022 standard tokens (including Tessera tokens) are supported on popular Solana-based DEX aggregators.',
-        icon: <Smile className="size-6 text-black dark:text-white" />,
+        icon: <Globe className="size-6 text-black dark:text-white" />,
       },
       {
         question: "What's the difference of using Tessera's UI to trade vs other Solana-based DEX aggregators?",
@@ -38,7 +38,7 @@ const faqCategories: FaqCategory[] = [
       {
         question: 'Are the tokens still tradable after the IPO?',
         answer: 'Yes, you will still be able to trade them for up to 180 days after the IPO. After 180 days have passed, all tokens will only be redeemable for USDC.',
-        icon: <CreditCard className="size-6 text-black dark:text-white" />,
+        icon: <Clock className="size-6 text-black dark:text-white" />,
       },
     ],
   },
