@@ -25,6 +25,21 @@ const faqCategories: FaqCategory[] = [
         answer: 'If your referee transfers their tokens to another address or used DeFi-related activities, we will still display that under the Trading History.\n\nHowever, subsequent transactions from the new address will not be recorded if they are outside of the referral system or beyond L3.',
         icon: <Mail className="size-6 text-black dark:text-white" />,
       },
+      {
+        question: 'Are Tessera tokens supported on popular DEX aggregators?',
+        answer: 'Yes, most Token-2022 standard tokens (including Tessera tokens) are supported on popular Solana-based DEX aggregators.',
+        icon: <Smile className="size-6 text-black dark:text-white" />,
+      },
+      {
+        question: "What's the difference of using Tessera's UI to trade vs other Solana-based DEX aggregators?",
+        answer: 'Our UI by default displays the correct token without the need to manually check token contract to prevent you from interacting with the wrong token.',
+        icon: <ShieldCheck className="size-6 text-black dark:text-white" />,
+      },
+      {
+        question: 'Are the tokens still tradable after the IPO?',
+        answer: 'Yes, you will still be able to trade them for up to 180 days after the IPO. After 180 days have passed, all tokens will only be redeemable for USDC.',
+        icon: <CreditCard className="size-6 text-black dark:text-white" />,
+      },
     ],
   },
 ]
