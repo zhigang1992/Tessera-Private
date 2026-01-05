@@ -83,7 +83,7 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
   return (
     <div className="fixed inset-0 top-[64px] lg:left-64 bg-[#f5f5f5] dark:bg-zinc-950 flex flex-col z-10">
       {/* Header - Fixed at top */}
-      <div className="bg-white dark:bg-zinc-900 border-b border-[#e4e4e7] dark:border-zinc-800 px-6 py-4 shrink-0">
+      <div className="bg-white dark:bg-zinc-900 border-b border-[#e4e4e7] dark:border-zinc-800 px-4 py-4 shrink-0">
         <button
           className="flex items-center gap-2 text-[14px] text-[#71717a] hover:text-black dark:hover:text-white transition-colors mb-4"
           onClick={onBack}
@@ -92,11 +92,11 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
           Back to Support Center
         </button>
 
-        <div className="flex items-start justify-between">
-          <div>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
             {issue ? (
               <>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span className="text-[14px] text-[#71717a]">
                     #{issue.id}
                   </span>
@@ -111,7 +111,7 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
                     {issue.status === 'checking' ? 'Checking' : 'Complete'}
                   </span>
                 </div>
-                <h1 className="text-[24px] font-semibold mb-0 dark:text-white">
+                <h1 className="text-[20px] md:text-[24px] font-semibold mb-0 dark:text-white truncate">
                   {issue.title}
                 </h1>
               </>
@@ -123,14 +123,14 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
                     Tessera AI Agent
                   </span>
                 </div>
-                <h1 className="text-[24px] font-semibold mb-0 dark:text-white">
+                <h1 className="text-[20px] md:text-[24px] font-semibold mb-0 dark:text-white">
                   AI Support Chat
                 </h1>
               </>
             )}
           </div>
           {issue && (
-            <span className="text-[12px] text-[#71717a]">
+            <span className="text-[12px] text-[#71717a] shrink-0">
               {issue.submittedTime}
             </span>
           )}
@@ -138,8 +138,8 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
       </div>
 
       {/* Chat Messages - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
-        <div className="max-w-[800px] mx-auto flex flex-col gap-[24px]">
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="max-w-[800px] mx-auto flex flex-col gap-[16px] md:gap-[24px]">
           {messages.map((message) => (
             <div
               key={message.id}
@@ -151,41 +151,41 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
               >
                 {message.type === 'user' && (
                   <>
-                    <div className="w-[32px] h-[32px] rounded-full bg-[#d2fb95] flex items-center justify-center shrink-0">
-                      <span className="text-[11px] font-semibold text-black tracking-[0.0645px]">
+                    <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#d2fb95] flex items-center justify-center shrink-0">
+                      <span className="text-[10px] md:text-[11px] font-semibold text-black tracking-[0.0645px]">
                         JD
                       </span>
                     </div>
-                    <span className="text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
+                    <span className="text-[12px] md:text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
                       {message.sender}
                     </span>
-                    <span className="text-[11px] text-[#a1a1aa] tracking-[0.0645px]">
+                    <span className="text-[10px] md:text-[11px] text-[#a1a1aa] tracking-[0.0645px]">
                       {message.timestamp}
                     </span>
                   </>
                 )}
                 {message.type === 'system' && (
                   <>
-                    <div className="w-[32px] h-[32px] rounded-full bg-[#e5e5e5] dark:bg-zinc-700 flex items-center justify-center shrink-0">
-                      <Bot className="w-[14px] h-[14px] text-[#71717a]" />
+                    <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#e5e5e5] dark:bg-zinc-700 flex items-center justify-center shrink-0">
+                      <Bot className="w-[12px] h-[12px] md:w-[14px] md:h-[14px] text-[#71717a]" />
                     </div>
-                    <span className="text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
+                    <span className="text-[12px] md:text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
                       {message.sender}
                     </span>
-                    <span className="text-[11px] text-[#a1a1aa] tracking-[0.0645px]">
+                    <span className="text-[10px] md:text-[11px] text-[#a1a1aa] tracking-[0.0645px]">
                       {message.timestamp}
                     </span>
                   </>
                 )}
                 {message.type === 'agent' && (
                   <>
-                    <div className="w-[32px] h-[32px] rounded-full bg-[#18181b] flex items-center justify-center shrink-0">
-                      <User className="w-[14px] h-[14px] text-white" />
+                    <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#18181b] flex items-center justify-center shrink-0">
+                      <User className="w-[12px] h-[12px] md:w-[14px] md:h-[14px] text-white" />
                     </div>
-                    <span className="text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
+                    <span className="text-[12px] md:text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
                       {message.sender}
                     </span>
-                    <span className="text-[11px] text-[#a1a1aa] tracking-[0.0645px]">
+                    <span className="text-[10px] md:text-[11px] text-[#a1a1aa] tracking-[0.0645px]">
                       {message.timestamp}
                     </span>
                   </>
@@ -194,21 +194,21 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
 
               {/* Message Content */}
               {message.type === 'user' && (
-                <div className="bg-[#d2fb95] rounded-tl-[16px] rounded-bl-[16px] rounded-br-[16px] px-[16px] py-[12px] max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
+                <div className="bg-[#d2fb95] rounded-tl-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
                   <p className="text-[13px] leading-[20px] text-[#18181b] tracking-[-0.0762px]">
                     {message.content}
                   </p>
                 </div>
               )}
               {message.type === 'system' && (
-                <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[16px] py-[12px] max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
+                <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
                   <p className="text-[13px] leading-[20px] text-[#18181b] dark:text-zinc-300 tracking-[-0.0762px]">
                     {message.content}
                   </p>
                 </div>
               )}
               {message.type === 'agent' && (
-                <div className="bg-[#18181b] rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[16px] py-[12px] max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
+                <div className="bg-[#18181b] rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
                   <p className="text-[13px] leading-[20px] text-white tracking-[-0.0762px]">
                     {message.content}
                   </p>
@@ -220,15 +220,18 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
       </div>
 
       {/* Input Area - Fixed at bottom */}
-      <div className="bg-white dark:bg-zinc-900 border-t border-[#e4e4e7] dark:border-zinc-800 px-6 py-4 shrink-0">
+      <div className="bg-white dark:bg-zinc-900 border-t border-[#e4e4e7] dark:border-zinc-800 px-4 py-3 shrink-0">
         <div className="max-w-[800px] mx-auto">
-          <button className="flex items-center gap-2 text-[14px] text-[#71717a] hover:text-black dark:hover:text-white transition-colors mb-3">
+          <button className="hidden md:flex items-center gap-2 text-[14px] text-[#71717a] hover:text-black dark:hover:text-white transition-colors mb-3">
             <Paperclip className="w-4 h-4" />
             Attach File
           </button>
 
-          <div className="flex items-end gap-3">
-            <div className="flex-1 bg-[#f6f6f6] dark:bg-zinc-800 rounded-[12px] px-4 py-3 min-h-[48px]">
+          <div className="flex items-end gap-2 md:gap-3">
+            <button className="md:hidden bg-[#f6f6f6] dark:bg-zinc-800 rounded-[8px] w-[44px] h-[44px] flex items-center justify-center shrink-0">
+              <Paperclip className="w-4 h-4 text-[#71717a]" />
+            </button>
+            <div className="flex-1 bg-[#f6f6f6] dark:bg-zinc-800 rounded-[12px] px-3 md:px-4 py-2 md:py-3 min-h-[44px] md:min-h-[48px]">
               <textarea
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
@@ -237,7 +240,7 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
                 rows={1}
               />
             </div>
-            <button className="bg-black rounded-[8px] w-[48px] h-[48px] flex items-center justify-center hover:bg-[#333] transition-colors shrink-0">
+            <button className="bg-black rounded-[8px] w-[44px] h-[44px] md:w-[48px] md:h-[48px] flex items-center justify-center hover:bg-[#333] transition-colors shrink-0">
               <Send className="w-5 h-5 text-white" />
             </button>
           </div>

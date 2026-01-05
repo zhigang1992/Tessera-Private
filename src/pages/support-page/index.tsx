@@ -158,16 +158,16 @@ export default function SupportPage() {
   }
 
   return (
-    <div className="max-w-[1200px] mx-auto p-6">
+    <div className="space-y-6">
       {/* AI Search Section */}
-      <div className="bg-[#d2fb95] dark:bg-[#d2fb95] rounded-[16px] p-12 mb-6">
+      <div className="bg-[#d2fb95] dark:bg-[#d2fb95] rounded-[16px] px-4 py-8 md:p-12">
         <div className="max-w-[600px] mx-auto">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Bot className="w-5 h-5 text-black" />
             <span className="text-black text-[16px]">Tessera AI Agent</span>
           </div>
 
-          <h2 className="text-black text-center text-[32px] font-semibold mb-6">
+          <h2 className="text-black text-center text-[24px] md:text-[32px] font-semibold mb-6">
             What would you like to know?
           </h2>
 
@@ -194,24 +194,26 @@ export default function SupportPage() {
             </button>
           </form>
 
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
             <button
               onClick={() => handleQuickQuestion('How to trade SpaceX?')}
-              className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-4 py-2 text-black text-[14px] flex items-center gap-2"
+              className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-3 md:px-4 py-2 text-black text-[12px] md:text-[14px] flex items-center gap-2"
             >
               <Rocket className="w-4 h-4" />
-              How to trade SpaceX?
+              <span className="hidden sm:inline">How to trade SpaceX?</span>
+              <span className="sm:hidden">Trade SpaceX</span>
             </button>
             <button
               onClick={() => handleQuickQuestion('Do I need KYC?')}
-              className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-4 py-2 text-black text-[14px] flex items-center gap-2"
+              className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-3 md:px-4 py-2 text-black text-[12px] md:text-[14px] flex items-center gap-2"
             >
               <ShieldCheck className="w-4 h-4" />
-              Do I need KYC?
+              <span className="hidden sm:inline">Do I need KYC?</span>
+              <span className="sm:hidden">KYC?</span>
             </button>
             <button
               onClick={() => handleQuickQuestion('What are the fees and gas costs?')}
-              className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-4 py-2 text-black text-[14px] flex items-center gap-2"
+              className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-3 md:px-4 py-2 text-black text-[12px] md:text-[14px] flex items-center gap-2"
             >
               <Fuel className="w-4 h-4" />
               Fees & Gas
@@ -221,7 +223,7 @@ export default function SupportPage() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-[1fr_320px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
         {/* Left: Knowledge Base */}
         <div className="bg-white dark:bg-zinc-900 rounded-[16px] p-6">
           <div className="flex items-center justify-between mb-6">
@@ -307,7 +309,7 @@ export default function SupportPage() {
                   className="px-[16px] py-[12px] bg-[#f6f6f6] dark:bg-zinc-800 rounded-[8px] hover:bg-[#ececec] dark:hover:bg-zinc-700 transition-colors w-full text-left"
                   onClick={() => setSelectedIssue(issue)}
                 >
-                  <div className="flex flex-col gap-[5px] w-[240px]">
+                  <div className="flex flex-col gap-[5px]">
                     <span className="text-[14px] font-medium text-[#404040] dark:text-zinc-300 tracking-[-0.1504px] leading-[21px]">
                       #{issue.id} - {issue.title}
                     </span>
@@ -323,7 +325,7 @@ export default function SupportPage() {
                       >
                         {issue.status === 'checking' ? 'Checking' : 'Complete'}
                       </span>
-                      <span className="text-[10px] font-normal text-[#71717a] leading-[18px] text-right w-[124px]">
+                      <span className="text-[10px] font-normal text-[#71717a] leading-[18px] text-right">
                         Submitted {issue.submittedTime}
                       </span>
                     </div>
