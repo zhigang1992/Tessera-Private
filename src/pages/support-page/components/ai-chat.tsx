@@ -17,14 +17,15 @@ export type LiveIssue = {
 }
 
 interface AiChatProps {
-  issue: LiveIssue
+  issue?: LiveIssue
+  initialQuery?: string
   onBack: () => void
 }
 
-export function AiChat({ issue, onBack }: AiChatProps) {
+export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
   const [replyText, setReplyText] = useState('')
 
-  const messages: Message[] = [
+  const issueMessages: Message[] = [
     {
       id: '1',
       type: 'user',
@@ -51,6 +52,34 @@ export function AiChat({ issue, onBack }: AiChatProps) {
     },
   ]
 
+  const searchMessages: Message[] = initialQuery
+    ? [
+        {
+          id: '1',
+          type: 'user',
+          content: initialQuery,
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          sender: 'You',
+        },
+        {
+          id: '2',
+          type: 'system',
+          content:
+            'Thanks for your question! Our AI agent is processing your request...',
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          sender: 'System',
+        },
+      ]
+    : []
+
+  const messages = issue ? issueMessages : searchMessages
+
   return (
     <div className="fixed inset-0 top-[64px] lg:left-64 bg-[#f5f5f5] dark:bg-zinc-950 flex flex-col z-10">
       {/* Header - Fixed at top */}
@@ -65,26 +94,46 @@ export function AiChat({ issue, onBack }: AiChatProps) {
 
         <div className="flex items-start justify-between">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[14px] text-[#71717a]">#{issue.id}</span>
-              <span
-                className="text-[10px] font-medium px-[6px] py-[2px] rounded-[4px] leading-[18px]"
-                style={{
-                  backgroundColor:
-                    issue.status === 'checking' ? '#ffe6c1' : '#bbf6be',
-                  color: issue.status === 'checking' ? '#e07d00' : '#008806',
-                }}
-              >
-                {issue.status === 'checking' ? 'Checking' : 'Complete'}
-              </span>
-            </div>
-            <h1 className="text-[24px] font-semibold mb-0 dark:text-white">
-              {issue.title}
-            </h1>
+            {issue ? (
+              <>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[14px] text-[#71717a]">
+                    #{issue.id}
+                  </span>
+                  <span
+                    className="text-[10px] font-medium px-[6px] py-[2px] rounded-[4px] leading-[18px]"
+                    style={{
+                      backgroundColor:
+                        issue.status === 'checking' ? '#ffe6c1' : '#bbf6be',
+                      color: issue.status === 'checking' ? '#e07d00' : '#008806',
+                    }}
+                  >
+                    {issue.status === 'checking' ? 'Checking' : 'Complete'}
+                  </span>
+                </div>
+                <h1 className="text-[24px] font-semibold mb-0 dark:text-white">
+                  {issue.title}
+                </h1>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-2">
+                  <Bot className="w-5 h-5 text-[#71717a]" />
+                  <span className="text-[14px] text-[#71717a]">
+                    Tessera AI Agent
+                  </span>
+                </div>
+                <h1 className="text-[24px] font-semibold mb-0 dark:text-white">
+                  AI Support Chat
+                </h1>
+              </>
+            )}
           </div>
-          <span className="text-[12px] text-[#71717a]">
-            {issue.submittedTime}
-          </span>
+          {issue && (
+            <span className="text-[12px] text-[#71717a]">
+              {issue.submittedTime}
+            </span>
+          )}
         </div>
       </div>
 

@@ -32,6 +32,23 @@ export default function SupportPage() {
   )
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedIssue, setSelectedIssue] = useState<LiveIssue | null>(null)
+  const [chatQuery, setChatQuery] = useState<string | null>(null)
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      setChatQuery(searchQuery.trim())
+      setSearchQuery('')
+    }
+  }
+
+  const handleQuickQuestion = (question: string) => {
+    setChatQuery(question)
+  }
+
+  const handleBackFromChat = () => {
+    setSelectedIssue(null)
+    setChatQuery(null)
+  }
 
   const toggleQuestion = (questionKey: string) => {
     setExpandedQuestions((prev) => {
@@ -129,9 +146,15 @@ export default function SupportPage() {
     },
   ]
 
-  // Show chat view if an issue is selected
-  if (selectedIssue) {
-    return <AiChat issue={selectedIssue} onBack={() => setSelectedIssue(null)} />
+  // Show chat view if an issue is selected or search query submitted
+  if (selectedIssue || chatQuery) {
+    return (
+      <AiChat
+        issue={selectedIssue ?? undefined}
+        initialQuery={chatQuery ?? undefined}
+        onBack={handleBackFromChat}
+      />
+    )
   }
 
   return (
@@ -148,7 +171,13 @@ export default function SupportPage() {
             What would you like to know?
           </h2>
 
-          <div className="bg-white rounded-[12px] pl-[16px] pr-[8px] py-[8px] mb-4 flex items-center gap-[12px]">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleSearch()
+            }}
+            className="bg-white rounded-[12px] pl-[16px] pr-[8px] py-[8px] mb-4 flex items-center gap-[12px]"
+          >
             <Search className="w-5 h-5 text-[#666]" />
             <input
               type="text"
@@ -157,21 +186,33 @@ export default function SupportPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 bg-transparent text-black text-[16px] tracking-[-0.3125px] outline-none placeholder:text-[#999]"
             />
-            <button className="bg-black rounded-[8px] w-[40px] h-[40px] p-[8px] hover:bg-[#333] transition-colors flex items-center justify-center shrink-0">
+            <button
+              type="submit"
+              className="bg-black rounded-[8px] w-[40px] h-[40px] p-[8px] hover:bg-[#333] transition-colors flex items-center justify-center shrink-0"
+            >
               <ArrowUpRight className="w-5 h-5 text-white" />
             </button>
-          </div>
+          </form>
 
           <div className="flex items-center justify-center gap-3">
-            <button className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-4 py-2 text-black text-[14px] flex items-center gap-2">
+            <button
+              onClick={() => handleQuickQuestion('How to trade SpaceX?')}
+              className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-4 py-2 text-black text-[14px] flex items-center gap-2"
+            >
               <Rocket className="w-4 h-4" />
               How to trade SpaceX?
             </button>
-            <button className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-4 py-2 text-black text-[14px] flex items-center gap-2">
+            <button
+              onClick={() => handleQuickQuestion('Do I need KYC?')}
+              className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-4 py-2 text-black text-[14px] flex items-center gap-2"
+            >
               <ShieldCheck className="w-4 h-4" />
               Do I need KYC?
             </button>
-            <button className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-4 py-2 text-black text-[14px] flex items-center gap-2">
+            <button
+              onClick={() => handleQuickQuestion('What are the fees and gas costs?')}
+              className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-4 py-2 text-black text-[14px] flex items-center gap-2"
+            >
               <Fuel className="w-4 h-4" />
               Fees & Gas
             </button>
