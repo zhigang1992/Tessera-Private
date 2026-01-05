@@ -14,6 +14,7 @@ import {
   Bot,
   ArrowUpRight,
 } from 'lucide-react'
+import { AiChat, type LiveIssue } from './components/ai-chat'
 
 type FAQCategory = {
   id: string
@@ -25,26 +26,12 @@ type FAQCategory = {
   }>
 }
 
-type LiveIssue = {
-  id: string
-  title: string
-  status: 'checking' | 'complete'
-  statusColor: string
-  submittedTime: string
-}
-
-interface SupportPageProps {
-  onNavigateToChat?: () => void
-}
-
-export default function SupportPage({ onNavigateToChat }: SupportPageProps) {
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(['access'])
-  )
+export default function SupportPage() {
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(
     new Set()
   )
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedIssue, setSelectedIssue] = useState<LiveIssue | null>(null)
 
   const toggleQuestion = (questionKey: string) => {
     setExpandedQuestions((prev) => {
@@ -132,17 +119,20 @@ export default function SupportPage({ onNavigateToChat }: SupportPageProps) {
       id: '2941',
       title: 'Wallet Connection Issue',
       status: 'checking',
-      statusColor: '#FFA726',
       submittedTime: '2 mins ago',
     },
     {
       id: '2880',
       title: 'Bridge Transaction',
       status: 'complete',
-      statusColor: '#66BB6A',
       submittedTime: '1 week ago',
     },
   ]
+
+  // Show chat view if an issue is selected
+  if (selectedIssue) {
+    return <AiChat issue={selectedIssue} onBack={() => setSelectedIssue(null)} />
+  }
 
   return (
     <div className="max-w-[1200px] mx-auto p-6">
@@ -274,7 +264,7 @@ export default function SupportPage({ onNavigateToChat }: SupportPageProps) {
                 <button
                   key={issue.id}
                   className="px-[16px] py-[12px] bg-[#f6f6f6] dark:bg-zinc-800 rounded-[8px] hover:bg-[#ececec] dark:hover:bg-zinc-700 transition-colors w-full text-left"
-                  onClick={onNavigateToChat}
+                  onClick={() => setSelectedIssue(issue)}
                 >
                   <div className="flex flex-col gap-[5px] w-[240px]">
                     <span className="text-[14px] font-medium text-[#404040] dark:text-zinc-300 tracking-[-0.1504px] leading-[21px]">
@@ -321,7 +311,7 @@ export default function SupportPage({ onNavigateToChat }: SupportPageProps) {
 
               <button
                 className="bg-white dark:bg-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors border border-[#a1a1aa] dark:border-zinc-600 rounded-[8px] px-4 py-3 flex items-center justify-center gap-2"
-                onClick={onNavigateToChat}
+                onClick={() => setSelectedIssue(liveIssues[0])}
               >
                 <Headphones className="w-[18px] h-[18px] dark:text-white" />
                 <span className="text-[14px] font-medium dark:text-white">
