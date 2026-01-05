@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { ChevronLeft, Paperclip, Send, Bot, User, Loader2 } from 'lucide-react'
+import { ChevronLeft, Paperclip, Send, Bot, User, Loader2, X } from 'lucide-react'
 import {
   type LiveIssue,
   type ChatMessage,
+  type ChatAttachment,
   getChatMessages,
   sendMessage,
 } from '@/services'
@@ -29,7 +30,11 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
   const [replyText, setReplyText] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [hasInitialQuerySent, setHasInitialQuerySent] = useState(false)
+  const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>(
+    []
+  )
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Fetch chat history for existing issues
   const { data: chatData, isLoading: isLoadingHistory } = useQuery({
@@ -40,7 +45,13 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
 
   // Send message mutation - only adds the AI reply on success
   const sendMessageMutation = useMutation({
-    mutationFn: (content: string) => sendMessage(content, issue?.id),
+    mutationFn: ({
+      content,
+      attachments,
+    }: {
+      content: string
+      attachments?: ChatAttachment[]
+    }) => sendMessage(content, issue?.id, attachments),
     onSuccess: (data) => {
       // Only add the reply message, user message was already added
       setMessages((prev) => [...prev, data.replyMessage])
@@ -67,7 +78,7 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
         sender: 'You',
       }
       setMessages((prev) => [...prev, userMessage])
-      sendMessageMutation.mutate(initialQuery)
+      sendMessageMutation.mutate({ content: initialQuery })
     }
   }, [initialQuery, issue, hasInitialQuerySent, sendMessageMutation])
 
@@ -76,21 +87,59 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, sendMessageMutation.isPending])
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const attachment: ChatAttachment = {
+          id: generateMessageId(),
+          name: file.name,
+          type: file.type,
+          url: event.target?.result as string,
+          size: file.size,
+        }
+        setPendingAttachments((prev) => [...prev, attachment])
+      }
+      reader.readAsDataURL(file)
+    })
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const handleRemoveAttachment = (id: string) => {
+    setPendingAttachments((prev) => prev.filter((a) => a.id !== id))
+  }
+
+  const handleAttachClick = () => {
+    fileInputRef.current?.click()
+  }
+
   const handleSendMessage = () => {
-    if (replyText.trim() && !sendMessageMutation.isPending) {
+    const hasContent = replyText.trim() || pendingAttachments.length > 0
+    if (hasContent && !sendMessageMutation.isPending) {
       const content = replyText.trim()
+      const attachments =
+        pendingAttachments.length > 0 ? [...pendingAttachments] : undefined
       // Add user message immediately
       const userMessage: ChatMessage = {
         id: generateMessageId(),
         type: 'user',
-        content,
+        content: content || (attachments ? '[Attachment]' : ''),
         timestamp: formatTimestamp(),
         sender: 'You',
+        attachments,
       }
       setMessages((prev) => [...prev, userMessage])
       setReplyText('')
+      setPendingAttachments([])
       // Then send to API for AI response
-      sendMessageMutation.mutate(content)
+      sendMessageMutation.mutate({ content, attachments })
     }
   }
 
@@ -232,9 +281,32 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
                   {/* Message Content */}
                   {message.type === 'user' && (
                     <div className="bg-[#d2fb95] rounded-tl-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
-                      <p className="text-[13px] leading-[20px] text-[#18181b] tracking-[-0.0762px] whitespace-pre-wrap">
-                        {message.content}
-                      </p>
+                      {message.attachments && message.attachments.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {message.attachments.map((attachment) =>
+                            attachment.type.startsWith('image/') ? (
+                              <img
+                                key={attachment.id}
+                                src={attachment.url}
+                                alt={attachment.name}
+                                className="max-w-[200px] max-h-[150px] rounded-[8px] object-cover"
+                              />
+                            ) : (
+                              <div
+                                key={attachment.id}
+                                className="bg-white/50 rounded-[8px] px-3 py-2 text-[12px] text-[#18181b]"
+                              >
+                                {attachment.name}
+                              </div>
+                            )
+                          )}
+                        </div>
+                      )}
+                      {message.content && message.content !== '[Attachment]' && (
+                        <p className="text-[13px] leading-[20px] text-[#18181b] tracking-[-0.0762px] whitespace-pre-wrap">
+                          {message.content}
+                        </p>
+                      )}
                     </div>
                   )}
                   {message.type === 'system' && (
@@ -279,13 +351,64 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
       {/* Input Area - Fixed at bottom */}
       <div className="bg-white dark:bg-zinc-900 border-t border-[#e4e4e7] dark:border-zinc-800 px-4 py-3 shrink-0">
         <div className="max-w-[800px] mx-auto">
-          <button className="hidden md:flex items-center gap-2 text-[14px] text-[#71717a] hover:text-black dark:hover:text-white transition-colors mb-3">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,.pdf,.doc,.docx,.txt"
+            multiple
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+
+          {/* Pending attachments preview */}
+          {pendingAttachments.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {pendingAttachments.map((attachment) => (
+                <div
+                  key={attachment.id}
+                  className="relative group bg-[#f6f6f6] dark:bg-zinc-800 rounded-[8px] overflow-hidden"
+                >
+                  {attachment.type.startsWith('image/') ? (
+                    <img
+                      src={attachment.url}
+                      alt={attachment.name}
+                      className="w-[80px] h-[80px] object-cover"
+                    />
+                  ) : (
+                    <div className="w-[80px] h-[80px] flex items-center justify-center">
+                      <Paperclip className="w-6 h-6 text-[#71717a]" />
+                    </div>
+                  )}
+                  <button
+                    onClick={() => handleRemoveAttachment(attachment.id)}
+                    className="absolute top-1 right-1 w-5 h-5 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center transition-colors"
+                  >
+                    <X className="w-3 h-3 text-white" />
+                  </button>
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5">
+                    <p className="text-[10px] text-white truncate">
+                      {attachment.name}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <button
+            onClick={handleAttachClick}
+            className="hidden md:flex items-center gap-2 text-[14px] text-[#71717a] hover:text-black dark:hover:text-white transition-colors mb-3"
+          >
             <Paperclip className="w-4 h-4" />
             Attach File
           </button>
 
           <div className="flex items-end gap-2 md:gap-3">
-            <button className="md:hidden bg-[#f6f6f6] dark:bg-zinc-800 rounded-[8px] w-[44px] h-[44px] flex items-center justify-center shrink-0">
+            <button
+              onClick={handleAttachClick}
+              className="md:hidden bg-[#f6f6f6] dark:bg-zinc-800 rounded-[8px] w-[44px] h-[44px] flex items-center justify-center shrink-0 hover:bg-[#ececec] dark:hover:bg-zinc-700 transition-colors"
+            >
               <Paperclip className="w-4 h-4 text-[#71717a]" />
             </button>
             <div className="flex-1 bg-[#f6f6f6] dark:bg-zinc-800 rounded-[12px] px-3 md:px-4 py-2 md:py-3 min-h-[44px] md:min-h-[48px]">
@@ -301,7 +424,10 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
             </div>
             <button
               onClick={handleSendMessage}
-              disabled={!replyText.trim() || sendMessageMutation.isPending}
+              disabled={
+                (!replyText.trim() && pendingAttachments.length === 0) ||
+                sendMessageMutation.isPending
+              }
               className="bg-black rounded-[8px] w-[44px] h-[44px] md:w-[48px] md:h-[48px] flex items-center justify-center hover:bg-[#333] transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {sendMessageMutation.isPending ? (

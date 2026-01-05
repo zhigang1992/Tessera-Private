@@ -18,12 +18,21 @@ export interface LiveIssuesResponse {
 
 export type MessageType = 'user' | 'system' | 'agent'
 
+export interface ChatAttachment {
+  id: string
+  name: string
+  type: string // MIME type
+  url: string // data URL or blob URL
+  size: number
+}
+
 export interface ChatMessage {
   id: string
   type: MessageType
   content: string
   timestamp: string
   sender: string
+  attachments?: ChatAttachment[]
 }
 
 export interface ChatMessagesResponse {
@@ -192,7 +201,8 @@ export async function getChatMessages(
 
 export async function sendMessage(
   content: string,
-  _issueId?: string
+  _issueId?: string,
+  attachments?: ChatAttachment[]
 ): Promise<SendMessageResponse> {
   await sleep(800)
 
@@ -204,15 +214,27 @@ export async function sendMessage(
     content,
     timestamp,
     sender: 'You',
+    attachments,
   }
 
   // Simulate AI thinking delay
   await sleep(1000)
 
+  // Generate response based on content and attachments
+  let responseContent = findAiResponse(content)
+  if (attachments && attachments.length > 0) {
+    const imageAttachments = attachments.filter((a) =>
+      a.type.startsWith('image/')
+    )
+    if (imageAttachments.length > 0) {
+      responseContent = `I've received your ${imageAttachments.length > 1 ? 'images' : 'image'}. Let me analyze ${imageAttachments.length > 1 ? 'them' : 'it'} to better understand your issue.\n\n${responseContent}`
+    }
+  }
+
   const replyMessage: ChatMessage = {
     id: generateMessageId(),
     type: 'system',
-    content: findAiResponse(content),
+    content: responseContent,
     timestamp: formatTimestamp(),
     sender: 'Tessera AI',
   }
