@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, Paperclip, Send, Bot, User, Loader2, X } from 'lucide-react'
 import {
   type LiveIssue,
@@ -29,12 +29,13 @@ function generateMessageId(): string {
 export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
   const [replyText, setReplyText] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [hasInitialQuerySent, setHasInitialQuerySent] = useState(false)
   const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>(
     []
   )
+  const [isWaitingForReply, setIsWaitingForReply] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const hasInitialQuerySentRef = useRef(false)
 
   // Fetch chat history for existing issues
   const { data: chatData, isLoading: isLoadingHistory } = useQuery({
@@ -43,20 +44,16 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
     enabled: !!issue?.id,
   })
 
-  // Send message mutation - only adds the AI reply on success
-  const sendMessageMutation = useMutation({
-    mutationFn: ({
-      content,
-      attachments,
-    }: {
-      content: string
-      attachments?: ChatAttachment[]
-    }) => sendMessage(content, issue?.id, attachments),
-    onSuccess: (data) => {
-      // Only add the reply message, user message was already added
+  // Send message function
+  const doSendMessage = async (content: string, attachments?: ChatAttachment[]) => {
+    setIsWaitingForReply(true)
+    try {
+      const data = await sendMessage(content, issue?.id, attachments)
       setMessages((prev) => [...prev, data.replyMessage])
-    },
-  })
+    } finally {
+      setIsWaitingForReply(false)
+    }
+  }
 
   // Initialize messages from chat history
   useEffect(() => {
@@ -67,8 +64,8 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
 
   // Handle initial query (from search)
   useEffect(() => {
-    if (initialQuery && !issue && !hasInitialQuerySent) {
-      setHasInitialQuerySent(true)
+    if (initialQuery && !issue && !hasInitialQuerySentRef.current) {
+      hasInitialQuerySentRef.current = true
       // Add user message immediately
       const userMessage: ChatMessage = {
         id: generateMessageId(),
@@ -78,14 +75,15 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
         sender: 'You',
       }
       setMessages((prev) => [...prev, userMessage])
-      sendMessageMutation.mutate({ content: initialQuery })
+      doSendMessage(initialQuery)
     }
-  }, [initialQuery, issue, hasInitialQuerySent, sendMessageMutation])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuery, issue])
 
   // Scroll to bottom when messages change or when pending
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, sendMessageMutation.isPending])
+  }, [messages, isWaitingForReply])
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -122,7 +120,7 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
 
   const handleSendMessage = () => {
     const hasContent = replyText.trim() || pendingAttachments.length > 0
-    if (hasContent && !sendMessageMutation.isPending) {
+    if (hasContent && !isWaitingForReply) {
       const content = replyText.trim()
       const attachments =
         pendingAttachments.length > 0 ? [...pendingAttachments] : undefined
@@ -139,7 +137,7 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
       setReplyText('')
       setPendingAttachments([])
       // Then send to API for AI response
-      sendMessageMutation.mutate({ content, attachments })
+      doSendMessage(content, attachments)
     }
   }
 
@@ -214,7 +212,7 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 text-[#71717a] animate-spin" />
             </div>
-          ) : messages.length === 0 && !sendMessageMutation.isPending ? (
+          ) : messages.length === 0 && !isWaitingForReply ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Bot className="w-12 h-12 text-[#a1a1aa] mb-3" />
               <p className="text-[14px] text-[#71717a] mb-1">
@@ -327,7 +325,7 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
               ))}
 
               {/* Loading indicator when sending message */}
-              {sendMessageMutation.isPending && (
+              {isWaitingForReply && (
                 <div className="flex items-start gap-[8px]">
                   <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#e5e5e5] dark:bg-zinc-700 flex items-center justify-center shrink-0">
                     <Bot className="w-[12px] h-[12px] md:w-[14px] md:h-[14px] text-[#71717a]" />
@@ -419,18 +417,18 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
                 placeholder="Type your reply here..."
                 className="w-full bg-transparent text-[14px] text-black dark:text-white outline-none resize-none placeholder:text-[#a1a1aa]"
                 rows={1}
-                disabled={sendMessageMutation.isPending}
+                disabled={isWaitingForReply}
               />
             </div>
             <button
               onClick={handleSendMessage}
               disabled={
                 (!replyText.trim() && pendingAttachments.length === 0) ||
-                sendMessageMutation.isPending
+                isWaitingForReply
               }
               className="bg-black rounded-[8px] w-[44px] h-[44px] md:w-[48px] md:h-[48px] flex items-center justify-center hover:bg-[#333] transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {sendMessageMutation.isPending ? (
+              {isWaitingForReply ? (
                 <Loader2 className="w-5 h-5 text-white animate-spin" />
               ) : (
                 <Send className="w-5 h-5 text-white" />
