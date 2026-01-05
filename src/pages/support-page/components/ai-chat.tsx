@@ -1,14 +1,12 @@
-import { useState } from 'react'
-import { ChevronLeft, Paperclip, Send, Bot, User } from 'lucide-react'
-import { type LiveIssue } from '@/services'
-
-type Message = {
-  id: string
-  type: 'user' | 'system' | 'agent'
-  content: string
-  timestamp: string
-  sender?: string
-}
+import { useState, useEffect, useRef } from 'react'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { ChevronLeft, Paperclip, Send, Bot, User, Loader2 } from 'lucide-react'
+import {
+  type LiveIssue,
+  type ChatMessage,
+  getChatMessages,
+  sendMessage,
+} from '@/services'
 
 interface AiChatProps {
   issue?: LiveIssue
@@ -16,63 +14,92 @@ interface AiChatProps {
   onBack: () => void
 }
 
+function formatTimestamp(): string {
+  return new Date().toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function generateMessageId(): string {
+  return `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+}
+
 export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
   const [replyText, setReplyText] = useState('')
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [hasInitialQuerySent, setHasInitialQuerySent] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const issueMessages: Message[] = [
-    {
-      id: '1',
-      type: 'user',
-      content:
-        "I'm trying to connect my Phantom wallet but it keeps spinning. I've tried refreshing.",
-      timestamp: '10:23 AM',
-      sender: 'You',
-    },
-    {
-      id: '2',
-      type: 'system',
-      content:
-        'Thank you for the report. Our automated system is checking the bridge status.',
-      timestamp: '10:24 AM',
-      sender: 'System',
-    },
-    {
-      id: '3',
-      type: 'agent',
-      content:
-        "Hi James, we noticed a slight congestion on the Solana RPC node. Could you try switching to 'Mainnet-Beta' in your wallet settings?",
-      timestamp: '10:28 AM',
-      sender: 'Support Agent',
-    },
-  ]
+  // Fetch chat history for existing issues
+  const { data: chatData, isLoading: isLoadingHistory } = useQuery({
+    queryKey: ['chatMessages', issue?.id],
+    queryFn: () => getChatMessages(issue?.id),
+    enabled: !!issue?.id,
+  })
 
-  const searchMessages: Message[] = initialQuery
-    ? [
-        {
-          id: '1',
-          type: 'user',
-          content: initialQuery,
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
-          sender: 'You',
-        },
-        {
-          id: '2',
-          type: 'system',
-          content:
-            'Thanks for your question! Our AI agent is processing your request...',
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
-          sender: 'System',
-        },
-      ]
-    : []
+  // Send message mutation - only adds the AI reply on success
+  const sendMessageMutation = useMutation({
+    mutationFn: (content: string) => sendMessage(content, issue?.id),
+    onSuccess: (data) => {
+      // Only add the reply message, user message was already added
+      setMessages((prev) => [...prev, data.replyMessage])
+    },
+  })
 
-  const messages = issue ? issueMessages : searchMessages
+  // Initialize messages from chat history
+  useEffect(() => {
+    if (chatData?.messages) {
+      setMessages(chatData.messages)
+    }
+  }, [chatData])
+
+  // Handle initial query (from search)
+  useEffect(() => {
+    if (initialQuery && !issue && !hasInitialQuerySent) {
+      setHasInitialQuerySent(true)
+      // Add user message immediately
+      const userMessage: ChatMessage = {
+        id: generateMessageId(),
+        type: 'user',
+        content: initialQuery,
+        timestamp: formatTimestamp(),
+        sender: 'You',
+      }
+      setMessages((prev) => [...prev, userMessage])
+      sendMessageMutation.mutate(initialQuery)
+    }
+  }, [initialQuery, issue, hasInitialQuerySent, sendMessageMutation])
+
+  // Scroll to bottom when messages change or when pending
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, sendMessageMutation.isPending])
+
+  const handleSendMessage = () => {
+    if (replyText.trim() && !sendMessageMutation.isPending) {
+      const content = replyText.trim()
+      // Add user message immediately
+      const userMessage: ChatMessage = {
+        id: generateMessageId(),
+        type: 'user',
+        content,
+        timestamp: formatTimestamp(),
+        sender: 'You',
+      }
+      setMessages((prev) => [...prev, userMessage])
+      setReplyText('')
+      // Then send to API for AI response
+      sendMessageMutation.mutate(content)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSendMessage()
+    }
+  }
 
   return (
     <div className="fixed inset-0 top-[64px] lg:left-64 bg-[#f5f5f5] dark:bg-zinc-950 flex flex-col z-10">
@@ -134,82 +161,118 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
       {/* Chat Messages - Scrollable */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
         <div className="max-w-[800px] mx-auto flex flex-col gap-[16px] md:gap-[24px]">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex flex-col gap-[8px] ${message.type === 'user' ? 'items-end' : 'items-start'}`}
-            >
-              {/* Message Header */}
-              <div
-                className={`flex items-center gap-[8px] ${message.type === 'user' ? 'flex-row-reverse' : ''}`}
-              >
-                {message.type === 'user' && (
-                  <>
-                    <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#d2fb95] flex items-center justify-center shrink-0">
-                      <span className="text-[10px] md:text-[11px] font-semibold text-black tracking-[0.0645px]">
-                        JD
+          {isLoadingHistory ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 text-[#71717a] animate-spin" />
+            </div>
+          ) : messages.length === 0 && !sendMessageMutation.isPending ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Bot className="w-12 h-12 text-[#a1a1aa] mb-3" />
+              <p className="text-[14px] text-[#71717a] mb-1">
+                Start a conversation
+              </p>
+              <p className="text-[12px] text-[#a1a1aa]">
+                Ask me anything about Tessera
+              </p>
+            </div>
+          ) : (
+            <>
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex flex-col gap-[8px] ${message.type === 'user' ? 'items-end' : 'items-start'}`}
+                >
+                  {/* Message Header */}
+                  <div
+                    className={`flex items-center gap-[8px] ${message.type === 'user' ? 'flex-row-reverse' : ''}`}
+                  >
+                    {message.type === 'user' && (
+                      <>
+                        <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#d2fb95] flex items-center justify-center shrink-0">
+                          <span className="text-[10px] md:text-[11px] font-semibold text-black tracking-[0.0645px]">
+                            JD
+                          </span>
+                        </div>
+                        <span className="text-[12px] md:text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
+                          {message.sender}
+                        </span>
+                        <span className="text-[10px] md:text-[11px] text-[#a1a1aa] tracking-[0.0645px]">
+                          {message.timestamp}
+                        </span>
+                      </>
+                    )}
+                    {message.type === 'system' && (
+                      <>
+                        <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#e5e5e5] dark:bg-zinc-700 flex items-center justify-center shrink-0">
+                          <Bot className="w-[12px] h-[12px] md:w-[14px] md:h-[14px] text-[#71717a]" />
+                        </div>
+                        <span className="text-[12px] md:text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
+                          {message.sender}
+                        </span>
+                        <span className="text-[10px] md:text-[11px] text-[#a1a1aa] tracking-[0.0645px]">
+                          {message.timestamp}
+                        </span>
+                      </>
+                    )}
+                    {message.type === 'agent' && (
+                      <>
+                        <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#18181b] flex items-center justify-center shrink-0">
+                          <User className="w-[12px] h-[12px] md:w-[14px] md:h-[14px] text-white" />
+                        </div>
+                        <span className="text-[12px] md:text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
+                          {message.sender}
+                        </span>
+                        <span className="text-[10px] md:text-[11px] text-[#a1a1aa] tracking-[0.0645px]">
+                          {message.timestamp}
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Message Content */}
+                  {message.type === 'user' && (
+                    <div className="bg-[#d2fb95] rounded-tl-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
+                      <p className="text-[13px] leading-[20px] text-[#18181b] tracking-[-0.0762px] whitespace-pre-wrap">
+                        {message.content}
+                      </p>
+                    </div>
+                  )}
+                  {message.type === 'system' && (
+                    <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
+                      <p className="text-[13px] leading-[20px] text-[#18181b] dark:text-zinc-300 tracking-[-0.0762px] whitespace-pre-wrap">
+                        {message.content}
+                      </p>
+                    </div>
+                  )}
+                  {message.type === 'agent' && (
+                    <div className="bg-[#18181b] rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
+                      <p className="text-[13px] leading-[20px] text-white tracking-[-0.0762px] whitespace-pre-wrap">
+                        {message.content}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Loading indicator when sending message */}
+              {sendMessageMutation.isPending && (
+                <div className="flex items-start gap-[8px]">
+                  <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#e5e5e5] dark:bg-zinc-700 flex items-center justify-center shrink-0">
+                    <Bot className="w-[12px] h-[12px] md:w-[14px] md:h-[14px] text-[#71717a]" />
+                  </div>
+                  <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[16px] py-[12px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 text-[#71717a] animate-spin" />
+                      <span className="text-[13px] text-[#71717a]">
+                        Thinking...
                       </span>
                     </div>
-                    <span className="text-[12px] md:text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
-                      {message.sender}
-                    </span>
-                    <span className="text-[10px] md:text-[11px] text-[#a1a1aa] tracking-[0.0645px]">
-                      {message.timestamp}
-                    </span>
-                  </>
-                )}
-                {message.type === 'system' && (
-                  <>
-                    <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#e5e5e5] dark:bg-zinc-700 flex items-center justify-center shrink-0">
-                      <Bot className="w-[12px] h-[12px] md:w-[14px] md:h-[14px] text-[#71717a]" />
-                    </div>
-                    <span className="text-[12px] md:text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
-                      {message.sender}
-                    </span>
-                    <span className="text-[10px] md:text-[11px] text-[#a1a1aa] tracking-[0.0645px]">
-                      {message.timestamp}
-                    </span>
-                  </>
-                )}
-                {message.type === 'agent' && (
-                  <>
-                    <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#18181b] flex items-center justify-center shrink-0">
-                      <User className="w-[12px] h-[12px] md:w-[14px] md:h-[14px] text-white" />
-                    </div>
-                    <span className="text-[12px] md:text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
-                      {message.sender}
-                    </span>
-                    <span className="text-[10px] md:text-[11px] text-[#a1a1aa] tracking-[0.0645px]">
-                      {message.timestamp}
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {/* Message Content */}
-              {message.type === 'user' && (
-                <div className="bg-[#d2fb95] rounded-tl-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
-                  <p className="text-[13px] leading-[20px] text-[#18181b] tracking-[-0.0762px]">
-                    {message.content}
-                  </p>
+                  </div>
                 </div>
               )}
-              {message.type === 'system' && (
-                <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
-                  <p className="text-[13px] leading-[20px] text-[#18181b] dark:text-zinc-300 tracking-[-0.0762px]">
-                    {message.content}
-                  </p>
-                </div>
-              )}
-              {message.type === 'agent' && (
-                <div className="bg-[#18181b] rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
-                  <p className="text-[13px] leading-[20px] text-white tracking-[-0.0762px]">
-                    {message.content}
-                  </p>
-                </div>
-              )}
-            </div>
-          ))}
+            </>
+          )}
+          <div ref={messagesEndRef} />
         </div>
       </div>
 
@@ -229,13 +292,23 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
               <textarea
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Type your reply here..."
                 className="w-full bg-transparent text-[14px] text-black dark:text-white outline-none resize-none placeholder:text-[#a1a1aa]"
                 rows={1}
+                disabled={sendMessageMutation.isPending}
               />
             </div>
-            <button className="bg-black rounded-[8px] w-[44px] h-[44px] md:w-[48px] md:h-[48px] flex items-center justify-center hover:bg-[#333] transition-colors shrink-0">
-              <Send className="w-5 h-5 text-white" />
+            <button
+              onClick={handleSendMessage}
+              disabled={!replyText.trim() || sendMessageMutation.isPending}
+              className="bg-black rounded-[8px] w-[44px] h-[44px] md:w-[48px] md:h-[48px] flex items-center justify-center hover:bg-[#333] transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {sendMessageMutation.isPending ? (
+                <Loader2 className="w-5 h-5 text-white animate-spin" />
+              ) : (
+                <Send className="w-5 h-5 text-white" />
+              )}
             </button>
           </div>
         </div>
