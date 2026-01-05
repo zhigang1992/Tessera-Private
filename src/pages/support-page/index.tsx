@@ -9,12 +9,12 @@ import {
   Rocket,
   ShieldCheck,
   Fuel,
-  MessageCircle,
-  Headphones,
   Bot,
   ArrowUpRight,
 } from 'lucide-react'
 import { AiChat, type LiveIssue } from './components/ai-chat'
+import ChatBubbleOutlineIcon from './components/_/chat-bubble-outline.svg?react'
+import SupportAgentIcon from './components/_/support-agent.svg?react'
 
 type FAQCategory = {
   id: string
@@ -308,7 +308,7 @@ export default function SupportPage() {
                 rel="noopener noreferrer"
                 className="bg-black hover:bg-gray-800 transition-colors text-white rounded-[8px] px-4 py-3 flex items-center justify-center gap-2"
               >
-                <MessageCircle className="w-[18px] h-[18px]" />
+                <ChatBubbleOutlineIcon className="w-[18px] h-[18px]" />
                 <span className="text-[14px] font-medium">
                   Discord Community
                 </span>
@@ -318,7 +318,7 @@ export default function SupportPage() {
                 className="bg-white dark:bg-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors border border-[#a1a1aa] dark:border-zinc-600 rounded-[8px] px-4 py-3 flex items-center justify-center gap-2"
                 onClick={() => setSelectedIssue(liveIssues[0])}
               >
-                <Headphones className="w-[18px] h-[18px] dark:text-white" />
+                <SupportAgentIcon className="w-[18px] h-[18px] dark:text-white" />
                 <span className="text-[14px] font-medium dark:text-white">
                   Technical Support
                 </span>
