@@ -302,12 +302,17 @@ export default function SupportPage() {
             </p>
 
             <div className="flex flex-col gap-3">
-              <button className="bg-black hover:bg-gray-800 transition-colors text-white rounded-[8px] px-4 py-3 flex items-center justify-center gap-2">
+              <a
+                href="https://discord.gg/tessera"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-black hover:bg-gray-800 transition-colors text-white rounded-[8px] px-4 py-3 flex items-center justify-center gap-2"
+              >
                 <MessageCircle className="w-[18px] h-[18px]" />
                 <span className="text-[14px] font-medium">
                   Discord Community
                 </span>
-              </button>
+              </a>
 
               <button
                 className="bg-white dark:bg-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors border border-[#a1a1aa] dark:border-zinc-600 rounded-[8px] px-4 py-3 flex items-center justify-center gap-2"
