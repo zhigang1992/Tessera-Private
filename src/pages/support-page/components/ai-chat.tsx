@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, Paperclip, Send, Bot, User } from 'lucide-react'
+import { type LiveIssue } from '@/services'
 
 type Message = {
   id: string
@@ -7,13 +8,6 @@ type Message = {
   content: string
   timestamp: string
   sender?: string
-}
-
-export type LiveIssue = {
-  id: string
-  title: string
-  status: 'checking' | 'complete'
-  submittedTime: string
 }
 
 interface AiChatProps {

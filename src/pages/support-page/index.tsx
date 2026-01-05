@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   Search,
   Globe,
@@ -11,8 +12,10 @@ import {
   Fuel,
   Bot,
   ArrowUpRight,
+  MessageSquare,
 } from 'lucide-react'
-import { AiChat, type LiveIssue } from './components/ai-chat'
+import { AiChat } from './components/ai-chat'
+import { getLiveIssues, type LiveIssue } from '@/services'
 import ChatBubbleOutlineIcon from './components/_/chat-bubble-outline.svg?react'
 import SupportAgentIcon from './components/_/support-agent.svg?react'
 
@@ -33,6 +36,13 @@ export default function SupportPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedIssue, setSelectedIssue] = useState<LiveIssue | null>(null)
   const [chatQuery, setChatQuery] = useState<string | null>(null)
+
+  const { data: liveIssuesData, isLoading: isLoadingIssues } = useQuery({
+    queryKey: ['liveIssues'],
+    queryFn: getLiveIssues,
+  })
+
+  const liveIssues = liveIssuesData?.items ?? []
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -128,21 +138,6 @@ export default function SupportPage() {
             'We operate under regulatory frameworks that permit permissionless protocols. Compliance is maintained through smart contract design, transparent operations, and adherence to applicable securities and financial regulations.',
         },
       ],
-    },
-  ]
-
-  const liveIssues: LiveIssue[] = [
-    {
-      id: '2941',
-      title: 'Wallet Connection Issue',
-      status: 'checking',
-      submittedTime: '2 mins ago',
-    },
-    {
-      id: '2880',
-      title: 'Bridge Transaction',
-      status: 'complete',
-      submittedTime: '1 week ago',
     },
   ]
 
@@ -302,37 +297,70 @@ export default function SupportPage() {
               Live Issues
             </h3>
 
-            <div className="flex flex-col gap-[12px]">
-              {liveIssues.map((issue) => (
-                <button
-                  key={issue.id}
-                  className="px-[16px] py-[12px] bg-[#f6f6f6] dark:bg-zinc-800 rounded-[8px] hover:bg-[#ececec] dark:hover:bg-zinc-700 transition-colors w-full text-left"
-                  onClick={() => setSelectedIssue(issue)}
-                >
-                  <div className="flex flex-col gap-[5px]">
-                    <span className="text-[14px] font-medium text-[#404040] dark:text-zinc-300 tracking-[-0.1504px] leading-[21px]">
-                      #{issue.id} - {issue.title}
-                    </span>
+            {isLoadingIssues ? (
+              <div className="flex flex-col gap-[12px]">
+                {[1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="px-[16px] py-[12px] bg-[#f6f6f6] dark:bg-zinc-800 rounded-[8px] animate-pulse"
+                  >
+                    <div className="h-[21px] bg-[#e4e4e7] dark:bg-zinc-700 rounded w-3/4 mb-2" />
                     <div className="flex items-center justify-between">
-                      <span
-                        className="text-[10px] font-medium px-[6px] py-[2px] rounded-[4px] leading-[18px]"
-                        style={{
-                          backgroundColor:
-                            issue.status === 'checking' ? '#ffe6c1' : '#bbf6be',
-                          color:
-                            issue.status === 'checking' ? '#e07d00' : '#008806',
-                        }}
-                      >
-                        {issue.status === 'checking' ? 'Checking' : 'Complete'}
-                      </span>
-                      <span className="text-[10px] font-normal text-[#71717a] leading-[18px] text-right">
-                        Submitted {issue.submittedTime}
-                      </span>
+                      <div className="h-[18px] bg-[#e4e4e7] dark:bg-zinc-700 rounded w-16" />
+                      <div className="h-[18px] bg-[#e4e4e7] dark:bg-zinc-700 rounded w-20" />
                     </div>
                   </div>
-                </button>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : liveIssues.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-12 h-12 rounded-full bg-[#f6f6f6] dark:bg-zinc-800 flex items-center justify-center mb-3">
+                  <MessageSquare className="w-6 h-6 text-[#a1a1aa]" />
+                </div>
+                <p className="text-[14px] text-[#71717a] mb-1">
+                  No open issues
+                </p>
+                <p className="text-[12px] text-[#a1a1aa]">
+                  Your support requests will appear here
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-[12px]">
+                {liveIssues.map((issue) => (
+                  <button
+                    key={issue.id}
+                    className="px-[16px] py-[12px] bg-[#f6f6f6] dark:bg-zinc-800 rounded-[8px] hover:bg-[#ececec] dark:hover:bg-zinc-700 transition-colors w-full text-left"
+                    onClick={() => setSelectedIssue(issue)}
+                  >
+                    <div className="flex flex-col gap-[5px]">
+                      <span className="text-[14px] font-medium text-[#404040] dark:text-zinc-300 tracking-[-0.1504px] leading-[21px]">
+                        #{issue.id} - {issue.title}
+                      </span>
+                      <div className="flex items-center justify-between">
+                        <span
+                          className="text-[10px] font-medium px-[6px] py-[2px] rounded-[4px] leading-[18px]"
+                          style={{
+                            backgroundColor:
+                              issue.status === 'checking'
+                                ? '#ffe6c1'
+                                : '#bbf6be',
+                            color:
+                              issue.status === 'checking'
+                                ? '#e07d00'
+                                : '#008806',
+                          }}
+                        >
+                          {issue.status === 'checking' ? 'Checking' : 'Complete'}
+                        </span>
+                        <span className="text-[10px] font-normal text-[#71717a] leading-[18px] text-right">
+                          Submitted {issue.submittedTime}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Community & Support */}
@@ -359,7 +387,7 @@ export default function SupportPage() {
 
               <button
                 className="bg-white dark:bg-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors border border-[#a1a1aa] dark:border-zinc-600 rounded-[8px] px-4 py-3 flex items-center justify-center gap-2"
-                onClick={() => setSelectedIssue(liveIssues[0])}
+                onClick={() => setChatQuery('I need technical support')}
               >
                 <SupportAgentIcon className="w-[18px] h-[18px] dark:text-white" />
                 <span className="text-[14px] font-medium dark:text-white">
