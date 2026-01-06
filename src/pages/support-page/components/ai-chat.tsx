@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, Paperclip, Send, Bot, User, Loader2, X } from 'lucide-react'
+import Markdown from 'react-markdown'
 import {
   type LiveIssue,
   type ChatMessage,
   type ChatAttachment,
   getChatMessages,
-  sendMessage,
+  sendMessageStream,
 } from '@/services'
 
 interface AiChatProps {
@@ -33,6 +34,8 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
     []
   )
   const [isWaitingForReply, setIsWaitingForReply] = useState(false)
+  const [streamingContent, setStreamingContent] = useState('')
+  const [isStreaming, setIsStreaming] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const hasInitialQuerySentRef = useRef(false)
@@ -44,14 +47,27 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
     enabled: !!issue?.id,
   })
 
-  // Send message function
+  // Send message function with streaming
   const doSendMessage = async (content: string, attachments?: ChatAttachment[]) => {
     setIsWaitingForReply(true)
+    setIsStreaming(true)
+    setStreamingContent('')
+
     try {
-      const data = await sendMessage(content, issue?.id, attachments)
+      const data = await sendMessageStream(
+        content,
+        issue?.id,
+        attachments,
+        (chunk) => {
+          setStreamingContent((prev) => prev + chunk)
+        }
+      )
+      // After streaming completes, add the final message
       setMessages((prev) => [...prev, data.replyMessage])
     } finally {
       setIsWaitingForReply(false)
+      setIsStreaming(false)
+      setStreamingContent('')
     }
   }
 
@@ -80,10 +96,10 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQuery, issue])
 
-  // Scroll to bottom when messages change or when pending
+  // Scroll to bottom when messages change or when streaming
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isWaitingForReply])
+  }, [messages, isWaitingForReply, streamingContent])
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -308,10 +324,10 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
                     </div>
                   )}
                   {message.type === 'system' && (
-                    <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
-                      <p className="text-[13px] leading-[20px] text-[#18181b] dark:text-zinc-300 tracking-[-0.0762px] whitespace-pre-wrap">
-                        {message.content}
-                      </p>
+                    <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[600px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
+                      <div className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[20px] text-[#18181b] dark:text-zinc-300 tracking-[-0.0762px] [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_strong]:font-semibold [&_a]:text-blue-600 [&_a]:underline">
+                        <Markdown>{message.content}</Markdown>
+                      </div>
                     </div>
                   )}
                   {message.type === 'agent' && (
@@ -324,19 +340,36 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
                 </div>
               ))}
 
-              {/* Loading indicator when sending message */}
+              {/* Streaming/Loading indicator when sending message */}
               {isWaitingForReply && (
-                <div className="flex items-start gap-[8px]">
-                  <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#e5e5e5] dark:bg-zinc-700 flex items-center justify-center shrink-0">
-                    <Bot className="w-[12px] h-[12px] md:w-[14px] md:h-[14px] text-[#71717a]" />
-                  </div>
-                  <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[16px] py-[12px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 text-[#71717a] animate-spin" />
-                      <span className="text-[13px] text-[#71717a]">
-                        Thinking...
-                      </span>
+                <div className="flex flex-col gap-[8px] items-start">
+                  {/* Message Header */}
+                  <div className="flex items-center gap-[8px]">
+                    <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#e5e5e5] dark:bg-zinc-700 flex items-center justify-center shrink-0">
+                      <Bot className="w-[12px] h-[12px] md:w-[14px] md:h-[14px] text-[#71717a]" />
                     </div>
+                    <span className="text-[12px] md:text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
+                      Tessera AI
+                    </span>
+                    <span className="text-[10px] md:text-[11px] text-[#a1a1aa] tracking-[0.0645px]">
+                      {formatTimestamp()}
+                    </span>
+                  </div>
+                  {/* Streaming Content */}
+                  <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[600px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
+                    {isStreaming && streamingContent ? (
+                      <div className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[20px] text-[#18181b] dark:text-zinc-300 tracking-[-0.0762px] [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_strong]:font-semibold [&_a]:text-blue-600 [&_a]:underline">
+                        <Markdown>{streamingContent}</Markdown>
+                        <span className="inline-block w-2 h-4 bg-[#71717a] animate-pulse ml-0.5" />
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 text-[#71717a] animate-spin" />
+                        <span className="text-[13px] text-[#71717a]">
+                          Thinking...
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

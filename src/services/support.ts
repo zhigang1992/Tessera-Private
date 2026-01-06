@@ -1,3 +1,8 @@
+import {
+  sendToOpenAI,
+  streamFromOpenAI,
+  type ChatHistory,
+} from './chat/openai'
 import { sleep } from './utils'
 
 // ============ Types ============
@@ -116,34 +121,8 @@ const mockChatHistory: Record<string, ChatMessage[]> = {
   ],
 }
 
-// Simulated AI responses based on keywords
-const aiResponses: Array<{ keywords: string[]; response: string }> = [
-  {
-    keywords: ['spacex', 'trade spacex', 'how to trade'],
-    response:
-      'To trade SpaceX tokens on Tessera:\n\n1. Connect your Solana wallet (Phantom, Solflare, etc.)\n2. Navigate to the Trade page\n3. Select T-SPACEX from the token list\n4. Enter the amount you want to buy or sell\n5. Confirm the transaction in your wallet\n\nSpaceX tokens are available 24/7 with instant settlement!',
-  },
-  {
-    keywords: ['kyc', 'verification', 'identity'],
-    response:
-      'No, Tessera does not require KYC (Know Your Customer) verification. Our platform is built on permissionless infrastructure, allowing anyone with a Web3 wallet to trade instantly without identity verification or accreditation requirements.',
-  },
-  {
-    keywords: ['fee', 'gas', 'cost'],
-    response:
-      'Tessera fees are minimal:\n\n• Trading fee: 0.3% per swap\n• Gas costs: ~0.00001 SOL per transaction (Solana network fees)\n\nThere are no deposit or withdrawal fees. All fees are transparently shown before you confirm any transaction.',
-  },
-  {
-    keywords: ['wallet', 'connect', 'phantom', 'solflare'],
-    response:
-      'We support all major Solana wallets:\n\n• Phantom\n• Solflare\n• Backpack\n• Any wallet supporting Solana connection protocols\n\nTo connect, click the "Connect Wallet" button in the top right corner and select your wallet provider.',
-  },
-  {
-    keywords: ['technical', 'support', 'help'],
-    response:
-      "I'm here to help with technical issues! Please describe your problem in detail, including:\n\n• What action you were trying to perform\n• Any error messages you saw\n• Your wallet type\n\nI'll do my best to assist you or connect you with a human support agent if needed.",
-  },
-]
+// Store chat history for OpenAI context
+const chatHistoryStore: Map<string, ChatHistory> = new Map()
 
 // ============ Helper Functions ============
 
@@ -158,17 +137,8 @@ function generateMessageId(): string {
   return `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
 }
 
-function findAiResponse(content: string): string {
-  const lowerContent = content.toLowerCase()
-
-  for (const item of aiResponses) {
-    if (item.keywords.some((keyword) => lowerContent.includes(keyword))) {
-      return item.response
-    }
-  }
-
-  // Default response
-  return "Thanks for your message! I'm processing your request. Our AI is analyzing your question to provide the most helpful response. If you need immediate assistance, please join our Discord community or try one of the quick questions above."
+function getSessionId(issueId?: string): string {
+  return issueId || 'default-session'
 }
 
 // ============ API Functions ============
@@ -201,12 +171,11 @@ export async function getChatMessages(
 
 export async function sendMessage(
   content: string,
-  _issueId?: string,
+  issueId?: string,
   attachments?: ChatAttachment[]
 ): Promise<SendMessageResponse> {
-  await sleep(800)
-
   const timestamp = formatTimestamp()
+  const sessionId = getSessionId(issueId)
 
   const userMessage: ChatMessage = {
     id: generateMessageId(),
@@ -217,18 +186,97 @@ export async function sendMessage(
     attachments,
   }
 
-  // Simulate AI thinking delay
-  await sleep(1000)
+  // Get or initialize chat history for this session
+  const history = chatHistoryStore.get(sessionId) || []
 
-  // Generate response based on content and attachments
-  let responseContent = findAiResponse(content)
+  // Prepare message content (include attachment info if present)
+  let messageContent = content
   if (attachments && attachments.length > 0) {
-    const imageAttachments = attachments.filter((a) =>
-      a.type.startsWith('image/')
+    const attachmentInfo = attachments
+      .map((a) => `[Attached: ${a.name}]`)
+      .join(' ')
+    messageContent = `${content}\n\n${attachmentInfo}`
+  }
+
+  let responseContent: string
+
+  try {
+    // Call OpenAI API
+    responseContent = await sendToOpenAI(messageContent, history)
+
+    // Update chat history
+    history.push({ role: 'user', content: messageContent })
+    history.push({ role: 'assistant', content: responseContent })
+    chatHistoryStore.set(sessionId, history)
+  } catch (error) {
+    console.error('OpenAI API error:', error)
+    responseContent =
+      "I'm sorry, I encountered an error while processing your request. Please try again later or contact our support team via Discord or Telegram."
+  }
+
+  const replyMessage: ChatMessage = {
+    id: generateMessageId(),
+    type: 'system',
+    content: responseContent,
+    timestamp: formatTimestamp(),
+    sender: 'Tessera AI',
+  }
+
+  return {
+    userMessage,
+    replyMessage,
+  }
+}
+
+// Streaming version of sendMessage
+export async function sendMessageStream(
+  content: string,
+  issueId?: string,
+  attachments?: ChatAttachment[],
+  onChunk?: (chunk: string) => void
+): Promise<SendMessageResponse> {
+  const timestamp = formatTimestamp()
+  const sessionId = getSessionId(issueId)
+
+  const userMessage: ChatMessage = {
+    id: generateMessageId(),
+    type: 'user',
+    content,
+    timestamp,
+    sender: 'You',
+    attachments,
+  }
+
+  // Get or initialize chat history for this session
+  const history = chatHistoryStore.get(sessionId) || []
+
+  // Prepare message content (include attachment info if present)
+  let messageContent = content
+  if (attachments && attachments.length > 0) {
+    const attachmentInfo = attachments
+      .map((a) => `[Attached: ${a.name}]`)
+      .join(' ')
+    messageContent = `${content}\n\n${attachmentInfo}`
+  }
+
+  let responseContent: string
+
+  try {
+    // Call OpenAI API with streaming
+    responseContent = await streamFromOpenAI(
+      messageContent,
+      history,
+      onChunk || (() => {})
     )
-    if (imageAttachments.length > 0) {
-      responseContent = `I've received your ${imageAttachments.length > 1 ? 'images' : 'image'}. Let me analyze ${imageAttachments.length > 1 ? 'them' : 'it'} to better understand your issue.\n\n${responseContent}`
-    }
+
+    // Update chat history
+    history.push({ role: 'user', content: messageContent })
+    history.push({ role: 'assistant', content: responseContent })
+    chatHistoryStore.set(sessionId, history)
+  } catch (error) {
+    console.error('OpenAI API error:', error)
+    responseContent =
+      "I'm sorry, I encountered an error while processing your request. Please try again later or contact our support team via Discord or Telegram."
   }
 
   const replyMessage: ChatMessage = {
