@@ -266,8 +266,8 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
                     )}
                     {message.type === 'system' && (
                       <>
-                        <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#e5e5e5] dark:bg-zinc-700 flex items-center justify-center shrink-0">
-                          <Bot className="w-[12px] h-[12px] md:w-[14px] md:h-[14px] text-[#71717a]" />
+                        <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-gradient-to-br from-[#d2fb95] to-[#a8e063] flex items-center justify-center shrink-0 shadow-sm">
+                          <Bot className="w-[14px] h-[14px] md:w-[16px] md:h-[16px] text-[#18181b]" />
                         </div>
                         <span className="text-[12px] md:text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
                           {message.sender}
@@ -324,8 +324,8 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
                     </div>
                   )}
                   {message.type === 'system' && (
-                    <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[600px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
-                      <div className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[20px] text-[#18181b] dark:text-zinc-300 tracking-[-0.0762px] [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_strong]:font-semibold [&_a]:text-blue-600 [&_a]:underline">
+                    <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[600px] shadow-[0px_2px_8px_0px_rgba(0,0,0,0.08)] border border-[#f0f0f0] dark:border-zinc-700">
+                      <div className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[22px] text-[#18181b] dark:text-zinc-300 tracking-[-0.0762px] [&_p]:my-1.5 [&_ul]:my-2 [&_ol]:my-2 [&_li]:my-1 [&_strong]:font-semibold [&_a]:text-[#16a34a] [&_a]:no-underline [&_a:hover]:underline">
                         <Markdown>{message.content}</Markdown>
                       </div>
                     </div>
@@ -342,29 +342,35 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
 
               {/* Streaming/Loading indicator when sending message */}
               {isWaitingForReply && (
-                <div className="flex flex-col gap-[8px] items-start">
+                <div className="flex flex-col gap-[8px] items-start animate-in fade-in duration-300">
                   {/* Message Header */}
                   <div className="flex items-center gap-[8px]">
-                    <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#e5e5e5] dark:bg-zinc-700 flex items-center justify-center shrink-0">
-                      <Bot className="w-[12px] h-[12px] md:w-[14px] md:h-[14px] text-[#71717a]" />
+                    <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-gradient-to-br from-[#d2fb95] to-[#a8e063] flex items-center justify-center shrink-0 shadow-sm">
+                      <Bot className="w-[14px] h-[14px] md:w-[16px] md:h-[16px] text-[#18181b]" />
                     </div>
                     <span className="text-[12px] md:text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
                       Tessera AI
                     </span>
-                    <span className="text-[10px] md:text-[11px] text-[#a1a1aa] tracking-[0.0645px]">
-                      {formatTimestamp()}
-                    </span>
+                    {isStreaming && streamingContent && (
+                      <span className="text-[10px] text-[#d2fb95] bg-[#18181b] px-1.5 py-0.5 rounded-full">
+                        typing...
+                      </span>
+                    )}
                   </div>
                   {/* Streaming Content */}
-                  <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[600px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
+                  <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[600px] shadow-[0px_2px_8px_0px_rgba(0,0,0,0.08)] border border-[#f0f0f0] dark:border-zinc-700">
                     {isStreaming && streamingContent ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[20px] text-[#18181b] dark:text-zinc-300 tracking-[-0.0762px] [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_strong]:font-semibold [&_a]:text-blue-600 [&_a]:underline">
+                      <div className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[22px] text-[#18181b] dark:text-zinc-300 tracking-[-0.0762px] [&_p]:my-1.5 [&_ul]:my-2 [&_ol]:my-2 [&_li]:my-1 [&_strong]:font-semibold [&_a]:text-[#16a34a] [&_a]:no-underline [&_a:hover]:underline">
                         <Markdown>{streamingContent}</Markdown>
-                        <span className="inline-block w-2 h-4 bg-[#71717a] animate-pulse ml-0.5" />
+                        <span className="inline-block w-[3px] h-[16px] bg-[#d2fb95] rounded-full animate-pulse ml-1 align-middle" />
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 text-[#71717a] animate-spin" />
+                      <div className="flex items-center gap-3 py-1">
+                        <div className="flex gap-1">
+                          <span className="w-2 h-2 bg-[#d2fb95] rounded-full animate-bounce [animation-delay:-0.3s]" />
+                          <span className="w-2 h-2 bg-[#d2fb95] rounded-full animate-bounce [animation-delay:-0.15s]" />
+                          <span className="w-2 h-2 bg-[#d2fb95] rounded-full animate-bounce" />
+                        </div>
                         <span className="text-[13px] text-[#71717a]">
                           Thinking...
                         </span>
