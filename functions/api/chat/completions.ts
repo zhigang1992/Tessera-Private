@@ -1,7 +1,8 @@
 import type { PagesFunction } from '@cloudflare/workers-types'
 
 type Env = {
-  OPENAI_API_KEY: string
+  CLOUDFLARE_AI_TOKEN: string
+  CLOUDFLARE_ACCOUNT_ID: string
 }
 
 type ChatMessage = {
@@ -494,10 +495,11 @@ ${TESSERA_KNOWLEDGE_BASE}
 6. **Be personable and helpful**, not robotic. You're here to help users understand Tessera and solve their problems.`
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  const apiKey = env.OPENAI_API_KEY
+  const apiToken = env.CLOUDFLARE_AI_TOKEN
+  const accountId = env.CLOUDFLARE_ACCOUNT_ID || 'b2f75eee8466291920000d9b28137185'
 
-  if (!apiKey) {
-    return Response.json({ error: 'OpenAI API key is not configured' }, { status: 500 })
+  if (!apiToken) {
+    return Response.json({ error: 'Cloudflare AI token is not configured' }, { status: 500 })
   }
 
   let body: RequestBody
@@ -516,32 +518,97 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // Prepend system prompt - frontend sends user/assistant messages, we add system
   const fullMessages: ChatMessage[] = [{ role: 'system', content: SYSTEM_PROMPT }, ...messages.slice(-10)]
 
-  const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: fullMessages,
-      max_tokens: 1000,
-      temperature: 0.7,
-      stream,
-    }),
-  })
+  // Use Cloudflare AI REST API /run endpoint
+  // Note: gpt-oss-120b doesn't support streaming well, always use non-streaming
+  const cfAIResponse = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/openai/gpt-oss-120b`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        input: fullMessages,
+        max_tokens: 1000,
+        stream: false, // gpt-oss-120b doesn't support SSE streaming
+      }),
+    }
+  )
 
-  if (!openAIResponse.ok) {
-    const errorData = await openAIResponse.json()
+  if (!cfAIResponse.ok) {
+    const errorData = await cfAIResponse.json()
     return Response.json(
-      { error: (errorData as { error?: { message?: string } }).error?.message || 'Failed to get AI response' },
-      { status: openAIResponse.status }
+      {
+        error:
+          (errorData as { errors?: Array<{ message?: string }> }).errors?.[0]?.message || 'Failed to get AI response',
+      },
+      { status: cfAIResponse.status }
     )
   }
 
-  if (stream) {
-    // For streaming, pass through the response directly
-    return new Response(openAIResponse.body, {
+  // Transform Responses API format to OpenAI format
+  type ResponsesAPIOutput = {
+    result?: {
+      output?: Array<{
+        type: string
+        content?: Array<{
+          type: string
+          text?: string
+        }>
+      }>
+      response?: string
+    }
+    success?: boolean
+  }
+
+  const data = (await cfAIResponse.json()) as ResponsesAPIOutput
+
+  // Extract content from Responses API format
+  let content = ''
+  if (data.result?.output) {
+    // Find the message output (not reasoning)
+    const messageOutput = data.result.output.find((o) => o.type === 'message')
+    const textContent = messageOutput?.content?.find((c) => c.type === 'output_text')
+    content = textContent?.text || ''
+  } else if (data.result?.response) {
+    content = data.result.response
+  }
+
+  // If streaming was requested, simulate streaming by chunking the response
+  if (stream && content) {
+    const encoder = new TextEncoder()
+
+    // Split content into words for more natural streaming
+    const words = content.split(/(\s+)/)
+    let wordIndex = 0
+
+    const transformStream = new ReadableStream({
+      async start(controller) {
+        // Stream words in small batches for natural feel
+        while (wordIndex < words.length) {
+          // Send 1-3 words at a time
+          const batchSize = Math.min(Math.floor(Math.random() * 3) + 1, words.length - wordIndex)
+          const batch = words.slice(wordIndex, wordIndex + batchSize).join('')
+          wordIndex += batchSize
+
+          if (batch) {
+            const chunk = {
+              choices: [{ delta: { content: batch } }],
+            }
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`))
+          }
+
+          // Small delay between chunks for natural streaming feel
+          await new Promise((resolve) => setTimeout(resolve, 20))
+        }
+
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+        controller.close()
+      },
+    })
+
+    return new Response(transformStream, {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -550,7 +617,15 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     })
   }
 
-  // For non-streaming, return the JSON response
-  const data = await openAIResponse.json()
-  return Response.json(data)
+  // Non-streaming response
+  return Response.json({
+    choices: [
+      {
+        message: {
+          role: 'assistant',
+          content,
+        },
+      },
+    ],
+  })
 }
