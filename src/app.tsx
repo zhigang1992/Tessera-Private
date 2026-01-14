@@ -1,23 +1,32 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import { AppProviders } from '@/components/app-providers.tsx'
-import ReferralFeatureSimple from '@/features/referral/referral-feature-simple.tsx'
+import { MainLayout } from '@/components/layout'
+import { ReferralPage, LeaderboardPage, PlaceholderPage, TradePage, DashboardPage, DebugMeteoraPage, SupportPage } from '@/pages'
+import ReferralFeatureSimple from '@/features/referral/referral-feature-simple'
 import { MigrationPage } from '@/features/admin/pages/MigrationPage'
 import { AuctionListPage } from '@/features/auction/pages/AuctionListPage'
 import { AuctionDetailPage } from '@/features/auction/pages/AuctionDetailPage'
-import { LeaderboardPage } from '@/features/leaderboard/pages/LeaderboardPage'
 
 export function App() {
   return (
     <AppProviders>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<ReferralFeatureSimple />} />
-          <Route path="/admin/migration" element={<MigrationPage />} />
-          <Route path="/auctions" element={<AuctionListPage />} />
-          <Route path="/auctions/:auctionId" element={<AuctionDetailPage />} />
-          <Route path="/leaderboard" element={<LeaderboardPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <MainLayout>
+          <Routes>
+            <Route path="/" element={<Navigate to="/referral" replace />} />
+            <Route path="/explorer" element={<PlaceholderPage title="Explorer" />} />
+            <Route path="/referral" element={<ReferralPage />} />
+            <Route path="/referral-simple" element={<ReferralFeatureSimple />} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/trade" element={<TradePage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/support" element={<SupportPage />} />
+            <Route path="/admin/migration" element={<MigrationPage />} />
+            <Route path="/auctions" element={<AuctionListPage />} />
+            <Route path="/auctions/:auctionId" element={<AuctionDetailPage />} />
+            <Route path="/debug/meteora" element={<DebugMeteoraPage />} />
+          </Routes>
+        </MainLayout>
       </BrowserRouter>
     </AppProviders>
   )

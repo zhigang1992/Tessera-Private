@@ -30,6 +30,7 @@ dist-ssr
 
 # Environment variables
 .envrc
+.env
 
 .playwright-mcp
 .dev.vars

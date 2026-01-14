@@ -9,6 +9,9 @@ import { createSolanaClient } from 'gill'
 import { solanaMobileWalletAdapter } from './solana-mobile-wallet-adapter'
 import { SolanaClusterProvider, SolanaCluster, useSolanaCluster } from './solana-cluster-context'
 
+// Use environment variable for mainnet RPC or fall back to public endpoint
+const MAINNET_RPC = import.meta.env.VITE_MAINNET_RPC_URL || clusterApiUrl(WalletAdapterNetwork.Mainnet)
+
 const CLUSTERS: SolanaCluster[] = [
   {
     id: 'solana:devnet',
@@ -19,7 +22,7 @@ const CLUSTERS: SolanaCluster[] = [
   {
     id: 'solana:mainnet',
     label: 'Mainnet',
-    endpoint: clusterApiUrl(WalletAdapterNetwork.Mainnet),
+    endpoint: MAINNET_RPC,
     url: 'mainnet',
   },
   {
