@@ -1,39 +1,32 @@
+import { useQuery } from '@tanstack/react-query'
 import { Card } from '@/components/ui/card'
-
-// Mock data for auction stats
-const mockAuctionData = {
-  title: 'T-SpaceX Liquidity Auction',
-  isOfficial: true,
-  totalRaised: 142500,
-  targetRaise: 58000,
-  oversubscribedRatio: 2.46,
-  percentageOfTarget: 246,
-  status: 'live' as const,
-  auctionEndsIn: { hours: 14, minutes: 12, seconds: 30 },
-  poolStartsIn: { hours: 14, minutes: 35, seconds: 58 },
-  myPosition: {
-    isActive: true,
-    deposited: 1200,
-    estAllocation: 1.22,
-    estRefund: 731.03,
-  },
-  impliedValuation: {
-    fdv: '$800B',
-    yoetPrice: 400.0,
-  },
-}
+import { getAuctionStats, getAuctionPosition, getAuctionValuation } from '@/services'
 
 export function AuctionHeaderCard() {
-  const data = mockAuctionData
-  const progressWidth = Math.min((data.totalRaised / data.targetRaise) * 100, 100)
+  const { data: stats } = useQuery({
+    queryKey: ['auctionStats'],
+    queryFn: getAuctionStats,
+  })
+
+  const { data: position } = useQuery({
+    queryKey: ['auctionPosition'],
+    queryFn: getAuctionPosition,
+  })
+
+  const { data: valuation } = useQuery({
+    queryKey: ['auctionValuation'],
+    queryFn: getAuctionValuation,
+  })
+
+  const progressWidth = stats ? Math.min((stats.totalRaised / stats.targetRaise) * 100, 100) : 0
 
   return (
     <Card className="p-6">
       <div className="flex flex-col gap-6">
         {/* Title and Badge */}
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-semibold text-foreground">{data.title}</h2>
-          {data.isOfficial && (
+          <h2 className="text-xl font-semibold text-foreground">{stats?.title ?? 'Loading...'}</h2>
+          {stats?.isOfficial && (
             <span className="bg-[#5865f2] text-white text-[10px] font-semibold px-2 py-1 rounded">
               OFFICIAL
             </span>
@@ -50,10 +43,10 @@ export function AuctionHeaderCard() {
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-semibold font-mono text-foreground">
-                  ${data.totalRaised.toLocaleString()}
+                  ${stats?.totalRaised.toLocaleString() ?? '0'}
                 </span>
                 <span className="bg-[rgba(210,251,149,0.5)] text-foreground text-xs font-medium px-2 py-0.5 rounded">
-                  {data.percentageOfTarget}%
+                  {stats?.percentageOfTarget ?? 0}%
                 </span>
               </div>
               <div className="flex flex-col gap-2">
@@ -65,10 +58,10 @@ export function AuctionHeaderCard() {
                 </div>
                 <div className="flex items-center justify-between text-[10px]">
                   <span className="text-zinc-600 dark:text-zinc-400">
-                    Target: ${data.targetRaise.toLocaleString()}
+                    Target: ${stats?.targetRaise.toLocaleString() ?? '0'}
                   </span>
                   <span className="text-[#06a800] font-medium">
-                    {data.oversubscribedRatio}x Oversubscribed
+                    {stats?.oversubscribedRatio ?? 0}x Oversubscribed
                   </span>
                 </div>
               </div>
@@ -90,9 +83,9 @@ export function AuctionHeaderCard() {
               <div className="flex flex-col">
                 <span className="text-xs text-zinc-600 dark:text-zinc-400">Auction Ends in</span>
                 <div className="flex items-center gap-1.5 font-mono text-xl font-semibold text-foreground">
-                  <span>{data.auctionEndsIn.hours}h</span>
-                  <span>{data.auctionEndsIn.minutes}m</span>
-                  <span>{data.auctionEndsIn.seconds}s</span>
+                  <span>{stats?.auctionEndsIn.hours ?? 0}h</span>
+                  <span>{stats?.auctionEndsIn.minutes ?? 0}m</span>
+                  <span>{stats?.auctionEndsIn.seconds ?? 0}s</span>
                 </div>
               </div>
               <div className="flex flex-col">
@@ -100,7 +93,8 @@ export function AuctionHeaderCard() {
                 <p className="text-xs text-foreground">
                   Approximately:{' '}
                   <span className="font-mono">
-                    {data.poolStartsIn.hours}h {data.poolStartsIn.minutes}m {data.poolStartsIn.seconds}s
+                    {stats?.poolStartsIn.hours ?? 0}h {stats?.poolStartsIn.minutes ?? 0}m{' '}
+                    {stats?.poolStartsIn.seconds ?? 0}s
                   </span>
                 </p>
               </div>
@@ -113,7 +107,7 @@ export function AuctionHeaderCard() {
               <span className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 tracking-wider">
                 MY POSITION
               </span>
-              {data.myPosition.isActive && (
+              {position?.isActive && (
                 <span className="bg-[rgba(88,101,242,0.2)] text-[#006fee] text-[10px] font-semibold px-2 py-1 rounded">
                   Active
                 </span>
@@ -123,19 +117,19 @@ export function AuctionHeaderCard() {
               <div className="flex items-center justify-between">
                 <span className="text-xs text-zinc-600 dark:text-zinc-400">Deposited</span>
                 <span className="text-sm font-semibold font-mono text-foreground">
-                  ${data.myPosition.deposited.toLocaleString()}
+                  ${position?.deposited.toLocaleString() ?? '0'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-zinc-600 dark:text-zinc-400">Est. Alloc</span>
                 <span className="text-sm font-semibold font-mono text-foreground">
-                  {data.myPosition.estAllocation}TSX
+                  {position?.estAllocation ?? 0}TSX
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-zinc-600 dark:text-zinc-400">Est. Refund</span>
                 <span className="text-sm font-semibold font-mono text-foreground">
-                  ${data.myPosition.estRefund.toFixed(2)}
+                  ${position?.estRefund.toFixed(2) ?? '0.00'}
                 </span>
               </div>
             </div>
@@ -149,14 +143,14 @@ export function AuctionHeaderCard() {
             <div className="flex flex-col gap-2.5">
               <div className="flex items-center gap-2.5">
                 <span className="text-2xl font-bold font-mono text-foreground">
-                  {data.impliedValuation.fdv}
+                  {valuation?.fdv ?? '-'}
                 </span>
                 <span className="text-sm text-zinc-600 dark:text-zinc-400">FDV</span>
               </div>
               <div className="h-px bg-zinc-300 dark:bg-zinc-700" />
               <p className="text-[10px] text-zinc-600 dark:text-zinc-400">
                 Based on Yoet Price:{' '}
-                <span className="font-mono">${data.impliedValuation.yoetPrice.toFixed(2)}</span>
+                <span className="font-mono">${valuation?.yoetPrice.toFixed(2) ?? '0.00'}</span>
               </p>
             </div>
           </div>
