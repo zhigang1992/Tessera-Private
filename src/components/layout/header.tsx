@@ -1,9 +1,10 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
-import { Menu, Check } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useTheme } from 'next-themes'
-import TesseraLogo from './_/terrera-logo.svg?react'
+import TesseraLogoIcon from './_/tessera-logo-icon.svg?react'
+import MenuIcon from './_/menu.svg?react'
 import PersonIcon from './_/person.svg?react'
 import ChevronDownIcon from './_/chevron-down.svg?react'
 import DisconnectIcon from './_/disconnect.svg?react'
@@ -73,20 +74,22 @@ export function Header({ onMenuClick }: HeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-white px-4 dark:bg-[#111111] lg:justify-end lg:px-6">
-      {/* Mobile: hamburger menu and logo */}
-      <div className="flex items-center gap-3 lg:hidden">
-        <button onClick={onMenuClick} className="rounded-lg p-2 hover:bg-accent">
-          <Menu className="h-5 w-5" />
-        </button>
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border/15 bg-white px-6 dark:bg-[#111111] lg:justify-end">
+      {/* Mobile: logo and hamburger menu */}
+      <div className="flex items-center lg:hidden">
         <Link to="/">
-          <TesseraLogo className="h-6 text-[#111111] dark:text-white" />
+          <TesseraLogoIcon className="size-8 text-[#111111] dark:text-white" />
         </Link>
       </div>
 
-      {/* Wallet connection */}
+      {/* Mobile: hamburger menu button */}
+      <button onClick={onMenuClick} className="p-2 lg:hidden">
+        <MenuIcon className="size-8" />
+      </button>
+
+      {/* Desktop: Wallet connection (hidden on mobile) */}
       {connected && publicKey ? (
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative hidden lg:block" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-4 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
@@ -177,7 +180,7 @@ export function Header({ onMenuClick }: HeaderProps) {
       ) : (
         <Button
           onClick={handleOpenModal}
-          className="h-9 rounded-full bg-black px-4 text-sm font-medium text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+          className="hidden lg:flex h-9 rounded-full bg-black px-4 text-sm font-medium text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
         >
           Select Wallet
         </Button>
