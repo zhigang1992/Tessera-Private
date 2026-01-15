@@ -172,8 +172,8 @@ const auctionChartData: AuctionChartData = [
   { hour: 13.5, value: 182000 },
   { hour: 14, value: 182300 },
   { hour: 14.5, value: 182500 },
-  // 11/11 05:00 - Current (~$182.5k)
-  { hour: 15, value: 182700 },
+  // 11/11 05:00 - Current (~$183k)
+  { hour: 15, value: 183000 },
 ]
 
 const depositInfo: DepositInfo = {
