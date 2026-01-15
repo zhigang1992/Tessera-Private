@@ -1,33 +1,20 @@
 import { useEffect, useRef } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { createChart, ColorType, AreaSeries } from 'lightweight-charts'
 import type { IChartApi, AreaData, Time } from 'lightweight-charts'
-
-// Mock data for vesting release schedule (linear unlock over 24 hours)
-const generateVestingData = (): AreaData<Time>[] => {
-  const now = Math.floor(Date.now() / 1000) // Current time in seconds
-  const hoursTotal = 24
-  const data: AreaData<Time>[] = []
-  const totalTokens = 1.22
-
-  for (let i = 0; i <= hoursTotal; i++) {
-    const time = (now + i * 3600) as Time // hours from now in seconds
-    const value = (totalTokens / hoursTotal) * i // Linear release
-
-    data.push({
-      time,
-      value: Math.min(value, totalTokens),
-    })
-  }
-
-  return data
-}
+import { getVestingChartData } from '@/services'
 
 export function VestingChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
 
+  const { data: vestingData } = useQuery({
+    queryKey: ['vestingChartData'],
+    queryFn: getVestingChartData,
+  })
+
   useEffect(() => {
-    if (!chartContainerRef.current) return
+    if (!chartContainerRef.current || !vestingData) return
 
     const chart = createChart(chartContainerRef.current, {
       layout: {
@@ -37,19 +24,37 @@ export function VestingChart() {
         attributionLogo: false,
       },
       grid: {
-        vertLines: { visible: false },
+        vertLines: { color: 'rgba(0, 0, 0, 0.06)', style: 2 },
         horzLines: { color: 'rgba(0, 0, 0, 0.06)', style: 1 },
       },
       width: chartContainerRef.current.clientWidth,
-      height: 250,
+      height: chartContainerRef.current.clientHeight || 250,
       rightPriceScale: {
         borderVisible: false,
-        scaleMargins: { top: 0.1, bottom: 0.2 },
+        scaleMargins: { top: 0.05, bottom: 0.1 },
+        autoScale: false,
       },
       timeScale: {
         borderVisible: false,
-        timeVisible: true,
-        secondsVisible: false,
+        timeVisible: false,
+        fixLeftEdge: true,
+        fixRightEdge: true,
+        tickMarkFormatter: (time: number) => {
+          // Time is in seconds, convert to hours from start
+          const startTime = new Date('2024-01-01T00:00:00').getTime() / 1000
+          const hours = Math.round((time - startTime) / 3600)
+          return `${hours}h`
+        },
+      },
+      localization: {
+        timeFormatter: (time: number) => {
+          const startTime = new Date('2024-01-01T00:00:00').getTime() / 1000
+          const hours = Math.round((time - startTime) / 3600)
+          return `${hours}h`
+        },
+        priceFormatter: (price: number) => {
+          return price.toFixed(1)
+        },
       },
       handleScroll: false,
       handleScale: false,
@@ -69,9 +74,20 @@ export function VestingChart() {
       },
     })
 
-    // Unlocked area (up to current progress - 10%)
+    // Locked area (full projection - gray)
+    const lockedSeries = chart.addSeries(AreaSeries, {
+      topColor: 'rgba(17, 17, 17, 0.08)',
+      bottomColor: 'rgba(17, 17, 17, 0.02)',
+      lineColor: 'rgba(17, 17, 17, 0.2)',
+      lineWidth: 2,
+      priceLineVisible: false,
+      lastValueVisible: false,
+      crosshairMarkerVisible: false,
+    })
+
+    // Unlocked area (green - up to current progress)
     const unlockedSeries = chart.addSeries(AreaSeries, {
-      topColor: 'rgba(170, 211, 109, 0.4)',
+      topColor: 'rgba(170, 211, 109, 0.5)',
       bottomColor: 'rgba(170, 211, 109, 0.1)',
       lineColor: '#aad36d',
       lineWidth: 2,
@@ -80,32 +96,57 @@ export function VestingChart() {
       crosshairMarkerVisible: false,
     })
 
-    // Locked area (full projection)
-    const lockedSeries = chart.addSeries(AreaSeries, {
-      topColor: 'rgba(17, 17, 17, 0.1)',
-      bottomColor: 'rgba(17, 17, 17, 0.05)',
-      lineColor: 'rgba(17, 17, 17, 0.2)',
-      lineWidth: 2,
-      lineStyle: 3, // Dashed
-      priceLineVisible: false,
-      lastValueVisible: false,
-      crosshairMarkerVisible: false,
+    // Convert chart data to lightweight-charts format
+    // Use a fixed start time for consistent X-axis
+    const startTime = new Date('2024-01-01T00:00:00').getTime() / 1000
+
+    const fullData: AreaData<Time>[] = vestingData.data.map((point) => ({
+      time: (startTime + point.hour * 3600) as Time,
+      value: point.value,
+    }))
+
+    // Filter data for unlocked portion (up to current progress)
+    const unlockedData = fullData.filter(
+      (_, i) => i <= Math.ceil(vestingData.currentProgressHours)
+    )
+
+    // Set data - locked first (background), then unlocked (foreground)
+    lockedSeries.setData(fullData)
+    unlockedSeries.setData(unlockedData)
+
+    // Set Y-axis range to match design: 0 to 1.5
+    lockedSeries.applyOptions({
+      autoscaleInfoProvider: () => ({
+        priceRange: {
+          minValue: 0,
+          maxValue: 1.5,
+        },
+      }),
+    })
+    unlockedSeries.applyOptions({
+      autoscaleInfoProvider: () => ({
+        priceRange: {
+          minValue: 0,
+          maxValue: 1.5,
+        },
+      }),
     })
 
-    // Set chart data
-    const fullData = generateVestingData()
-    const currentProgress = 2.4 // 10% of 24 hours
-    const unlockedData = fullData.filter((_, i) => i <= currentProgress)
-
-    unlockedSeries.setData(unlockedData)
-    lockedSeries.setData(fullData)
+    // Set visible time range: 1h to 24h
+    chart.timeScale().setVisibleRange({
+      from: (startTime + 1 * 3600) as Time,
+      to: (startTime + 24 * 3600) as Time,
+    })
 
     chartRef.current = chart
 
     // Handle resize
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
-        chartRef.current.applyOptions({ width: chartContainerRef.current.clientWidth })
+        chartRef.current.applyOptions({
+          width: chartContainerRef.current.clientWidth,
+          height: chartContainerRef.current.clientHeight,
+        })
       }
     }
 
@@ -115,7 +156,7 @@ export function VestingChart() {
       window.removeEventListener('resize', handleResize)
       chart.remove()
     }
-  }, [])
+  }, [vestingData])
 
-  return <div ref={chartContainerRef} className="w-full" />
+  return <div ref={chartContainerRef} className="w-full h-full" />
 }

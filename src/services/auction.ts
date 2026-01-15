@@ -90,6 +90,18 @@ export interface ClaimInfo {
   nextUnlockIn: string
 }
 
+export interface VestingChartDataPoint {
+  hour: number
+  value: number
+}
+
+export interface VestingChartData {
+  totalTokens: number
+  currentProgressHours: number
+  totalHours: number
+  data: VestingChartDataPoint[]
+}
+
 // ============ Mock Data ============
 
 const auctionStats: AuctionStats = {
@@ -211,6 +223,20 @@ const claimInfo: ClaimInfo = {
   nextUnlockIn: '58h 12s',
 }
 
+// Vesting chart data matching Figma design
+// X-axis: 1h to 24h, Y-axis: 0 to 1.5
+// Linear unlock from 0 to 1.22 tokens over 24 hours
+// Current progress: ~2.4h (10%)
+const vestingChartData: VestingChartData = {
+  totalTokens: 1.22,
+  currentProgressHours: 2.4, // 10% of 24h
+  totalHours: 24,
+  data: Array.from({ length: 25 }, (_, i) => ({
+    hour: i,
+    value: (1.22 / 24) * i,
+  })),
+}
+
 // ============ API Functions ============
 
 export async function getAuctionStats(): Promise<AuctionStats> {
@@ -261,4 +287,9 @@ export async function getClaimInfo(): Promise<ClaimInfo> {
 export async function getAuctionChartData(): Promise<AuctionChartData> {
   await sleep(400)
   return auctionChartData
+}
+
+export async function getVestingChartData(): Promise<VestingChartData> {
+  await sleep(400)
+  return vestingChartData
 }
