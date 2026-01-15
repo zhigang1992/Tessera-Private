@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { getExploreAssets, type ExploreAsset } from '@/services'
 import { AssetCard } from './components/asset-card'
+import { AssetCardSkeleton } from './components/asset-card-skeleton'
 import { ComingSoonCard } from './components/coming-soon-card'
 import HelpCircleIcon from './components/_/help-circle.svg?react'
 
 export default function ExplorePage() {
-  const { data: assets } = useQuery({
+  const { data: assets, isLoading } = useQuery({
     queryKey: ['exploreAssets'],
     queryFn: getExploreAssets,
   })
@@ -36,10 +37,23 @@ export default function ExplorePage() {
 
       {/* Asset Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {assets?.map((asset) => (
-          <AssetCard key={asset.id} asset={asset} onAction={handleAssetAction} />
-        ))}
-        <ComingSoonCard />
+        {isLoading ? (
+          <>
+            <AssetCardSkeleton />
+            <AssetCardSkeleton />
+            <AssetCardSkeleton />
+            <AssetCardSkeleton />
+            <AssetCardSkeleton />
+            <AssetCardSkeleton />
+          </>
+        ) : (
+          <>
+            {assets?.map((asset) => (
+              <AssetCard key={asset.id} asset={asset} onAction={handleAssetAction} />
+            ))}
+            <ComingSoonCard />
+          </>
+        )}
       </div>
     </div>
   )
