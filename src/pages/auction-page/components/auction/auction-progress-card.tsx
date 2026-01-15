@@ -1,13 +1,15 @@
+import { useQuery } from '@tanstack/react-query'
 import { Card } from '@/components/ui/card'
 import { TrendingUp } from 'lucide-react'
+import { getAuctionProgress } from '@/services'
 import { AuctionChart } from './auction-chart'
 
-// Mock data for auction progress
-const mockProgressData = {
-  oversubscribedRatio: 2.46,
-}
-
 export function AuctionProgressCard() {
+  const { data: progress } = useQuery({
+    queryKey: ['auctionProgress'],
+    queryFn: getAuctionProgress,
+  })
+
   return (
     <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1a2c0d] dark:to-[#243a12] p-6">
       <div className="flex flex-col gap-4">
@@ -21,7 +23,7 @@ export function AuctionProgressCard() {
           </div>
           <div className="flex items-center gap-2 text-[#06a800] font-bold text-sm">
             <TrendingUp className="w-6 h-6" />
-            <span>{mockProgressData.oversubscribedRatio}x Oversubscribed</span>
+            <span>{progress?.oversubscribedRatio ?? 0}x Oversubscribed</span>
           </div>
         </div>
 

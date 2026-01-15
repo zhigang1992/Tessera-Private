@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { AuctionTabs } from './components/auction-tabs'
-import { AuctionHeaderCard } from './components/auction-header-card'
-import { AuctionProgressCard } from './components/auction-progress-card'
-import { DepositUSDCCard } from './components/deposit-usdc-card'
-import { TokenInfoCard } from './components/token-info-card'
-import { VestingHeaderCard } from './components/vesting-header-card'
-import { VestingChartCard } from './components/vesting-chart-card'
-import { ClaimTokensCard } from './components/claim-tokens-card'
+import { AuctionTabs } from './components/auction/auction-tabs'
+import { AuctionHeaderCard } from './components/auction/auction-header-card'
+import { AuctionProgressCard } from './components/auction/auction-progress-card'
+import { DepositUSDCCard } from './components/auction/deposit-usdc-card'
+import { TokenInfoCard } from './components/auction/token-info-card'
+import { VestingHeaderCard } from './components/vesting/vesting-header-card'
+import { VestingChartCard } from './components/vesting/vesting-chart-card'
+import { ClaimTokensCard } from './components/vesting/claim-tokens-card'
 
 export default function AuctionPage() {
   const [activeTab, setActiveTab] = useState('auction')

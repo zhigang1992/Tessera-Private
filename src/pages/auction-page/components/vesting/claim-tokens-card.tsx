@@ -1,16 +1,14 @@
+import { useQuery } from '@tanstack/react-query'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LockOpen } from 'lucide-react'
-
-// Mock data for claim tokens
-const mockClaimData = {
-  availableToClaim: 0.12,
-  tokenSymbol: 'TSX',
-  nextUnlockIn: '58h 12s',
-}
+import { getClaimInfo } from '@/services'
 
 export function ClaimTokensCard() {
-  const data = mockClaimData
+  const { data: claimInfo } = useQuery({
+    queryKey: ['claimInfo'],
+    queryFn: getClaimInfo,
+  })
 
   return (
     <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1a2c0d] dark:to-[#243a12] p-6">
@@ -25,7 +23,7 @@ export function ClaimTokensCard() {
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
               You have{' '}
               <span className="font-mono font-semibold text-[#aad36d]">
-                {data.availableToClaim.toFixed(2)} {data.tokenSymbol}
+                {claimInfo?.availableToClaim.toFixed(2) ?? '0.00'} {claimInfo?.tokenSymbol ?? 'TSX'}
               </span>{' '}
               available to claim.
             </p>
@@ -41,7 +39,7 @@ export function ClaimTokensCard() {
           {/* Next Unlock */}
           <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-3 text-center">
             <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mb-1">Next unlock in</p>
-            <p className="text-sm font-semibold font-mono text-foreground">{data.nextUnlockIn}</p>
+            <p className="text-sm font-semibold font-mono text-foreground">{claimInfo?.nextUnlockIn ?? '-'}</p>
           </div>
         </div>
       </div>

@@ -1,23 +1,18 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Info } from 'lucide-react'
-
-// Mock data for deposit card
-const mockDepositData = {
-  status: 'open' as const,
-  maxDeposit: 5000,
-  currentDeposit: 1200,
-  estAllocation: 0.0,
-  poolAddress: 'Bu879R...',
-  targetRaise: 58000,
-  currentRaise: 142500,
-}
+import { getDepositInfo } from '@/services'
 
 export function DepositUSDCCard() {
   const [depositAmount, setDepositAmount] = useState('')
-  const data = mockDepositData
+
+  const { data: depositInfo } = useQuery({
+    queryKey: ['depositInfo'],
+    queryFn: getDepositInfo,
+  })
 
   return (
     <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1a2c0d] dark:to-[#243a12] p-6">
@@ -30,7 +25,7 @@ export function DepositUSDCCard() {
             <h3 className="text-base font-semibold text-foreground">Deposit USDC</h3>
           </div>
           <span className="bg-[#06a800] text-white text-[10px] font-semibold px-2 py-1 rounded tracking-wider">
-            OPEN
+            {depositInfo?.status === 'open' ? 'OPEN' : 'CLOSED'}
           </span>
         </div>
 
@@ -39,7 +34,9 @@ export function DepositUSDCCard() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold text-zinc-400">You Deposit</span>
-              <span className="text-sm text-zinc-400">MAX: {data.maxDeposit.toLocaleString()}</span>
+              <span className="text-sm text-zinc-400">
+                MAX: {depositInfo?.maxDeposit.toLocaleString() ?? '0'}
+              </span>
             </div>
             <div className="flex items-center justify-between gap-4">
               <button className="flex items-center gap-2.5 border border-[#dddbd0] dark:border-zinc-700 rounded-md px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
@@ -63,14 +60,18 @@ export function DepositUSDCCard() {
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between text-xs">
             <span className="text-zinc-600 dark:text-zinc-400">Current Deposit</span>
-            <span className="font-mono text-foreground">{data.currentDeposit.toLocaleString()} USDC</span>
+            <span className="font-mono text-foreground">
+              {depositInfo?.currentDeposit.toLocaleString() ?? '0'} USDC
+            </span>
           </div>
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-1">
               <span className="text-zinc-600 dark:text-zinc-400">Est. Allocation</span>
               <Info className="w-3 h-3 text-zinc-400" />
             </div>
-            <span className="font-mono text-[#06a800]">{data.estAllocation.toFixed(4)} TSX</span>
+            <span className="font-mono text-[#06a800]">
+              {depositInfo?.estAllocation.toFixed(4) ?? '0.0000'} TSX
+            </span>
           </div>
         </div>
 
@@ -97,16 +98,20 @@ export function DepositUSDCCard() {
             <div className="flex items-center justify-between text-[10px]">
               <span className="text-zinc-600 dark:text-zinc-400">Address</span>
               <span className="bg-black/10 dark:bg-white/10 px-2 py-0.5 rounded font-mono text-foreground">
-                {data.poolAddress}
+                {depositInfo?.poolAddress ?? '-'}
               </span>
             </div>
             <div className="flex items-center justify-between text-[10px]">
               <span className="text-zinc-600 dark:text-zinc-400">Target Raise</span>
-              <span className="font-mono text-foreground">${data.targetRaise.toLocaleString()}</span>
+              <span className="font-mono text-foreground">
+                ${depositInfo?.targetRaise.toLocaleString() ?? '0'}
+              </span>
             </div>
             <div className="flex items-center justify-between text-[10px]">
               <span className="text-zinc-600 dark:text-zinc-400">Current Raise</span>
-              <span className="font-mono text-foreground">${data.currentRaise.toLocaleString()}</span>
+              <span className="font-mono text-foreground">
+                ${depositInfo?.currentRaise.toLocaleString() ?? '0'}
+              </span>
             </div>
           </div>
         </div>
