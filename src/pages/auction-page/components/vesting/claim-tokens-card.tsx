@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -5,10 +6,24 @@ import { LockOpen } from 'lucide-react'
 import { getClaimInfo } from '@/services'
 
 export function ClaimTokensCard() {
+  const [isClaiming, setIsClaiming] = useState(false)
+
   const { data: claimInfo } = useQuery({
     queryKey: ['claimInfo'],
     queryFn: getClaimInfo,
   })
+
+  const handleClaimTokens = async () => {
+    if (!claimInfo || claimInfo.availableToClaim <= 0) {
+      alert('No tokens available to claim')
+      return
+    }
+    setIsClaiming(true)
+    // Mock claim action
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    alert(`Successfully claimed ${claimInfo.availableToClaim.toFixed(2)} ${claimInfo.tokenSymbol}`)
+    setIsClaiming(false)
+  }
 
   return (
     <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1a2c0d] dark:to-[#243a12] p-6">
@@ -32,8 +47,12 @@ export function ClaimTokensCard() {
 
         {/* Claim Button */}
         <div className="w-full flex flex-col gap-4">
-          <Button className="w-full h-14 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 text-lg font-semibold">
-            Claim Available
+          <Button
+            onClick={handleClaimTokens}
+            disabled={isClaiming}
+            className="w-full h-14 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 text-lg font-semibold disabled:opacity-50"
+          >
+            {isClaiming ? 'Claiming...' : 'Claim Available'}
           </Button>
 
           {/* Next Unlock */}
