@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import { AppProviders } from '@/components/app-providers.tsx'
 import { MainLayout } from '@/components/layout'
-import { ReferralPage, LeaderboardPage, PlaceholderPage, TradePage, DashboardPage, DebugMeteoraPage, SupportPage, AuctionPage } from '@/pages'
+import { ReferralPage, LeaderboardPage, PlaceholderPage, TradePage, DashboardPage, DebugMeteoraPage, SupportPage, AuctionPage, ExplorePage } from '@/pages'
 import ReferralFeatureSimple from '@/features/referral/referral-feature-simple'
 import { MigrationPage } from '@/features/admin/pages/MigrationPage'
 import { AuctionListPage } from '@/features/auction/pages/AuctionListPage'
@@ -14,7 +14,7 @@ export function App() {
         <MainLayout>
           <Routes>
             <Route path="/" element={<Navigate to="/referral" replace />} />
-            <Route path="/explorer" element={<PlaceholderPage title="Explorer" />} />
+            <Route path="/explorer" element={<ExplorePage />} />
             <Route path="/referral" element={<ReferralPage />} />
             <Route path="/referral-simple" element={<ReferralFeatureSimple />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
