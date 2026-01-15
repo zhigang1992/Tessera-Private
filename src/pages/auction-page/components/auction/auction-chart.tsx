@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { createChart, ColorType, AreaSeries } from 'lightweight-charts'
-import type { IChartApi, AreaData, Time } from 'lightweight-charts'
+import { createChart, ColorType, LineSeries } from 'lightweight-charts'
+import type { IChartApi, LineData, Time } from 'lightweight-charts'
 import { getAuctionChartData } from '@/services'
 
 export function AuctionChart() {
@@ -31,7 +31,7 @@ export function AuctionChart() {
       height: chartContainerRef.current.clientHeight || 360,
       rightPriceScale: {
         borderVisible: false,
-        scaleMargins: { top: 0.02, bottom: 0.02 },
+        scaleMargins: { top: 0.05, bottom: 0.1 },
         autoScale: false,
       },
       timeScale: {
@@ -78,10 +78,8 @@ export function AuctionChart() {
       },
     })
 
-    const areaSeries = chart.addSeries(AreaSeries, {
-      topColor: 'rgba(29, 143, 0, 0.4)',
-      bottomColor: 'rgba(29, 143, 0, 0.05)',
-      lineColor: '#1d8f00',
+    const lineSeries = chart.addSeries(LineSeries, {
+      color: '#1d8f00',
       lineWidth: 3,
       priceLineVisible: false,
       lastValueVisible: true,
@@ -89,16 +87,20 @@ export function AuctionChart() {
       crosshairMarkerRadius: 6,
       crosshairMarkerBorderColor: '#1d8f00',
       crosshairMarkerBackgroundColor: '#fff',
+      priceFormat: {
+        type: 'custom',
+        formatter: (price: number) => `$${Math.round(price / 1000)}k`,
+      },
     })
 
     // Convert chart data to the format required by lightweight-charts
     // Start: 11/10 14:00, End: 11/11 05:00 (15 hours total)
     const startDate = new Date('2024-11-10T14:00:00').getTime() / 1000
-    const formattedData: AreaData<Time>[] = chartData.map((point) => ({
+    const formattedData: LineData<Time>[] = chartData.map((point) => ({
       time: (startDate + point.hour * 3600) as Time,
       value: point.value,
     }))
-    areaSeries.setData(formattedData)
+    lineSeries.setData(formattedData)
 
     // Set visible time range to show all 6 time labels from design
     chart.timeScale().setVisibleRange({
@@ -106,22 +108,22 @@ export function AuctionChart() {
       to: (startDate + 15 * 3600) as Time,
     })
 
-    // Set visible range to match design: $0k to $190k
+    // Set visible range to match design: $0k to $200k
     chart.priceScale('right').applyOptions({
       autoScale: false,
     })
-    areaSeries.applyOptions({
+    lineSeries.applyOptions({
       autoscaleInfoProvider: () => ({
         priceRange: {
           minValue: 0,
-          maxValue: 190000,
+          maxValue: 200000,
         },
       }),
     })
 
-    // Add a price line for the target ($120k) - blue dashed line as in design
-    areaSeries.createPriceLine({
-      price: 120000,
+    // Add a price line for the target ($80k) - blue dashed line as in design
+    lineSeries.createPriceLine({
+      price: 80000,
       color: '#5865f2',
       lineWidth: 2,
       lineStyle: 2, // Dashed

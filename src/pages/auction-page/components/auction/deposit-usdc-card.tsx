@@ -37,9 +37,6 @@ export function DepositUSDCCard() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center text-base">
-              💵
-            </div>
             <h3 className="text-base font-semibold text-foreground">Deposit USDC</h3>
           </div>
           <span className="bg-[#06a800] text-white text-[10px] font-semibold px-2 py-1 rounded tracking-wider">
@@ -90,9 +87,7 @@ export function DepositUSDCCard() {
               <span className="text-zinc-600 dark:text-zinc-400">Est. Allocation</span>
               <Info className="w-3 h-3 text-zinc-400" />
             </div>
-            <span className="font-mono text-[#06a800]">
-              {depositInfo?.estAllocation.toFixed(4) ?? '0.0000'} TSX
-            </span>
+            <span className="font-mono text-[#06a800]">{depositInfo?.estAllocation.toFixed(4) ?? '0.0000'} TSX</span>
           </div>
         </div>
 
@@ -110,8 +105,8 @@ export function DepositUSDCCard() {
           <div className="bg-black/10 dark:bg-white/10 rounded-lg p-3 flex items-start gap-3">
             <Info className="w-3 h-3 text-foreground shrink-0 mt-0.5" />
             <p className="text-[10px] text-foreground leading-relaxed">
-              You have an active position in this auction. Check the top "My Position" card for
-              real-time allocation updates.
+              You have an active position in this auction. Check the top "My Position" card for real-time allocation
+              updates.
             </p>
           </div>
         </div>
@@ -128,15 +123,11 @@ export function DepositUSDCCard() {
             </div>
             <div className="flex items-center justify-between text-[10px]">
               <span className="text-zinc-600 dark:text-zinc-400">Target Raise</span>
-              <span className="font-mono text-foreground">
-                ${depositInfo?.targetRaise.toLocaleString() ?? '0'}
-              </span>
+              <span className="font-mono text-foreground">${depositInfo?.targetRaise.toLocaleString() ?? '0'}</span>
             </div>
             <div className="flex items-center justify-between text-[10px]">
               <span className="text-zinc-600 dark:text-zinc-400">Current Raise</span>
-              <span className="font-mono text-foreground">
-                ${depositInfo?.currentRaise.toLocaleString() ?? '0'}
-              </span>
+              <span className="font-mono text-foreground">${depositInfo?.currentRaise.toLocaleString() ?? '0'}</span>
             </div>
           </div>
         </div>

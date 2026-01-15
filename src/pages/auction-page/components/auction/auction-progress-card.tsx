@@ -11,8 +11,8 @@ export function AuctionProgressCard() {
   })
 
   return (
-    <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1a2c0d] dark:to-[#243a12] p-6 h-full">
-      <div className="flex flex-col gap-4 h-full">
+    <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1a2c0d] dark:to-[#243a12] p-6">
+      <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h3 className="text-base font-semibold text-foreground">Auction Progress</h3>
@@ -28,7 +28,7 @@ export function AuctionProgressCard() {
         </div>
 
         {/* Chart */}
-        <div className="flex-1 min-h-0">
+        <div className="h-[392px]">
           <AuctionChart />
         </div>
       </div>
