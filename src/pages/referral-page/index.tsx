@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ReferralHeader } from './components/referral-header'
+import ReferralCodeModal from '@/features/referral/ui/referral-code-modal'
 import { TabSwitcher } from './components/tab-switcher'
 import { RewardsOverview } from './components/rewards-overview'
 import { ReferralTree } from './components/referral-tree'
@@ -11,6 +12,33 @@ import { TradersRulesFaq } from './components/traders-rules-faq'
 
 export default function ReferralPage() {
   const [activeTab, setActiveTab] = useState<'affiliates' | 'traders'>('affiliates')
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [referralCode, setReferralCode] = useState<string | null>(null)
+
+  // Handle ?code=xxx URL parameter for referral code binding
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const code = urlParams.get('code')
+
+    if (code) {
+      setReferralCode(code)
+      setIsModalOpen(true)
+    }
+  }, [])
+
+  const clearCodeFromUrl = () => {
+    const url = new URL(window.location.href)
+    if (!url.searchParams.has('code')) return
+
+    url.searchParams.delete('code')
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setReferralCode(null)
+    clearCodeFromUrl()
+  }
 
   return (
     <div className="space-y-6">
@@ -45,6 +73,11 @@ export default function ReferralPage() {
           {/* Rules & FAQ */}
           <TradersRulesFaq />
         </>
+      )}
+
+      {/* Referral Code Bind Modal - triggered by ?code=xxx URL parameter */}
+      {referralCode && (
+        <ReferralCodeModal isOpen={isModalOpen} onClose={handleCloseModal} referralCode={referralCode} />
       )}
     </div>
   )

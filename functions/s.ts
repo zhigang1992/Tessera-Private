@@ -39,8 +39,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request }) => {
   const origin = url.origin
   const imageUrl = `${origin}/api/referral/image?code=${encodeURIComponent(code)}&bg=${validBg}`
 
-  // Redirect URL
-  const redirectUrl = `${origin}/?code=${encodeURIComponent(code)}`
+  // Redirect URL - go to /referral with code param to trigger bind modal
+  const redirectUrl = `${origin}/referral?code=${encodeURIComponent(code)}`
 
   const html = `<!doctype html>
 <html lang="en">
