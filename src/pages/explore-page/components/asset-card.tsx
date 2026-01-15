@@ -1,7 +1,10 @@
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowUpRight, Repeat2, Gavel, Clock } from 'lucide-react'
 import type { ExploreAsset } from '@/services'
+import ExternalLinkIcon from './_/external-link.svg?react'
+import SwapIcon from './_/swap.svg?react'
+import GavelIcon from './_/gavel.svg?react'
+import HourglassIcon from './_/hourglass.svg?react'
 
 interface AssetCardProps {
   asset: ExploreAsset
@@ -27,8 +30,8 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
           <h3 className="text-xl font-semibold text-white">{asset.name}</h3>
           <p className="text-xs text-white/70">{asset.ticker}</p>
         </div>
-        <button className="text-white/80 hover:text-white transition-colors h-fit">
-          <ArrowUpRight className="w-[18px] h-[18px]" />
+        <button className="text-white/70 hover:text-white transition-colors h-fit">
+          <ExternalLinkIcon className="w-[14px] h-[14px]" />
         </button>
       </div>
 
@@ -51,7 +54,7 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
             onClick={handleAction}
             className="w-full h-9 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-[13px] font-medium"
           >
-            <Repeat2 className="w-4 h-4 mr-2" />
+            <SwapIcon className="w-4 h-4 mr-2" />
             Buy / Sell
           </Button>
         )}
@@ -60,7 +63,7 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
             onClick={handleAction}
             className="w-full h-9 bg-[#d2fb95] text-zinc-900 hover:bg-[#c4ed87] text-[13px] font-medium"
           >
-            <Gavel className="w-4 h-4 mr-2" />
+            <GavelIcon className="w-4 h-4 mr-2" />
             Join Auction
           </Button>
         )}
@@ -69,7 +72,7 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
             disabled
             className="w-full h-9 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 text-[13px] font-medium cursor-not-allowed"
           >
-            <Clock className="w-4 h-4 mr-2" />
+            <HourglassIcon className="w-4 h-4 mr-2" />
             Coming Soon
           </Button>
         )}

@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { HelpCircle } from 'lucide-react'
 import { getExploreAssets, type ExploreAsset } from '@/services'
 import { AssetCard } from './components/asset-card'
 import { ComingSoonCard } from './components/coming-soon-card'
+import HelpCircleIcon from './components/_/help-circle.svg?react'
 
 export default function ExplorePage() {
   const { data: assets } = useQuery({
@@ -24,7 +24,7 @@ export default function ExplorePage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-foreground">Explore</h1>
         <button className="flex items-center gap-2 text-[13px] text-zinc-500 dark:text-zinc-400 hover:text-foreground transition-colors">
-          <HelpCircle className="w-[18px] h-[18px]" />
+          <HelpCircleIcon className="w-[18px] h-[18px]" />
           Learn More
         </button>
       </div>
