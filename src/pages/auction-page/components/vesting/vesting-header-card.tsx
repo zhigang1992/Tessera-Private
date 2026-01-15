@@ -50,7 +50,7 @@ export function VestingHeaderCard() {
                     cy="30"
                     r="24"
                     fill="none"
-                    stroke="rgba(0,0,0,0.1)"
+                    className="stroke-black/10 dark:stroke-white/20"
                     strokeWidth="8"
                   />
                   <circle
