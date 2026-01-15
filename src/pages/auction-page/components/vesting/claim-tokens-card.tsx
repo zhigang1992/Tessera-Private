@@ -26,7 +26,7 @@ export function ClaimTokensCard() {
   }
 
   return (
-    <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1a2c0d] dark:to-[#243a12] p-6">
+    <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95] border-0 p-6 h-full">
       <div className="flex flex-col items-center gap-6 h-full justify-between">
         {/* Icon and Title */}
         <div className="flex flex-col items-center gap-4 text-center">
