@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import { AppProviders } from '@/components/app-providers.tsx'
 import { MainLayout } from '@/components/layout'
-import { ReferralPage, LeaderboardPage, PlaceholderPage, TradePage, DashboardPage, DebugMeteoraPage, SupportPage, AuctionPage, ExplorePage } from '@/pages'
+import { ReferralPage, LeaderboardPage, TradePage, DashboardPage, DebugMeteoraPage, SupportPage, AuctionPage, ExplorePage } from '@/pages'
 import ReferralFeatureSimple from '@/features/referral/referral-feature-simple'
 import { MigrationPage } from '@/features/admin/pages/MigrationPage'
 import { AuctionListPage } from '@/features/auction/pages/AuctionListPage'

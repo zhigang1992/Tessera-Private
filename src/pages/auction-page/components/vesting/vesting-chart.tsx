@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { createChart, ColorType, LineSeries, AreaSeries } from 'lightweight-charts'
-import type { IChartApi, LineData, AreaData, Time } from 'lightweight-charts'
+import { createChart, ColorType, AreaSeries } from 'lightweight-charts'
+import type { IChartApi, AreaData, Time } from 'lightweight-charts'
 import { getVestingChartData } from '@/services'
 
 export function VestingChart() {

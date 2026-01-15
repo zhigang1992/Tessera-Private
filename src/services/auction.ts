@@ -56,7 +56,7 @@ export interface DepositInfo {
   currentRaise: number
 }
 
-export interface TokenInfo {
+export interface AuctionTokenInfo {
   name: string
   type: string
   website: string
@@ -186,7 +186,7 @@ const depositInfo: DepositInfo = {
   currentRaise: 142500,
 }
 
-const tokenInfo: TokenInfo = {
+const tokenInfo: AuctionTokenInfo = {
   name: 'T-SpaceX Token',
   type: 'PRE-IPO DERIVATIVE',
   website: 'https://spacex.com',
@@ -264,7 +264,7 @@ export async function getDepositInfo(): Promise<DepositInfo> {
   return depositInfo
 }
 
-export async function getAuctionTokenInfo(): Promise<TokenInfo> {
+export async function getAuctionTokenInfo(): Promise<AuctionTokenInfo> {
   await sleep(400)
   return tokenInfo
 }
