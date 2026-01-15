@@ -1,54 +1,20 @@
 import { useEffect, useRef } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { createChart, ColorType, AreaSeries } from 'lightweight-charts'
 import type { IChartApi, AreaData, Time } from 'lightweight-charts'
-
-// Mock data for the auction progress matching the design
-// Chart shows progress from 11/10 14:00 to 11/11 05:00
-// Starts around $20k-40k, rises to ~$180k with target line at $58k
-const generateChartData = (): AreaData<Time>[] => {
-  // Use fixed dates matching the design: 11/10 14:00 to 11/11 05:00 (15 hours)
-  const startDate = new Date('2024-11-10T14:00:00').getTime() / 1000
-  const data: AreaData<Time>[] = []
-
-  // Define key points to match the design curve
-  // The chart shows: starts low (~$20-30k), crosses $58k target around hour 3-4,
-  // then rises more gradually to ~$180k
-  const keyPoints = [
-    { hour: 0, value: 22000 },    // 11/10 14:00 - Start
-    { hour: 1, value: 28000 },    // 11/10 15:00
-    { hour: 2, value: 38000 },    // 11/10 16:00
-    { hour: 3, value: 52000 },    // 11/10 17:00 - Approaching target
-    { hour: 4, value: 68000 },    // 11/10 18:00 - Just passed target
-    { hour: 5, value: 85000 },    // 11/10 19:00
-    { hour: 6, value: 105000 },   // 11/10 20:00
-    { hour: 7, value: 118000 },   // 11/10 21:00
-    { hour: 8, value: 128000 },   // 11/10 22:00
-    { hour: 9, value: 138000 },   // 11/10 23:00
-    { hour: 10, value: 148000 },  // 11/11 00:00
-    { hour: 11, value: 158000 },  // 11/11 01:00
-    { hour: 12, value: 165000 },  // 11/11 02:00
-    { hour: 13, value: 172000 },  // 11/11 03:00
-    { hour: 14, value: 178000 },  // 11/11 04:00
-    { hour: 15, value: 182000 },  // 11/11 05:00 - Current
-  ]
-
-  for (const point of keyPoints) {
-    const time = (startDate + point.hour * 3600) as Time
-    data.push({
-      time,
-      value: point.value,
-    })
-  }
-
-  return data
-}
+import { getAuctionChartData } from '@/services'
 
 export function AuctionChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
 
+  const { data: chartData } = useQuery({
+    queryKey: ['auctionChartData'],
+    queryFn: getAuctionChartData,
+  })
+
   useEffect(() => {
-    if (!chartContainerRef.current) return
+    if (!chartContainerRef.current || !chartData) return
 
     const chart = createChart(chartContainerRef.current, {
       layout: {
@@ -62,7 +28,7 @@ export function AuctionChart() {
         horzLines: { color: 'rgba(0, 0, 0, 0.06)', style: 1 },
       },
       width: chartContainerRef.current.clientWidth,
-      height: 360,
+      height: chartContainerRef.current.clientHeight || 360,
       rightPriceScale: {
         borderVisible: false,
         scaleMargins: { top: 0.02, bottom: 0.02 },
@@ -72,6 +38,27 @@ export function AuctionChart() {
         borderVisible: false,
         timeVisible: true,
         secondsVisible: false,
+        fixLeftEdge: true,
+        fixRightEdge: true,
+        tickMarkFormatter: (time: number) => {
+          const date = new Date(time * 1000)
+          const month = date.getMonth() + 1
+          const day = date.getDate()
+          const hours = date.getHours().toString().padStart(2, '0')
+          return `${month}/${day} ${hours}:00`
+        },
+      },
+      localization: {
+        timeFormatter: (time: number) => {
+          const date = new Date(time * 1000)
+          const month = date.getMonth() + 1
+          const day = date.getDate()
+          const hours = date.getHours().toString().padStart(2, '0')
+          return `${month}/${day} ${hours}:00`
+        },
+        priceFormatter: (price: number) => {
+          return `$${Math.round(price / 1000)}k`
+        },
       },
       handleScroll: false,
       handleScale: false,
@@ -104,9 +91,20 @@ export function AuctionChart() {
       crosshairMarkerBackgroundColor: '#fff',
     })
 
-    // Set chart data
-    const chartData = generateChartData()
-    areaSeries.setData(chartData)
+    // Convert chart data to the format required by lightweight-charts
+    // Start: 11/10 14:00, End: 11/11 05:00 (15 hours total)
+    const startDate = new Date('2024-11-10T14:00:00').getTime() / 1000
+    const formattedData: AreaData<Time>[] = chartData.map((point) => ({
+      time: (startDate + point.hour * 3600) as Time,
+      value: point.value,
+    }))
+    areaSeries.setData(formattedData)
+
+    // Set visible time range to show all 6 time labels from design
+    chart.timeScale().setVisibleRange({
+      from: startDate as Time,
+      to: (startDate + 15 * 3600) as Time,
+    })
 
     // Set visible range to match design: $0k to $190k
     chart.priceScale('right').applyOptions({
@@ -121,14 +119,14 @@ export function AuctionChart() {
       }),
     })
 
-    // Add a price line for the target ($58k)
+    // Add a price line for the target ($120k) - blue dashed line as in design
     areaSeries.createPriceLine({
-      price: 58000,
-      color: '#1d8f00',
+      price: 120000,
+      color: '#5865f2',
       lineWidth: 2,
-      lineStyle: 3, // Dashed
-      axisLabelVisible: true,
-      title: 'Target',
+      lineStyle: 2, // Dashed
+      axisLabelVisible: false,
+      title: '',
     })
 
     chartRef.current = chart
@@ -136,7 +134,10 @@ export function AuctionChart() {
     // Handle resize
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
-        chartRef.current.applyOptions({ width: chartContainerRef.current.clientWidth })
+        chartRef.current.applyOptions({
+          width: chartContainerRef.current.clientWidth,
+          height: chartContainerRef.current.clientHeight,
+        })
       }
     }
 
@@ -146,7 +147,7 @@ export function AuctionChart() {
       window.removeEventListener('resize', handleResize)
       chart.remove()
     }
-  }, [])
+  }, [chartData])
 
-  return <div ref={chartContainerRef} className="w-full" />
+  return <div ref={chartContainerRef} className="w-full h-full" />
 }
