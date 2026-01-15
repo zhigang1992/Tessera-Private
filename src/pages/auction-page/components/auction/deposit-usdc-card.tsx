@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Info } from 'lucide-react'
 import { getDepositInfo } from '@/services'
+import UsdcIcon from '@/pages/trade-page/components/_/token-usdc.svg?react'
 
 export function DepositUSDCCard() {
   const [depositAmount, setDepositAmount] = useState('')
@@ -58,9 +59,7 @@ export function DepositUSDCCard() {
             </div>
             <div className="flex items-center justify-between gap-4">
               <button className="flex items-center gap-2.5 border border-[#dddbd0] dark:border-zinc-700 rounded-md px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
-                <div className="w-8 h-8 bg-[#2775ca] rounded-full flex items-center justify-center text-white text-xs font-bold">
-                  US
-                </div>
+                <UsdcIcon className="w-8 h-8" />
                 <span className="text-xl font-semibold text-foreground">USDC</span>
               </button>
               <Input
@@ -102,9 +101,9 @@ export function DepositUSDCCard() {
           </Button>
 
           {/* Notice */}
-          <div className="bg-black/10 dark:bg-white/10 rounded-lg p-3 flex items-start gap-3">
-            <Info className="w-3 h-3 text-foreground shrink-0 mt-0.5" />
-            <p className="text-[10px] text-foreground leading-relaxed">
+          <div className="bg-white/50 dark:bg-white/10 rounded-lg px-3 pt-3 pb-0 flex items-start gap-2.5">
+            <Info className="w-3 h-3 text-foreground shrink-0" />
+            <p className="text-[10px] text-foreground leading-[1.65]">
               You have an active position in this auction. Check the top "My Position" card for real-time allocation
               updates.
             </p>
