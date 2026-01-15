@@ -49,13 +49,17 @@ export default function AuctionPage() {
           {/* Vesting Header Card */}
           <VestingHeaderCard />
 
-          {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1.75fr_1fr] gap-4 lg:gap-6">
-            {/* Release Schedule Chart */}
-            <VestingChartCard />
+          {/* Charts Section - Mobile: Claim first, Desktop: Chart first */}
+          <div className="flex flex-col lg:grid lg:grid-cols-[1.75fr_1fr] gap-4 lg:gap-6">
+            {/* Claim Tokens Card - Shows first on mobile */}
+            <div className="order-1 lg:order-2">
+              <ClaimTokensCard />
+            </div>
 
-            {/* Claim Tokens Card */}
-            <ClaimTokensCard />
+            {/* Release Schedule Chart - Shows second on mobile */}
+            <div className="order-2 lg:order-1">
+              <VestingChartCard />
+            </div>
           </div>
         </div>
       )}

@@ -109,9 +109,9 @@ export function VestingHeaderCard() {
               )}
             </div>
 
-            <div className="grid grid-cols-3 gap-4 h-[113px]">
+            <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 lg:h-[113px]">
               {/* Total Allocation */}
-              <div className="bg-[rgba(88,101,242,0.08)] dark:bg-[rgba(88,101,242,0.15)] rounded-[10px] pt-4 px-4 pb-0 flex flex-col gap-2">
+              <div className="bg-[rgba(88,101,242,0.08)] dark:bg-[rgba(88,101,242,0.15)] rounded-[10px] p-2 lg:pt-4 lg:px-4 lg:pb-0 flex flex-col gap-2">
                 <span className="text-xs font-medium text-[#5865f2]">Total Allocation</span>
                 <span className="text-2xl font-semibold font-mono text-foreground">
                   {vestingPosition?.totalAllocation.toFixed(2) ?? '0.00'}
@@ -120,7 +120,7 @@ export function VestingHeaderCard() {
               </div>
 
               {/* Unlocked */}
-              <div className="bg-[rgba(170,211,109,0.08)] dark:bg-[rgba(170,211,109,0.15)] rounded-[10px] pt-4 px-4 pb-0 flex flex-col gap-2">
+              <div className="bg-[rgba(170,211,109,0.08)] dark:bg-[rgba(170,211,109,0.15)] rounded-[10px] p-2 lg:pt-4 lg:px-4 lg:pb-0 flex flex-col gap-2">
                 <span className="text-xs font-medium text-[#06a800]">
                   Unlocked ({vestingPosition?.unlockedPercent ?? 0}%)
                 </span>
@@ -131,7 +131,7 @@ export function VestingHeaderCard() {
               </div>
 
               {/* Locked */}
-              <div className="bg-[rgba(17,17,17,0.03)] dark:bg-[rgba(255,255,255,0.05)] rounded-[10px] pt-4 px-4 pb-0 flex flex-col gap-2">
+              <div className="bg-[rgba(17,17,17,0.03)] dark:bg-[rgba(255,255,255,0.05)] rounded-[10px] p-2 lg:pt-4 lg:px-4 lg:pb-0 flex flex-col gap-2">
                 <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
                   Locked ({vestingPosition?.lockedPercent ?? 0}%)
                 </span>
