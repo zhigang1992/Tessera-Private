@@ -33,8 +33,8 @@ export function AuctionHeaderCard() {
           )}
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Stats Grid - Mobile: vertical stack, Tablet: 2 cols, Desktop: 4 cols */}
+        <div className="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Raised */}
           <div className="bg-[#f6f6f6] dark:bg-zinc-900 rounded-lg p-4 flex flex-col gap-4">
             <div className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 tracking-wider">
