@@ -8,11 +8,29 @@ import { getDepositInfo } from '@/services'
 
 export function DepositUSDCCard() {
   const [depositAmount, setDepositAmount] = useState('')
+  const [isDepositing, setIsDepositing] = useState(false)
 
   const { data: depositInfo } = useQuery({
     queryKey: ['depositInfo'],
     queryFn: getDepositInfo,
   })
+
+  const handleConfirmDeposit = async () => {
+    if (!depositAmount || parseFloat(depositAmount) <= 0) {
+      alert('Please enter a valid deposit amount')
+      return
+    }
+    setIsDepositing(true)
+    // Mock deposit action
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    alert(`Successfully deposited ${depositAmount} USDC`)
+    setDepositAmount('')
+    setIsDepositing(false)
+  }
+
+  const handleMaxClick = () => {
+    setDepositAmount(depositInfo?.maxDeposit.toString() ?? '0')
+  }
 
   return (
     <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1a2c0d] dark:to-[#243a12] p-6">
@@ -34,9 +52,12 @@ export function DepositUSDCCard() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold text-zinc-400">You Deposit</span>
-              <span className="text-sm text-zinc-400">
+              <button
+                onClick={handleMaxClick}
+                className="text-sm text-zinc-400 hover:text-foreground transition-colors"
+              >
                 MAX: {depositInfo?.maxDeposit.toLocaleString() ?? '0'}
-              </span>
+              </button>
             </div>
             <div className="flex items-center justify-between gap-4">
               <button className="flex items-center gap-2.5 border border-[#dddbd0] dark:border-zinc-700 rounded-md px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
@@ -77,8 +98,12 @@ export function DepositUSDCCard() {
 
         {/* Action Button */}
         <div className="flex flex-col gap-2.5">
-          <Button className="w-full h-14 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 text-lg font-semibold">
-            Confirm Deposit
+          <Button
+            onClick={handleConfirmDeposit}
+            disabled={isDepositing}
+            className="w-full h-14 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 text-lg font-semibold disabled:opacity-50"
+          >
+            {isDepositing ? 'Depositing...' : 'Confirm Deposit'}
           </Button>
 
           {/* Notice */}
