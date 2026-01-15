@@ -34,8 +34,8 @@ export function DepositUSDCCard() {
   }
 
   return (
-    <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1a2c0d] dark:to-[#243a12] p-6">
-      <div className="flex flex-col gap-4">
+    <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95] border-0 p-6 h-full">
+      <div className="flex flex-col gap-4 h-full">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className="text-base font-semibold text-foreground">Deposit USDC</h3>
