@@ -25,13 +25,17 @@ export default function AuctionPage() {
           {/* Auction Header Card */}
           <AuctionHeaderCard />
 
-          {/* Bottom Section: Chart and Deposit */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1.75fr_1fr] gap-4 lg:gap-6">
-            {/* Auction Progress Chart */}
-            <AuctionProgressCard />
+          {/* Bottom Section: Chart and Deposit - Mobile: stacked, Desktop: grid */}
+          <div className="flex flex-col lg:grid lg:grid-cols-[1.75fr_1fr] gap-4 lg:gap-6">
+            {/* Deposit USDC Card - Shows first on mobile */}
+            <div className="order-1 lg:order-2">
+              <DepositUSDCCard />
+            </div>
 
-            {/* Deposit USDC Card */}
-            <DepositUSDCCard />
+            {/* Auction Progress Chart - Shows second on mobile */}
+            <div className="order-2 lg:order-1">
+              <AuctionProgressCard />
+            </div>
           </div>
 
           {/* Token Information */}
