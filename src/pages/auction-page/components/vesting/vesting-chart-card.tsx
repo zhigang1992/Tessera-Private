@@ -3,8 +3,8 @@ import { VestingChart } from './vesting-chart'
 
 export function VestingChartCard() {
   return (
-    <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1a2c0d] dark:to-[#243a12] p-6">
-      <div className="flex flex-col gap-4">
+    <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1a2c0d] dark:to-[#243a12] p-6 h-full">
+      <div className="flex flex-col gap-4 h-full">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold text-foreground">Release Schedule</h3>
           <div className="flex items-center gap-4 text-xs">
@@ -20,7 +20,7 @@ export function VestingChartCard() {
         </div>
 
         {/* Chart */}
-        <div className="bg-white/50 dark:bg-black/20 rounded-lg p-4">
+        <div className="flex-1 min-h-0">
           <VestingChart />
         </div>
       </div>
