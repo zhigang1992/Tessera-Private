@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { createChart, ColorType, AreaSeries } from 'lightweight-charts'
-import type { IChartApi, AreaData, Time } from 'lightweight-charts'
+import { createChart, ColorType, LineSeries, AreaSeries } from 'lightweight-charts'
+import type { IChartApi, LineData, AreaData, Time } from 'lightweight-charts'
 import { getVestingChartData } from '@/services'
 
 export function VestingChart() {
@@ -29,16 +29,22 @@ export function VestingChart() {
       },
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight || 250,
-      rightPriceScale: {
+      leftPriceScale: {
+        visible: true,
         borderVisible: false,
-        scaleMargins: { top: 0.05, bottom: 0.1 },
+        scaleMargins: { top: 0.02, bottom: 0.02 },
         autoScale: false,
+      },
+      rightPriceScale: {
+        visible: false,
       },
       timeScale: {
         borderVisible: false,
         timeVisible: false,
         fixLeftEdge: true,
         fixRightEdge: true,
+        ticksVisible: true,
+        minBarSpacing: 0.5,
         tickMarkFormatter: (time: number) => {
           // Time is in seconds, convert to hours from start
           const startTime = new Date('2024-01-01T00:00:00').getTime() / 1000
@@ -61,65 +67,69 @@ export function VestingChart() {
       crosshair: {
         vertLine: {
           visible: true,
-          color: 'rgba(170, 211, 109, 0.3)',
+          color: 'rgba(29, 143, 0, 0.3)',
           width: 1,
           style: 3,
         },
         horzLine: {
           visible: true,
-          color: 'rgba(170, 211, 109, 0.3)',
+          color: 'rgba(29, 143, 0, 0.3)',
           width: 1,
           style: 3,
         },
       },
     })
 
-    // Locked area (full projection - gray)
+    // Locked area (gray horizontal at 1.22 with fill)
     const lockedSeries = chart.addSeries(AreaSeries, {
-      topColor: 'rgba(17, 17, 17, 0.08)',
-      bottomColor: 'rgba(17, 17, 17, 0.02)',
-      lineColor: 'rgba(17, 17, 17, 0.2)',
+      topColor: 'rgba(170, 170, 170, 0.3)',
+      bottomColor: 'rgba(170, 170, 170, 0.05)',
+      lineColor: '#aaa',
       lineWidth: 2,
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerVisible: false,
+      priceScaleId: 'left',
     })
 
-    // Unlocked area (green - up to current progress)
+    // Unlocked area (green with fill)
     const unlockedSeries = chart.addSeries(AreaSeries, {
-      topColor: 'rgba(170, 211, 109, 0.5)',
-      bottomColor: 'rgba(170, 211, 109, 0.1)',
-      lineColor: '#aad36d',
-      lineWidth: 2,
+      topColor: 'rgba(29, 143, 0, 0.3)',
+      bottomColor: 'rgba(29, 143, 0, 0.05)',
+      lineColor: '#1d8f00',
+      lineWidth: 3,
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerVisible: false,
+      priceScaleId: 'left',
     })
 
     // Convert chart data to lightweight-charts format
     // Use a fixed start time for consistent X-axis
     const startTime = new Date('2024-01-01T00:00:00').getTime() / 1000
 
-    const fullData: AreaData<Time>[] = vestingData.data.map((point) => ({
+    // Unlocked area: diagonal from 0 to 1.22 over 24 hours
+    const unlockedData: AreaData<Time>[] = vestingData.data.map((point) => ({
       time: (startTime + point.hour * 3600) as Time,
       value: point.value,
     }))
 
-    // Filter data for unlocked portion (up to current progress)
-    const unlockedData = fullData.filter(
-      (_, i) => i <= Math.ceil(vestingData.currentProgressHours)
-    )
+    // Locked area: horizontal at 1.22 from hour 1 to hour 24
+    const lockedData: AreaData<Time>[] = Array.from({ length: 24 }, (_, i) => ({
+      time: (startTime + (i + 1) * 3600) as Time,
+      value: vestingData.totalTokens, // 1.22
+    }))
 
-    // Set data - locked first (background), then unlocked (foreground)
-    lockedSeries.setData(fullData)
+    // Set data
+    lockedSeries.setData(lockedData)
     unlockedSeries.setData(unlockedData)
 
-    // Set Y-axis range to match design: 0 to 1.5
+    // Set Y-axis range to match design: 0 to 3.5
     lockedSeries.applyOptions({
       autoscaleInfoProvider: () => ({
         priceRange: {
           minValue: 0,
-          maxValue: 1.5,
+          maxValue: 3.5,
         },
       }),
     })
@@ -127,7 +137,7 @@ export function VestingChart() {
       autoscaleInfoProvider: () => ({
         priceRange: {
           minValue: 0,
-          maxValue: 1.5,
+          maxValue: 3.5,
         },
       }),
     })

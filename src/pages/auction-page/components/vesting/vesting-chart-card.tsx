@@ -8,19 +8,19 @@ export function VestingChartCard() {
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold text-foreground">Release Schedule</h3>
           <div className="flex items-center gap-4 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-[#aad36d] rounded-full" />
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 bg-[#1d8f00] rounded-full" />
               <span className="text-zinc-600 dark:text-zinc-400">Unlocked</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-zinc-300 dark:bg-zinc-600 rounded-full" />
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 bg-[#aaa] rounded-full" />
               <span className="text-zinc-600 dark:text-zinc-400">Locked</span>
             </div>
           </div>
         </div>
 
         {/* Chart */}
-        <div className="flex-1 min-h-0">
+        <div className="h-[300px]">
           <VestingChart />
         </div>
       </div>
