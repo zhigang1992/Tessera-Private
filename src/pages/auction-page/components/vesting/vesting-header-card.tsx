@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { Card } from '@/components/ui/card'
-import { Calendar, CheckCircle } from 'lucide-react'
 import { getVestingStatus, getVestingPosition } from '@/services'
+import CalendarIcon from './_/calendar.svg?react'
+import CheckCircleIcon from './_/check-circle.svg?react'
 
 export function VestingHeaderCard() {
   const { data: vestingStatus } = useQuery({
@@ -71,15 +72,15 @@ export function VestingHeaderCard() {
 
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
-                  <Calendar className="w-4 h-4" />
+                <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">
+                  <CalendarIcon className="w-4 h-4 text-zinc-400" />
                   <span>Start</span>
                 </div>
                 <span className="font-mono text-foreground">{vestingStatus?.startDate ?? '-'}</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
-                  <Calendar className="w-4 h-4" />
+                <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">
+                  <CalendarIcon className="w-4 h-4 text-zinc-400" />
                   <span>End</span>
                 </div>
                 <span className="font-mono text-foreground">{vestingStatus?.endDate ?? '-'}</span>
@@ -95,22 +96,22 @@ export function VestingHeaderCard() {
           </div>
 
           {/* My Vesting Position */}
-          <div className="bg-[#f6f6f6] dark:bg-zinc-900 rounded-lg p-4 flex flex-col gap-4">
+          <div className="bg-[#f6f6f6] dark:bg-zinc-900 rounded-lg p-4 flex flex-col gap-9">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 tracking-wider">
                 MY VESTING POSITION
               </span>
               {vestingPosition?.isEligible && (
                 <div className="flex items-center gap-1.5 bg-[#06a800] px-2 py-1 rounded">
-                  <CheckCircle className="w-3 h-3 text-white" />
+                  <CheckCircleIcon className="w-3 h-3 text-white" />
                   <span className="text-[10px] font-semibold text-white">Eligible</span>
                 </div>
               )}
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-4 h-[113px]">
               {/* Total Allocation */}
-              <div className="bg-[rgba(88,101,242,0.08)] dark:bg-[rgba(88,101,242,0.15)] rounded-lg p-4 flex flex-col gap-2">
+              <div className="bg-[rgba(88,101,242,0.08)] dark:bg-[rgba(88,101,242,0.15)] rounded-[10px] pt-4 px-4 pb-0 flex flex-col gap-2">
                 <span className="text-xs font-medium text-[#5865f2]">Total Allocation</span>
                 <span className="text-2xl font-semibold font-mono text-foreground">
                   {vestingPosition?.totalAllocation.toFixed(2) ?? '0.00'}
@@ -119,7 +120,7 @@ export function VestingHeaderCard() {
               </div>
 
               {/* Unlocked */}
-              <div className="bg-[rgba(170,211,109,0.08)] dark:bg-[rgba(170,211,109,0.15)] rounded-lg p-4 flex flex-col gap-2">
+              <div className="bg-[rgba(170,211,109,0.08)] dark:bg-[rgba(170,211,109,0.15)] rounded-[10px] pt-4 px-4 pb-0 flex flex-col gap-2">
                 <span className="text-xs font-medium text-[#06a800]">
                   Unlocked ({vestingPosition?.unlockedPercent ?? 0}%)
                 </span>
@@ -130,7 +131,7 @@ export function VestingHeaderCard() {
               </div>
 
               {/* Locked */}
-              <div className="bg-[rgba(17,17,17,0.03)] dark:bg-[rgba(255,255,255,0.05)] rounded-lg p-4 flex flex-col gap-2">
+              <div className="bg-[rgba(17,17,17,0.03)] dark:bg-[rgba(255,255,255,0.05)] rounded-[10px] pt-4 px-4 pb-0 flex flex-col gap-2">
                 <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
                   Locked ({vestingPosition?.lockedPercent ?? 0}%)
                 </span>
