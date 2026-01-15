@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import TesseraLogo from './_/terrera-logo.svg?react'
 import ExploreIcon from './_/explore.svg?react'
+import AuctionIcon from './_/auction.svg?react'
 import ReferralIcon from './_/referral.svg?react'
 import LeaderboardIcon from './_/leaderboard.svg?react'
 import TradeIcon from './_/trade.svg?react'
@@ -11,6 +12,7 @@ import HelpIcon from './_/help.svg?react'
 
 const navItems = [
   { icon: ExploreIcon, label: 'Explorer', path: '/explorer' },
+  { icon: AuctionIcon, label: 'Auction', path: '/auction', badge: 'LIVE' },
   { icon: ReferralIcon, label: 'Referral', path: '/referral' },
   { icon: LeaderboardIcon, label: 'Leaderboard', path: '/leaderboard' },
   { icon: TradeIcon, label: 'Trade', path: '/trade' },
@@ -99,12 +101,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   to={item.path}
                   onClick={onClose}
                   className={cn(
-                    'flex items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium transition-colors',
+                    'flex items-center justify-between gap-3 rounded-full px-3 py-2.5 text-sm font-medium transition-colors',
                     isActive ? 'bg-[#D2FB95] text-black' : 'text-foreground dark:text-[#d2d2d2] hover:bg-accent hover:text-accent-foreground',
                   )}
                 >
-                  <item.icon className="h-6 w-6" />
-                  {item.label}
+                  <div className="flex items-center gap-3">
+                    <item.icon className="h-6 w-6" />
+                    {item.label}
+                  </div>
+                  {item.badge && (
+                    <div className="flex items-center gap-1 bg-[rgba(6,168,0,0.1)] px-2 py-0.5 rounded-full">
+                      <div className="w-2 h-2 bg-[#06a800] rounded-full" />
+                      <span className="text-[10px] font-semibold text-[#06a800]">{item.badge}</span>
+                    </div>
+                  )}
                 </Link>
               )
             })}
