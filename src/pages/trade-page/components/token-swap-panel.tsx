@@ -4,7 +4,7 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useMeteoraSwap, type SwapDirection } from '@/hooks/use-meteora-swap'
 import { getExplorerUrl } from '@/lib/solana/config'
 import TokenUsdcIcon from './_/token-usdc.svg?react'
-import TokenSolIcon from './_/token-sol.svg?react'
+import TokenTessIcon from './_/token-tess.svg?react'
 import SwapIcon from './_/swap-icon.svg?react'
 import { toast } from 'sonner'
 
@@ -18,7 +18,7 @@ export function TokenSwapPanel() {
     quote,
     txSignature,
     usdcBalance,
-    solBalance,
+    tessBalance,
     loadPool,
     getQuote,
     executeSwap,
@@ -26,17 +26,17 @@ export function TokenSwapPanel() {
     clearError,
   } = useMeteoraSwap()
 
-  // Default: USDC -> SOL (buying SOL)
-  const [direction, setDirection] = useState<SwapDirection>('USDC_TO_SOL')
+  // Default: USDC -> TESS (buying TESS)
+  const [direction, setDirection] = useState<SwapDirection>('USDC_TO_TESS')
   const [inputAmount, setInputAmount] = useState('')
   const [isSwapping, setIsSwapping] = useState(false)
 
   // Derived state
-  const isBuying = direction === 'USDC_TO_SOL' // Buying SOL with USDC
-  const sellingToken = isBuying ? 'USDC' : 'SOL'
-  const buyingToken = isBuying ? 'SOL' : 'USDC'
-  const sellingBalance = isBuying ? usdcBalance : solBalance
-  const buyingBalance = isBuying ? solBalance : usdcBalance
+  const isBuying = direction === 'USDC_TO_TESS' // Buying TESS with USDC
+  const sellingToken = isBuying ? 'USDC' : 'TESS'
+  const buyingToken = isBuying ? 'TESS' : 'USDC'
+  const sellingBalance = isBuying ? usdcBalance : tessBalance
+  const buyingBalance = isBuying ? tessBalance : usdcBalance
 
   // Load pool and balances on mount
   useEffect(() => {
@@ -90,7 +90,7 @@ export function TokenSwapPanel() {
   }, [txSignature])
 
   const handleSwapDirection = () => {
-    setDirection((prev) => (prev === 'USDC_TO_SOL' ? 'SOL_TO_USDC' : 'USDC_TO_SOL'))
+    setDirection((prev) => (prev === 'USDC_TO_TESS' ? 'TESS_TO_USDC' : 'USDC_TO_TESS'))
     setInputAmount('')
   }
 
@@ -134,7 +134,7 @@ export function TokenSwapPanel() {
     if (isSwapping) return 'Swapping...'
     if (isLoading) return 'Loading...'
     if (!hasValidInput) return 'Enter amount'
-    return isBuying ? 'Buy SOL' : 'Sell SOL'
+    return isBuying ? 'Buy TESS' : 'Sell TESS'
   }
 
   const handleButtonClick = () => {
@@ -150,7 +150,7 @@ export function TokenSwapPanel() {
       {/* Network indicator */}
       <div className="flex justify-end mb-2">
         <span className="text-xs px-2 py-1 rounded bg-black/10 dark:bg-white/10 text-muted-foreground">
-          Mainnet
+          Devnet
         </span>
       </div>
 
@@ -177,7 +177,7 @@ export function TokenSwapPanel() {
                 {sellingToken === 'USDC' ? (
                   <TokenUsdcIcon className="w-6 h-6 lg:w-8 lg:h-8" />
                 ) : (
-                  <TokenSolIcon className="w-6 h-6 lg:w-8 lg:h-8" />
+                  <TokenTessIcon className="w-6 h-6 lg:w-8 lg:h-8" />
                 )}
                 <span className="text-base lg:text-xl font-semibold text-foreground dark:text-[#d2d2d2]">
                   {sellingToken}
@@ -220,7 +220,7 @@ export function TokenSwapPanel() {
               {buyingToken === 'USDC' ? (
                 <TokenUsdcIcon className="w-6 h-6 lg:w-8 lg:h-8" />
               ) : (
-                <TokenSolIcon className="w-6 h-6 lg:w-8 lg:h-8" />
+                <TokenTessIcon className="w-6 h-6 lg:w-8 lg:h-8" />
               )}
               <span className="text-base lg:text-xl font-semibold text-foreground dark:text-[#d2d2d2]">
                 {buyingToken}

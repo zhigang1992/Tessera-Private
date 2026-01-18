@@ -29,16 +29,16 @@ export const MAINNET_POOLS = {
   },
 } as const
 
-// DevNet TTT-USDC Pool (for testing)
-// Pool: H5hdKWhiw9p2fXXJo9Zbab27HZ4hFUfssw22jEtygKtL
-// TTT Mint: 7Psa4ygej7976CvJsz3hNAmW2vZwRKhBbKC9ceGb19Pn
+// DevNet TESS-USDC Pool
+// Pool: 5V6TXJkrQcvmTwcqgt3bozntK3MdjGuEcUzS8XgyBJP5
+// TESS Mint (Token-2022): 767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj
 // USDC Mint: 5xFsnWSvZDTatxY9EyGwXbkjYXU75tN5dhMzneA9hPSB
 export const DEVNET_POOLS = {
-  'TTT-USDC': {
-    address: 'H5hdKWhiw9p2fXXJo9Zbab27HZ4hFUfssw22jEtygKtL',
+  'TESS-USDC': {
+    address: '5V6TXJkrQcvmTwcqgt3bozntK3MdjGuEcUzS8XgyBJP5',
     tokenX: {
-      mint: '7Psa4ygej7976CvJsz3hNAmW2vZwRKhBbKC9ceGb19Pn',
-      symbol: 'TTT',
+      mint: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj',
+      symbol: 'TESS',
       decimals: 6,
     },
     tokenY: {
@@ -168,13 +168,9 @@ export class MeteoraClient {
     // Get quote
     const quote = await pool.swapQuote(amount, swapForY, new BN(slippageBps), binArrays)
 
-    // Get decimals for formatting
-    // Note: We use known decimals from pool config because SDK token objects
-    // may not expose decimals correctly. For SOL-USDC pool:
-    // - tokenX (SOL) = 9 decimals
-    // - tokenY (USDC) = 6 decimals
-    const tokenXDecimals = MAINNET_POOLS['SOL-USDC'].tokenX.decimals // SOL = 9
-    const tokenYDecimals = MAINNET_POOLS['SOL-USDC'].tokenY.decimals // USDC = 6
+    // Get decimals for formatting from SDK token objects
+    const tokenXDecimals = (pool.tokenX as { decimal?: number; decimals?: number }).decimal ?? (pool.tokenX as { decimal?: number; decimals?: number }).decimals ?? 6
+    const tokenYDecimals = (pool.tokenY as { decimal?: number; decimals?: number }).decimal ?? (pool.tokenY as { decimal?: number; decimals?: number }).decimals ?? 6
     const inDecimals = swapForY ? tokenXDecimals : tokenYDecimals
     const outDecimals = swapForY ? tokenYDecimals : tokenXDecimals
 

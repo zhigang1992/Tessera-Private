@@ -1,28 +1,28 @@
 /**
  * React Hook for Meteora DLMM Swap Operations
  *
- * Uses the SOL-USDC pool on Mainnet
- * - USDC is the quote token (what you pay with when buying SOL)
- * - SOL is the base token (what you buy/sell)
+ * Uses the TESS-USDC pool on Devnet
+ * - USDC is the quote token (what you pay with when buying TESS)
+ * - TESS is the base token (what you buy/sell)
  */
 
 import { useState, useCallback, useMemo } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { Connection, PublicKey, LAMPORTS_PER_SOL, clusterApiUrl } from '@solana/web3.js'
-import { getAccount, getAssociatedTokenAddress } from '@solana/spl-token'
+import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
+import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import {
   MeteoraClient,
   createMeteoraClient,
-  MAINNET_POOLS,
+  DEVNET_POOLS,
   type MeteoraSwapQuote,
   type PoolInfo,
 } from '@/services/meteora'
 
-// Get mainnet RPC URL from environment or use default
-const MAINNET_RPC_URL = import.meta.env.VITE_MAINNET_RPC_URL || clusterApiUrl('mainnet-beta')
+// Get devnet RPC URL from environment or use default
+const DEVNET_RPC_URL = import.meta.env.VITE_DEVNET_RPC_URL || clusterApiUrl('devnet')
 
-// Direction: USDC -> SOL (buy SOL) or SOL -> USDC (sell SOL)
-export type SwapDirection = 'USDC_TO_SOL' | 'SOL_TO_USDC'
+// Direction: USDC -> TESS (buy TESS) or TESS -> USDC (sell TESS)
+export type SwapDirection = 'USDC_TO_TESS' | 'TESS_TO_USDC'
 
 export interface UseMeteoraSwapReturn {
   // State
@@ -34,9 +34,9 @@ export interface UseMeteoraSwapReturn {
 
   // Token info
   usdcMint: string
-  solMint: string
+  tessMint: string
   usdcBalance: string | null
-  solBalance: string | null
+  tessBalance: string | null
 
   // Actions
   loadPool: () => Promise<void>
@@ -46,12 +46,12 @@ export interface UseMeteoraSwapReturn {
   clearError: () => void
 }
 
-// Pool configuration - SOL is tokenX, USDC is tokenY
-const POOL_ADDRESS = MAINNET_POOLS['SOL-USDC'].address
-const SOL_MINT = MAINNET_POOLS['SOL-USDC'].tokenX.mint
-const USDC_MINT = MAINNET_POOLS['SOL-USDC'].tokenY.mint
-const SOL_DECIMALS = MAINNET_POOLS['SOL-USDC'].tokenX.decimals
-const USDC_DECIMALS = MAINNET_POOLS['SOL-USDC'].tokenY.decimals
+// Pool configuration - TESS is tokenX, USDC is tokenY
+const POOL_ADDRESS = DEVNET_POOLS['TESS-USDC'].address
+const TESS_MINT = DEVNET_POOLS['TESS-USDC'].tokenX.mint
+const USDC_MINT = DEVNET_POOLS['TESS-USDC'].tokenY.mint
+const TESS_DECIMALS = DEVNET_POOLS['TESS-USDC'].tokenX.decimals
+const USDC_DECIMALS = DEVNET_POOLS['TESS-USDC'].tokenY.decimals
 
 export function useMeteoraSwap(): UseMeteoraSwapReturn {
   const wallet = useWallet()
@@ -63,18 +63,17 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
   const [quote, setQuote] = useState<MeteoraSwapQuote | null>(null)
   const [txSignature, setTxSignature] = useState<string | null>(null)
   const [usdcBalance, setUsdcBalance] = useState<string | null>(null)
-  const [solBalance, setSolBalance] = useState<string | null>(null)
+  const [tessBalance, setTessBalance] = useState<string | null>(null)
 
-  // Create a dedicated mainnet connection for swap operations
-  // This is separate from the wallet adapter connection which may be on devnet
-  const mainnetConnection = useMemo(() => {
-    return new Connection(MAINNET_RPC_URL, 'confirmed')
+  // Create a dedicated devnet connection for swap operations
+  const devnetConnection = useMemo(() => {
+    return new Connection(DEVNET_RPC_URL, 'confirmed')
   }, [])
 
-  // Create client with mainnet connection
+  // Create client with devnet connection
   const client = useMemo(() => {
-    return createMeteoraClient(mainnetConnection, 'mainnet-beta')
-  }, [mainnetConnection])
+    return createMeteoraClient(devnetConnection, 'devnet')
+  }, [devnetConnection])
 
   // Load pool info
   const loadPool = useCallback(async () => {
@@ -91,44 +90,51 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
     }
   }, [client])
 
-  // Refresh token balances from mainnet
+  // Refresh token balances from devnet
   const refreshBalances = useCallback(async () => {
     if (!wallet.publicKey) {
       setUsdcBalance(null)
-      setSolBalance(null)
+      setTessBalance(null)
       return
     }
 
     try {
-      // Get USDC balance on mainnet
+      // Get USDC balance on devnet (standard SPL token)
       try {
         const usdcMintPubkey = new PublicKey(USDC_MINT)
         const ata = await getAssociatedTokenAddress(usdcMintPubkey, wallet.publicKey)
-        const account = await getAccount(mainnetConnection, ata)
+        const account = await getAccount(devnetConnection, ata)
         const usdcFormatted = (Number(account.amount) / 10 ** USDC_DECIMALS).toFixed(2)
         setUsdcBalance(usdcFormatted)
       } catch {
-        // Token account doesn't exist on mainnet
+        // Token account doesn't exist on devnet
         setUsdcBalance('0.00')
       }
 
-      // Get native SOL balance on mainnet
+      // Get TESS balance on devnet (Token-2022)
       try {
-        const balance = await mainnetConnection.getBalance(wallet.publicKey)
-        const solFormatted = (balance / LAMPORTS_PER_SOL).toFixed(4)
-        setSolBalance(solFormatted)
+        const tessMintPubkey = new PublicKey(TESS_MINT)
+        const ata = await getAssociatedTokenAddress(
+          tessMintPubkey,
+          wallet.publicKey,
+          false,
+          TOKEN_2022_PROGRAM_ID
+        )
+        const account = await getAccount(devnetConnection, ata, 'confirmed', TOKEN_2022_PROGRAM_ID)
+        const tessFormatted = (Number(account.amount) / 10 ** TESS_DECIMALS).toFixed(4)
+        setTessBalance(tessFormatted)
       } catch {
-        setSolBalance('0.0000')
+        setTessBalance('0.0000')
       }
     } catch (err) {
       console.error('Failed to fetch balances:', err)
     }
-  }, [mainnetConnection, wallet.publicKey])
+  }, [devnetConnection, wallet.publicKey])
 
   // Get swap quote
-  // In the pool: tokenX = SOL, tokenY = USDC
-  // swapForY = true means X -> Y (SOL -> USDC, selling SOL)
-  // swapForY = false means Y -> X (USDC -> SOL, buying SOL)
+  // In the pool: tokenX = TESS, tokenY = USDC
+  // swapForY = true means X -> Y (TESS -> USDC, selling TESS)
+  // swapForY = false means Y -> X (USDC -> TESS, buying TESS)
   const getQuote = useCallback(
     async (amount: string, direction: SwapDirection): Promise<MeteoraSwapQuote | null> => {
       if (!amount || parseFloat(amount) <= 0) {
@@ -140,10 +146,10 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
       setError(null)
 
       try {
-        // USDC_TO_SOL = buying SOL with USDC = Y -> X = swapForY = false
-        // SOL_TO_USDC = selling SOL for USDC = X -> Y = swapForY = true
-        const swapForY = direction === 'SOL_TO_USDC'
-        const decimals = direction === 'USDC_TO_SOL' ? USDC_DECIMALS : SOL_DECIMALS
+        // USDC_TO_TESS = buying TESS with USDC = Y -> X = swapForY = false
+        // TESS_TO_USDC = selling TESS for USDC = X -> Y = swapForY = true
+        const swapForY = direction === 'TESS_TO_USDC'
+        const decimals = direction === 'USDC_TO_TESS' ? USDC_DECIMALS : TESS_DECIMALS
         const amountBN = MeteoraClient.parseAmount(amount, decimals)
 
         const newQuote = await client.getSwapQuote(POOL_ADDRESS, amountBN, swapForY, 100) // 1% slippage
@@ -174,9 +180,9 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
       setTxSignature(null)
 
       try {
-        // USDC_TO_SOL = buying SOL = Y -> X = swapForY = false
-        // SOL_TO_USDC = selling SOL = X -> Y = swapForY = true
-        const swapForY = direction === 'SOL_TO_USDC'
+        // USDC_TO_TESS = buying TESS = Y -> X = swapForY = false
+        // TESS_TO_USDC = selling TESS = X -> Y = swapForY = true
+        const swapForY = direction === 'TESS_TO_USDC'
 
         // Create swap transaction
         const swapTx = await client.createSwapTransaction(
@@ -186,17 +192,17 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
           wallet.publicKey
         )
 
-        // Set recent blockhash and fee payer using mainnet connection
-        const { blockhash, lastValidBlockHeight } = await mainnetConnection.getLatestBlockhash()
+        // Set recent blockhash and fee payer using devnet connection
+        const { blockhash, lastValidBlockHeight } = await devnetConnection.getLatestBlockhash()
         swapTx.recentBlockhash = blockhash
         swapTx.feePayer = wallet.publicKey
 
-        // Sign and send to mainnet
+        // Sign and send to devnet
         const signed = await wallet.signTransaction(swapTx)
-        const signature = await mainnetConnection.sendRawTransaction(signed.serialize())
+        const signature = await devnetConnection.sendRawTransaction(signed.serialize())
 
-        // Confirm transaction on mainnet
-        await mainnetConnection.confirmTransaction({
+        // Confirm transaction on devnet
+        await devnetConnection.confirmTransaction({
           signature,
           blockhash,
           lastValidBlockHeight,
@@ -216,7 +222,7 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
         setIsLoading(false)
       }
     },
-    [client, mainnetConnection, wallet, refreshBalances]
+    [client, devnetConnection, wallet, refreshBalances]
   )
 
   // Clear error
@@ -231,9 +237,9 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
     quote,
     txSignature,
     usdcMint: USDC_MINT,
-    solMint: SOL_MINT,
+    tessMint: TESS_MINT,
     usdcBalance,
-    solBalance,
+    tessBalance,
     loadPool,
     getQuote,
     executeSwap,
