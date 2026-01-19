@@ -41,6 +41,28 @@ export interface OwnerReferralStats {
   invited_count: number
 }
 
+// Trade/Swap event types
+export interface MeteoraSwapEvent {
+  signature: string
+  sender: string
+  mint_x: string
+  mint_y: string
+  amount_x: string // numeric type comes as string from GraphQL
+  amount_y: string
+  type: string // 'swap-x-for-y' or 'swap-y-for-x'
+  block_time: number
+  pool_address: string
+}
+
+export interface SwapEventsQueryResult {
+  facts_meteora_token_swap_events: MeteoraSwapEvent[]
+  facts_meteora_token_swap_events_aggregate: {
+    aggregate: {
+      count: number
+    }
+  }
+}
+
 export interface ReferralCodeCreatedEvent {
   signature: string
   event_index: number
@@ -357,4 +379,53 @@ export async function fetchGlobalReferralStats(limit: number = 10, offset: numbe
     view_owner_referral_stats: OwnerReferralStats[]
     view_owner_referral_stats_aggregate: { aggregate: { count: number } }
   }>(query, { limit, offset })
+}
+
+/**
+ * Fetch swap events for trade history with pagination
+ */
+export async function fetchSwapEvents(
+  limit: number = 10,
+  offset: number = 0,
+  poolAddress?: string
+): Promise<{ events: MeteoraSwapEvent[]; total: number }> {
+  const whereClause = poolAddress
+    ? `where: { pool_address: { _eq: $poolAddress } }`
+    : ''
+  const variables: Record<string, unknown> = { limit, offset }
+  if (poolAddress) {
+    variables.poolAddress = poolAddress
+  }
+
+  const query = `
+    query GetSwapEvents($limit: Int!, $offset: Int!${poolAddress ? ', $poolAddress: String!' : ''}) {
+      facts_meteora_token_swap_events(
+        limit: $limit
+        offset: $offset
+        order_by: { block_time: desc }
+        ${whereClause}
+      ) {
+        signature
+        sender
+        mint_x
+        mint_y
+        amount_x
+        amount_y
+        type
+        block_time
+        pool_address
+      }
+      facts_meteora_token_swap_events_aggregate${poolAddress ? '(where: { pool_address: { _eq: $poolAddress } })' : ''} {
+        aggregate {
+          count
+        }
+      }
+    }
+  `
+
+  const data = await graphqlRequest<SwapEventsQueryResult>(query, variables)
+  return {
+    events: data.facts_meteora_token_swap_events,
+    total: data.facts_meteora_token_swap_events_aggregate.aggregate.count,
+  }
 }

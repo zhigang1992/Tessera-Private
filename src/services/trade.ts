@@ -1,4 +1,9 @@
 import { sleep } from './utils'
+import {
+  fetchSwapEvents,
+  type MeteoraSwapEvent,
+} from '@/features/referral/lib/graphql-client'
+import { DEVNET_POOLS } from './meteora'
 
 // ============ Types ============
 
@@ -19,11 +24,13 @@ export interface PriceDataPoint {
 export interface TradeHistoryItem {
   id: string
   token: string
+  tokenIcon?: string
   amountIn: string
   amountOut: string
   type: 'Buy' | 'Sell'
   account: string
   time: string
+  signature: string
 }
 
 export interface TradeHistoryResponse {
@@ -174,34 +181,73 @@ function generatePriceHistory(
   return data
 }
 
-// Generate trade history
-function generateTradeHistory(): TradeHistoryItem[] {
-  const items: TradeHistoryItem[] = []
-  const tokenSymbols = ['T-SPACEX', 'T-TSLA', 'T-NVDA', 'T-AAPL', 'T-GOOG', 'T-AMZN', 'T-META', 'T-MSFT']
-  const accounts = ['0xA8D0...6006', '0x7B3F...A123', '0x9C2E...8B45', '0x1D4A...C789', '0x5E6F...D012']
-  const times = ['Today at 3:20 PM', 'Today at 2:45 PM', 'Today at 1:30 PM', 'Yesterday at 5:00 PM', 'Yesterday at 11:20 AM']
-
-  for (let i = 1; i <= 100; i++) {
-    const token = tokenSymbols[Math.floor(Math.random() * tokenSymbols.length)]
-    const type = Math.random() > 0.5 ? 'Buy' : 'Sell'
-    const usdcAmount = (Math.floor(Math.random() * 10) + 1) * 100
-    const tokenAmount = (usdcAmount / (300 + Math.random() * 200)).toFixed(2)
-
-    items.push({
-      id: `trade-${i}`,
-      token,
-      amountIn: type === 'Buy' ? `${usdcAmount.toLocaleString()} USDC` : `${tokenAmount} ${token}`,
-      amountOut: type === 'Buy' ? `${tokenAmount} ${token}` : `${usdcAmount.toLocaleString()} USDC`,
-      type,
-      account: accounts[Math.floor(Math.random() * accounts.length)],
-      time: times[Math.floor(Math.random() * times.length)],
-    })
-  }
-
-  return items
+// Token mint to symbol mapping
+const MINT_TO_SYMBOL: Record<string, string> = {
+  [DEVNET_POOLS['TESS-USDC'].tokenX.mint]: 'TESS',
+  [DEVNET_POOLS['TESS-USDC'].tokenY.mint]: 'USDC',
 }
 
-const rawTradeHistory = generateTradeHistory()
+// Format wallet address for display
+function formatWalletAddress(address: string): string {
+  if (address.length <= 12) return address
+  return `${address.slice(0, 4)}...${address.slice(-4)}`
+}
+
+// Format block time to readable date
+function formatBlockTime(blockTime: number): string {
+  const date = new Date(blockTime * 1000)
+  const now = new Date()
+  const isToday = date.toDateString() === now.toDateString()
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const isYesterday = date.toDateString() === yesterday.toDateString()
+
+  const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+
+  if (isToday) {
+    return `Today at ${timeStr}`
+  } else if (isYesterday) {
+    return `Yesterday at ${timeStr}`
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ` at ${timeStr}`
+  }
+}
+
+// Format amount from raw value (accounting for 18 decimal precision from GraphQL)
+function formatAmount(rawAmount: string | number): string {
+  // The GraphQL returns amounts in a high precision format (18 decimals from numeric)
+  // Numbers may come as scientific notation (e.g., 1e+21), so use Number directly
+  const num = Number(rawAmount)
+  const divisor = 10 ** 18 // GraphQL numeric precision
+  const actualAmount = num / divisor
+
+  // Format with appropriate decimals
+  return actualAmount.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4,
+  })
+}
+
+// Transform GraphQL swap event to trade history item
+function transformSwapEvent(event: MeteoraSwapEvent): TradeHistoryItem {
+  const isBuy = event.type === 'swap-y-for-x' // USDC -> TESS is a buy
+  const symbolX = MINT_TO_SYMBOL[event.mint_x] || 'Unknown'
+  const symbolY = MINT_TO_SYMBOL[event.mint_y] || 'Unknown'
+
+  const amountX = formatAmount(event.amount_x)
+  const amountY = formatAmount(event.amount_y)
+
+  return {
+    id: event.signature,
+    signature: event.signature,
+    token: symbolX, // TESS is always the main token
+    amountIn: isBuy ? `${amountY} ${symbolY}` : `${amountX} ${symbolX}`,
+    amountOut: isBuy ? `${amountX} ${symbolX}` : `${amountY} ${symbolY}`,
+    type: isBuy ? 'Buy' : 'Sell',
+    account: formatWalletAddress(event.sender),
+    time: formatBlockTime(event.block_time),
+  }
+}
 
 // User balances
 const userBalances: UserBalance[] = [
@@ -233,19 +279,35 @@ export async function getPriceHistory(
   return generatePriceHistory(token.price, range)
 }
 
-export async function getTradeHistory(page: number = 1, pageSize: number = 10): Promise<TradeHistoryResponse> {
-  await sleep(500)
-  const start = (page - 1) * pageSize
-  const items = rawTradeHistory.slice(start, start + pageSize)
-  const total = rawTradeHistory.length
-  const totalPages = Math.ceil(total / pageSize)
+// TESS-USDC pool address for filtering
+const TESS_USDC_POOL = DEVNET_POOLS['TESS-USDC'].address
 
-  return {
-    items,
-    total,
-    page,
-    pageSize,
-    totalPages,
+export async function getTradeHistory(page: number = 1, pageSize: number = 10): Promise<TradeHistoryResponse> {
+  try {
+    const offset = (page - 1) * pageSize
+    // Filter to only show trades from the TESS-USDC pool
+    const { events, total } = await fetchSwapEvents(pageSize, offset, TESS_USDC_POOL)
+
+    const items = events.map(transformSwapEvent)
+    const totalPages = Math.ceil(total / pageSize)
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+      totalPages,
+    }
+  } catch (error) {
+    console.warn('Failed to fetch trade history from GraphQL:', error)
+    // Return empty result on error
+    return {
+      items: [],
+      total: 0,
+      page,
+      pageSize,
+      totalPages: 0,
+    }
   }
 }
 
