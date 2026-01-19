@@ -2,7 +2,9 @@ import { sleep } from './utils'
 import {
   fetchAffiliateStats,
   fetchUserRegistration,
+  fetchTradersForCode,
   type AggregatedAffiliateStats,
+  type UserRegisteredEvent,
 } from '@/features/referral/lib/graphql-client'
 
 // ============ Types ============
@@ -76,42 +78,6 @@ export function getCurrentWalletAddress(): string | null {
   return currentWalletAddress
 }
 
-// ============ Raw Mock Data (simulating backend raw data) ============
-
-// Raw referral code data
-interface RawReferralCode {
-  code: string
-  createdAt: string
-}
-
-const rawReferralCodes: RawReferralCode[] = [
-  { code: 'JFHDKSKL9', createdAt: '2025-11-01' },
-  { code: 'JFHDKSKL1', createdAt: '2025-11-15' },
-  { code: 'JFHDKSKL2', createdAt: '2025-12-01' },
-  { code: 'ABCD1234', createdAt: '2025-10-01' },
-  { code: 'EFGH5678', createdAt: '2025-10-05' },
-  { code: 'IJKL9012', createdAt: '2025-10-10' },
-  { code: 'MNOP3456', createdAt: '2025-10-15' },
-  { code: 'QRST7890', createdAt: '2025-10-20' },
-  { code: 'UVWX1357', createdAt: '2025-10-25' },
-  { code: 'YZAB2468', createdAt: '2025-10-28' },
-  { code: 'CDEF3691', createdAt: '2025-11-02' },
-  { code: 'GHIJ4820', createdAt: '2025-11-05' },
-]
-
-// Raw user data - includes referral relationships
-const rawUsers: ReferralUser[] = [
-  // Mock users matching design
-  { id: 'u1', email: 'm****@hotmain.com', dateJoined: 'Dec 12, 2025', layer: 'L1', rewards: [{ amount: 0.2, token: 'SPACE-X' }, { amount: 0.1, token: 'Kalshi' }] },
-  { id: 'u2', email: 'h*****@gmail.com', dateJoined: 'Dec 7, 2025', layer: 'L3', rewards: [{ amount: 0.2, token: 'SPACE-X' }] },
-  { id: 'u3', email: 'E8LGMQFiuuweilLLQiejend88274', dateJoined: 'Nov 25, 2025', layer: 'L1', rewards: [{ amount: 0.2, token: 'SPACE-X' }] },
-  { id: 'u4', email: '8mgd8dioe11Quj867Gnq400978L', dateJoined: 'Nov 16, 2025', layer: 'L2', rewards: [{ amount: 0.2, token: 'SPACE-X' }] },
-  { id: 'u5', email: 'a****@gmail.com', dateJoined: 'Nov 10, 2025', layer: 'L1', rewards: [{ amount: 0.15, token: 'SPACE-X' }, { amount: 0.05, token: 'Kalshi' }] },
-  { id: 'u6', email: 'b****@yahoo.com', dateJoined: 'Nov 5, 2025', layer: 'L2', rewards: [{ amount: 0.1, token: 'SPACE-X' }] },
-  { id: 'u7', email: 'c****@outlook.com', dateJoined: 'Oct 28, 2025', layer: 'L1', rewards: [{ amount: 0.25, token: 'SPACE-X' }] },
-  { id: 'u8', email: 'd****@icloud.com', dateJoined: 'Oct 20, 2025', layer: 'L3', rewards: [{ amount: 0.08, token: 'SPACE-X' }], referredBy: 'u6' },
-  { id: 'u9', email: 'e****@proton.me', dateJoined: 'Oct 15, 2025', layer: 'L1', rewards: [{ amount: 0.3, token: 'SPACE-X' }, { amount: 0.12, token: 'Kalshi' }] },
-]
 
 // ============ Helper Functions (calculation logic) ============
 
@@ -203,54 +169,61 @@ export async function getReferralCodes(): Promise<ReferralCode[]> {
   return []
 }
 
-export async function getReferralUsersByCode(_code: string): Promise<ReferralUser[]> {
-  await sleep(300)
-  // Return first 6 users as mock data for any code
-  // TODO: Implement GraphQL query for traders by code
-  return rawUsers.slice(0, 6)
+/**
+ * Determine the tier (L1, L2, L3) of a user relative to the current wallet owner
+ */
+function determineUserTier(event: UserRegisteredEvent, ownerWallet: string): 'L1' | 'L2' | 'L3' {
+  // L1: Direct referral - tier1_referrer is the code owner
+  if (event.tier1_referrer === ownerWallet) {
+    return 'L1'
+  }
+  // L2: Second-level referral - tier2_referrer is the code owner
+  if (event.tier2_referrer === ownerWallet) {
+    return 'L2'
+  }
+  // L3: Third-level referral - tier3_referrer is the code owner
+  if (event.tier3_referrer === ownerWallet) {
+    return 'L3'
+  }
+  // Default to L1 if no match (shouldn't happen for valid data)
+  return 'L1'
 }
 
-export async function createReferralCode(customCode?: string): Promise<{ success: boolean; code?: ReferralCode; error?: string }> {
-  await sleep(800)
-
-  // Validate and check for duplicates if custom code provided
-  if (customCode) {
-    const normalizedCode = customCode.toUpperCase().trim()
-
-    // Check if code already exists
-    const existingCodes = rawReferralCodes.map((c) => c.code.toUpperCase())
-    if (existingCodes.includes(normalizedCode)) {
-      return { success: false, error: 'Code already taken' }
-    }
-
-    return {
-      success: true,
-      code: {
-        code: normalizedCode,
-        totalVolume: 0,
-        tradersReferred: 0,
-        totalRewards: 0,
-      },
-    }
-  }
-
-  // Generate random code
-  const newCode = `CODE${Math.random().toString(36).substring(2, 8).toUpperCase()}`
-  return {
-    success: true,
-    code: {
-      code: newCode,
-      totalVolume: 0,
-      tradersReferred: 0,
-      totalRewards: 0,
-    },
-  }
+/**
+ * Format a wallet address for display (truncate middle)
+ */
+function formatWalletAddress(address: string): string {
+  if (address.length <= 12) return address
+  return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
 
-export async function deleteReferralCode(code: string): Promise<boolean> {
-  await sleep(300)
-  console.log(`Deleting code: ${code}`)
-  return true
+/**
+ * Format timestamp to readable date
+ */
+function formatBlockTime(blockTime: number): string {
+  const date = new Date(blockTime * 1000) // block_time is in seconds
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+export async function getReferralUsersByCode(code: string): Promise<ReferralUser[]> {
+  if (!currentWalletAddress) {
+    return []
+  }
+
+  try {
+    const traders = await fetchTradersForCode(code)
+
+    return traders.map((event) => ({
+      id: event.signature,
+      email: formatWalletAddress(event.user), // Using wallet address as identifier
+      dateJoined: formatBlockTime(event.block_time),
+      layer: determineUserTier(event, currentWalletAddress!),
+      rewards: [], // Rewards data would need separate query - leaving empty for now
+    }))
+  } catch (error) {
+    console.warn('Failed to fetch traders for code from GraphQL:', error)
+    return []
+  }
 }
 
 // Clear cache when wallet changes
