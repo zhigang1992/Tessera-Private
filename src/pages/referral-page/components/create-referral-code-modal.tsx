@@ -6,9 +6,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
 import { useCreateReferralCode } from '@/features/referral/hooks/use-referral-onchain'
-import { useReferralAuth } from '@/features/referral/hooks/use-referral-auth'
-import { UrlKeyAlertDialog } from '@/features/referral/ui/url-key-alert-dialog'
-import { getUrlKeyAlertHandlers } from '@/features/referral/lib/url-key-alert'
 
 interface CreateReferralCodeModalProps {
   open: boolean
@@ -19,43 +16,20 @@ export function CreateReferralCodeModal({ open, onOpenChange }: CreateReferralCo
   const [customCode, setCustomCode] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
   const createCodeMutation = useCreateReferralCode()
-  const { isAuthenticated, isAuthenticating, authenticate, showUrlKeyAlert, setShowUrlKeyAlert } = useReferralAuth()
 
   const trimmedCustomCode = useMemo(() => customCode.trim(), [customCode])
   const normalizedCustomCode = useMemo(() => trimmedCustomCode.toUpperCase(), [trimmedCustomCode])
   const isCustomCodeProvided = trimmedCustomCode.length > 0
   const isCustomCodeLengthValid =
     !isCustomCodeProvided || (trimmedCustomCode.length >= 6 && trimmedCustomCode.length <= 12)
-  const isCreatePending = createCodeMutation.isPending || isAuthenticating
+  const isCreatePending = createCodeMutation.isPending
   const isCreateDisabled = isCreatePending || (isCustomCodeProvided && !isCustomCodeLengthValid)
-
-  const handleUrlKeyConfirm = async () => {
-    const handlers = getUrlKeyAlertHandlers()
-    if (handlers?.handleConfirm) {
-      await handlers.handleConfirm()
-    }
-  }
-
-  const handleUrlKeyCancel = () => {
-    const handlers = getUrlKeyAlertHandlers()
-    if (handlers?.handleCancel) {
-      handlers.handleCancel()
-    }
-  }
 
   const handleSubmit = useCallback(async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault()
 
     if (isCreateDisabled) {
       return
-    }
-
-    // If not authenticated, require sign message first
-    if (!isAuthenticated) {
-      const signedIn = await authenticate()
-      if (!signedIn) {
-        return
-      }
     }
 
     if (isCustomCodeProvided && !isCustomCodeLengthValid) {
@@ -77,7 +51,7 @@ export function CreateReferralCodeModal({ open, onOpenChange }: CreateReferralCo
       setFormError(message)
       console.error('Failed to create referral code', error)
     }
-  }, [isCreateDisabled, isAuthenticated, authenticate, isCustomCodeProvided, isCustomCodeLengthValid, normalizedCustomCode, createCodeMutation, onOpenChange])
+  }, [isCreateDisabled, isCustomCodeProvided, isCustomCodeLengthValid, normalizedCustomCode, createCodeMutation, onOpenChange])
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,13 +127,6 @@ export function CreateReferralCodeModal({ open, onOpenChange }: CreateReferralCo
           </form>
         </DialogContent>
       </Dialog>
-
-      <UrlKeyAlertDialog
-        open={showUrlKeyAlert}
-        onOpenChange={setShowUrlKeyAlert}
-        onConfirm={handleUrlKeyConfirm}
-        onCancel={handleUrlKeyCancel}
-      />
     </>
   )
 }

@@ -113,22 +113,6 @@ const rawUsers: ReferralUser[] = [
   { id: 'u9', email: 'e****@proton.me', dateJoined: 'Oct 15, 2025', layer: 'L1', rewards: [{ amount: 0.3, token: 'SPACE-X' }, { amount: 0.12, token: 'Kalshi' }] },
 ]
 
-// Mapping between referral codes and users
-const codeUserMapping: Record<string, string[]> = {
-  JFHDKSKL9: ['u1', 'u2', 'u3', 'u4', 'u5', 'u6'],
-  JFHDKSKL1: ['u7', 'u8', 'u9', 'u10', 'u11'],
-  JFHDKSKL2: ['u12', 'u13'],
-  ABCD1234: ['u14', 'u15'],
-  EFGH5678: ['u16', 'u17'],
-  IJKL9012: ['u18'],
-  MNOP3456: ['u19', 'u20', 'u21'],
-  QRST7890: ['u22'],
-  UVWX1357: ['u23', 'u24', 'u25'],
-  YZAB2468: ['u26'],
-  CDEF3691: ['u27', 'u28'],
-  GHIJ4820: ['u29', 'u30'],
-}
-
 // ============ Helper Functions (calculation logic) ============
 
 function formatCurrency(value: number): string {
@@ -137,59 +121,6 @@ function formatCurrency(value: number): string {
 
 function formatSOL(value: number): string {
   return `${value.toFixed(2)} SOL`
-}
-
-function getUsersByCode(code: string): ReferralUser[] {
-  // Case-insensitive lookup
-  const normalizedCode = code.toUpperCase()
-  const matchingKey = Object.keys(codeUserMapping).find((key) => key.toUpperCase() === normalizedCode)
-  const userIds = matchingKey ? codeUserMapping[matchingKey] : []
-  return rawUsers.filter((u) => userIds.includes(u.id))
-}
-
-function calculateCodeStats(code: string): ReferralCode {
-  const users = getUsersByCode(code)
-  // Sum all rewards across all users
-  const totalRewards = users.reduce((sum, u) => {
-    return sum + u.rewards.reduce((rSum, r) => rSum + r.amount, 0)
-  }, 0)
-
-  return {
-    code,
-    totalVolume: 0, // Not tracked in new data model
-    tradersReferred: users.length,
-    totalRewards,
-  }
-}
-
-function calculateTraderLayers(): TraderLayer[] {
-  const layers: Record<string, { count: number; points: number }> = {
-    L1: { count: 0, points: 0 },
-    L2: { count: 0, points: 0 },
-    L3: { count: 0, points: 0 },
-  }
-
-  rawUsers.forEach((user) => {
-    layers[user.layer].count++
-    // Points no longer tracked, use 0
-  })
-
-  return Object.entries(layers).map(([layer, data]) => ({
-    layer,
-    tradersReferred: data.count,
-    points: data.points,
-  }))
-}
-
-function calculateRewardsOverview(): RewardsData {
-  const totalRewards = rawUsers.reduce((sum, u) => {
-    return sum + u.rewards.reduce((rSum, r) => rSum + r.amount, 0)
-  }, 0)
-
-  return {
-    rewards: totalRewards,
-    referralPoints: 0, // Points no longer tracked
-  }
 }
 
 // ============ API Functions ============
