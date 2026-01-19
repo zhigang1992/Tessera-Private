@@ -24,25 +24,20 @@ import { estimateSlotDate } from './alpha-vault-helpers'
  */
 export const ALPHA_VAULT_CONFIG = {
   // Vault address
-  vault: 'B6sWUco8k3JRG3e8Y2XGXiFJBx7otS4rWAQXsL5QLn1F',
+  vault: 'DEoHK6x7sqjvKrA2vz5cSoraRY45gsaEMDueWtTAiVnm',
 
   // DLMM Pool
-  dlmmPool: '4547V8RiCQNeRLmQtnCVkjWVBFQiVC2vBgWy2UPGS1tY',
-  poolActivationSlot: 436450109,
+  dlmmPool: 'BuxVQBEjT2VadSgfnCT2ibE6M5ibjQagSgoU1j3Ceo64',
 
   // Token addresses
   tessToken: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj', // Token-2022
-  usdcToken: '38Pfqg4F9YBTyzGxSY2WBih49ECuY7fivZqUh9vhfrfu', // Standard SPL
+  usdcToken: 'fd6M2XoPfiWtYyR7t69zPrZPfMzrCEppjFNKTPyd1jX', // Devnet USDC
 
-  // Token badge for verification
-  tokenBadge: 'BxS7zDoBrtdQHL1YDozfs88kCZvWo9gcAoNiEqRkqf6y',
-
-  // Merkle root config for whitelisted wallets (v1)
-  merkleRootConfig: 'Hg1YrUWstdC65iMHnDdv2iBAJoi2zyDgcKWnDLdcyPtu',
-  whitelistedWallets: 7,
+  // Merkle root config for whitelisted wallets
+  merkleRootConfig: '5RXtKpYcgnsYKGYVh92DViw83D652ph3VxKvGzAK366T',
 
   // View on Meteora
-  meteoraUrl: 'https://devnet.app.meteora.ag/vault/B6sWUco8k3JRG3e8Y2XGXiFJBx7otS4rWAQXsL5QLn1F',
+  meteoraUrl: 'https://devnet.app.meteora.ag/vault/DEoHK6x7sqjvKrA2vz5cSoraRY45gsaEMDueWtTAiVnm',
 
   // Token decimals
   tessDecimals: 6,
@@ -112,51 +107,6 @@ export interface AlphaVaultClaimInfo {
   lockedAmount: string
   vestingProgress: number
   nextUnlockTime: Date | null
-}
-
-// ============ Temporary Hardcoded Merkle Proofs ============
-// TODO: Remove once Meteora's worker-dev API has the whitelist data synced
-
-/**
- * Convert hex string to byte array (number[])
- */
-function hexToBytes(hex: string): number[] {
-  const bytes: number[] = []
-  for (let i = 0; i < hex.length; i += 2) {
-    bytes.push(parseInt(hex.substring(i, i + 2), 16))
-  }
-  return bytes
-}
-
-/**
- * Hardcoded merkle proofs for whitelisted wallets
- * This is a temporary workaround while the Meteora API syncs
- * proof format: hex strings that will be converted to number[][] for SDK
- */
-const HARDCODED_MERKLE_PROOFS: Record<string, { proof: string[]; maxCap: string }> = {
-  // Kyle's wallet - 10,000 USDC cap
-  'Hzu1F1HF9ZEd7ezokS6ePUP5gP3p1UkdnoU7rKYS2xPu': {
-    proof: [
-      '5e60840cf6ad418fa3b5fdf1c3fad1f686be678d37fdcfe8d5dfd418a689ded3',
-      'c12af0d171c26f20c39e27cae747641277a4c20923793f21788aeb957bc2991a',
-      'cd9be9d4714936ca124cdb7918e74f6d07ef5649ebd67d7f260ebbf038027958',
-    ],
-    maxCap: '10000000000', // 10,000 USDC (6 decimals)
-  },
-}
-
-function getHardcodedMerkleProof(wallet: string): DepositWithProofParams | null {
-  const data = HARDCODED_MERKLE_PROOFS[wallet]
-  if (!data) return null
-
-  // Convert hex strings to number[][] as required by SDK
-  const proofBytes: number[][] = data.proof.map((hexStr) => hexToBytes(hexStr))
-
-  return {
-    merkleRootConfig: new PublicKey(ALPHA_VAULT_CONFIG.merkleRootConfig),
-    maxCap: new BN(data.maxCap),
-    proof: proofBytes,
-  }
 }
 
 // ============ Helper to map SDK types to our types ============
@@ -343,23 +293,10 @@ export class AlphaVaultClient {
 
       // For permissioned vaults, we need to fetch the merkle proof to get correct quota
       let merkleProof: DepositWithProofParams | null = null
-
-      // TODO: Temporarily use hardcoded proof while Meteora API syncs
-      // Once Meteora's worker-dev API has the whitelist data, remove this and use SDK method
-      const hardcodedProof = getHardcodedMerkleProof(owner.toBase58())
-      if (hardcodedProof) {
-        console.log('[AlphaVault] Using hardcoded merkle proof for:', owner.toBase58())
-        merkleProof = hardcodedProof
-      } else {
-        // Fallback to SDK method (will call Meteora API)
-        try {
-          console.log('[AlphaVault] Fetching merkle proof from API for:', owner.toBase58())
-          merkleProof = await vault.getMerkleProofForDeposit(owner)
-          console.log('[AlphaVault] Merkle proof received:', merkleProof ? 'yes' : 'no')
-        } catch (proofErr) {
-          // If no merkle proof available, user might not be whitelisted
-          console.log('[AlphaVault] Merkle proof fetch failed:', proofErr)
-        }
+      try {
+        merkleProof = await vault.getMerkleProofForDeposit(owner)
+      } catch {
+        // If no merkle proof available, user might not be whitelisted
       }
 
       const quota = vault.getAvailableDepositQuota(escrow, merkleProof ?? undefined)
@@ -501,13 +438,6 @@ export class AlphaVaultClient {
    * This requires the vault to have a merkle proof metadata URL set
    */
   async getMerkleProof(owner: PublicKey): Promise<DepositWithProofParams | null> {
-    // TODO: Temporarily use hardcoded proof while Meteora API syncs
-    const hardcodedProof = getHardcodedMerkleProof(owner.toBase58())
-    if (hardcodedProof) {
-      return hardcodedProof
-    }
-
-    // Fallback to SDK method
     const vault = await this.initialize()
     try {
       const proof = await vault.getMerkleProofForDeposit(owner)
