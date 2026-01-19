@@ -7,7 +7,7 @@ import {
   type UserRegisteredEvent,
 } from '@/features/referral/lib/graphql-client'
 import { DEVNET_POOLS } from './meteora'
-import { fromHasuraToNative, type BigNumberSource } from '@/lib/bignumber'
+import { fromHasuraToNative, formatBigNumber, type BigNumberSource } from '@/lib/bignumber'
 
 // ============ Types ============
 
@@ -267,12 +267,8 @@ function formatBlockTimeWithTime(blockTime: number): string {
 
 // Format amount from raw value (accounting for 18 decimal precision from GraphQL)
 function formatSwapAmount(rawAmount: BigNumberSource): string {
-  const actualAmount = fromHasuraToNative(rawAmount)
-
-  return actualAmount.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 4,
-  })
+  const bigNum = fromHasuraToNative(rawAmount)
+  return formatBigNumber(bigNum)
 }
 
 // ============ Traders Tab API Functions ============

@@ -4,7 +4,7 @@ import {
   type MeteoraSwapEvent,
 } from '@/features/referral/lib/graphql-client'
 import { DEVNET_POOLS } from './meteora'
-import { fromHasuraToNative, type BigNumberSource } from '@/lib/bignumber'
+import { fromHasuraToNative, formatBigNumber, type BigNumberSource } from '@/lib/bignumber'
 
 // ============ Types ============
 
@@ -216,13 +216,8 @@ function formatBlockTime(blockTime: number): string {
 
 // Format amount from raw value (accounting for 18 decimal precision from GraphQL)
 function formatAmount(rawAmount: BigNumberSource): string {
-  const actualAmount = fromHasuraToNative(rawAmount)
-
-  // Format with appropriate decimals
-  return actualAmount.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 4,
-  })
+  const bigNum = fromHasuraToNative(rawAmount)
+  return formatBigNumber(bigNum)
 }
 
 // Transform GraphQL swap event to trade history item
