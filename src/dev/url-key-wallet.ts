@@ -4,6 +4,7 @@
   - Registers a minimal Wallet Standard wallet exposing that account
   - Auto-selects the account so the app treats it as connected
   - Implements window.solana.signMessage for referral auth flows
+  - Implements signTransaction and signAndSendTransaction for on-chain operations
 
   Supported hash formats (examples):
   - #<base58-encoded-secret-key>                // 64 bytes (secret+public) or 32-byte seed
@@ -19,7 +20,22 @@ import bs58 from 'bs58'
 import { registerWallet } from '@wallet-standard/wallet'
 import type { Wallet, WalletAccount } from '@wallet-standard/base'
 import { StandardConnect, StandardDisconnect, StandardEvents } from '@wallet-standard/features'
-import { SolanaSignMessage } from '@solana/wallet-standard-features'
+import {
+  SolanaSignMessage,
+  SolanaSignTransaction,
+  SolanaSignAndSendTransaction,
+  type SolanaSignTransactionInput,
+  type SolanaSignAndSendTransactionInput,
+} from '@solana/wallet-standard-features'
+import { Transaction, VersionedTransaction, Keypair, Connection } from '@solana/web3.js'
+
+// RPC endpoints for different chains
+const CHAIN_RPC_ENDPOINTS: Record<string, string> = {
+  'solana:devnet': 'https://api.devnet.solana.com',
+  'solana:localnet': 'http://localhost:8899',
+  'solana:testnet': 'https://api.testnet.solana.com',
+  'solana:mainnet': 'https://api.mainnet-beta.solana.com',
+}
 
 function parseHash(): string | undefined {
   const raw = globalThis?.location?.hash?.slice(1) ?? ''
@@ -99,9 +115,38 @@ function createWalletAccount(
     address,
     publicKey: kp.publicKey,
     chains: chains as WalletAccount['chains'],
-    features: [SolanaSignMessage] as WalletAccount['features'],
+    features: [SolanaSignMessage, SolanaSignTransaction, SolanaSignAndSendTransaction] as WalletAccount['features'],
     label: `${name} (${address.slice(0, 4)}..${address.slice(-4)})`,
   })
+}
+
+/**
+ * Sign a serialized transaction with the keypair.
+ * Handles both legacy Transaction and VersionedTransaction formats.
+ */
+function signTransactionBytes(transactionBytes: Uint8Array, secretKey: Uint8Array): Uint8Array {
+  // Create Keypair from the secret key
+  const keypair = Keypair.fromSecretKey(secretKey)
+
+  // Try to deserialize as VersionedTransaction first (v0 format)
+  try {
+    const versionedTx = VersionedTransaction.deserialize(transactionBytes)
+    versionedTx.sign([keypair])
+    return versionedTx.serialize()
+  } catch {
+    // Fall back to legacy Transaction
+    const legacyTx = Transaction.from(transactionBytes)
+    legacyTx.partialSign(keypair)
+    return legacyTx.serialize()
+  }
+}
+
+/**
+ * Get or create a Connection for the given chain
+ */
+function getConnectionForChain(chain: string): Connection {
+  const endpoint = CHAIN_RPC_ENDPOINTS[chain] || CHAIN_RPC_ENDPOINTS['solana:devnet']
+  return new Connection(endpoint, 'confirmed')
 }
 
 // Simple event emitter for standard:events
@@ -174,6 +219,47 @@ function registerUrlKeyWallet(secretKey: Uint8Array) {
           })
         },
       },
+      [SolanaSignTransaction]: {
+        version: '1.0.0',
+        supportedTransactionVersions: ['legacy', 0] as const,
+        signTransaction: async (...inputs: readonly SolanaSignTransactionInput[]) => {
+          return inputs.map(({ transaction }) => {
+            const signedTransaction = signTransactionBytes(transaction, secretKey)
+            return Object.freeze({ signedTransaction })
+          })
+        },
+      },
+      [SolanaSignAndSendTransaction]: {
+        version: '1.0.0',
+        supportedTransactionVersions: ['legacy', 0] as const,
+        signAndSendTransaction: async (...inputs: readonly SolanaSignAndSendTransactionInput[]) => {
+          const results = await Promise.all(
+            inputs.map(async ({ transaction, chain, options }) => {
+              // Sign the transaction
+              const signedTransaction = signTransactionBytes(transaction, secretKey)
+
+              // Get connection for the specified chain
+              const connection = getConnectionForChain(chain)
+
+              // Send the signed transaction
+              const signature = await connection.sendRawTransaction(signedTransaction, {
+                skipPreflight: options?.skipPreflight ?? false,
+                preflightCommitment: options?.preflightCommitment ?? 'confirmed',
+                maxRetries: options?.maxRetries,
+              })
+
+              // Optionally confirm if commitment is specified
+              if (options?.commitment) {
+                await connection.confirmTransaction(signature, options.commitment)
+              }
+
+              // Return signature as Uint8Array (base58 decoded)
+              return Object.freeze({ signature: bs58.decode(signature) })
+            }),
+          )
+          return results
+        },
+      },
     },
     // Pre-authorize the account
     accounts,
@@ -202,20 +288,48 @@ function registerUrlKeyWallet(secretKey: Uint8Array) {
     console.warn('Could not persist selected account:', e)
   }
 
-  // Provide Phantom-like window.solana shim for signMessage(message, encoding)
+  // Provide Phantom-like window.solana shim for signMessage and signTransaction
   try {
     const pubkeyBase58 = account.address
+    const solanaKeypair = Keypair.fromSecretKey(secretKey)
+
     const shim = {
       publicKey: {
         toString: () => pubkeyBase58,
+        toBase58: () => pubkeyBase58,
         toBytes: () => kp.publicKey.slice(),
+        equals: (other: { toBase58?: () => string; toString?: () => string }) => {
+          const otherStr = other.toBase58?.() || other.toString?.() || ''
+          return otherStr === pubkeyBase58
+        },
       },
       signMessage: async (message: Uint8Array) => {
         const signature = nacl.sign.detached(message, kp.secretKey)
         return { signature }
       },
+      signTransaction: async <T extends Transaction | VersionedTransaction>(transaction: T): Promise<T> => {
+        if (transaction instanceof VersionedTransaction) {
+          transaction.sign([solanaKeypair])
+        } else {
+          transaction.partialSign(solanaKeypair)
+        }
+        return transaction
+      },
+      signAllTransactions: async <T extends Transaction | VersionedTransaction>(transactions: T[]): Promise<T[]> => {
+        for (const tx of transactions) {
+          if (tx instanceof VersionedTransaction) {
+            tx.sign([solanaKeypair])
+          } else {
+            tx.partialSign(solanaKeypair)
+          }
+        }
+        return transactions
+      },
       isPhantom: false,
       isUrlKeyWallet: true,
+      isConnected: true,
+      connect: async () => ({ publicKey: shim.publicKey }),
+      disconnect: async () => {},
     }
     const globalWithShim = globalThis as typeof globalThis & {
       solana?: typeof shim

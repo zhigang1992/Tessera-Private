@@ -14,7 +14,8 @@
     "test": "bun test",
     "test:watch": "bun test --watch",
     "migrate:export": "bun run scripts/export-production-data.ts",
-    "migrate:devnet": "bun run scripts/migrate-to-devnet.ts"
+    "migrate:devnet": "bun run scripts/migrate-to-devnet.ts",
+    "test:wallets": "bun run scripts/generate-test-wallets.ts"
   },
   "description": "React+Vite, Tailwind, gill (based on @solana/kit), Wallet UI",
   "keywords": [
