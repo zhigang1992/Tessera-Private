@@ -52,6 +52,7 @@
     "bn.js": "^5.2.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "decimal.js": "^10.6.0",
     "framer-motion": "^12.23.24",
     "gill": "0.11.0",
     "jotai": "^2.14.0",

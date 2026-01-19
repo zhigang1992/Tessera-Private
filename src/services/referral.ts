@@ -7,6 +7,7 @@ import {
   type UserRegisteredEvent,
 } from '@/features/referral/lib/graphql-client'
 import { DEVNET_POOLS } from './meteora'
+import { fromHasuraToNative, type BigNumberSource } from '@/lib/bignumber'
 
 // ============ Types ============
 
@@ -265,10 +266,8 @@ function formatBlockTimeWithTime(blockTime: number): string {
 }
 
 // Format amount from raw value (accounting for 18 decimal precision from GraphQL)
-function formatSwapAmount(rawAmount: string | number): string {
-  const num = Number(rawAmount)
-  const divisor = 10 ** 18 // GraphQL numeric precision
-  const actualAmount = num / divisor
+function formatSwapAmount(rawAmount: BigNumberSource): string {
+  const actualAmount = fromHasuraToNative(rawAmount)
 
   return actualAmount.toLocaleString('en-US', {
     minimumFractionDigits: 2,
