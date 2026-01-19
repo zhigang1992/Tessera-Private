@@ -155,7 +155,8 @@ export function MigrationPage() {
       if (config.skipExisting) {
         const existingChecks = await Promise.all(
           batch.map(async (codeData) => {
-            const layout = await checkReferralCodeLayout(connection, codeData.code)
+            const ownerPubkey = new PublicKey(codeData.ownerWallet)
+            const layout = await checkReferralCodeLayout(connection, codeData.code, ownerPubkey)
             return { codeData, layout }
           }),
         )

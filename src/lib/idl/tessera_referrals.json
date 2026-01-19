@@ -125,6 +125,11 @@
                 "kind": "account",
                 "path": "referral_code.code",
                 "account": "ReferralCode"
+              },
+              {
+                "kind": "account",
+                "path": "referral_code.owner",
+                "account": "ReferralCode"
               }
             ]
           }
@@ -198,6 +203,10 @@
               {
                 "kind": "arg",
                 "path": "code"
+              },
+              {
+                "kind": "arg",
+                "path": "owner"
               }
             ]
           }
@@ -226,6 +235,10 @@
         },
         {
           "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "payer",
           "writable": true,
           "signer": true
         },
@@ -284,6 +297,11 @@
               {
                 "kind": "account",
                 "path": "referral_code.code",
+                "account": "ReferralCode"
+              },
+              {
+                "kind": "account",
+                "path": "referral_code.owner",
                 "account": "ReferralCode"
               }
             ]
@@ -614,6 +632,10 @@
               {
                 "kind": "arg",
                 "path": "code"
+              },
+              {
+                "kind": "account",
+                "path": "owner"
               }
             ]
           }
@@ -674,6 +696,11 @@
               {
                 "kind": "account",
                 "path": "referral_code.code",
+                "account": "ReferralCode"
+              },
+              {
+                "kind": "account",
+                "path": "referral_code.owner",
                 "account": "ReferralCode"
               }
             ]
@@ -755,8 +782,18 @@
         },
         {
           "name": "authority",
+          "docs": [
+            "AUDIT FIX #3: Authority must be the program's upgrade authority",
+            "This prevents unauthorized initialization via frontrunning"
+          ],
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "program_data",
+          "docs": [
+            "AUDIT FIX #3: Program data account to verify upgrade authority"
+          ]
         },
         {
           "name": "system_program",
@@ -822,6 +859,11 @@
                 "kind": "account",
                 "path": "referral_code.code",
                 "account": "ReferralCode"
+              },
+              {
+                "kind": "account",
+                "path": "referral_code.owner",
+                "account": "ReferralCode"
               }
             ]
           }
@@ -875,6 +917,11 @@
               {
                 "kind": "account",
                 "path": "referral_code.code",
+                "account": "ReferralCode"
+              },
+              {
+                "kind": "account",
+                "path": "referral_code.owner",
                 "account": "ReferralCode"
               }
             ]
@@ -1120,6 +1167,29 @@
           }
         },
         {
+          "name": "admin_list",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "authority",
           "signer": true,
           "relations": [
@@ -1176,6 +1246,29 @@
           }
         },
         {
+          "name": "admin_list",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "authority",
           "signer": true,
           "relations": [
@@ -1226,6 +1319,29 @@
                   102,
                   105,
                   103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin_list",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
                 ]
               }
             ]
@@ -1376,6 +1492,19 @@
       ]
     },
     {
+      "name": "FeeRecipientsConfigured",
+      "discriminator": [
+        48,
+        211,
+        242,
+        205,
+        169,
+        129,
+        5,
+        53
+      ]
+    },
+    {
       "name": "ReferralCodeCreated",
       "discriminator": [
         44,
@@ -1508,6 +1637,36 @@
       "code": 6015,
       "name": "TooManyFeeRecipients",
       "msg": "Too many fee recipients. Maximum exceeded."
+    },
+    {
+      "code": 6016,
+      "name": "InvalidProgramData",
+      "msg": "Invalid program data account provided."
+    },
+    {
+      "code": 6017,
+      "name": "NoUpgradeAuthority",
+      "msg": "Program has no upgrade authority set."
+    },
+    {
+      "code": 6018,
+      "name": "UnauthorizedUpgradeAuthority",
+      "msg": "Unauthorized: Caller is not the program's upgrade authority."
+    },
+    {
+      "code": 6019,
+      "name": "TooManyAdmins",
+      "msg": "Too many admins. Cannot add more admins."
+    },
+    {
+      "code": 6020,
+      "name": "InvalidReferrerRegistration",
+      "msg": "Invalid referrer registration account."
+    },
+    {
+      "code": 6021,
+      "name": "InvalidTierOrdering",
+      "msg": "Invalid tier percentages. Must follow: Tier1 >= Tier2 >= Tier3."
     }
   ],
   "types": [
@@ -1619,6 +1778,54 @@
           {
             "name": "split_percentage",
             "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeRecipientsConfigured",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient1",
+            "type": "pubkey"
+          },
+          {
+            "name": "split1",
+            "type": "u16"
+          },
+          {
+            "name": "recipient2",
+            "type": "pubkey"
+          },
+          {
+            "name": "split2",
+            "type": "u16"
+          },
+          {
+            "name": "recipient3",
+            "type": "pubkey"
+          },
+          {
+            "name": "split3",
+            "type": "u16"
+          },
+          {
+            "name": "recipient4",
+            "type": "pubkey"
+          },
+          {
+            "name": "split4",
+            "type": "u16"
+          },
+          {
+            "name": "recipient_count",
+            "type": "u8"
           }
         ]
       }

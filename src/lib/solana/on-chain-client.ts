@@ -88,10 +88,14 @@ export function getReferralConfigPDA(programId?: PublicKey): [PublicKey, number]
 
 /**
  * Derive a referral code PDA
+ * Seeds: ["referral_code", code, owner]
  */
-export function getReferralCodePDA(code: string, programId?: PublicKey): [PublicKey, number] {
+export function getReferralCodePDA(code: string, ownerPubkey: PublicKey, programId?: PublicKey): [PublicKey, number] {
   const id = resolveProgramId(programId)
-  return PublicKey.findProgramAddressSync([Buffer.from('referral_code'), Buffer.from(code)], id)
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('referral_code'), Buffer.from(code), ownerPubkey.toBuffer()],
+    id,
+  )
 }
 
 /**
@@ -180,6 +184,7 @@ export async function fetchReferralConfig(connection: Connection) {
 export async function checkReferralCodeLayout(
   connection: Connection,
   code: string,
+  ownerPubkey: PublicKey,
 ): Promise<{
   exists: boolean
   hasCorrectLayout: boolean
@@ -190,7 +195,7 @@ export async function checkReferralCodeLayout(
     return { exists: false, hasCorrectLayout: false, needsRecreation: false }
   }
 
-  const [codePDA] = getReferralCodePDA(code, program.programId)
+  const [codePDA] = getReferralCodePDA(code, ownerPubkey, program.programId)
 
   // Try Anchor's auto-deserializer first (this is what on-chain instructions use)
   let anchorWorks = false
@@ -243,15 +248,16 @@ export async function checkReferralCodeLayout(
 
 /**
  * Fetch referral code account
+ * @param ownerPubkey - The owner of the referral code (required for PDA derivation)
  */
-export async function fetchReferralCode(connection: Connection, code: string) {
+export async function fetchReferralCode(connection: Connection, code: string, ownerPubkey: PublicKey) {
   const program = getReferralProgram(connection, null)
   if (!program) {
     console.error('fetchReferralCode: Failed to get program')
     return null
   }
 
-  const [codePDA] = getReferralCodePDA(code, program.programId)
+  const [codePDA] = getReferralCodePDA(code, ownerPubkey, program.programId)
 
   console.log(`fetchReferralCode: Querying code "${code}"`)
   console.log(`  Program ID: ${program.programId.toBase58()}`)
@@ -368,17 +374,162 @@ export function validateReferralCodeFormat(code: string): {
 }
 
 /**
- * Check if referral code exists and is active
+ * Search for a referral code by its code string (without knowing the owner)
+ * Uses getProgramAccounts to find matching codes.
+ * Returns the first active code found, or null if not found.
+ */
+export async function findReferralCodeByString(
+  connection: Connection,
+  code: string,
+): Promise<{
+  code: string
+  owner: PublicKey
+  isActive: boolean
+  bump: number
+  referredUserCount: number
+  totalRebatesEarned: bigint
+  pda: PublicKey
+} | null> {
+  const program = getReferralProgram(connection, null)
+  if (!program) {
+    console.error('findReferralCodeByString: Failed to get program')
+    return null
+  }
+
+  try {
+    // Use getProgramAccounts with memcmp filter to find codes matching the string
+    // The code string is stored after the 8-byte discriminator
+    // String format: 4-byte length + string bytes
+    const codeBytes = Buffer.from(code)
+    const codeFilter = Buffer.concat([
+      Buffer.from([codeBytes.length, 0, 0, 0]), // 4-byte little-endian length
+      codeBytes,
+    ])
+
+    const accounts = await connection.getProgramAccounts(program.programId, {
+      filters: [
+        {
+          memcmp: {
+            offset: 8, // Skip discriminator
+            bytes: codeFilter.toString('base64'),
+            encoding: 'base64',
+          },
+        },
+      ],
+    })
+
+    if (accounts.length === 0) {
+      console.log(`findReferralCodeByString: No account found for code "${code}"`)
+      return null
+    }
+
+    // Parse the first matching account
+    // Prefer active codes, but return first match if none active
+    for (const { pubkey, account } of accounts) {
+      const data = account.data
+
+      // Verify discriminator
+      const expectedDiscriminator = Buffer.from([227, 239, 247, 224, 128, 187, 44, 229])
+      const actualDiscriminator = data.slice(0, 8)
+      if (!expectedDiscriminator.equals(actualDiscriminator)) {
+        continue
+      }
+
+      let offset = 8
+
+      // Read code
+      const codeLen = data.readUInt32LE(offset)
+      offset += 4
+      const codeStr = data.slice(offset, offset + codeLen).toString('utf8')
+      offset += codeLen
+
+      // Read owner (32 bytes)
+      const ownerBytes = data.slice(offset, offset + 32)
+      const owner = new PublicKey(ownerBytes)
+      offset += 32
+
+      // Read bump (1 byte)
+      const bump = data.readUInt8(offset)
+      offset += 1
+
+      // Read isActive (1 byte bool)
+      const isActive = data.readUInt8(offset) === 1
+      offset += 1
+
+      // Read referredUserCount (u32)
+      const referredUserCount = data.readUInt32LE(offset)
+      offset += 4
+
+      // Read totalRebatesEarned (u64)
+      const totalRebatesEarned = data.readBigUInt64LE(offset)
+
+      if (isActive) {
+        return {
+          code: codeStr,
+          owner,
+          isActive,
+          bump,
+          referredUserCount,
+          totalRebatesEarned,
+          pda: pubkey,
+        }
+      }
+    }
+
+    // No active code found, return first match
+    const { pubkey, account } = accounts[0]
+    const data = account.data
+    let offset = 8
+
+    const codeLen = data.readUInt32LE(offset)
+    offset += 4
+    const codeStr = data.slice(offset, offset + codeLen).toString('utf8')
+    offset += codeLen
+
+    const ownerBytes = data.slice(offset, offset + 32)
+    const owner = new PublicKey(ownerBytes)
+    offset += 32
+
+    const bump = data.readUInt8(offset)
+    offset += 1
+
+    const isActive = data.readUInt8(offset) === 1
+    offset += 1
+
+    const referredUserCount = data.readUInt32LE(offset)
+    offset += 4
+
+    const totalRebatesEarned = data.readBigUInt64LE(offset)
+
+    return {
+      code: codeStr,
+      owner,
+      isActive,
+      bump,
+      referredUserCount,
+      totalRebatesEarned,
+      pda: pubkey,
+    }
+  } catch (error) {
+    console.error('findReferralCodeByString: Error searching for code:', error)
+    return null
+  }
+}
+
+/**
+ * Check if referral code exists and is active for a specific owner
+ * @param ownerPubkey - The owner to check the code for (required for PDA derivation)
  */
 export async function checkReferralCodeAvailability(
   connection: Connection,
   code: string,
+  ownerPubkey: PublicKey,
 ): Promise<{
   available: boolean
   exists: boolean
   isActive?: boolean
 }> {
-  const codeAccount = await fetchReferralCode(connection, code)
+  const codeAccount = await fetchReferralCode(connection, code, ownerPubkey)
 
   if (!codeAccount) {
     return { available: true, exists: false }
@@ -399,7 +550,7 @@ export async function checkReferralCodeAvailability(
  * Get accounts for create referral code instruction
  */
 export function getCreateReferralCodeAccounts(code: string, ownerPubkey: PublicKey, programId?: PublicKey) {
-  const [referralCodePDA] = getReferralCodePDA(code, programId)
+  const [referralCodePDA] = getReferralCodePDA(code, ownerPubkey, programId)
 
   return {
     referralCode: referralCodePDA,
@@ -417,15 +568,16 @@ type RegisterWithReferralCodeOptions = {
   programId?: PublicKey
   tesseraTokenProgram?: PublicKey
   authority?: PublicKey
+  codeOwner: PublicKey // Required: owner of the referral code
 }
 
 export function getRegisterWithReferralCodeAccounts(
   code: string,
   userPubkey: PublicKey,
-  options: RegisterWithReferralCodeOptions = {},
+  options: RegisterWithReferralCodeOptions,
 ) {
   const programId = resolveProgramId(options.programId)
-  const [referralCodePDA] = getReferralCodePDA(code, programId)
+  const [referralCodePDA] = getReferralCodePDA(code, options.codeOwner, programId)
   const [userRegistrationPDA] = getUserRegistrationPDA(userPubkey, programId)
   const [defaultReferralConfigPDA] = getReferralConfigPDA(programId)
   const referralConfigPDA = options.referralConfig ?? defaultReferralConfigPDA

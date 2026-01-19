@@ -18,7 +18,7 @@ import {
   getWhitelistEntryPDA,
   getTesseraMintAddress,
   getTesseraTokenProgramId,
-  fetchReferralCode,
+  findReferralCodeByString,
   fetchUserRegistration,
 } from '@/lib/solana'
 import type { TraderBindingData } from '../types/migration'
@@ -55,15 +55,11 @@ export function useAdminRegisterSingleUser() {
 
       const userPubkey = new PublicKey(input.binding.userWallet)
 
-      // Validate referral code exists on-chain
-      const codeAccount = await fetchReferralCode(connection, input.binding.referralCode)
+      // Search for referral code on-chain (we don't know owner beforehand)
+      const codeAccount = await findReferralCodeByString(connection, input.binding.referralCode)
       if (!codeAccount) {
-        // Debug: Show the PDA we're looking for
-        const [codePDA] = getReferralCodePDA(input.binding.referralCode, program.programId)
         throw new Error(
           `Referral code "${input.binding.referralCode}" does not exist on-chain.\n` +
-            `PDA: ${codePDA.toBase58()}\n` +
-            `Code bytes: ${Array.from(Buffer.from(input.binding.referralCode)).join(',')}\n` +
             `Make sure this exact code was created in Step 3.`,
         )
       }
@@ -73,13 +69,13 @@ export function useAdminRegisterSingleUser() {
       }
 
       const [referralConfigPDA] = getReferralConfigPDA(program.programId)
-      const [referralCodePDA] = getReferralCodePDA(input.binding.referralCode, program.programId)
+      const [referralCodePDA] = getReferralCodePDA(input.binding.referralCode, codeAccount.owner, program.programId)
       const [userRegistrationPDA] = getUserRegistrationPDA(userPubkey, program.programId)
       const [tokenAuthorityPDA] = getTokenAuthorityPDA(referralConfigPDA, program.programId)
       const [adminListPDA] = getAdminListPDA(program.programId)
 
       // Get optional referrer registration if it exists (similar to user-facing flow)
-      const referrerPubkey = new PublicKey(codeAccount.owner)
+      const referrerPubkey = codeAccount.owner
       const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey)
       const referrerRegistrationPDA = referrerRegistration
         ? getUserRegistrationPDA(referrerPubkey, program.programId)[0]

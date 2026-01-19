@@ -15,7 +15,7 @@ import {
   useCreateReferralCode as useCreateCodeMutation,
   useSolanaConnection,
   getReferralProgram,
-  fetchReferralCode,
+  findReferralCodeByString,
   fetchReferralConfig,
   fetchUserRegistration,
   getReferralConfigPDA,
@@ -291,8 +291,8 @@ export function useBindReferralCode() {
         throw new Error('Program not initialized')
       }
 
-      // Validate code exists
-      const codeAccount = await fetchReferralCode(connection, referralCode)
+      // Search for code on-chain (we don't know the owner beforehand)
+      const codeAccount = await findReferralCodeByString(connection, referralCode)
       if (!codeAccount) {
         throw new Error('Referral code does not exist')
       }
@@ -312,7 +312,7 @@ export function useBindReferralCode() {
       const tesseraTokenProgramId = getTesseraTokenProgramId()
 
       // Get optional referrer registration if it exists
-      const referrerPubkey = new PublicKey(codeAccount.owner)
+      const referrerPubkey = codeAccount.owner
       const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey)
       const referrerRegistrationPda = referrerRegistration
         ? getUserRegistrationPDA(referrerPubkey, program.programId)[0]
@@ -326,6 +326,7 @@ export function useBindReferralCode() {
 
       // Get accounts with the referrer registration if available
       const accounts = getRegisterWithReferralCodeAccounts(referralCode, wallet.publicKey, {
+        codeOwner: codeAccount.owner,
         referrerRegistration: referrerRegistrationPda,
         referralConfig: referralConfigPda,
         programId: program.programId,

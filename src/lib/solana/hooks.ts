@@ -22,6 +22,7 @@ import {
   getUserRegistrationPDA,
   validateReferralCodeFormat,
   checkReferralCodeAvailability,
+  findReferralCodeByString,
   shortenAddress,
 } from './on-chain-client'
 import { getTesseraTokenProgramId } from './config'
@@ -77,16 +78,16 @@ export function useReferralConfig() {
 /**
  * Hook: Query referral code
  */
-export function useReferralCode(code: string | null) {
+export function useReferralCode(code: string | null, ownerPubkey: PublicKey | null) {
   const connection = useSolanaConnection()
 
   return useQuery({
-    queryKey: QUERY_KEYS.referralCode(code || ''),
+    queryKey: [...QUERY_KEYS.referralCode(code || ''), ownerPubkey?.toBase58()],
     queryFn: () => {
-      if (!code) return null
-      return fetchReferralCode(connection, code)
+      if (!code || !ownerPubkey) return null
+      return fetchReferralCode(connection, code, ownerPubkey)
     },
-    enabled: !!code && code.length >= 6,
+    enabled: !!code && code.length >= 6 && !!ownerPubkey,
     staleTime: 30 * 1000, // 30 seconds
   })
 }
@@ -145,11 +146,11 @@ export function useCreateReferralCode() {
         throw new Error(validation.error)
       }
 
-      // Check availability
+      // Check availability (for this owner)
       const connection = createConnection()
-      const availability = await checkReferralCodeAvailability(connection, code)
+      const availability = await checkReferralCodeAvailability(connection, code, wallet.publicKey)
       if (!availability.available) {
-        throw new Error('Referral code already exists')
+        throw new Error('Referral code already exists for this wallet')
       }
 
       // PRE-FLIGHT CHECK: Verify program is deployed on our connection
@@ -267,9 +268,9 @@ export function useRegisterWithReferralCode() {
         throw new Error(validation.error)
       }
 
-      // Check code exists
+      // Search for the code on-chain (since we don't know the owner)
       const connection = createConnection()
-      const codeAccount = await fetchReferralCode(connection, code)
+      const codeAccount = await findReferralCodeByString(connection, code)
       if (!codeAccount) {
         throw new Error('Referral code does not exist')
       }
@@ -288,7 +289,7 @@ export function useRegisterWithReferralCode() {
       // Use the global config function to get the token program ID
       const tesseraTokenProgramId = getTesseraTokenProgramId()
 
-      const referrerPubkey = new PublicKey(codeAccount.owner)
+      const referrerPubkey = codeAccount.owner
       const referrerRegistration = await fetchUserRegistration(connection, referrerPubkey)
       const referrerRegistrationPda = referrerRegistration
         ? getUserRegistrationPDA(referrerPubkey, program.programId)[0]
@@ -301,6 +302,7 @@ export function useRegisterWithReferralCode() {
       })
 
       const accounts = getRegisterWithReferralCodeAccounts(code, wallet.publicKey, {
+        codeOwner: codeAccount.owner,
         referralConfig: referralConfigPda,
         referrerRegistration: referrerRegistrationPda,
         programId: program.programId,
@@ -342,20 +344,23 @@ export function useRegisterWithReferralCode() {
 }
 
 /**
- * Hook: Check referral code availability (debounced)
+ * Hook: Check referral code availability for current wallet (debounced)
+ * Note: With the new PDA scheme, codes are unique per owner, so this checks
+ * if the current wallet can create this code.
  */
 export function useCheckCodeAvailability(code: string) {
   const connection = useSolanaConnection()
+  const wallet = useWallet()
 
   return useQuery({
-    queryKey: ['checkAvailability', code],
+    queryKey: ['checkAvailability', code, wallet.publicKey?.toBase58()],
     queryFn: () => {
-      if (!code || code.length < 6) {
+      if (!code || code.length < 6 || !wallet.publicKey) {
         return { available: false, exists: false }
       }
-      return checkReferralCodeAvailability(connection, code)
+      return checkReferralCodeAvailability(connection, code, wallet.publicKey)
     },
-    enabled: code.length >= 6,
+    enabled: code.length >= 6 && !!wallet.publicKey,
     staleTime: 5000, // 5 seconds
   })
 }
