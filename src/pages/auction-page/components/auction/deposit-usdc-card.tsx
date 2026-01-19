@@ -1,36 +1,79 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Info } from 'lucide-react'
-import { getDepositInfo } from '@/services'
+import { Info, ExternalLink, Loader2 } from 'lucide-react'
+import { useAlphaVault } from '@/hooks/use-alpha-vault'
+import { ALPHA_VAULT_CONFIG } from '@/services/alpha-vault'
+import { toast } from 'sonner'
 import UsdcIcon from '@/pages/trade-page/components/_/token-usdc.svg?react'
 
 export function DepositUSDCCard() {
+  const wallet = useWallet()
   const [depositAmount, setDepositAmount] = useState('')
-  const [isDepositing, setIsDepositing] = useState(false)
 
-  const { data: depositInfo } = useQuery({
-    queryKey: ['depositInfo'],
-    queryFn: getDepositInfo,
-  })
+  const {
+    isLoading,
+    vaultInfo,
+    vaultStateDisplay,
+    escrowInfo,
+    depositQuota,
+    usdcBalance,
+    totalRaised,
+    targetRaise,
+    estimatedAllocation,
+    deposit,
+    error,
+    clearError,
+  } = useAlphaVault()
+
+  const isDepositOpen = vaultInfo?.state === 'deposit_open'
+  const canDeposit = depositQuota?.canDeposit && isDepositOpen && wallet.connected
 
   const handleConfirmDeposit = async () => {
     if (!depositAmount || parseFloat(depositAmount) <= 0) {
-      alert('Please enter a valid deposit amount')
+      toast.error('Please enter a valid deposit amount')
       return
     }
-    setIsDepositing(true)
-    // Mock deposit action
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    alert(`Successfully deposited ${depositAmount} USDC`)
-    setDepositAmount('')
-    setIsDepositing(false)
+
+    if (!wallet.connected) {
+      toast.error('Please connect your wallet')
+      return
+    }
+
+    const signature = await deposit(depositAmount)
+
+    if (signature) {
+      toast.success('Deposit successful!', {
+        description: `Transaction: ${signature.slice(0, 8)}...`,
+        action: {
+          label: 'View',
+          onClick: () =>
+            window.open(
+              `https://explorer.solana.com/tx/${signature}?cluster=devnet`,
+              '_blank'
+            ),
+        },
+      })
+      setDepositAmount('')
+    } else if (error) {
+      toast.error('Deposit failed', { description: error })
+      clearError()
+    }
   }
 
   const handleMaxClick = () => {
-    setDepositAmount(depositInfo?.maxDeposit.toString() ?? '0')
+    // Use the smaller of: user's USDC balance or remaining deposit quota
+    const balance = parseFloat(usdcBalance ?? '0')
+    const quota = parseFloat(depositQuota?.remainingQuota ?? '0') / 10 ** 6
+
+    const maxAmount = Math.min(balance, quota)
+    setDepositAmount(maxAmount > 0 ? maxAmount.toFixed(2) : '0')
+  }
+
+  const shortenAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
 
   return (
@@ -40,8 +83,11 @@ export function DepositUSDCCard() {
           <div className="flex items-center gap-2">
             <h3 className="text-base font-semibold text-foreground">Deposit USDC</h3>
           </div>
-          <span className="bg-[#06a800] text-white text-[10px] font-semibold px-2 py-1 rounded tracking-wider">
-            {depositInfo?.status === 'open' ? 'OPEN' : 'CLOSED'}
+          <span
+            className="text-white text-[10px] font-semibold px-2 py-1 rounded tracking-wider"
+            style={{ backgroundColor: vaultStateDisplay?.color ?? '#6b7280' }}
+          >
+            {vaultStateDisplay?.label ?? 'LOADING'}
           </span>
         </div>
 
@@ -53,8 +99,9 @@ export function DepositUSDCCard() {
               <button
                 onClick={handleMaxClick}
                 className="text-sm text-zinc-400 hover:text-foreground transition-colors"
+                disabled={!canDeposit}
               >
-                MAX: {depositInfo?.maxDeposit.toLocaleString() ?? '0'}
+                MAX: {usdcBalance ?? '0.00'}
               </button>
             </div>
             <div className="flex items-center justify-between gap-4">
@@ -67,6 +114,7 @@ export function DepositUSDCCard() {
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value)}
                 placeholder="0.0"
+                disabled={!canDeposit}
                 className="text-right text-4xl font-semibold border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
@@ -76,9 +124,11 @@ export function DepositUSDCCard() {
         {/* Info */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-zinc-600 dark:text-zinc-400">Current Deposit</span>
+            <span className="text-zinc-600 dark:text-zinc-400">Your Deposit</span>
             <span className="font-mono text-foreground">
-              {depositInfo?.currentDeposit.toLocaleString() ?? '0'} USDC
+              {escrowInfo
+                ? `${(parseFloat(escrowInfo.totalDeposited) / 10 ** 6).toLocaleString()} USDC`
+                : '0 USDC'}
             </span>
           </div>
           <div className="flex items-center justify-between text-xs">
@@ -86,47 +136,84 @@ export function DepositUSDCCard() {
               <span className="text-zinc-600 dark:text-zinc-400">Est. Allocation</span>
               <Info className="w-3 h-3 text-zinc-400" />
             </div>
-            <span className="font-mono text-[#06a800]">{depositInfo?.estAllocation.toFixed(4) ?? '0.0000'} TSX</span>
+            <span className="font-mono text-[#06a800]">{estimatedAllocation} TESS</span>
           </div>
         </div>
 
         {/* Action Button */}
         <div className="flex flex-col gap-2.5">
-          <Button
-            onClick={handleConfirmDeposit}
-            disabled={isDepositing}
-            className="w-full h-14 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 text-lg font-semibold disabled:opacity-50"
-          >
-            {isDepositing ? 'Depositing...' : 'Confirm Deposit'}
-          </Button>
+          {wallet.connected ? (
+            <Button
+              onClick={handleConfirmDeposit}
+              disabled={isLoading || !canDeposit}
+              className="w-full h-14 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 text-lg font-semibold disabled:opacity-50"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : !isDepositOpen ? (
+                'Deposits Closed'
+              ) : !depositQuota?.canDeposit ? (
+                depositQuota?.reason ?? 'Cannot Deposit'
+              ) : (
+                'Confirm Deposit'
+              )}
+            </Button>
+          ) : (
+            <Button
+              onClick={() => {
+                /* Trigger wallet modal via wallet adapter */
+              }}
+              className="w-full h-14 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 text-lg font-semibold"
+            >
+              Connect Wallet
+            </Button>
+          )}
 
           {/* Notice */}
-          <div className="bg-white/50 dark:bg-white/10 rounded-lg px-3 pt-3 pb-0 flex items-start gap-2.5">
-            <Info className="w-3 h-3 text-foreground shrink-0" />
-            <p className="text-[10px] text-foreground leading-[1.65]">
-              You have an active position in this auction. Check the top "My Position" card for real-time allocation
-              updates.
-            </p>
-          </div>
+          {escrowInfo && (
+            <div className="bg-white/50 dark:bg-white/10 rounded-lg px-3 pt-3 pb-0 flex items-start gap-2.5">
+              <Info className="w-3 h-3 text-foreground shrink-0" />
+              <p className="text-[10px] text-foreground leading-[1.65]">
+                You have an active position in this auction. Check the top "My Position" card for
+                real-time allocation updates.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Pool Details */}
         <div className="border-t border-zinc-200/10 dark:border-zinc-700/10 pt-4 flex flex-col gap-2">
-          <span className="text-[10px] font-semibold text-foreground tracking-wider">POOL DETAILS</span>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-semibold text-foreground tracking-wider">
+              VAULT DETAILS
+            </span>
+            <a
+              href={ALPHA_VAULT_CONFIG.meteoraUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-zinc-500 hover:text-foreground flex items-center gap-1"
+            >
+              View on Meteora
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
           <div className="flex flex-col gap-2.5">
             <div className="flex items-center justify-between text-[10px]">
               <span className="text-zinc-600 dark:text-zinc-400">Address</span>
               <span className="bg-black/10 dark:bg-white/10 px-2 py-0.5 rounded font-mono text-foreground">
-                {depositInfo?.poolAddress ?? '-'}
+                {shortenAddress(ALPHA_VAULT_CONFIG.vault)}
               </span>
             </div>
             <div className="flex items-center justify-between text-[10px]">
               <span className="text-zinc-600 dark:text-zinc-400">Target Raise</span>
-              <span className="font-mono text-foreground">${depositInfo?.targetRaise.toLocaleString() ?? '0'}</span>
+              <span className="font-mono text-foreground">${targetRaise}</span>
             </div>
             <div className="flex items-center justify-between text-[10px]">
               <span className="text-zinc-600 dark:text-zinc-400">Current Raise</span>
-              <span className="font-mono text-foreground">${depositInfo?.currentRaise.toLocaleString() ?? '0'}</span>
+              <span className="font-mono text-foreground">${totalRaised}</span>
             </div>
           </div>
         </div>
