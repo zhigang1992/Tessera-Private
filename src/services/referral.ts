@@ -1,4 +1,9 @@
 import { sleep } from './utils'
+import {
+  fetchAffiliateStats,
+  fetchUserRegistration,
+  type AggregatedAffiliateStats,
+} from '@/features/referral/lib/graphql-client'
 
 // ============ Types ============
 
@@ -58,6 +63,17 @@ export interface TradingHistoryResponse {
   page: number
   pageSize: number
   totalPages: number
+}
+
+// Store wallet address for service layer (set by components that have wallet context)
+let currentWalletAddress: string | null = null
+
+export function setCurrentWalletAddress(address: string | null) {
+  currentWalletAddress = address
+}
+
+export function getCurrentWalletAddress(): string | null {
+  return currentWalletAddress
 }
 
 // ============ Raw Mock Data (simulating backend raw data) ============
@@ -178,17 +194,73 @@ function calculateRewardsOverview(): RewardsData {
 
 // ============ API Functions ============
 
+// Cache for GraphQL stats to avoid repeated calls
+let cachedAffiliateStats: AggregatedAffiliateStats | null = null
+let cacheTimestamp: number = 0
+const CACHE_TTL = 30000 // 30 seconds
+
+async function getCachedAffiliateStats(): Promise<AggregatedAffiliateStats | null> {
+  if (!currentWalletAddress) return null
+
+  const now = Date.now()
+  if (cachedAffiliateStats && now - cacheTimestamp < CACHE_TTL) {
+    return cachedAffiliateStats
+  }
+
+  try {
+    cachedAffiliateStats = await fetchAffiliateStats(currentWalletAddress)
+    cacheTimestamp = now
+    return cachedAffiliateStats
+  } catch (error) {
+    console.warn('Failed to fetch affiliate stats from GraphQL:', error)
+    return null
+  }
+}
+
 export async function getRewardsOverview(): Promise<RewardsData> {
+  const stats = await getCachedAffiliateStats()
+
+  if (stats) {
+    return {
+      rewards: stats.totalRewardsUsd,
+      referralPoints: stats.totalReferrals,
+    }
+  }
+
+  // Fallback to mock data
   await sleep(500)
   return calculateRewardsOverview()
 }
 
 export async function getTraderLayers(): Promise<TraderLayer[]> {
+  const stats = await getCachedAffiliateStats()
+
+  if (stats) {
+    return [
+      { layer: 'L1', tradersReferred: stats.tier1Referrals, points: Math.round(stats.tier1Rewards) },
+      { layer: 'L2', tradersReferred: stats.tier2Referrals, points: Math.round(stats.tier2Rewards) },
+      { layer: 'L3', tradersReferred: stats.tier3Referrals, points: Math.round(stats.tier3Rewards) },
+    ]
+  }
+
+  // Fallback to mock calculation
   await sleep(600)
   return calculateTraderLayers()
 }
 
 export async function getReferralCodes(): Promise<ReferralCode[]> {
+  const stats = await getCachedAffiliateStats()
+
+  if (stats && stats.codes.length > 0) {
+    return stats.codes.map((c) => ({
+      code: c.code,
+      totalVolume: c.tradingVolume,
+      tradersReferred: c.referralCount,
+      totalRewards: c.rewardsUsd,
+    }))
+  }
+
+  // Fallback to mock data
   await sleep(400)
   return rawReferralCodes.map((rc) => calculateCodeStats(rc.code))
 }
@@ -196,6 +268,7 @@ export async function getReferralCodes(): Promise<ReferralCode[]> {
 export async function getReferralUsersByCode(_code: string): Promise<ReferralUser[]> {
   await sleep(300)
   // Return first 6 users as mock data for any code
+  // TODO: Implement GraphQL query for traders by code
   return rawUsers.slice(0, 6)
 }
 
@@ -242,6 +315,12 @@ export async function deleteReferralCode(code: string): Promise<boolean> {
   return true
 }
 
+// Clear cache when wallet changes
+export function clearAffiliateStatsCache() {
+  cachedAffiliateStats = null
+  cacheTimestamp = 0
+}
+
 // ============ Traders Tab Data ============
 
 const tradersOverviewData: TradersOverviewData = {
@@ -272,6 +351,25 @@ const rawTradingHistory = generateTradingHistory()
 // ============ Traders Tab API Functions ============
 
 export async function getTradersOverview(): Promise<TradersOverviewData> {
+  if (currentWalletAddress) {
+    try {
+      // Fetch user registration to get active referral code
+      const registration = await fetchUserRegistration(currentWalletAddress)
+      const activeReferralCode = registration?.referral_code ?? null
+
+      // For trading volume, we would need to aggregate from swap events
+      // For now, return 0 as the data model doesn't track per-user trading volume
+      return {
+        tradingVolume: 0, // TODO: Implement swap volume aggregation
+        activeReferralCode,
+        tradingPoints: 0, // Not tracked in current schema
+      }
+    } catch (error) {
+      console.warn('Failed to fetch traders overview from GraphQL:', error)
+    }
+  }
+
+  // Fallback to mock data
   await sleep(400)
   return tradersOverviewData
 }

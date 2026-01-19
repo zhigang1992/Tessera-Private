@@ -1,13 +1,27 @@
 import { useQuery } from '@tanstack/react-query'
+import { useWallet } from '@solana/wallet-adapter-react'
 import TreeIcon from './_/tree.svg?react'
 import PersonIcon from './_/person.svg?react'
 import { getTraderLayers } from '@/services'
 
+// Default empty data for when wallet is not connected
+const emptyLayers = [
+  { layer: 'L1', tradersReferred: 0, points: 0 },
+  { layer: 'L2', tradersReferred: 0, points: 0 },
+  { layer: 'L3', tradersReferred: 0, points: 0 },
+]
+
 export function ReferralTree() {
+  const { connected } = useWallet()
   const { data = [], isLoading } = useQuery({
     queryKey: ['traderLayers'],
     queryFn: getTraderLayers,
+    enabled: connected,
   })
+
+  // Use empty data when wallet not connected, otherwise use fetched data
+  const displayData = !connected ? emptyLayers : (data.length > 0 ? data : emptyLayers)
+  const showLoading = connected && isLoading
 
   return (
     <div className="flex flex-col lg:flex-row lg:items-stretch items-center rounded-[16px] bg-white dark:bg-[#1e1f20] px-4 lg:px-6 py-4 gap-4 lg:gap-6">
@@ -30,12 +44,12 @@ export function ReferralTree() {
 
         {/* Rows */}
         <div className="flex flex-col">
-          {isLoading ? (
+          {showLoading ? (
             <div className="px-[10px] py-4 text-center text-muted-foreground">
               Loading...
             </div>
           ) : (
-            data.map((row, index) => (
+            displayData.map((row, index) => (
               <div
                 key={row.layer}
                 className={`flex justify-between items-center px-2 lg:px-[10px] rounded-md lg:rounded-none ${

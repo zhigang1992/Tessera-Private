@@ -1,12 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
+import { useWallet } from '@solana/wallet-adapter-react'
 import TableViewIcon from './_/table-view.svg?react'
 import { getTradersOverview, formatCurrency } from '@/services'
 
 export function TradersOverview() {
+  const { connected } = useWallet()
   const { data, isLoading } = useQuery({
     queryKey: ['tradersOverview'],
     queryFn: getTradersOverview,
+    enabled: connected,
   })
+
+  // Show dash when wallet not connected or loading
+  const showDash = !connected || isLoading
 
   return (
     <div className="flex flex-col md:flex-row gap-[10px]">
@@ -15,7 +21,7 @@ export function TradersOverview() {
         <div className="flex flex-col gap-[5px]">
           <p className="text-[12px] text-zinc-900 dark:text-zinc-900">Your trading vol</p>
           <p className="text-[28px] font-light text-zinc-900 dark:text-zinc-900 font-martian leading-none h-10 flex items-center">
-            {isLoading ? '—' : formatCurrency(data?.tradingVolume ?? 0)}
+            {showDash ? '—' : formatCurrency(data?.tradingVolume ?? 0)}
           </p>
         </div>
         <TableViewIcon className="size-14 text-zinc-700 shrink-0" />
@@ -28,7 +34,7 @@ export function TradersOverview() {
           <div className="flex items-center w-full">
             <div className="bg-[#d2fb95] w-full rounded-[4px] px-6 h-10 flex items-center justify-center">
               <span className="text-[16px] font-semibold text-zinc-900 font-martian">
-                {isLoading ? '—' : (data?.activeReferralCode ?? '—')}
+                {showDash ? '—' : (data?.activeReferralCode ?? '—')}
               </span>
             </div>
           </div>
@@ -40,7 +46,7 @@ export function TradersOverview() {
         <div className="flex flex-col gap-[5px]">
           <p className="text-[12px] text-zinc-900">Your trading point</p>
           <p className="text-[28px] font-light text-zinc-900 font-martian leading-none h-10 flex items-center">
-            {isLoading ? '—' : (data?.tradingPoints?.toLocaleString() ?? '—')}
+            {showDash ? '—' : (data?.tradingPoints?.toLocaleString() ?? '—')}
           </p>
         </div>
       </div>

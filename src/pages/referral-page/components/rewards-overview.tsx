@@ -1,13 +1,19 @@
 import { useQuery } from '@tanstack/react-query'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { Trophy} from 'lucide-react'
 import { getRewardsOverview, formatCurrency } from '@/services'
 import AwardIcon from './_/award.svg?react'
 
 export function RewardsOverview() {
+  const { connected } = useWallet()
   const { data, isLoading } = useQuery({
     queryKey: ['rewardsOverview'],
     queryFn: getRewardsOverview,
+    enabled: connected,
   })
+
+  // Show dash when wallet not connected or loading
+  const showDash = !connected || isLoading
 
   return (
     <div className="flex flex-col md:flex-row gap-[10px]">
@@ -16,7 +22,7 @@ export function RewardsOverview() {
         <div className="flex flex-col gap-[5px]">
           <p className="text-[12px] text-zinc-900 dark:text-zinc-900">Rewards</p>
           <p className="text-[40px] font-light text-zinc-900 dark:text-zinc-900 font-martian leading-none">
-            {isLoading ? '—' : formatCurrency(data?.rewards ?? 0)}
+            {showDash ? '—' : formatCurrency(data?.rewards ?? 0)}
           </p>
         </div>
         <Trophy className="size-14 text-zinc-700 shrink-0" strokeWidth={1.5} />
@@ -27,7 +33,7 @@ export function RewardsOverview() {
         <div className="flex flex-col gap-[5px]">
           <p className="text-[12px] text-zinc-900">Referral Points</p>
           <p className="text-[40px] font-light text-zinc-900 font-martian leading-none">
-            {isLoading ? '—' : (data?.referralPoints?.toLocaleString() ?? '0')}
+            {showDash ? '—' : (data?.referralPoints?.toLocaleString() ?? '0')}
           </p>
         </div>
         <AwardIcon className="size-14 text-zinc-700 shrink-0" />

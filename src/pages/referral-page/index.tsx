@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { ReferralHeader } from './components/referral-header'
 import ReferralCodeModal from '@/features/referral/ui/referral-code-modal'
 import { TabSwitcher } from './components/tab-switcher'
@@ -9,11 +10,20 @@ import { RulesFaq } from './components/rules-faq'
 import { TradersOverview } from './components/traders-overview'
 import { TradingHistory } from './components/trading-history'
 import { TradersRulesFaq } from './components/traders-rules-faq'
+import { setCurrentWalletAddress, clearAffiliateStatsCache } from '@/services'
 
 export default function ReferralPage() {
+  const { publicKey } = useWallet()
   const [activeTab, setActiveTab] = useState<'affiliates' | 'traders'>('affiliates')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [referralCode, setReferralCode] = useState<string | null>(null)
+
+  // Set wallet address for service layer
+  useEffect(() => {
+    const walletAddress = publicKey?.toBase58() ?? null
+    setCurrentWalletAddress(walletAddress)
+    clearAffiliateStatsCache() // Clear cache when wallet changes
+  }, [publicKey])
 
   // Handle ?code=xxx URL parameter for referral code binding
   useEffect(() => {

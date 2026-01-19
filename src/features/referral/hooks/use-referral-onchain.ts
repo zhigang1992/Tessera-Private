@@ -3,6 +3,7 @@
  *
  * Replacement for use-referral-queries.ts
  * Uses on-chain Solana queries instead of off-chain API
+ * Enriched with GraphQL data for metrics and tier counts
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -23,6 +24,7 @@ import {
   getTesseraTokenProgramId,
   shortenAddress,
 } from '@/lib/solana'
+import { fetchAffiliateStats } from '../lib/graphql-client'
 
 /**
  * Query Keys - mimics the old structure for easier migration
@@ -111,6 +113,7 @@ export function useTraderData(walletAddress?: string | null, enabled = true) {
 /**
  * Affiliate Data (equivalent to useAffiliateData)
  * Returns user's referral codes and metrics
+ * Now enriched with GraphQL data for accurate metrics and tier counts
  */
 export function useAffiliateData(enabled = true, walletAddress?: string | null) {
   const wallet = useWallet()
@@ -125,23 +128,41 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
       const program = getReferralProgram(connection, wallet)
       if (!program) return null
 
-      // OPTIMIZATION: Use raw getProgramAccounts with discriminator filter
-      // Note: We can't filter by owner at RPC level because owner offset is variable
-      // (depends on code string length). So we filter client-side instead.
-      const accounts = await connection.getProgramAccounts(program.programId, {
-        filters: [
-          {
-            // Filter by account discriminator (ReferralCode)
-            memcmp: {
-              offset: 0,
-              bytes: 'f8H8SWXTmJC', // base58 of [227, 239, 247, 224, 128, 187, 44, 229]
+      // Fetch both on-chain data and GraphQL stats in parallel
+      const [accountsResult, graphqlStats] = await Promise.all([
+        // On-chain: Get referral codes owned by this wallet
+        connection.getProgramAccounts(program.programId, {
+          filters: [
+            {
+              // Filter by account discriminator (ReferralCode)
+              memcmp: {
+                offset: 0,
+                bytes: 'f8H8SWXTmJC', // base58 of [227, 239, 247, 224, 128, 187, 44, 229]
+              },
             },
-          },
-        ],
-      })
+          ],
+        }),
+        // GraphQL: Get aggregated stats
+        fetchAffiliateStats(pubkey.toBase58()).catch((err) => {
+          console.warn('Failed to fetch GraphQL stats:', err)
+          return null
+        }),
+      ])
+
+      // Build code stats lookup from GraphQL data
+      const codeStatsMap = new Map<string, { referralCount: number; tradingVolume: number; rewardsUsd: number }>()
+      if (graphqlStats) {
+        for (const code of graphqlStats.codes) {
+          codeStatsMap.set(code.code, {
+            referralCount: code.referralCount,
+            tradingVolume: code.tradingVolume,
+            rewardsUsd: code.rewardsUsd,
+          })
+        }
+      }
 
       const referralCodes: ReferralCodeRecord[] = []
-      for (const { pubkey: accountPubkey, account } of accounts) {
+      for (const { pubkey: accountPubkey, account } of accountsResult) {
         try {
           // Manual deserialization from raw bytes
           const data = account.data
@@ -168,8 +189,12 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
           const isActive = data[offset] === 1
           offset += 1
 
-          // Read total_referrals (u32: 4 bytes)
-          const totalReferrals = data.readUInt32LE(offset)
+          // Read total_referrals (u32: 4 bytes) - on-chain value as fallback
+          const onChainReferrals = data.readUInt32LE(offset)
+
+          // Use GraphQL stats if available, otherwise fall back to on-chain data
+          const codeStats = codeStatsMap.get(code)
+          const referredTraderCount = codeStats?.referralCount ?? onChainReferrals
 
           referralCodes.push({
             id: referralCodes.length,
@@ -179,12 +204,15 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
             walletAddress: pubkey.toBase58(),
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            referredTraderCount: totalReferrals,
+            referredTraderCount,
           })
         } catch (err) {
           console.warn('Failed to decode account:', accountPubkey.toBase58(), err)
         }
       }
+
+      // Calculate total rewards from GraphQL data
+      const totalRewards = graphqlStats?.totalRewardsUsd ?? 0
 
       const affiliateSummary: AffiliateDataRecord = {
         walletAddress: pubkey.toBase58(),
@@ -192,17 +220,17 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
         email: null,
         emailVerified: false,
         metrics: {
-          rebatesTotal: 0, // Not tracked in current schema
-          referralPoints: 0,
+          rebatesTotal: totalRewards,
+          referralPoints: graphqlStats?.totalReferrals ?? 0,
           snapshotAt: new Date().toISOString(),
         },
         referralCodes,
         tree: {
-          l1TraderCount: 0, // Would need to query all registrations
-          l2TraderCount: 0,
-          l3TraderCount: 0,
-          totalTraderCount: 0,
-          l1Traders: [],
+          l1TraderCount: graphqlStats?.tier1Referrals ?? 0,
+          l2TraderCount: graphqlStats?.tier2Referrals ?? 0,
+          l3TraderCount: graphqlStats?.tier3Referrals ?? 0,
+          totalTraderCount: graphqlStats?.totalReferrals ?? 0,
+          l1Traders: [], // Could be populated from GraphQL if needed
           l2Traders: [],
           l3Traders: [],
         },
