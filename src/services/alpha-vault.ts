@@ -118,8 +118,20 @@ export interface AlphaVaultClaimInfo {
 // TODO: Remove once Meteora's worker-dev API has the whitelist data synced
 
 /**
+ * Convert hex string to byte array (number[])
+ */
+function hexToBytes(hex: string): number[] {
+  const bytes: number[] = []
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes.push(parseInt(hex.substring(i, i + 2), 16))
+  }
+  return bytes
+}
+
+/**
  * Hardcoded merkle proofs for whitelisted wallets
  * This is a temporary workaround while the Meteora API syncs
+ * proof format: hex strings that will be converted to number[][] for SDK
  */
 const HARDCODED_MERKLE_PROOFS: Record<string, { proof: string[]; maxCap: string }> = {
   // Kyle's wallet - 10,000 USDC cap
@@ -137,10 +149,13 @@ function getHardcodedMerkleProof(wallet: string): DepositWithProofParams | null 
   const data = HARDCODED_MERKLE_PROOFS[wallet]
   if (!data) return null
 
+  // Convert hex strings to number[][] as required by SDK
+  const proofBytes: number[][] = data.proof.map((hexStr) => hexToBytes(hexStr))
+
   return {
     merkleRootConfig: new PublicKey(ALPHA_VAULT_CONFIG.merkleRootConfig),
     maxCap: new BN(data.maxCap),
-    proof: data.proof,
+    proof: proofBytes,
   }
 }
 
