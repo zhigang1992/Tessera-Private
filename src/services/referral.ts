@@ -220,6 +220,8 @@ async function getCachedAffiliateStats(): Promise<AggregatedAffiliateStats | nul
 export async function getRewardsOverview(): Promise<RewardsData> {
   const stats = await getCachedAffiliateStats()
 
+  // Always return GraphQL data (which may be zeros if no data exists)
+  // Only fall back to mock if GraphQL fetch failed entirely (stats is null)
   if (stats) {
     return {
       rewards: stats.totalRewardsUsd,
@@ -227,14 +229,17 @@ export async function getRewardsOverview(): Promise<RewardsData> {
     }
   }
 
-  // Fallback to mock data
-  await sleep(500)
-  return calculateRewardsOverview()
+  // Return zeros when no wallet connected or GraphQL failed
+  return {
+    rewards: 0,
+    referralPoints: 0,
+  }
 }
 
 export async function getTraderLayers(): Promise<TraderLayer[]> {
   const stats = await getCachedAffiliateStats()
 
+  // Always return GraphQL data (which may be zeros if no data exists)
   if (stats) {
     return [
       { layer: 'L1', tradersReferred: stats.tier1Referrals, points: Math.round(stats.tier1Rewards) },
@@ -243,9 +248,12 @@ export async function getTraderLayers(): Promise<TraderLayer[]> {
     ]
   }
 
-  // Fallback to mock calculation
-  await sleep(600)
-  return calculateTraderLayers()
+  // Return zeros when no wallet connected or GraphQL failed
+  return [
+    { layer: 'L1', tradersReferred: 0, points: 0 },
+    { layer: 'L2', tradersReferred: 0, points: 0 },
+    { layer: 'L3', tradersReferred: 0, points: 0 },
+  ]
 }
 
 export async function getReferralCodes(): Promise<ReferralCode[]> {
@@ -260,9 +268,8 @@ export async function getReferralCodes(): Promise<ReferralCode[]> {
     }))
   }
 
-  // Fallback to mock data
-  await sleep(400)
-  return rawReferralCodes.map((rc) => calculateCodeStats(rc.code))
+  // Return empty array when no codes exist or GraphQL failed
+  return []
 }
 
 export async function getReferralUsersByCode(_code: string): Promise<ReferralUser[]> {

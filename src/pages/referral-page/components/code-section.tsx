@@ -121,6 +121,8 @@ export function CodeSection() {
             <div className="flex-1 text-[12px] leading-4 text-zinc-500">Total Volume</div>
             <div className="flex-1 text-[12px] leading-4 text-zinc-500">Traders Referred</div>
             <div className="flex-1 text-[12px] leading-4 text-zinc-500">Total Rewards</div>
+            {/* Placeholder for Share button column */}
+            <div className="w-[85px] shrink-0" />
           </div>
 
           {/* Divider - hidden on mobile */}
