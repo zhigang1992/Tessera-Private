@@ -423,93 +423,68 @@ export async function findReferralCodeByString(
       return null
     }
 
-    // Parse the first matching account
-    // Prefer active codes, but return first match if none active
-    for (const { pubkey, account } of accounts) {
-      const data = account.data
-
+    // Parse account data according to new IDL layout:
+    // ReferralCode { code: string, owner: pubkey, is_active: bool, total_referrals: u32, bump: u8 }
+    const parseReferralCode = (pubkey: PublicKey, data: Buffer) => {
       // Verify discriminator
       const expectedDiscriminator = Buffer.from([227, 239, 247, 224, 128, 187, 44, 229])
       const actualDiscriminator = data.slice(0, 8)
       if (!expectedDiscriminator.equals(actualDiscriminator)) {
-        continue
+        return null
       }
 
       let offset = 8
 
-      // Read code
+      // Read code (string: 4-byte length + bytes)
       const codeLen = data.readUInt32LE(offset)
       offset += 4
       const codeStr = data.slice(offset, offset + codeLen).toString('utf8')
       offset += codeLen
 
-      // Read owner (32 bytes)
+      // Read owner (32 bytes pubkey)
       const ownerBytes = data.slice(offset, offset + 32)
       const owner = new PublicKey(ownerBytes)
       offset += 32
 
-      // Read bump (1 byte)
-      const bump = data.readUInt8(offset)
-      offset += 1
-
-      // Read isActive (1 byte bool)
+      // Read is_active (1 byte bool)
       const isActive = data.readUInt8(offset) === 1
       offset += 1
 
-      // Read referredUserCount (u32)
-      const referredUserCount = data.readUInt32LE(offset)
+      // Read total_referrals (u32)
+      const totalReferrals = data.readUInt32LE(offset)
       offset += 4
 
-      // Read totalRebatesEarned (u64)
-      const totalRebatesEarned = data.readBigUInt64LE(offset)
+      // Read bump (1 byte)
+      const bump = data.readUInt8(offset)
 
-      if (isActive) {
-        return {
-          code: codeStr,
-          owner,
-          isActive,
-          bump,
-          referredUserCount,
-          totalRebatesEarned,
-          pda: pubkey,
-        }
+      return {
+        code: codeStr,
+        owner,
+        isActive,
+        bump,
+        referredUserCount: totalReferrals,
+        totalRebatesEarned: BigInt(0), // Field removed in new IDL
+        pda: pubkey,
       }
     }
 
-    // No active code found, return first match
-    const { pubkey, account } = accounts[0]
-    const data = account.data
-    let offset = 8
-
-    const codeLen = data.readUInt32LE(offset)
-    offset += 4
-    const codeStr = data.slice(offset, offset + codeLen).toString('utf8')
-    offset += codeLen
-
-    const ownerBytes = data.slice(offset, offset + 32)
-    const owner = new PublicKey(ownerBytes)
-    offset += 32
-
-    const bump = data.readUInt8(offset)
-    offset += 1
-
-    const isActive = data.readUInt8(offset) === 1
-    offset += 1
-
-    const referredUserCount = data.readUInt32LE(offset)
-    offset += 4
-
-    const totalRebatesEarned = data.readBigUInt64LE(offset)
-
-    return {
-      code: codeStr,
-      owner,
-      isActive,
-      bump,
-      referredUserCount,
-      totalRebatesEarned,
-      pda: pubkey,
+    // Parse accounts, prefer active codes
+    for (const { pubkey, account } of accounts) {
+      const parsed = parseReferralCode(pubkey, account.data)
+      if (parsed && parsed.isActive) {
+        return parsed
+      }
     }
+
+    // No active code found, return first valid match
+    for (const { pubkey, account } of accounts) {
+      const parsed = parseReferralCode(pubkey, account.data)
+      if (parsed) {
+        return parsed
+      }
+    }
+
+    return null
   } catch (error) {
     console.error('findReferralCodeByString: Error searching for code:', error)
     return null
