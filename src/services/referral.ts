@@ -1,11 +1,12 @@
-import { sleep } from './utils'
 import {
   fetchAffiliateStats,
   fetchUserRegistration,
   fetchTradersForCode,
+  fetchSwapEvents,
   type AggregatedAffiliateStats,
   type UserRegisteredEvent,
 } from '@/features/referral/lib/graphql-client'
+import { DEVNET_POOLS } from './meteora'
 
 // ============ Types ============
 
@@ -234,30 +235,46 @@ export function clearAffiliateStatsCache() {
 
 // ============ Traders Tab Data ============
 
-const tradersOverviewData: TradersOverviewData = {
-  tradingVolume: 100,
-  activeReferralCode: 'jfhdkskl9',
-  tradingPoints: 100000,
+// Token mint to symbol mapping for trade history
+const MINT_TO_SYMBOL: Record<string, string> = {
+  [DEVNET_POOLS['TESS-USDC'].tokenX.mint]: 'TESS',
+  [DEVNET_POOLS['TESS-USDC'].tokenY.mint]: 'USDC',
 }
 
-// Generate mock trading history data
-const generateTradingHistory = (): TradingHistoryItem[] => {
-  const items: TradingHistoryItem[] = []
-  for (let i = 1; i <= 100; i++) {
-    items.push({
-      id: `trade-${i}`,
-      token: 'T-SPACEX',
-      amountIn: '1,000 USDC',
-      amountOut: '300.2 T-SPACEX',
-      type: 'Buy',
-      account: '0xA8D0...6006',
-      time: 'Today at 3:20 PM',
-    })
+// TESS-USDC pool address for filtering
+const TESS_USDC_POOL = DEVNET_POOLS['TESS-USDC'].address
+
+// Format block time to readable date with time
+function formatBlockTimeWithTime(blockTime: number): string {
+  const date = new Date(blockTime * 1000)
+  const now = new Date()
+  const isToday = date.toDateString() === now.toDateString()
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const isYesterday = date.toDateString() === yesterday.toDateString()
+
+  const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+
+  if (isToday) {
+    return `Today at ${timeStr}`
+  } else if (isYesterday) {
+    return `Yesterday at ${timeStr}`
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ` at ${timeStr}`
   }
-  return items
 }
 
-const rawTradingHistory = generateTradingHistory()
+// Format amount from raw value (accounting for 18 decimal precision from GraphQL)
+function formatSwapAmount(rawAmount: string | number): string {
+  const num = Number(rawAmount)
+  const divisor = 10 ** 18 // GraphQL numeric precision
+  const actualAmount = num / divisor
+
+  return actualAmount.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4,
+  })
+}
 
 // ============ Traders Tab API Functions ============
 
@@ -280,27 +297,61 @@ export async function getTradersOverview(): Promise<TradersOverviewData> {
     }
   }
 
-  // Fallback to mock data
-  await sleep(400)
-  return tradersOverviewData
+  // Return zeros when no wallet connected or GraphQL failed
+  return {
+    tradingVolume: 0,
+    activeReferralCode: null,
+    tradingPoints: 0,
+  }
 }
 
 export async function getTradingHistory(
   page: number = 1,
   pageSize: number = 10
 ): Promise<TradingHistoryResponse> {
-  await sleep(500)
-  const start = (page - 1) * pageSize
-  const items = rawTradingHistory.slice(start, start + pageSize)
-  const total = rawTradingHistory.length
-  const totalPages = Math.ceil(total / pageSize)
+  try {
+    const offset = (page - 1) * pageSize
+    // Filter to only show trades from the TESS-USDC pool
+    const { events, total } = await fetchSwapEvents(pageSize, offset, TESS_USDC_POOL)
 
-  return {
-    items,
-    total,
-    page,
-    pageSize,
-    totalPages,
+    const items: TradingHistoryItem[] = events.map((event) => {
+      const isBuy = event.type === 'swap-y-for-x' // USDC -> TESS is a buy
+      const symbolX = MINT_TO_SYMBOL[event.mint_x] || 'Unknown'
+      const symbolY = MINT_TO_SYMBOL[event.mint_y] || 'Unknown'
+
+      const amountX = formatSwapAmount(event.amount_x)
+      const amountY = formatSwapAmount(event.amount_y)
+
+      return {
+        id: event.signature,
+        token: symbolX, // TESS is always the main token
+        amountIn: isBuy ? `${amountY} ${symbolY}` : `${amountX} ${symbolX}`,
+        amountOut: isBuy ? `${amountX} ${symbolX}` : `${amountY} ${symbolY}`,
+        type: isBuy ? 'Buy' : 'Sell',
+        account: formatWalletAddress(event.sender),
+        time: formatBlockTimeWithTime(event.block_time),
+      }
+    })
+
+    const totalPages = Math.ceil(total / pageSize)
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+      totalPages,
+    }
+  } catch (error) {
+    console.warn('Failed to fetch trading history from GraphQL:', error)
+    // Return empty result on error
+    return {
+      items: [],
+      total: 0,
+      page,
+      pageSize,
+      totalPages: 0,
+    }
   }
 }
 
