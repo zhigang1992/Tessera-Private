@@ -8,7 +8,7 @@ import CheckCircleIcon from './_/check-circle.svg?react'
 export function VestingHeaderCard() {
   const wallet = useWallet()
 
-  const { vaultInfo, claimInfo } = useAlphaVault()
+  const { vaultInfo, claimInfo, vestingDuration } = useAlphaVault()
 
   const circumference = 2 * Math.PI * 24
 
@@ -143,7 +143,7 @@ export function VestingHeaderCard() {
             <div className="border-t border-zinc-200 dark:border-zinc-700 pt-4">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-zinc-600 dark:text-zinc-400">Unlock Rate</span>
-                <span className="font-medium text-[#06a800]">Linear / 24h</span>
+                <span className="font-medium text-[#06a800]">{vestingDuration}</span>
               </div>
             </div>
           </div>

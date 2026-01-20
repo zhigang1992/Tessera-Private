@@ -1,20 +1,33 @@
-import { useEffect, useRef } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useRef, useMemo } from 'react'
 import { createChart, ColorType, AreaSeries } from 'lightweight-charts'
 import type { IChartApi, AreaData, Time } from 'lightweight-charts'
-import { getVestingChartData } from '@/services'
 
-export function VestingChart() {
+interface VestingChartProps {
+  totalTokens: number
+  totalHours: number
+  currentProgressHours: number
+}
+
+export function VestingChart({ totalTokens, totalHours, currentProgressHours }: VestingChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
 
-  const { data: vestingData } = useQuery({
-    queryKey: ['vestingChartData'],
-    queryFn: getVestingChartData,
-  })
+  // Generate chart data based on props
+  const vestingData = useMemo(() => {
+    const dataPoints = Math.max(totalHours + 1, 25)
+    return {
+      totalTokens,
+      currentProgressHours,
+      totalHours,
+      data: Array.from({ length: dataPoints }, (_, i) => ({
+        hour: i,
+        value: totalTokens > 0 ? (totalTokens / totalHours) * i : 0,
+      })),
+    }
+  }, [totalTokens, totalHours, currentProgressHours])
 
   useEffect(() => {
-    if (!chartContainerRef.current || !vestingData) return
+    if (!chartContainerRef.current) return
 
     const chart = createChart(chartContainerRef.current, {
       layout: {
@@ -80,7 +93,7 @@ export function VestingChart() {
       },
     })
 
-    // Locked area (gray horizontal at 1.22 with fill)
+    // Locked area (gray horizontal at totalTokens with fill)
     const lockedSeries = chart.addSeries(AreaSeries, {
       topColor: 'rgba(170, 170, 170, 0.3)',
       bottomColor: 'rgba(170, 170, 170, 0.05)',
@@ -108,28 +121,31 @@ export function VestingChart() {
     // Use a fixed start time for consistent X-axis
     const startTime = new Date('2024-01-01T00:00:00').getTime() / 1000
 
-    // Unlocked area: diagonal from 0 to 1.22 over 24 hours
+    // Unlocked area: diagonal from 0 to totalTokens over totalHours
     const unlockedData: AreaData<Time>[] = vestingData.data.map((point) => ({
       time: (startTime + point.hour * 3600) as Time,
       value: point.value,
     }))
 
-    // Locked area: horizontal at 1.22 from hour 1 to hour 24
-    const lockedData: AreaData<Time>[] = Array.from({ length: 24 }, (_, i) => ({
+    // Locked area: horizontal at totalTokens from hour 1 to totalHours
+    const lockedData: AreaData<Time>[] = Array.from({ length: totalHours }, (_, i) => ({
       time: (startTime + (i + 1) * 3600) as Time,
-      value: vestingData.totalTokens, // 1.22
+      value: vestingData.totalTokens,
     }))
 
     // Set data
     lockedSeries.setData(lockedData)
     unlockedSeries.setData(unlockedData)
 
-    // Set Y-axis range to match design: 0 to 3.5
+    // Calculate Y-axis max: round up totalTokens to nice number, minimum 3.5
+    const yAxisMax = Math.max(3.5, Math.ceil(vestingData.totalTokens * 1.5 * 10) / 10)
+
+    // Set Y-axis range
     lockedSeries.applyOptions({
       autoscaleInfoProvider: () => ({
         priceRange: {
           minValue: 0,
-          maxValue: 3.5,
+          maxValue: yAxisMax,
         },
       }),
     })
@@ -137,15 +153,15 @@ export function VestingChart() {
       autoscaleInfoProvider: () => ({
         priceRange: {
           minValue: 0,
-          maxValue: 3.5,
+          maxValue: yAxisMax,
         },
       }),
     })
 
-    // Set visible time range: 1h to 24h
+    // Set visible time range: 1h to totalHours
     chart.timeScale().setVisibleRange({
       from: (startTime + 1 * 3600) as Time,
-      to: (startTime + 24 * 3600) as Time,
+      to: (startTime + totalHours * 3600) as Time,
     })
 
     chartRef.current = chart
@@ -166,7 +182,7 @@ export function VestingChart() {
       window.removeEventListener('resize', handleResize)
       chart.remove()
     }
-  }, [vestingData])
+  }, [vestingData, totalHours])
 
   return <div ref={chartContainerRef} className="w-full h-full" />
 }

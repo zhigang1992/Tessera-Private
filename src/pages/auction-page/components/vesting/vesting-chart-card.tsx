@@ -1,7 +1,32 @@
 import { Card } from '@/components/ui/card'
 import { VestingChart } from './vesting-chart'
+import { useAlphaVault } from '@/hooks/use-alpha-vault'
 
 export function VestingChartCard() {
+  const { vaultInfo, claimInfo } = useAlphaVault()
+
+  // Calculate chart data from real vault info
+  const vestingDurationHours = vaultInfo?.vestingDurationHours ?? 24
+  const totalAllocation = claimInfo
+    ? parseFloat(claimInfo.totalAllocation) / 10 ** 6
+    : 0
+
+  // Calculate current progress through vesting period
+  let currentProgressHours = 0
+  if (vaultInfo?.vestingStartTime && vaultInfo?.vestingEndTime) {
+    const now = Date.now()
+    const startTime = vaultInfo.vestingStartTime.getTime()
+    const endTime = vaultInfo.vestingEndTime.getTime()
+
+    if (now >= startTime && now <= endTime) {
+      const elapsed = now - startTime
+      const total = endTime - startTime
+      currentProgressHours = (elapsed / total) * vestingDurationHours
+    } else if (now > endTime) {
+      currentProgressHours = vestingDurationHours
+    }
+  }
+
   return (
     <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95] border-0 p-6 h-full">
       <div className="flex flex-col gap-4 h-full">
@@ -21,7 +46,11 @@ export function VestingChartCard() {
 
         {/* Chart */}
         <div className="h-[300px]">
-          <VestingChart />
+          <VestingChart
+            totalTokens={totalAllocation}
+            totalHours={vestingDurationHours}
+            currentProgressHours={currentProgressHours}
+          />
         </div>
       </div>
     </Card>
