@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Card } from '@/components/ui/card'
 import { useAlphaVault } from '@/hooks/use-alpha-vault'
 import { ALPHA_VAULT_CONFIG } from '@/services/alpha-vault'
+import { WithdrawModal } from './withdraw-modal'
 
 export function AuctionHeaderCard() {
   const wallet = useWallet()
+  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false)
 
   const {
     vaultInfo,
@@ -141,9 +144,19 @@ export function AuctionHeaderCard() {
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-zinc-600 dark:text-zinc-400">Deposited</span>
-                  <span className="text-sm font-semibold font-mono text-foreground">
-                    ${userDeposited}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold font-mono text-foreground">
+                      ${userDeposited}
+                    </span>
+                    {hasPosition && vaultInfo?.state === 'deposit_open' && (
+                      <button
+                        onClick={() => setWithdrawModalOpen(true)}
+                        className="text-sm font-mono text-foreground underline hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                      >
+                        Withdraw
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-zinc-600 dark:text-zinc-400">Est. Alloc</span>
@@ -196,6 +209,8 @@ export function AuctionHeaderCard() {
           </div>
         </div>
       </div>
+
+      <WithdrawModal open={withdrawModalOpen} onOpenChange={setWithdrawModalOpen} />
     </Card>
   )
 }
