@@ -57,6 +57,7 @@ export interface UseAlphaVaultReturn {
   estimatedAllocation: string
   estimatedRefund: string
   availableToClaim: string
+  vestingDuration: string // e.g., "6h Linear"
 
   // Actions
   initialize: () => Promise<void>
@@ -144,6 +145,11 @@ export function useAlphaVault(): UseAlphaVaultReturn {
     if (!claimInfo) return '0'
     return formatVaultAmount(claimInfo.availableToClaim, ALPHA_VAULT_CONFIG.tessDecimals)
   }, [claimInfo])
+
+  const vestingDuration = useMemo(() => {
+    if (!vaultInfo) return '0h Linear'
+    return `${vaultInfo.vestingDurationHours}h Linear`
+  }, [vaultInfo])
 
   // Fetch USDC balance
   const fetchUsdcBalance = useCallback(async () => {
@@ -441,6 +447,7 @@ export function useAlphaVault(): UseAlphaVaultReturn {
     estimatedAllocation,
     estimatedRefund,
     availableToClaim,
+    vestingDuration,
     initialize,
     refreshVaultInfo,
     refreshUserPosition,

@@ -17,6 +17,7 @@ export function AuctionHeaderCard() {
     userDeposited,
     estimatedAllocation,
     estimatedRefund,
+    vestingDuration,
   } = useAlphaVault()
 
   // Calculate progress percentage
@@ -188,7 +189,7 @@ export function AuctionHeaderCard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-zinc-600 dark:text-zinc-400">Vesting</span>
-                  <span className="font-mono text-foreground">24h Linear</span>
+                  <span className="font-mono text-foreground">{vestingDuration}</span>
                 </div>
               </div>
             </div>

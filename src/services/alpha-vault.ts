@@ -12,6 +12,7 @@
 
 import { Connection, PublicKey, Transaction } from '@solana/web3.js'
 import AlphaVault, { VaultState as SdkVaultState, VaultMode as SdkVaultMode, type DepositWithProofParams } from '@meteora-ag/alpha-vault'
+import DLMM from '@meteora-ag/dlmm'
 import BN from 'bn.js'
 import { getRpcEndpoint } from '@/lib/solana/config'
 import { estimateSlotDate } from './alpha-vault-helpers'
@@ -135,6 +136,7 @@ export interface VaultInfo {
   // Calculated
   isOversubscribed: boolean
   oversubscriptionRatio: number
+  vestingDurationHours: number // Calculated from on-chain slots
   // Timestamps (estimated from slots)
   depositOpenTime: Date | null
   depositCloseTime: Date | null
@@ -257,7 +259,9 @@ export class AlphaVaultClient {
 
     // Calculate amounts
     const totalDeposited = vaultDataAny.totalDeposit?.toString() ?? '0'
-    const maxCap = vaultDataAny.maxDepositingCap?.toString() ?? '0'
+    // For Pro Rata vaults, maxBuyingCap is the target raise (max USDC the vault will spend)
+    // maxDepositingCap is 0 for unlimited deposits in Pro Rata mode
+    const maxCap = vaultDataAny.maxBuyingCap?.toString() ?? vaultDataAny.maxDepositingCap?.toString() ?? '0'
     const maxIndividualDeposit = vaultDataAny.individualDepositingCap?.toString() ?? '0'
 
     // Calculate oversubscription
@@ -265,6 +269,12 @@ export class AlphaVaultClient {
     const maxCapNum = parseFloat(maxCap) / 10 ** ALPHA_VAULT_CONFIG.usdcDecimals
     const isOversubscribed = maxCapNum > 0 && totalDepositedNum > maxCapNum
     const oversubscriptionRatio = maxCapNum > 0 ? totalDepositedNum / maxCapNum : 0
+
+    // Calculate vesting duration from on-chain slots
+    // Approximate: 400ms per slot = 2.5 slots per second
+    const vestingDurationSlots = vestingEndSlot - vestingStartSlot
+    const vestingDurationSeconds = vestingDurationSlots / 2.5
+    const vestingDurationHours = Math.round(vestingDurationSeconds / 3600)
 
     // Estimate times from slots
     const estimateTime = (slot: number) => estimateSlotDate(currentSlot, slot)
@@ -283,6 +293,7 @@ export class AlphaVaultClient {
       maxIndividualDeposit,
       isOversubscribed,
       oversubscriptionRatio,
+      vestingDurationHours,
       depositOpenTime: estimateTime(depositOpenSlot),
       depositCloseTime: estimateTime(depositCloseSlot),
       vestingStartTime: estimateTime(vestingStartSlot),
@@ -311,12 +322,41 @@ export class AlphaVaultClient {
       let estimatedAllocation = '0'
       let estimatedRefund = '0'
 
-      if (vaultInfo.mode === 'prorata' && vaultInfo.isOversubscribed) {
-        const depositNum = parseFloat(totalDeposited) / 10 ** ALPHA_VAULT_CONFIG.usdcDecimals
-        const allocationRatio = 1 / vaultInfo.oversubscriptionRatio
-        const allocatedUsdc = depositNum * allocationRatio
-        estimatedAllocation = (allocatedUsdc * allocationRatio).toFixed(6)
-        estimatedRefund = ((depositNum - allocatedUsdc) * 10 ** ALPHA_VAULT_CONFIG.usdcDecimals).toFixed(0)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const vaultData = vault.vault as any
+      const boughtToken = parseFloat(vaultData.boughtToken?.toString() ?? '0')
+
+      if (boughtToken > 0) {
+        // Vault has already bought tokens - use actual allocation from claimInfo
+        estimatedAllocation = claimInfo?.totalAllocated?.toString() ?? '0'
+      } else if (vaultInfo.mode === 'prorata') {
+        // During deposit period, estimate based on pool liquidity
+        const tessAvailable = await this.getPoolTessReserve()
+        const userDepositNum = parseFloat(totalDeposited) / 10 ** ALPHA_VAULT_CONFIG.usdcDecimals
+        const totalDepositsNum = parseFloat(vaultInfo.totalDeposited) / 10 ** ALPHA_VAULT_CONFIG.usdcDecimals
+        const maxCapNum = parseFloat(vaultInfo.maxCap) / 10 ** ALPHA_VAULT_CONFIG.usdcDecimals
+
+        if (totalDepositsNum > 0) {
+          // User's share of deposits
+          const userShare = userDepositNum / totalDepositsNum
+
+          // Effective USDC that will be used (capped by maxBuyingCap)
+          const effectiveUsdc = Math.min(totalDepositsNum, maxCapNum)
+
+          // Estimate TESS allocation based on available pool liquidity
+          // The vault buys at pool price (currently 1:1)
+          const estimatedTessForVault = Math.min(tessAvailable, effectiveUsdc)
+          const userTessAllocation = userShare * estimatedTessForVault
+
+          estimatedAllocation = (userTessAllocation * 10 ** ALPHA_VAULT_CONFIG.tessDecimals).toFixed(0)
+
+          // Calculate refund if oversubscribed
+          if (totalDepositsNum > maxCapNum) {
+            const usedRatio = maxCapNum / totalDepositsNum
+            const usedUsdc = userDepositNum * usedRatio
+            estimatedRefund = ((userDepositNum - usedUsdc) * 10 ** ALPHA_VAULT_CONFIG.usdcDecimals).toFixed(0)
+          }
+        }
       }
 
       const availableToClaim = claimInfo?.totalClaimable?.toString() ?? '0'
@@ -341,6 +381,24 @@ export class AlphaVaultClient {
       }
     } catch {
       return null
+    }
+  }
+
+  /**
+   * Get TESS reserve from the DLMM pool
+   * This is the amount of TESS available for the vault to purchase
+   */
+  async getPoolTessReserve(): Promise<number> {
+    try {
+      const poolAddress = new PublicKey(ALPHA_VAULT_CONFIG.dlmmPool)
+      const dlmmPool = await DLMM.create(this.connection, poolAddress, { cluster: 'devnet' })
+
+      // Get the reserve X (TESS) balance
+      const reserveXBalance = await this.connection.getTokenAccountBalance(dlmmPool.lbPair.reserveX)
+      return parseFloat(reserveXBalance.value.uiAmountString || '0')
+    } catch (error) {
+      console.error('Failed to get pool TESS reserve:', error)
+      return 0
     }
   }
 
