@@ -24,20 +24,20 @@ import { estimateSlotDate } from './alpha-vault-helpers'
  */
 export const ALPHA_VAULT_CONFIG = {
   // Vault address
-  vault: 'DEoHK6x7sqjvKrA2vz5cSoraRY45gsaEMDueWtTAiVnm',
+  vault: '6fwBYbM4e1NTwndKRdKyAZWSL5ohkgYsHkkYTtCZW6TM',
 
   // DLMM Pool
-  dlmmPool: 'BuxVQBEjT2VadSgfnCT2ibE6M5ibjQagSgoU1j3Ceo64',
+  dlmmPool: 'Dd6kCyHuaLStsXRnBpCXpDcLKhDud1VCS3rJjQ1cZnky',
 
   // Token addresses
   tessToken: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj', // Token-2022
-  usdcToken: 'fd6M2XoPfiWtYyR7t69zPrZPfMzrCEppjFNKTPyd1jX', // Devnet USDC
+  usdcToken: 'ELFPGFJCALgJ12oAoLTyzPVxKEmKNFRz7GxMbQftpdzE', // Devnet USDC
 
-  // Merkle root config for whitelisted wallets (version 1 - using Meteora's BalanceTree)
-  merkleRootConfig: 'ArMTUt7bkW7pbDJYatgUMz6C4SDZ5Rvu4Qo1YzdcxdTZ',
+  // Merkle root config for whitelisted wallets (version 0 - using Meteora's BalanceTree)
+  merkleRootConfig: '83oewKfgQkGqGMmAKxJUF4rZLyQprM2Xwzym2DAPnmmF',
 
   // View on Meteora
-  meteoraUrl: 'https://devnet.app.meteora.ag/vault/DEoHK6x7sqjvKrA2vz5cSoraRY45gsaEMDueWtTAiVnm',
+  meteoraUrl: 'https://devnet.app.meteora.ag/vault/6fwBYbM4e1NTwndKRdKyAZWSL5ohkgYsHkkYTtCZW6TM',
 
   // Token decimals
   tessDecimals: 6,
@@ -54,12 +54,21 @@ export const LOCAL_MERKLE_PROOFS: Record<string, { proof: string[]; maxCap: stri
     proof: [
       '5e096bb18896ee9008efae23165be20a53144e8e321da839ca7658f5fda85713',
       'bf1be92705411da7b569867376466352341c2fa3da0117a4fb89f8a4aa11ee3a',
-      '46369729a4fac87fa19fbc0b77092267b7e42d7613a92cd6243a8076816c75e9',
+      'f1a55e6facdfb92eeea5930b5e67f2def16ad9b2f36f36489ba42758292f2d7e',
+    ],
+    maxCap: '10000000000',
+  },
+  'Hzu1F1HF9ZEd7ezokS6ePUP5gP3p1UkdnoU7rKYS2xPu': {
+    proof: [
+      'bda2d70ee9047728d171335cd979871d17fb0b88ba92a038e65c147955fe6ad4',
+      'c4a27535958110a9c730304ce1d7e8ba902c9f50f862e2add6a2393f75ce85ef',
+      '7c61303308de99f00d3501fc2af18a17b12c40e262ef2fa55332fb595f063557',
     ],
     maxCap: '10000000000',
   },
   '9KjD5Gm8FufT2i9Lf4XYaxqaRXSVbqA7M1qcEY9CCNcq': {
     proof: [
+      '7849a2d6ff3add9ae59551ae229a7c58a538e4eb694c65b0153db3c8c4eca1ad',
       'c4a27535958110a9c730304ce1d7e8ba902c9f50f862e2add6a2393f75ce85ef',
       '7c61303308de99f00d3501fc2af18a17b12c40e262ef2fa55332fb595f063557',
     ],
@@ -67,7 +76,7 @@ export const LOCAL_MERKLE_PROOFS: Record<string, { proof: string[]; maxCap: stri
   },
   '83ysBV2FDx8jrue3kyysHmvsi97A4HsxdxuYnG5hjFXr': {
     proof: [
-      'bda2d70ee9047728d171335cd979871d17fb0b88ba92a038e65c147955fe6ad4',
+      '031b10c525b01d98d40d0332348d7e18f59280f5d3a66d038b4e2942570216ad',
       '7c61303308de99f00d3501fc2af18a17b12c40e262ef2fa55332fb595f063557',
     ],
     maxCap: '1000000000',
@@ -76,7 +85,7 @@ export const LOCAL_MERKLE_PROOFS: Record<string, { proof: string[]; maxCap: stri
     proof: [
       '34d847d7cef22f2be06111d3e3c799b628dc7c9f43ed599bc9b7b70a8d495333',
       'a2e7748e4c9a04d1b5713f955098b16d764b31e11568d2c29d5f9bc20d0065d9',
-      '46369729a4fac87fa19fbc0b77092267b7e42d7613a92cd6243a8076816c75e9',
+      'f1a55e6facdfb92eeea5930b5e67f2def16ad9b2f36f36489ba42758292f2d7e',
     ],
     maxCap: '1000000000',
   },
@@ -84,7 +93,7 @@ export const LOCAL_MERKLE_PROOFS: Record<string, { proof: string[]; maxCap: stri
     proof: [
       '6a22346856b05e74908de8e6bb22b69a266938919d7c8043de3c472a4d0cc9b5',
       'bf1be92705411da7b569867376466352341c2fa3da0117a4fb89f8a4aa11ee3a',
-      '46369729a4fac87fa19fbc0b77092267b7e42d7613a92cd6243a8076816c75e9',
+      'f1a55e6facdfb92eeea5930b5e67f2def16ad9b2f36f36489ba42758292f2d7e',
     ],
     maxCap: '1000000000',
   },
@@ -92,7 +101,7 @@ export const LOCAL_MERKLE_PROOFS: Record<string, { proof: string[]; maxCap: stri
     proof: [
       '4a5d9f896e81deee6560c807c5943b801a2fd8b88fbd963561e48f15c9202cec',
       'a2e7748e4c9a04d1b5713f955098b16d764b31e11568d2c29d5f9bc20d0065d9',
-      '46369729a4fac87fa19fbc0b77092267b7e42d7613a92cd6243a8076816c75e9',
+      'f1a55e6facdfb92eeea5930b5e67f2def16ad9b2f36f36489ba42758292f2d7e',
     ],
     maxCap: '1000000000',
   },
