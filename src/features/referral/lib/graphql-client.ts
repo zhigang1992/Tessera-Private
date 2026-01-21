@@ -2,8 +2,17 @@
  * GraphQL client for fetching referral data from Hasura
  */
 
+import { fromHasuraToNative, BigNumber, type BigNumberSource } from '@/lib/bignumber'
+
 const GRAPHQL_ENDPOINT = 'https://tracker-gql-dev.tessera.fun/v1/graphql'
 const HASURA_ADMIN_SECRET = 'xRkifHbnNykgVkQ6r7Ns'
+
+/**
+ * Convert Hasura 18-decimal numeric value to native number
+ */
+function hasuraToNumber(value: BigNumberSource): number {
+  return BigNumber.toNumber(fromHasuraToNative(value))
+}
 
 // Types for GraphQL responses
 export interface ReferralCodeStats {
@@ -198,17 +207,17 @@ export async function fetchAffiliateStats(walletAddress: string): Promise<Aggreg
     codeMap.set(item.code, existing)
   }
 
-  // Process trading volumes
+  // Process trading volumes (values are stored with 18-decimal precision)
   for (const item of data.public_marts_attributed_trading_volume_by_code_account) {
     const existing = codeMap.get(item.code) || { referralCount: 0, tradingVolume: 0, rewardsUsd: 0 }
-    existing.tradingVolume = Number(item.total_volume) || 0
+    existing.tradingVolume = hasuraToNumber(item.total_volume)
     codeMap.set(item.code, existing)
   }
 
-  // Process rewards
+  // Process rewards (values are stored with 18-decimal precision)
   for (const item of data.public_marts_reward_usd_by_code_account) {
     const existing = codeMap.get(item.code) || { referralCount: 0, tradingVolume: 0, rewardsUsd: 0 }
-    existing.rewardsUsd = Number(item.total_rewards_usd) || 0
+    existing.rewardsUsd = hasuraToNumber(item.total_rewards_usd)
     codeMap.set(item.code, existing)
   }
 
@@ -230,7 +239,7 @@ export async function fetchAffiliateStats(walletAddress: string): Promise<Aggreg
     else if (item.tier === 3) tier3Referrals = count
   }
 
-  // Calculate volume and reward tier totals
+  // Calculate volume and reward tier totals (values are stored with 18-decimal precision)
   let tier1Volume = 0
   let tier2Volume = 0
   let tier3Volume = 0
@@ -239,15 +248,15 @@ export async function fetchAffiliateStats(walletAddress: string): Promise<Aggreg
   let tier3Rewards = 0
 
   for (const item of data.public_marts_attributed_trading_volume_by_code_account) {
-    tier1Volume += Number(item.tier1_volume) || 0
-    tier2Volume += Number(item.tier2_volume) || 0
-    tier3Volume += Number(item.tier3_volume) || 0
+    tier1Volume += hasuraToNumber(item.tier1_volume)
+    tier2Volume += hasuraToNumber(item.tier2_volume)
+    tier3Volume += hasuraToNumber(item.tier3_volume)
   }
 
   for (const item of data.public_marts_reward_usd_by_code_account) {
-    tier1Rewards += Number(item.tier1_rewards_usd) || 0
-    tier2Rewards += Number(item.tier2_rewards_usd) || 0
-    tier3Rewards += Number(item.tier3_rewards_usd) || 0
+    tier1Rewards += hasuraToNumber(item.tier1_rewards_usd)
+    tier2Rewards += hasuraToNumber(item.tier2_rewards_usd)
+    tier3Rewards += hasuraToNumber(item.tier3_rewards_usd)
   }
 
   // Calculate totals

@@ -33,6 +33,7 @@
         "jotai": "^2.14.0",
         "lightweight-charts": "^5.1.0",
         "lucide-react": "^0.544.0",
+        "math-literal": "^0.1.3",
         "next-themes": "^0.4.6",
         "qrcode-svg": "^1.1.0",
         "react": "^19.1.1",
@@ -1957,6 +1958,8 @@
     "marky": ["marky@1.3.0", "", {}, "sha512-ocnPZQLNpvbedwTy9kNrQEsknEfgvcLMvOtz3sFeWApDq1MXH1TqkCIx58xlpESsfwQOnuBO9beyQuNGzVvuhQ=="],
 
     "math-intrinsics": ["math-intrinsics@1.1.0", "", {}, "sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g=="],
+
+    "math-literal": ["math-literal@0.1.3", "", { "dependencies": { "decimal.js": "^10.4.3" } }, "sha512-GEpHzZMrlxFW+Nj0mSxNmdaoMwYrZVsSwRPi6oOOtxxDKtR+J03ifYW+ypstAi8oYX7q0OJelZHu9H2/KxlLjw=="],
 
     "md5.js": ["md5.js@1.3.5", "", { "dependencies": { "hash-base": "^3.0.0", "inherits": "^2.0.1", "safe-buffer": "^5.1.2" } }, "sha512-xitP+WxNPcTTOgnTJcrhM0xvdPepipPSf3I8EIpGKeFLjt3PlJLIDG3u8EX53ZIubkb+5U2+3rELYpEhHhzdkg=="],
 

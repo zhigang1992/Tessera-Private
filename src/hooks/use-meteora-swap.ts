@@ -17,6 +17,14 @@ import {
   type MeteoraSwapQuote,
   type PoolInfo,
 } from '@/services/meteora'
+import {
+  type BigNumberValue,
+  fromTokenAmount,
+  formatBigNumber,
+  parseAmount,
+  ZERO,
+  isZero,
+} from '@/lib/bignumber'
 
 // Get devnet RPC URL from environment or use default
 const DEVNET_RPC_URL = import.meta.env.VITE_DEVNET_RPC_URL || clusterApiUrl('devnet')
@@ -35,8 +43,14 @@ export interface UseMeteoraSwapReturn {
   // Token info
   usdcMint: string
   tessMint: string
-  usdcBalance: string | null
-  tessBalance: string | null
+  /** USDC balance as BigNumber for calculations */
+  usdcBalance: BigNumberValue | null
+  /** TESS balance as BigNumber for calculations */
+  tessBalance: BigNumberValue | null
+  /** Formatted USDC balance for display */
+  usdcBalanceFormatted: string | null
+  /** Formatted TESS balance for display */
+  tessBalanceFormatted: string | null
 
   // Actions
   loadPool: () => Promise<void>
@@ -62,8 +76,8 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
   const [poolInfo, setPoolInfo] = useState<PoolInfo | null>(null)
   const [quote, setQuote] = useState<MeteoraSwapQuote | null>(null)
   const [txSignature, setTxSignature] = useState<string | null>(null)
-  const [usdcBalance, setUsdcBalance] = useState<string | null>(null)
-  const [tessBalance, setTessBalance] = useState<string | null>(null)
+  const [usdcBalance, setUsdcBalance] = useState<BigNumberValue | null>(null)
+  const [tessBalance, setTessBalance] = useState<BigNumberValue | null>(null)
 
   // Create a dedicated devnet connection for swap operations
   const devnetConnection = useMemo(() => {
@@ -104,11 +118,12 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
         const usdcMintPubkey = new PublicKey(USDC_MINT)
         const ata = await getAssociatedTokenAddress(usdcMintPubkey, wallet.publicKey)
         const account = await getAccount(devnetConnection, ata)
-        const usdcFormatted = (Number(account.amount) / 10 ** USDC_DECIMALS).toFixed(2)
-        setUsdcBalance(usdcFormatted)
+        // Convert raw amount to BigNumber using token decimals
+        const usdcBigNum = fromTokenAmount(account.amount.toString(), USDC_DECIMALS)
+        setUsdcBalance(usdcBigNum)
       } catch {
         // Token account doesn't exist on devnet
-        setUsdcBalance('0.00')
+        setUsdcBalance(ZERO)
       }
 
       // Get TESS balance on devnet (Token-2022)
@@ -121,10 +136,11 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
           TOKEN_2022_PROGRAM_ID
         )
         const account = await getAccount(devnetConnection, ata, 'confirmed', TOKEN_2022_PROGRAM_ID)
-        const tessFormatted = (Number(account.amount) / 10 ** TESS_DECIMALS).toFixed(4)
-        setTessBalance(tessFormatted)
+        // Convert raw amount to BigNumber using token decimals
+        const tessBigNum = fromTokenAmount(account.amount.toString(), TESS_DECIMALS)
+        setTessBalance(tessBigNum)
       } catch {
-        setTessBalance('0.0000')
+        setTessBalance(ZERO)
       }
     } catch (err) {
       console.error('Failed to fetch balances:', err)
@@ -137,7 +153,9 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
   // swapForY = false means Y -> X (USDC -> TESS, buying TESS)
   const getQuote = useCallback(
     async (amount: string, direction: SwapDirection): Promise<MeteoraSwapQuote | null> => {
-      if (!amount || parseFloat(amount) <= 0) {
+      // Parse amount to BigNumber for validation
+      const amountBigNum = parseAmount(amount)
+      if (isZero(amountBigNum)) {
         setQuote(null)
         return null
       }
@@ -230,6 +248,17 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
     setError(null)
   }, [])
 
+  // Memoized formatted balance strings for display
+  const usdcBalanceFormatted = useMemo(() => {
+    if (!usdcBalance) return null
+    return formatBigNumber(usdcBalance, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }, [usdcBalance])
+
+  const tessBalanceFormatted = useMemo(() => {
+    if (!tessBalance) return null
+    return formatBigNumber(tessBalance, { minimumFractionDigits: 4, maximumFractionDigits: 4 })
+  }, [tessBalance])
+
   return {
     isLoading,
     error,
@@ -240,6 +269,8 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
     tessMint: TESS_MINT,
     usdcBalance,
     tessBalance,
+    usdcBalanceFormatted,
+    tessBalanceFormatted,
     loadPool,
     getQuote,
     executeSwap,

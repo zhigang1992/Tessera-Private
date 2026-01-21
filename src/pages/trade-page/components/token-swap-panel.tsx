@@ -19,6 +19,8 @@ export function TokenSwapPanel() {
     txSignature,
     usdcBalance,
     tessBalance,
+    usdcBalanceFormatted,
+    tessBalanceFormatted,
     loadPool,
     getQuote,
     executeSwap,
@@ -35,8 +37,11 @@ export function TokenSwapPanel() {
   const isBuying = direction === 'USDC_TO_TESS' // Buying TESS with USDC
   const sellingToken = isBuying ? 'USDC' : 'TESS'
   const buyingToken = isBuying ? 'TESS' : 'USDC'
+  // BigNumber value for max button calculation
   const sellingBalance = isBuying ? usdcBalance : tessBalance
-  const buyingBalance = isBuying ? tessBalance : usdcBalance
+  // Formatted strings for display
+  const sellingBalanceFormatted = isBuying ? usdcBalanceFormatted : tessBalanceFormatted
+  const buyingBalanceFormatted = isBuying ? tessBalanceFormatted : usdcBalanceFormatted
 
   // Load pool and balances on mount
   useEffect(() => {
@@ -103,7 +108,8 @@ export function TokenSwapPanel() {
 
   const handleMaxClick = () => {
     if (sellingBalance) {
-      setInputAmount(sellingBalance)
+      // Convert BigNumber to string for input (full precision, no formatting)
+      setInputAmount(sellingBalance.toString())
     }
   }
 
@@ -163,12 +169,12 @@ export function TokenSwapPanel() {
               <p className="text-xs lg:text-sm font-bold text-black/30 dark:text-[#d2d2d2]/30 leading-5">
                 Selling
               </p>
-              {sellingBalance && (
+              {sellingBalanceFormatted && (
                 <button
                   onClick={handleMaxClick}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Balance: {sellingBalance} {sellingToken}
+                  Balance: {sellingBalanceFormatted} {sellingToken}
                 </button>
               )}
             </div>
@@ -209,9 +215,9 @@ export function TokenSwapPanel() {
             <p className="text-xs lg:text-sm font-bold text-black/30 dark:text-[#d2d2d2]/30 leading-5">
               Buying
             </p>
-            {buyingBalance && (
+            {buyingBalanceFormatted && (
               <span className="text-xs text-muted-foreground">
-                Balance: {buyingBalance} {buyingToken}
+                Balance: {buyingBalanceFormatted} {buyingToken}
               </span>
             )}
           </div>

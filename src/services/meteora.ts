@@ -8,6 +8,7 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js'
 import DLMM from '@meteora-ag/dlmm'
 import BN from 'bn.js'
+import { BigNumber, math, mathIs, formatBigNumber } from '@/lib/bignumber'
 
 // Mainnet SOL-USDC DLMM Pool
 // Pool: BGm1tav58oGcsQJehL9WXBFXF7D27vZsKefj4xJKD5Y
@@ -179,10 +180,11 @@ export class MeteoraClient {
     const outAmountFormatted = this.formatAmount(quote.outAmount, outDecimals)
     const minOutAmountFormatted = this.formatAmount(quote.minOutAmount, outDecimals)
 
-    // Calculate rate
-    const inNum = parseFloat(inAmountFormatted)
-    const outNum = parseFloat(outAmountFormatted)
-    const rate = inNum > 0 ? (outNum / inNum).toFixed(6) : '0'
+    // Calculate rate using math-literal for precision
+    const inBigNum = BigNumber.from(inAmountFormatted)
+    const outBigNum = BigNumber.from(outAmountFormatted)
+    const rateBigNum = mathIs`${inBigNum} > ${0}` ? math`${outBigNum} / ${inBigNum}` : BigNumber.from(0)
+    const rate = formatBigNumber(rateBigNum, { minimumFractionDigits: 6, maximumFractionDigits: 6 })
 
     return {
       consumedInAmount: quote.consumedInAmount.toString(),
