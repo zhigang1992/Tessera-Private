@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Paperclip, Send, Bot, User, Loader2, X } from 'lucide-react'
+import { Send, Bot, User, Loader2 } from 'lucide-react'
 import Markdown from 'react-markdown'
 import {
   type LiveIssue,
   type ChatMessage,
-  type ChatAttachment,
   getChatMessages,
   sendMessageStream,
 } from '@/services'
@@ -30,14 +29,10 @@ function generateMessageId(): string {
 export function AiChat({ issue, initialQuery}: AiChatProps) {
   const [replyText, setReplyText] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>(
-    []
-  )
   const [isWaitingForReply, setIsWaitingForReply] = useState(false)
   const [streamingContent, setStreamingContent] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const hasInitialQuerySentRef = useRef(false)
 
   // Fetch chat history for existing issues
@@ -48,7 +43,7 @@ export function AiChat({ issue, initialQuery}: AiChatProps) {
   })
 
   // Send message function with streaming
-  const doSendMessage = async (content: string, attachments?: ChatAttachment[]) => {
+  const doSendMessage = async (content: string) => {
     setIsWaitingForReply(true)
     setIsStreaming(true)
     setStreamingContent('')
@@ -57,7 +52,7 @@ export function AiChat({ issue, initialQuery}: AiChatProps) {
       const data = await sendMessageStream(
         content,
         issue?.id,
-        attachments,
+        undefined,
         (chunk) => {
           setStreamingContent((prev) => prev + chunk)
         }
@@ -101,59 +96,22 @@ export function AiChat({ issue, initialQuery}: AiChatProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isWaitingForReply, streamingContent])
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
-
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const attachment: ChatAttachment = {
-          id: generateMessageId(),
-          name: file.name,
-          type: file.type,
-          url: event.target?.result as string,
-          size: file.size,
-        }
-        setPendingAttachments((prev) => [...prev, attachment])
-      }
-      reader.readAsDataURL(file)
-    })
-
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-  }
-
-  const handleRemoveAttachment = (id: string) => {
-    setPendingAttachments((prev) => prev.filter((a) => a.id !== id))
-  }
-
-  const handleAttachClick = () => {
-    fileInputRef.current?.click()
-  }
-
   const handleSendMessage = () => {
-    const hasContent = replyText.trim() || pendingAttachments.length > 0
+    const hasContent = replyText.trim()
     if (hasContent && !isWaitingForReply) {
       const content = replyText.trim()
-      const attachments =
-        pendingAttachments.length > 0 ? [...pendingAttachments] : undefined
       // Add user message immediately
       const userMessage: ChatMessage = {
         id: generateMessageId(),
         type: 'user',
-        content: content || (attachments ? '[Attachment]' : ''),
+        content: content,
         timestamp: formatTimestamp(),
         sender: 'You',
-        attachments,
       }
       setMessages((prev) => [...prev, userMessage])
       setReplyText('')
-      setPendingAttachments([])
       // Then send to API for AI response
-      doSendMessage(content, attachments)
+      doSendMessage(content)
     }
   }
 
@@ -380,66 +338,7 @@ export function AiChat({ issue, initialQuery}: AiChatProps) {
       {/* Input Area - Fixed at bottom */}
       <div className="bg-white dark:bg-[#1E1F20] border-t border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] px-4 md:px-6 py-3 md:py-4 shrink-0">
         <div className="max-w-[800px] mx-auto">
-          {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,.pdf,.doc,.docx,.txt"
-            multiple
-            className="hidden"
-            onChange={handleFileSelect}
-          />
-
-          {/* Pending attachments preview */}
-          {pendingAttachments.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {pendingAttachments.map((attachment) => (
-                <div
-                  key={attachment.id}
-                  className="relative group bg-[#f6f6f6] dark:bg-zinc-800 rounded-[8px] overflow-hidden"
-                >
-                  {attachment.type.startsWith('image/') ? (
-                    <img
-                      src={attachment.url}
-                      alt={attachment.name}
-                      className="w-[80px] h-[80px] object-cover"
-                    />
-                  ) : (
-                    <div className="w-[80px] h-[80px] flex items-center justify-center">
-                      <Paperclip className="w-6 h-6 text-[#71717a]" />
-                    </div>
-                  )}
-                  <button
-                    onClick={() => handleRemoveAttachment(attachment.id)}
-                    className="absolute top-1 right-1 w-5 h-5 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center transition-colors"
-                  >
-                    <X className="w-3 h-3 text-white" />
-                  </button>
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5">
-                    <p className="text-[10px] text-white truncate">
-                      {attachment.name}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <button
-            onClick={handleAttachClick}
-            className="hidden md:flex items-center gap-2 text-[14px] text-[#71717a] hover:text-black dark:hover:text-white transition-colors mb-3"
-          >
-            <Paperclip className="w-4 h-4" />
-            Attach File
-          </button>
-
           <div className="flex items-end gap-2 md:gap-3">
-            <button
-              onClick={handleAttachClick}
-              className="md:hidden bg-[#f6f6f6] dark:bg-zinc-800 rounded-[8px] w-[44px] h-[44px] flex items-center justify-center shrink-0 hover:bg-[#ececec] dark:hover:bg-zinc-700 transition-colors"
-            >
-              <Paperclip className="w-4 h-4 text-[#71717a]" />
-            </button>
             <div className="flex-1 bg-[#e5e5e5] dark:bg-[#3f3f46] rounded-[12px] px-3 md:px-4 min-h-[44px] md:min-h-[48px] flex items-center">
               <textarea
                 value={replyText}
@@ -453,10 +352,7 @@ export function AiChat({ issue, initialQuery}: AiChatProps) {
             </div>
             <button
               onClick={handleSendMessage}
-              disabled={
-                (!replyText.trim() && pendingAttachments.length === 0) ||
-                isWaitingForReply
-              }
+              disabled={!replyText.trim() || isWaitingForReply}
               className="bg-black dark:bg-white rounded-[8px] w-[44px] h-[44px] md:w-[48px] md:h-[48px] flex items-center justify-center hover:bg-[#333] dark:hover:bg-[#e5e5e5] transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isWaitingForReply ? (
