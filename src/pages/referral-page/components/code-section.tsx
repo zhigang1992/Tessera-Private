@@ -83,7 +83,7 @@ export function CodeSection() {
     <div className="space-y-4">
       {/* Tab Header */}
       <div className="flex items-center justify-between">
-        <div className="inline-flex items-center gap-0.5 sm:gap-1 rounded-xl px-1 sm:px-2 py-1.5 dark:bg-[#1E1F20]">
+        <div className="inline-flex items-center gap-0.5 sm:gap-1 rounded-xl px-1 sm:px-2 py-1.5 dark:bg-[#27272A]">
           <button
             onClick={() => setActiveTab('code')}
             className={cn(
@@ -197,7 +197,7 @@ export function CodeSection() {
                     {/* Mobile: Share button */}
                     <button
                       onClick={(e) => handleOpenShareModal(e, row.code)}
-                      className="lg:hidden inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-black/80 transition-colors"
+                      className="lg:hidden inline-flex items-center gap-1.5 rounded-lg bg-black dark:bg-[#D2D2D2] px-3 py-1.5 text-sm font-medium text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/80 transition-colors"
                     >
                       <Share2 className="size-3.5" />
                       Share
@@ -246,7 +246,7 @@ export function CodeSection() {
                   <div className="hidden lg:block shrink-0">
                     <button
                       onClick={(e) => handleOpenShareModal(e, row.code)}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-black/80 transition-colors"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-black dark:bg-[#D2D2D2] px-3 py-1.5 text-sm font-medium text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/80 transition-colors"
                     >
                       <Share2 className="size-3.5" />
                       Share
