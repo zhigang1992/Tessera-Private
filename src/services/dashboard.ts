@@ -1,6 +1,9 @@
 import { sleep } from './utils'
 import { fetchDashboardStats, fetchUserSwapEvents } from '@/features/referral/lib/graphql-client'
-import { fromHasuraToNative, formatBigNumber, BigNumber, type BigNumberSource } from '@/lib/bignumber'
+import { fromHasuraToNative, formatBigNumber, BigNumber, type BigNumberSource, fromTokenAmount } from '@/lib/bignumber'
+import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
+import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
+import { DEVNET_POOLS } from './meteora'
 
 // ============ Types ============
 
@@ -117,14 +120,6 @@ const tokenStatistics: TokenStatistics = {
     high: 449.63,
     low: 433.41,
   },
-}
-
-const userDashboard: UserDashboard = {
-  balance: 1355.87,
-  tokenBalance: 13.27,
-  tokenSymbol: 'T-SpaceX',
-  tokenName: 'T-SpaceX Token',
-  healthFactor: 100,
 }
 
 // ============ Helper Functions ============
@@ -253,9 +248,76 @@ export async function getDashboardStatistics(): Promise<TokenStatistics> {
   return tokenStatistics
 }
 
-export async function getUserDashboard(): Promise<UserDashboard> {
-  await sleep(300)
-  return userDashboard
+/**
+ * Get user dashboard data including balances
+ */
+export async function getUserDashboard(walletAddress?: string): Promise<UserDashboard> {
+  if (!walletAddress) {
+    // Return default/empty data when no wallet connected
+    return {
+      balance: 0,
+      tokenBalance: 0,
+      tokenSymbol: 'T-SPACEX',
+      tokenName: 'T-SPACEX Token',
+      healthFactor: 100,
+    }
+  }
+
+  try {
+    // Get devnet RPC connection
+    const DEVNET_RPC_URL = import.meta.env.VITE_DEVNET_RPC_URL || clusterApiUrl('devnet')
+    const connection = new Connection(DEVNET_RPC_URL, 'confirmed')
+    const publicKey = new PublicKey(walletAddress)
+
+    // Get USDC balance (this represents user's USD balance)
+    let usdcBalance = 0
+    try {
+      const usdcMint = new PublicKey(DEVNET_POOLS['TESS-USDC'].tokenY.mint)
+      const usdcAta = await getAssociatedTokenAddress(usdcMint, publicKey)
+      const usdcAccount = await getAccount(connection, usdcAta)
+      const usdcBigNum = fromTokenAmount(usdcAccount.amount.toString(), DEVNET_POOLS['TESS-USDC'].tokenY.decimals)
+      usdcBalance = BigNumber.toNumber(usdcBigNum)
+    } catch {
+      // Token account doesn't exist, balance is 0
+      usdcBalance = 0
+    }
+
+    // Get TESS token balance (Token-2022)
+    let tessBalance = 0
+    try {
+      const tessMint = new PublicKey(DEVNET_POOLS['TESS-USDC'].tokenX.mint)
+      const tessAta = await getAssociatedTokenAddress(
+        tessMint,
+        publicKey,
+        false,
+        TOKEN_2022_PROGRAM_ID
+      )
+      const tessAccount = await getAccount(connection, tessAta, 'confirmed', TOKEN_2022_PROGRAM_ID)
+      const tessBigNum = fromTokenAmount(tessAccount.amount.toString(), DEVNET_POOLS['TESS-USDC'].tokenX.decimals)
+      tessBalance = BigNumber.toNumber(tessBigNum)
+    } catch {
+      // Token account doesn't exist, balance is 0
+      tessBalance = 0
+    }
+
+    return {
+      balance: usdcBalance,
+      tokenBalance: tessBalance,
+      tokenSymbol: 'T-SPACEX',
+      tokenName: 'T-SPACEX Token',
+      healthFactor: 100, // TODO: Calculate health factor based on actual metrics
+    }
+  } catch (error) {
+    console.error('Failed to fetch user dashboard:', error)
+    // Return zeros on error
+    return {
+      balance: 0,
+      tokenBalance: 0,
+      tokenSymbol: 'T-SPACEX',
+      tokenName: 'T-SPACEX Token',
+      healthFactor: 100,
+    }
+  }
 }
 
 /**

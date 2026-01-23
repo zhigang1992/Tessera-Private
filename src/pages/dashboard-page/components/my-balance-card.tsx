@@ -4,12 +4,14 @@ import { getUserDashboard } from '@/services'
 import TokenSpacexIcon from './_/token-spacex.svg?react'
 
 export function MyBalanceCard() {
-  const { connected } = useWallet()
+  const { connected, publicKey } = useWallet()
+  const walletAddress = publicKey?.toBase58()
 
   const { data: userDashboard } = useQuery({
-    queryKey: ['userDashboard'],
-    queryFn: getUserDashboard,
-    enabled: connected,
+    queryKey: ['userDashboard', walletAddress],
+    queryFn: () => getUserDashboard(walletAddress),
+    enabled: connected && !!walletAddress,
+    refetchInterval: 10000, // Refetch every 10 seconds
   })
 
   const displayBalance = !connected ? '—' : userDashboard?.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) ?? '0.00'
