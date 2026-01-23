@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getTradingHistory } from '@/services'
 import { Pagination } from '@/components/ui/pagination'
+import { TableContainer, TableHeader } from '@/components/ui/table-header'
 import TokenIconIcon from './_/token-icon.svg?react'
 
 const PAGE_SIZE = 10
@@ -30,25 +31,17 @@ export function TradingHistory() {
   const items = data?.items ?? []
 
   return (
-    <div className="rounded-[16px] bg-white dark:bg-[#323334] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px] border dark:border-[rgba(210,210,210,0.1)] border-[rgba(17,17,17,0.15)]">
-      {/* Title */}
-      <h2 className="text-base lg:text-[18px] leading-7 text-foreground dark:text-[#d2d2d2] px-1 lg:px-0">Trading History</h2>
-
-      {/* Table */}
+    <TableContainer title="Trading History">
       <div className="flex flex-col gap-[10px]">
-        {/* Header - hidden on mobile */}
-        <div className="hidden lg:flex items-center gap-[10px] px-[10px]">
-          <div className="w-[180px] text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Token</div>
-          <div className="w-[250px] text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Amount</div>
-          <div className="flex-1 text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Type</div>
-          <div className="flex-1 text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Account</div>
-          <div className="flex-1 text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Time</div>
-        </div>
-
-        {/* Divider - hidden on mobile */}
-        <div className="hidden lg:block px-[10px]">
-          <div className="h-px bg-black/15 dark:bg-white/15" />
-        </div>
+        <TableHeader
+          columns={[
+            { label: 'Token', className: 'w-[180px]' },
+            { label: 'Amount', className: 'w-[250px]' },
+            { label: 'Type', className: 'flex-1' },
+            { label: 'Account', className: 'flex-1' },
+            { label: 'Time', className: 'flex-1' },
+          ]}
+        />
 
         {/* Rows */}
         <div className="flex flex-col gap-[5px]">
@@ -112,6 +105,6 @@ export function TradingHistory() {
         onPageChange={setCurrentPage}
         className="justify-center"
       />
-    </div>
+    </TableContainer>
   )
 }

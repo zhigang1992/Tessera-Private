@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { formatCurrency, getReferralUsersByCode } from '@/services'
 import { WalletDropdown } from '@/components/wallet-dropdown'
 import { Pagination } from '@/components/ui/pagination'
+import { TableContainer, TableHeader } from '@/components/ui/table-header'
 import CopyIcon from './_/copy.svg?react'
 import XIcon from './_/x.svg?react'
 import AddIcon from './_/add.svg?react'
@@ -114,21 +115,16 @@ export function CodeSection() {
 
       {/* Code Table */}
       {activeTab === 'code' && (
-        <div className="rounded-[16px] bg-white dark:bg-[#323334] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px] overflow-x-auto border dark:border-[rgba(210,210,210,0.1)] border-[rgba(17,17,17,0.15)]">
-          {/* Header - hidden on mobile */}
-          <div className="hidden lg:flex items-center gap-[10px] px-[10px]">
-            <div className="w-[240px] text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Referral Code</div>
-            <div className="flex-1 text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Total Volume</div>
-            <div className="flex-1 text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Traders Referred</div>
-            <div className="flex-1 text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Total Rewards</div>
-            {/* Placeholder for Share button column */}
-            <div className="w-[85px] shrink-0" />
-          </div>
-
-          {/* Divider - hidden on mobile */}
-          <div className="hidden lg:block px-[10px]">
-            <div className="h-px bg-black/15 dark:bg-white/15" />
-          </div>
+        <TableContainer className="overflow-x-auto">
+          <TableHeader
+            columns={[
+              { label: 'Referral Code', className: 'w-[240px]' },
+              { label: 'Total Volume', className: 'flex-1' },
+              { label: 'Traders Referred', className: 'flex-1' },
+              { label: 'Total Rewards', className: 'flex-1' },
+              { label: '', className: 'w-[85px] shrink-0' }, // Placeholder for Share button
+            ]}
+          />
 
           {/* Rows */}
           <div className="flex flex-col gap-[5px]">
@@ -264,7 +260,7 @@ export function CodeSection() {
             onPageChange={setCurrentPage}
             className="justify-center"
           />
-        </div>
+        </TableContainer>
       )}
 
       {/* Selected Code Details */}
@@ -325,7 +321,7 @@ export function CodeSection() {
                     </td>
                   </tr>
                 ) : (
-                  users.map((user, index) => (
+                  users.map((user) => (
                     <tr
                       key={user.id}
                       className={cn(
