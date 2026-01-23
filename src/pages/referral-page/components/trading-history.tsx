@@ -30,7 +30,7 @@ export function TradingHistory() {
   const items = data?.items ?? []
 
   return (
-    <div className="rounded-[16px] bg-white dark:bg-[#1e1f20] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px]">
+    <div className="rounded-[16px] bg-white dark:bg-[#323334] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px] border dark:border-[rgba(210,210,210,0.1)] border-[rgba(17,17,17,0.15)]">
       {/* Title */}
       <h2 className="text-base lg:text-[18px] leading-7 text-foreground dark:text-[#d2d2d2] px-1 lg:px-0">Trading History</h2>
 

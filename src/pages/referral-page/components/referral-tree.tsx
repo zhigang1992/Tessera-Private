@@ -24,14 +24,14 @@ export function ReferralTree() {
   const showLoading = connected && isLoading
 
   return (
-    <div className="flex flex-col lg:flex-row lg:items-stretch items-center rounded-[16px] bg-white dark:bg-[#1e1f20] px-4 lg:px-6 py-4 gap-4 lg:gap-6">
+    <div className="flex flex-col lg:flex-row lg:items-stretch items-center rounded-[16px] bg-white dark:bg-[#323334] px-4 lg:px-6 py-4 gap-4 lg:gap-6 border dark:border-[rgba(210,210,210,0.1)] border-[rgba(17,17,17,0.15)]">
       {/* Tree Visualization */}
       <div className="flex items-center justify-center shrink-0">
         <TreeIcon className="w-full max-w-[200px] lg:max-w-[260px] h-auto text-zinc-900 dark:text-zinc-100" />
       </div>
 
       {/* Divider */}
-      <div className="w-full h-px lg:w-px lg:h-auto bg-[#D9D9D9]" />
+      <div className="w-full h-px lg:w-px lg:h-auto dark:bg-[#393b3d] bg-[#d9d9d9]" />
 
       {/* Data Table */}
       <div className="flex-1 flex flex-col gap-[10px] min-w-0 w-full">
