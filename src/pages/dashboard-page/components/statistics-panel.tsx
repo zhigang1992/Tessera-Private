@@ -11,8 +11,8 @@ export function StatisticsPanel() {
   const assetPrice = statistics?.underlyingAssetPrice24h
 
   return (
-    <div className="bg-white dark:bg-[#1e1f20] rounded-2xl p-4 lg:p-6">
-      <h2 className="text-lg font-normal text-foreground dark:text-[#d2d2d2] mb-4 lg:mb-6">Statistics</h2>
+    <div className="bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl p-4 lg:p-6">
+      <h2 className="text-base font-semibold text-foreground dark:text-[#d2d2d2] mb-4 lg:mb-6">Statistics</h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
         {/* Token Price 24H */}

@@ -15,8 +15,8 @@ export function AboutPanel() {
   const displayDescription = showMore ? description : description
 
   return (
-    <div className="bg-white dark:bg-[#1e1f20] rounded-2xl p-4 lg:p-6">
-      <h2 className="text-lg font-normal text-foreground dark:text-[#d2d2d2] mb-4 lg:mb-6">About</h2>
+    <div className="bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl p-4 lg:p-6">
+      <h2 className="text-base font-semibold text-foreground dark:text-[#d2d2d2] mb-4 lg:mb-6">About</h2>
 
       {/* Description */}
       <p className="text-sm text-foreground dark:text-[#d2d2d2] leading-5 mb-6">
