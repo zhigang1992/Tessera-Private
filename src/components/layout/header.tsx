@@ -94,7 +94,7 @@ export function Header({ onMenuClick, backButton }: HeaderProps) {
             className="flex items-center gap-2 text-[14px] text-[#71717a] hover:text-black dark:text-[#a1a1aa] dark:hover:text-[#d2d2d2] transition-colors cursor-pointer"
             onClick={backButton.onClick}
           >
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M15.41 7.41L14 6L8 12L14 18L15.41 16.59L10.83 12L15.41 7.41Z" fill="currentColor" />
             </svg>
             {backButton.text}
