@@ -1,12 +1,19 @@
 import { useQuery } from '@tanstack/react-query'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { getUserDashboard } from '@/services'
 import TokenSpacexIcon from './_/token-spacex.svg?react'
 
 export function MyBalanceCard() {
+  const { connected } = useWallet()
+
   const { data: userDashboard } = useQuery({
     queryKey: ['userDashboard'],
     queryFn: getUserDashboard,
+    enabled: connected,
   })
+
+  const displayBalance = !connected ? '—' : userDashboard?.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) ?? '0.00'
+  const displayTokenBalance = !connected ? '—' : userDashboard?.tokenBalance.toFixed(2) ?? '0.00'
 
   return (
     <div className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] rounded-2xl p-4 flex flex-col lg:flex-row gap-2.5">
@@ -14,7 +21,7 @@ export function MyBalanceCard() {
       <div className="bg-[rgba(255,255,255,0.5)] rounded-lg px-4 lg:px-6 py-4 w-full lg:w-[240px]">
         <p className="text-sm font-medium text-black leading-5">My Balance</p>
         <p className="text-2xl lg:text-3xl font-semibold text-black leading-9">
-          ${userDashboard?.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) ?? '0.00'}
+          {connected ? '$' : ''}{displayBalance}
         </p>
       </div>
 
@@ -29,7 +36,7 @@ export function MyBalanceCard() {
                 {userDashboard?.tokenName ?? 'T-SpaceX Token'}
               </p>
               <p className="text-2xl lg:text-3xl font-semibold text-black leading-9">
-                {userDashboard?.tokenBalance.toFixed(2) ?? '0.00'}
+                {displayTokenBalance}
               </p>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { sleep } from './utils'
-import { fetchDashboardStats } from '@/features/referral/lib/graphql-client'
+import { fetchDashboardStats, fetchUserSwapEvents } from '@/features/referral/lib/graphql-client'
+import { fromHasuraToNative, formatBigNumber, type BigNumberSource } from '@/lib/bignumber'
 
 // ============ Types ============
 
@@ -126,28 +127,45 @@ const userDashboard: UserDashboard = {
   healthFactor: 100,
 }
 
-// Generate user trade history
-function generateUserTradeHistory(): UserTradeHistoryItem[] {
-  const items: UserTradeHistoryItem[] = []
-  const accounts = ['0xA8D0...6006']
-  const times = ['Today at 3:20 PM', 'Today at 2:45 PM', 'Today at 1:30 PM', 'Yesterday at 5:00 PM', 'Yesterday at 11:20 AM']
+// ============ Helper Functions ============
 
-  for (let i = 1; i <= 100; i++) {
-    items.push({
-      id: `user-trade-${i}`,
-      token: 'T-SPACEX',
-      amountIn: '1,000 USDC',
-      amountOut: '300.2 T-SPACEX',
-      type: 'Buy',
-      account: accounts[0],
-      time: times[Math.floor(Math.random() * times.length)],
-    })
-  }
-
-  return items
+/**
+ * Format swap amount from Hasura 18-decimal precision
+ */
+function formatSwapAmount(rawAmount: BigNumberSource): string {
+  const bigNum = fromHasuraToNative(rawAmount)
+  return formatBigNumber(bigNum)
 }
 
-const rawUserTradeHistory = generateUserTradeHistory()
+/**
+ * Format block time to readable date with time
+ */
+function formatBlockTimeWithTime(blockTime: number): string {
+  const date = new Date(blockTime * 1000)
+  const now = new Date()
+  const isToday = date.toDateString() === now.toDateString()
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const isYesterday = date.toDateString() === yesterday.toDateString()
+
+  const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+
+  if (isToday) {
+    return `Today at ${timeStr}`
+  } else if (isYesterday) {
+    return `Yesterday at ${timeStr}`
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ` at ${timeStr}`
+  }
+}
+
+/**
+ * Format wallet address for display
+ */
+function formatWalletAddress(address: string): string {
+  if (address.length <= 12) return address
+  return `${address.slice(0, 6)}...${address.slice(-4)}`
+}
 
 // ============ Market Data API Functions ============
 
@@ -231,19 +249,67 @@ export async function getUserDashboard(): Promise<UserDashboard> {
   return userDashboard
 }
 
-export async function getUserTradeHistory(page: number = 1, pageSize: number = 10): Promise<UserTradeHistoryResponse> {
-  await sleep(500)
-  const start = (page - 1) * pageSize
-  const items = rawUserTradeHistory.slice(start, start + pageSize)
-  const total = rawUserTradeHistory.length
-  const totalPages = Math.ceil(total / pageSize)
+/**
+ * Get user-specific trade history from GraphQL
+ */
+export async function getUserTradeHistory(
+  walletAddress: string | undefined,
+  page: number = 1,
+  pageSize: number = 10
+): Promise<UserTradeHistoryResponse> {
+  if (!walletAddress) {
+    // Return empty data if no wallet connected
+    return {
+      items: [],
+      total: 0,
+      page,
+      pageSize,
+      totalPages: 0,
+    }
+  }
 
-  return {
-    items,
-    total,
-    page,
-    pageSize,
-    totalPages,
+  try {
+    const offset = (page - 1) * pageSize
+    const { events, total } = await fetchUserSwapEvents(walletAddress, pageSize, offset)
+
+    // Transform swap events to trade history items
+    const items: UserTradeHistoryItem[] = events.map((event) => {
+      const isBuy = event.type === 'swap-y-for-x' // USDC -> Token is a buy
+
+      // Format amounts using BigNumber utilities
+      const amountX = formatSwapAmount(event.amount_x)
+      const amountY = formatSwapAmount(event.amount_y)
+
+      return {
+        id: `${event.signature}-${event.block_time}`,
+        token: 'T-SPACEX', // TODO: Map mint addresses to token symbols
+        amountIn: isBuy ? `${amountY} USDC` : `${amountX} T-SPACEX`,
+        amountOut: isBuy ? `${amountX} T-SPACEX` : `${amountY} USDC`,
+        type: isBuy ? 'Buy' : 'Sell',
+        account: formatWalletAddress(event.sender),
+        time: formatBlockTimeWithTime(event.block_time),
+      }
+    })
+
+    const totalPages = Math.ceil(total / pageSize)
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+      totalPages,
+    }
+  } catch (error) {
+    console.error('Failed to fetch user trade history:', error)
+    // Return empty data on error
+    return {
+      items: [],
+      total: 0,
+      page,
+      pageSize,
+      totalPages: 0,
+    }
   }
 }
 

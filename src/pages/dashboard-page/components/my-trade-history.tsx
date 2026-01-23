@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { Pagination } from '@/components/ui/pagination'
 import { getUserTradeHistory } from '@/services'
 import TokenSpacexIcon from './_/token-spacex.svg?react'
@@ -8,10 +9,13 @@ const PAGE_SIZE = 10
 
 export function MyTradeHistory() {
   const [currentPage, setCurrentPage] = useState(1)
+  const { connected, publicKey } = useWallet()
+  const walletAddress = publicKey?.toBase58()
 
   const { data, isLoading } = useQuery({
-    queryKey: ['userTradeHistory', currentPage],
-    queryFn: () => getUserTradeHistory(currentPage, PAGE_SIZE),
+    queryKey: ['userTradeHistory', walletAddress, currentPage],
+    queryFn: () => getUserTradeHistory(walletAddress, currentPage, PAGE_SIZE),
+    enabled: connected,
   })
 
   const totalPages = data?.totalPages ?? 1
@@ -37,7 +41,11 @@ export function MyTradeHistory() {
 
           {/* List */}
           <div className="flex flex-col gap-1">
-            {isLoading ? (
+            {!connected ? (
+              <div className="flex items-center justify-center py-8">
+                <span className="text-sm text-muted-foreground dark:text-[#d2d2d2]">Please connect your wallet to view trade history</span>
+              </div>
+            ) : isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <span className="text-sm text-muted-foreground dark:text-[#d2d2d2]">Loading...</span>
               </div>
