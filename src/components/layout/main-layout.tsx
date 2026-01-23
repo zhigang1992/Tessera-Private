@@ -22,7 +22,9 @@ export function MainLayout({ children }: MainLayoutProps) {
       <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
       <div className="lg:pl-64">
         <Header onMenuClick={handleMenuClick} />
-        <main className="p-4 lg:p-6">{children}</main>
+        <main className="p-4 lg:p-6">
+          <div className="max-w-[1200px] mx-auto">{children}</div>
+        </main>
       </div>
     </div>
   )
