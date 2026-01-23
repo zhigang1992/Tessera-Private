@@ -36,7 +36,7 @@ export function ReferralTree() {
       {/* Data Table */}
       <div className="flex-1 flex flex-col gap-[10px] min-w-0 w-full">
         {/* Header */}
-        <div className="flex justify-between px-2 lg:px-[10px] text-[11px] lg:text-[12px] text-zinc-500">
+        <div className="flex justify-between px-2 lg:px-[10px] text-[11px] lg:text-[12px] text-zinc-500 dark:text-zinc-400">
           <span className="flex-1">Trader Layers</span>
           <span className="flex-1 text-center lg:text-left">Traders Referred</span>
           <span className="flex-1 text-right lg:text-left">Points</span>
