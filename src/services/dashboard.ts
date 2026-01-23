@@ -1,6 +1,6 @@
 import { sleep } from './utils'
 import { fetchDashboardStats, fetchUserSwapEvents } from '@/features/referral/lib/graphql-client'
-import { fromHasuraToNative, formatBigNumber, type BigNumberSource } from '@/lib/bignumber'
+import { fromHasuraToNative, formatBigNumber, BigNumber, type BigNumberSource } from '@/lib/bignumber'
 
 // ============ Types ============
 
@@ -131,10 +131,19 @@ const userDashboard: UserDashboard = {
 
 /**
  * Format swap amount from Hasura 18-decimal precision
+ * Adjusts decimal places based on the magnitude of the number
  */
 function formatSwapAmount(rawAmount: BigNumberSource): string {
   const bigNum = fromHasuraToNative(rawAmount)
-  return formatBigNumber(bigNum)
+  const numValue = BigNumber.toNumber(bigNum)
+
+  // For very small amounts (< 0.01), show more precision
+  if (numValue < 0.01 && numValue > 0) {
+    return formatBigNumber(bigNum, { minimumFractionDigits: 2, maximumFractionDigits: 6 })
+  }
+
+  // For regular amounts, show 2 decimal places
+  return formatBigNumber(bigNum, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 /**
