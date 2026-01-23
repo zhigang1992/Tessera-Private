@@ -173,9 +173,9 @@ export default function SupportPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 m-6">
       {/* AI Search Section */}
-      <div className="bg-[#d2fb95] dark:bg-[#d2fb95] rounded-[16px] px-4 py-8 md:p-12">
+      <div className="bg-[#d2fb95] dark:bg-[#d2fb95] rounded-[16px] px-4 py-8 md:p-12 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
         <div className="max-w-[600px] mx-auto">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Bot className="w-5 h-5 text-black" />
@@ -240,7 +240,7 @@ export default function SupportPage() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
         {/* Left: Knowledge Base */}
-        <div className="bg-white dark:bg-zinc-900 rounded-[16px] p-6">
+        <div className="bg-white dark:bg-zinc-900 rounded-[16px] p-6 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-[20px] font-semibold dark:text-white">
               Browse Knowledge Base
@@ -312,7 +312,7 @@ export default function SupportPage() {
         {/* Right: Live Issues & Community */}
         <div className="flex flex-col gap-6">
           {/* Live Issues */}
-          <div className="bg-white dark:bg-zinc-900 rounded-[16px] p-6">
+          <div className="bg-white dark:bg-zinc-900 rounded-[16px] p-6 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
             <h3 className="text-[16px] font-semibold mb-4 dark:text-white">
               Live Issues
             </h3>
@@ -384,7 +384,7 @@ export default function SupportPage() {
           </div>
 
           {/* Community & Support */}
-          <div className="bg-white dark:bg-zinc-900 rounded-[16px] p-6">
+          <div className="bg-white dark:bg-zinc-900 rounded-[16px] p-6 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
             <h3 className="text-[16px] font-semibold mb-2 dark:text-white">
               Community & Support
             </h3>
