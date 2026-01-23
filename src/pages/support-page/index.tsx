@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Search,
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { AiChat } from './components/ai-chat'
 import { getLiveIssues, type LiveIssue } from '@/services'
+import { useHeader } from '@/contexts/header-context'
 import ChatBubbleOutlineIcon from './components/_/chat-bubble-outline.svg?react'
 import SupportAgentIcon from './components/_/support-agent.svg?react'
 
@@ -30,6 +31,7 @@ type FAQCategory = {
 }
 
 export default function SupportPage() {
+  const { setBackButton } = useHeader()
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(
     new Set()
   )
@@ -59,6 +61,24 @@ export default function SupportPage() {
     setSelectedIssue(null)
     setChatQuery(null)
   }
+
+  // Set back button in header when chat is active
+  useEffect(() => {
+    if (selectedIssue || chatQuery) {
+      setBackButton({
+        show: true,
+        text: 'Back to Support Center',
+        onClick: handleBackFromChat,
+      })
+    } else {
+      setBackButton(undefined)
+    }
+
+    // Cleanup on unmount
+    return () => {
+      setBackButton(undefined)
+    }
+  }, [selectedIssue, chatQuery, setBackButton])
 
   const toggleQuestion = (questionKey: string) => {
     setExpandedQuestions((prev) => {

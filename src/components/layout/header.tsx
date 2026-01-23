@@ -22,9 +22,14 @@ function ellipsify(str = '', len = 4, delimiter = '...') {
 
 interface HeaderProps {
   onMenuClick?: () => void
+  backButton?: {
+    show: boolean
+    text: string
+    onClick: () => void
+  }
 }
 
-export function Header({ onMenuClick }: HeaderProps) {
+export function Header({ onMenuClick, backButton }: HeaderProps) {
   const { connected, publicKey, disconnect } = useWallet()
   const { setVisible } = useWalletModal()
   const { theme, setTheme } = useTheme()
@@ -74,12 +79,42 @@ export function Header({ onMenuClick }: HeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border/15 bg-white px-6 dark:bg-[#111111] lg:justify-end">
-      {/* Mobile: logo and hamburger menu */}
-      <div className="flex items-center lg:hidden">
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border/15 bg-white px-6 dark:bg-[#111111]">
+      {/* Mobile: logo (only show if no back button) */}
+      <div className={`flex items-center lg:hidden ${backButton?.show ? 'hidden' : ''}`}>
         <Link to="/">
           <TesseraLogoIcon className="size-8 text-[#111111] dark:text-white" />
         </Link>
+      </div>
+
+      {/* Desktop: Back button (conditional) */}
+      <div className="hidden lg:flex items-center">
+        {backButton?.show && (
+          <button
+            className="flex items-center gap-2 text-[14px] text-[#71717a] hover:text-black dark:text-[#a1a1aa] dark:hover:text-[#d2d2d2] transition-colors cursor-pointer"
+            onClick={backButton.onClick}
+          >
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15.41 7.41L14 6L8 12L14 18L15.41 16.59L10.83 12L15.41 7.41Z" fill="currentColor" />
+            </svg>
+            {backButton.text}
+          </button>
+        )}
+      </div>
+
+      {/* Mobile: Back button (conditional, replaces logo) */}
+      <div className={`flex items-center lg:hidden ${backButton?.show ? '' : 'hidden'}`}>
+        {backButton?.show && (
+          <button
+            className="flex items-center gap-2 text-[14px] text-[#71717a] hover:text-black dark:text-[#a1a1aa] dark:hover:text-[#d2d2d2] transition-colors cursor-pointer"
+            onClick={backButton.onClick}
+          >
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15.41 7.41L14 6L8 12L14 18L15.41 16.59L10.83 12L15.41 7.41Z" fill="currentColor" />
+            </svg>
+            {backButton.text}
+          </button>
+        )}
       </div>
 
       {/* Mobile: hamburger menu button */}
