@@ -165,23 +165,26 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
   }
 
   return (
-    <div className="fixed inset-0 top-[64px] lg:left-64 bg-[#f5f5f5] dark:bg-zinc-950 flex flex-col z-10">
-      {/* Header - Fixed at top */}
-      <div className="bg-white dark:bg-zinc-900 border-b border-[#e4e4e7] dark:border-zinc-800 px-4 py-4 shrink-0">
+    <div className="fixed inset-0 top-[64px] lg:left-64 bg-[#f5f5f5] dark:bg-[#131314] flex flex-col z-10">
+      {/* Back Button - Above header */}
+      <div className="bg-[#f5f5f5] dark:bg-[#131314] px-4 md:px-6 pt-3 md:pt-4 shrink-0">
         <button
-          className="flex items-center gap-2 text-[14px] text-[#71717a] hover:text-black dark:hover:text-white transition-colors mb-4"
+          className="flex items-center gap-2 text-[12px] md:text-[14px] text-[#71717a] hover:text-black dark:hover:text-white transition-colors"
           onClick={onBack}
         >
           <ChevronLeft className="w-3 h-3" />
           Back to Support Center
         </button>
+      </div>
 
+      {/* Header - Fixed at top */}
+      <div className="bg-[#f5f5f5] dark:bg-[#131314] border-b border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] px-4 md:px-6 py-3 md:py-4 shrink-0">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             {issue ? (
               <>
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <span className="text-[14px] text-[#71717a]">
+                <div className="flex items-center gap-2 mb-1 md:mb-2 flex-wrap">
+                  <span className="text-[12px] md:text-[14px] text-[#71717a]">
                     #{issue.id}
                   </span>
                   <span
@@ -195,26 +198,26 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
                     {issue.status === 'checking' ? 'Checking' : 'Complete'}
                   </span>
                 </div>
-                <h1 className="text-[20px] md:text-[24px] font-semibold mb-0 dark:text-white truncate">
+                <h1 className="text-[18px] md:text-[24px] font-semibold mb-0 text-black dark:text-[#d2d2d2] truncate">
                   {issue.title}
                 </h1>
               </>
             ) : (
               <>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-1 md:mb-2">
                   <Bot className="w-5 h-5 text-[#71717a]" />
-                  <span className="text-[14px] text-[#71717a]">
+                  <span className="text-[12px] md:text-[14px] text-[#71717a]">
                     Tessera AI Agent
                   </span>
                 </div>
-                <h1 className="text-[20px] md:text-[24px] font-semibold mb-0 dark:text-white">
+                <h1 className="text-[18px] md:text-[24px] font-semibold mb-0 text-black dark:text-[#d2d2d2]">
                   AI Support Chat
                 </h1>
               </>
             )}
           </div>
           {issue && (
-            <span className="text-[12px] text-[#71717a] shrink-0">
+            <span className="text-[11px] md:text-[12px] text-[#71717a] whitespace-nowrap ml-2">
               {issue.submittedTime}
             </span>
           )}
@@ -266,8 +269,8 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
                     )}
                     {message.type === 'system' && (
                       <>
-                        <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-gradient-to-br from-[#d2fb95] to-[#a8e063] flex items-center justify-center shrink-0 shadow-sm">
-                          <Bot className="w-[14px] h-[14px] md:w-[16px] md:h-[16px] text-[#18181b]" />
+                        <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#e5e5e5] flex items-center justify-center shrink-0">
+                          <Bot className="w-[14px] h-[14px] md:w-[16px] md:h-[16px] text-[#71717a]" />
                         </div>
                         <span className="text-[12px] md:text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
                           {message.sender}
@@ -324,8 +327,8 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
                     </div>
                   )}
                   {message.type === 'system' && (
-                    <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[600px] shadow-[0px_2px_8px_0px_rgba(0,0,0,0.08)] border border-[#f0f0f0] dark:border-zinc-700">
-                      <div className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[22px] text-[#18181b] dark:text-zinc-300 tracking-[-0.0762px] [&_p]:my-1.5 [&_ul]:my-2 [&_ol]:my-2 [&_li]:my-1 [&_strong]:font-semibold [&_a]:text-[#16a34a] [&_a]:no-underline [&_a:hover]:underline">
+                    <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
+                      <div className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[20px] text-[#18181b] dark:text-zinc-300 tracking-[-0.0762px] [&_p]:my-1.5 [&_ul]:my-2 [&_ol]:my-2 [&_li]:my-1 [&_strong]:font-semibold [&_a]:text-[#16a34a] [&_a]:no-underline [&_a:hover]:underline">
                         <Markdown>{message.content}</Markdown>
                       </div>
                     </div>
@@ -345,8 +348,8 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
                 <div className="flex flex-col gap-[8px] items-start animate-in fade-in duration-300">
                   {/* Message Header */}
                   <div className="flex items-center gap-[8px]">
-                    <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-gradient-to-br from-[#d2fb95] to-[#a8e063] flex items-center justify-center shrink-0 shadow-sm">
-                      <Bot className="w-[14px] h-[14px] md:w-[16px] md:h-[16px] text-[#18181b]" />
+                    <div className="w-[28px] h-[28px] md:w-[32px] md:h-[32px] rounded-full bg-[#e5e5e5] flex items-center justify-center shrink-0">
+                      <Bot className="w-[14px] h-[14px] md:w-[16px] md:h-[16px] text-[#71717a]" />
                     </div>
                     <span className="text-[12px] md:text-[13px] font-medium text-[#18181b] dark:text-white tracking-[0.0645px]">
                       Tessera AI
@@ -358,9 +361,9 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
                     )}
                   </div>
                   {/* Streaming Content */}
-                  <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[600px] shadow-[0px_2px_8px_0px_rgba(0,0,0,0.08)] border border-[#f0f0f0] dark:border-zinc-700">
+                  <div className="bg-white dark:bg-zinc-800 rounded-tr-[16px] rounded-bl-[16px] rounded-br-[16px] px-[12px] md:px-[16px] py-[10px] md:py-[12px] max-w-[85%] md:max-w-[480px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)]">
                     {isStreaming && streamingContent ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[22px] text-[#18181b] dark:text-zinc-300 tracking-[-0.0762px] [&_p]:my-1.5 [&_ul]:my-2 [&_ol]:my-2 [&_li]:my-1 [&_strong]:font-semibold [&_a]:text-[#16a34a] [&_a]:no-underline [&_a:hover]:underline">
+                      <div className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[20px] text-[#18181b] dark:text-zinc-300 tracking-[-0.0762px] [&_p]:my-1.5 [&_ul]:my-2 [&_ol]:my-2 [&_li]:my-1 [&_strong]:font-semibold [&_a]:text-[#16a34a] [&_a]:no-underline [&_a:hover]:underline">
                         <Markdown>{streamingContent}</Markdown>
                         <span className="inline-block w-[3px] h-[16px] bg-[#d2fb95] rounded-full animate-pulse ml-1 align-middle" />
                       </div>
@@ -386,7 +389,7 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
       </div>
 
       {/* Input Area - Fixed at bottom */}
-      <div className="bg-white dark:bg-zinc-900 border-t border-[#e4e4e7] dark:border-zinc-800 px-4 py-3 shrink-0">
+      <div className="bg-white dark:bg-[#1E1F20] border-t border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] px-4 md:px-6 py-3 md:py-4 shrink-0">
         <div className="max-w-[800px] mx-auto">
           {/* Hidden file input */}
           <input
@@ -448,13 +451,13 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
             >
               <Paperclip className="w-4 h-4 text-[#71717a]" />
             </button>
-            <div className="flex-1 bg-[#f6f6f6] dark:bg-zinc-800 rounded-[12px] px-3 md:px-4 py-2 md:py-3 min-h-[44px] md:min-h-[48px]">
+            <div className="flex-1 bg-[#e5e5e5] dark:bg-[#3f3f46] rounded-[12px] px-3 md:px-4 min-h-[44px] md:min-h-[48px] flex items-center">
               <textarea
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type your reply here..."
-                className="w-full bg-transparent text-[14px] text-black dark:text-white outline-none resize-none placeholder:text-[#a1a1aa]"
+                className="w-full bg-transparent text-[14px] text-black dark:text-[#d2d2d2] outline-none resize-none placeholder:text-[#a1a1aa]"
                 rows={1}
                 disabled={isWaitingForReply}
               />
@@ -465,12 +468,12 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
                 (!replyText.trim() && pendingAttachments.length === 0) ||
                 isWaitingForReply
               }
-              className="bg-black rounded-[8px] w-[44px] h-[44px] md:w-[48px] md:h-[48px] flex items-center justify-center hover:bg-[#333] transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-black dark:bg-white rounded-[8px] w-[44px] h-[44px] md:w-[48px] md:h-[48px] flex items-center justify-center hover:bg-[#333] dark:hover:bg-[#e5e5e5] transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isWaitingForReply ? (
-                <Loader2 className="w-5 h-5 text-white animate-spin" />
+                <Loader2 className="w-5 h-5 text-white dark:text-black animate-spin" />
               ) : (
-                <Send className="w-5 h-5 text-white" />
+                <Send className="w-5 h-5 text-white dark:text-black" />
               )}
             </button>
           </div>
