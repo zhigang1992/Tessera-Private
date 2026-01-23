@@ -114,7 +114,7 @@ export function CodeSection() {
 
       {/* Code Table */}
       {activeTab === 'code' && (
-        <div className="rounded-[16px] bg-white dark:bg-[#1e1f20] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px] overflow-x-auto">
+        <div className="rounded-[16px] bg-white dark:bg-[#323334] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px] overflow-x-auto border dark:border-[rgba(210,210,210,0.1)] border-[rgba(17,17,17,0.15)]">
           {/* Header - hidden on mobile */}
           <div className="hidden lg:flex items-center gap-[10px] px-[10px]">
             <div className="w-[240px] text-[12px] leading-4 text-zinc-500">Referral Code</div>
@@ -269,90 +269,122 @@ export function CodeSection() {
 
       {/* Selected Code Details */}
       {selectedCode && (
-        <div className="rounded-[16px] bg-white dark:bg-[#1e1f20] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px]">
-          {/* Title */}
-          <div className="flex items-center gap-2 lg:gap-[10px] justify-center">
-            <span className="text-base lg:text-[18px] font-semibold text-foreground dark:text-[#d2d2d2] uppercase">{selectedCode}</span>
-            <span className="flex items-center text-[12px] font-semibold text-[#404040] dark:text-[#d2d2d2] uppercase">
-              (<PersonIcon className="size-4" />{users.length})
-            </span>
-          </div>
-
-          {/* Header - hidden on mobile */}
-          <div className="hidden lg:flex items-center gap-[10px] px-[10px]">
-            <div className="w-[480px] text-[12px] leading-4 text-zinc-500">Email/Wallet</div>
-            <div className="flex-1 text-[12px] leading-4 text-zinc-500">Date Joined</div>
-            <div className="w-[64px] text-[12px] leading-4 text-zinc-500">Type</div>
-            <div className="flex-1 text-[12px] leading-4 text-zinc-500">Reward Earned</div>
-          </div>
-
-          {/* Divider - hidden on mobile */}
-          <div className="hidden lg:block px-[10px]">
-            <div className="h-px bg-black/15 dark:bg-white/15" />
-          </div>
-
-          {/* Rows */}
-          <div className="flex flex-col gap-[5px]">
-            {usersLoading ? (
-              <div className="p-[10px] text-center text-[14px] text-muted-foreground">
-                Loading...
+        <div className="rounded-xl border overflow-hidden bg-white dark:bg-[#323334] dark:border-[rgba(210,210,210,0.1)] border-[rgba(17,17,17,0.15)]">
+          {/* Header */}
+          <div className="px-4 md:px-6 py-3 md:py-4 border-b dark:border-[#393b3d] border-[#e0e0e0] flex items-center justify-center">
+            <div className="flex gap-[10px] items-center justify-center">
+              <div className="text-[18px] font-semibold uppercase leading-[28px] dark:text-[#d2d2d2] text-black">
+                {selectedCode}
               </div>
-            ) : users.length === 0 ? (
-              <div className="p-4">
-                <div className="flex items-center justify-center rounded-lg bg-zinc-50 dark:bg-[#27272A] py-16">
-                  <span className="text-[14px] text-muted-foreground">No users found</span>
+              <div className="flex items-center">
+                <span className="text-[12px] font-semibold uppercase leading-[20px] dark:text-[#999] text-[#404040]">(</span>
+                <div className="flex items-center">
+                  <PersonIcon className="size-4 dark:text-[#d2d2d2] text-black" />
+                  <span className="text-[12px] font-semibold uppercase leading-[20px] dark:text-[#999] text-[#404040]">{users.length}</span>
                 </div>
+                <span className="text-[12px] font-semibold uppercase leading-[20px] dark:text-[#999] text-[#404040]">)</span>
               </div>
-            ) : (
-              users.map((user, index) => (
-                <div
-                  key={user.id}
-                  className={`flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-[10px] p-3 lg:p-[10px] rounded-lg lg:rounded-none ${
-                    index % 2 === 0 ? 'bg-zinc-50 dark:bg-[#323334]' : 'bg-white dark:bg-transparent'
-                  }`}
-                >
-                  {/* Email/Wallet */}
-                  <div className="lg:w-[480px]">
-                    <span className="text-[10px] text-zinc-500 lg:hidden">Email/Wallet</span>
-                    <div className="text-[13px] lg:text-[14px] font-semibold text-[#404040] dark:text-[#d2d2d2] break-all">
-                      {user.email}
-                    </div>
-                  </div>
-                  {/* Mobile: Stats grid */}
-                  <div className="grid grid-cols-3 gap-2 lg:contents">
-                    <div className="flex flex-col lg:flex-1">
-                      <span className="text-[10px] text-zinc-500 lg:hidden">Date Joined</span>
-                      <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-[#d2d2d2]">
-                        {user.dateJoined}
-                      </span>
-                    </div>
-                    <div className="flex flex-col lg:w-[64px]">
-                      <span className="text-[10px] text-zinc-500 lg:hidden">Type</span>
-                      <span className="text-[12px] lg:text-[14px] leading-5 text-black dark:text-[#d2d2d2]">
-                        {user.layer}
-                      </span>
-                    </div>
-                    <div className="flex flex-col lg:flex-1">
-                      <span className="text-[10px] text-zinc-500 lg:hidden">Rewards</span>
-                      <div className="flex flex-col gap-1 lg:gap-[10px] text-[12px] lg:text-[14px] leading-5 text-black dark:text-[#d2d2d2]">
-                        {user.rewards.map((reward, idx) => (
-                          <span key={idx}>{reward.amount} {reward.token}</span>
-                        ))}
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px]">
+              <thead>
+                <tr className="border-b dark:border-[#393b3d] dark:bg-[#27272a] border-[#e0e0e0] bg-gray-50">
+                  <th className="px-4 md:px-6 py-3 text-left text-[11px] md:text-[12px] font-medium whitespace-nowrap dark:text-[#71717a] text-gray-600">
+                    <span className="hidden sm:inline">Email/Wallet</span>
+                    <span className="inline sm:hidden">Email</span>
+                  </th>
+                  <th className="px-4 md:px-6 py-3 text-left text-[11px] md:text-[12px] font-medium whitespace-nowrap dark:text-[#71717a] text-gray-600">
+                    <span className="hidden sm:inline">Date Joined</span>
+                    <span className="inline sm:hidden">Date</span>
+                  </th>
+                  <th className="px-4 md:px-6 py-3 text-left text-[11px] md:text-[12px] font-medium dark:text-[#71717a] text-gray-600">
+                    Type
+                  </th>
+                  <th className="px-4 md:px-6 py-3 text-left text-[11px] md:text-[12px] font-medium whitespace-nowrap dark:text-[#71717a] text-gray-600">
+                    <span className="hidden sm:inline">Reward Earned</span>
+                    <span className="inline sm:hidden">Reward</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {usersLoading ? (
+                  <tr>
+                    <td colSpan={4} className="p-10 text-center text-[14px] text-muted-foreground">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : users.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="p-4">
+                      <div className="flex items-center justify-center rounded-lg bg-zinc-50 dark:bg-[#27272A] py-16">
+                        <span className="text-[14px] text-muted-foreground">No users found</span>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
+                    </td>
+                  </tr>
+                ) : (
+                  users.map((user, index) => (
+                    <tr
+                      key={user.id}
+                      className={cn(
+                        'border-b transition-colors cursor-pointer',
+                        'dark:border-[#393b3d] dark:hover:bg-[#27272a] border-[#e0e0e0] hover:bg-gray-50'
+                      )}
+                    >
+                      <td className="px-4 md:px-6 py-3 md:py-4 text-[12px] md:text-[13px] dark:text-[#d2d2d2] text-black">
+                        <div className="max-w-[150px] md:max-w-none truncate">{user.email}</div>
+                      </td>
+                      <td className="px-4 md:px-6 py-3 md:py-4 text-[12px] md:text-[13px] whitespace-nowrap dark:text-[#d2d2d2] text-black">
+                        {user.dateJoined}
+                      </td>
+                      <td className="px-4 md:px-6 py-3 md:py-4 text-[12px] md:text-[13px] dark:text-[#d2d2d2] text-black">
+                        {user.layer}
+                      </td>
+                      <td className="px-4 md:px-6 py-3 md:py-4 text-[12px] md:text-[13px] whitespace-pre-line dark:text-[#d2d2d2] text-black">
+                        {user.rewards.map((reward, idx) => (
+                          <div key={idx}>{reward.amount} {reward.token}</div>
+                        ))}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
 
           {/* Pagination */}
-          <Pagination
-            currentPage={1}
-            totalPages={Math.ceil(users.length / 10)}
-            onPageChange={() => {}}
-            className="justify-center"
-          />
+          <div className="flex gap-[5px] items-center justify-center py-4 md:py-5 border-t dark:border-[#393b3d] border-[#e0e0e0]">
+            {Array.from({ length: Math.min(Math.ceil(users.length / 10), 5) }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                className={cn(
+                  'flex items-center justify-center w-10 h-10 rounded-lg text-xs font-normal transition-colors cursor-pointer',
+                  page === 1
+                    ? 'dark:bg-[#d2fb95] dark:text-black bg-black text-white'
+                    : 'dark:bg-[rgba(212,212,216,0.4)] dark:text-[#d2d2d2] dark:hover:bg-[#3f3f46] bg-[rgba(212,212,216,0.4)] text-black hover:bg-gray-100'
+                )}
+              >
+                {page}
+              </button>
+            ))}
+            {Math.ceil(users.length / 10) > 5 && (
+              <>
+                <button
+                  disabled
+                  className="flex items-center justify-center w-10 h-10 rounded-lg text-xs font-normal dark:bg-[rgba(212,212,216,0.4)] dark:text-[#d2d2d2] bg-[rgba(212,212,216,0.4)] text-black"
+                >
+                  ...
+                </button>
+                <button
+                  className="flex items-center justify-center w-10 h-10 rounded-lg text-xs font-normal transition-colors cursor-pointer dark:bg-[rgba(212,212,216,0.4)] dark:text-[#d2d2d2] dark:hover:bg-[#3f3f46] bg-[rgba(212,212,216,0.4)] text-black hover:bg-gray-100"
+                >
+                  {Math.ceil(users.length / 10)}
+                </button>
+              </>
+            )}
+          </div>
         </div>
       )}
 

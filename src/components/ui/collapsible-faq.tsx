@@ -56,7 +56,7 @@ export function CollapsibleFaq({
     <div
       id={id}
       className={cn(
-        'rounded-2xl bg-white dark:bg-[#18181B] px-4 lg:px-6 pt-4 lg:pt-6 pb-6 lg:pb-10',
+        'rounded-2xl bg-white dark:bg-[#323334] px-4 lg:px-6 pt-4 lg:pt-6 pb-6 lg:pb-10 border dark:border-[rgba(210,210,210,0.1)] border-[rgba(17,17,17,0.15)]',
         className
       )}
     >
