@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useWallet } from '@solana/wallet-adapter-react'
+import { TableHeader } from '@/components/ui/table-header'
 import TreeIcon from './_/tree.svg?react'
 import PersonIcon from './_/person.svg?react'
 import { getTraderLayers } from '@/services'
@@ -36,10 +37,20 @@ export function ReferralTree() {
       {/* Data Table */}
       <div className="flex-1 flex flex-col gap-[10px] min-w-0 w-full">
         {/* Header */}
-        <div className="flex justify-between px-2 lg:px-[10px] text-[11px] lg:text-[12px] text-zinc-500 dark:text-zinc-400">
+        <div className="hidden lg:flex justify-between px-2 lg:px-[10px]">
+          <TableHeader
+            columns={[
+              { label: 'Trader Layers', className: 'flex-1' },
+              { label: 'Traders Referred', className: 'flex-1' },
+              { label: 'Points', className: 'flex-1' },
+            ]}
+            className="px-0"
+          />
+        </div>
+        <div className="lg:hidden flex justify-between px-2 text-[11px] text-zinc-500 dark:text-[#71717a]">
           <span className="flex-1">Trader Layers</span>
-          <span className="flex-1 text-center lg:text-left">Traders Referred</span>
-          <span className="flex-1 text-right lg:text-left">Points</span>
+          <span className="flex-1 text-center">Traders Referred</span>
+          <span className="flex-1 text-right">Points</span>
         </div>
 
         {/* Rows */}
