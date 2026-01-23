@@ -488,3 +488,49 @@ export async function fetchDashboardStats(): Promise<DashboardStatsResult> {
     totalTraders: data.facts_referral_system_user_registered_events_aggregate.aggregate.count,
   }
 }
+
+/**
+ * Fetch user-specific swap events (trade history) with pagination
+ */
+export async function fetchUserSwapEvents(
+  userAddress: string,
+  limit: number = 10,
+  offset: number = 0
+): Promise<{ events: MeteoraSwapEvent[]; total: number }> {
+  const query = `
+    query GetUserSwapEvents($sender: String!, $limit: Int!, $offset: Int!) {
+      facts_meteora_token_swap_events(
+        where: { sender: { _eq: $sender } }
+        limit: $limit
+        offset: $offset
+        order_by: { block_time: desc }
+      ) {
+        signature
+        sender
+        mint_x
+        mint_y
+        amount_x
+        amount_y
+        type
+        block_time
+        pool_address
+      }
+      facts_meteora_token_swap_events_aggregate(where: { sender: { _eq: $sender } }) {
+        aggregate {
+          count
+        }
+      }
+    }
+  `
+
+  const data = await graphqlRequest<SwapEventsQueryResult>(query, {
+    sender: userAddress,
+    limit,
+    offset,
+  })
+
+  return {
+    events: data.facts_meteora_token_swap_events,
+    total: data.facts_meteora_token_swap_events_aggregate.aggregate.count,
+  }
+}
