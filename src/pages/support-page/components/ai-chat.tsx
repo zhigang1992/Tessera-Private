@@ -27,7 +27,7 @@ function generateMessageId(): string {
   return `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
 }
 
-export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
+export function AiChat({ issue, initialQuery}: AiChatProps) {
   const [replyText, setReplyText] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>(
@@ -165,7 +165,7 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
   }
 
   return (
-    <div className="fixed inset-0 top-[64px] lg:left-64 bg-[#f5f5f5] dark:bg-[#131314] flex flex-col z-10">
+    <div className="fixed inset-0 top-14 lg:left-64 bg-[#f5f5f5] dark:bg-[#131314] flex flex-col z-10">
       {/* Header - Fixed at top */}
       <div className="bg-[#f5f5f5] dark:bg-[#131314] border-b border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] px-4 md:px-6 py-3 md:py-4 shrink-0">
         <div className="flex items-start justify-between gap-2">
