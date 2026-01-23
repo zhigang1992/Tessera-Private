@@ -1,43 +1,17 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { TrendingUp } from 'lucide-react'
 import TokenSpacexIcon from './_/token-spacex.svg?react'
-
-interface Asset {
-  id: string
-  symbol: string
-  name: string
-  code: string
-  sector: string
-  price: number
-  holders: number
-  valuation: string
-}
-
-const mockAssets: Asset[] = [
-  {
-    id: 'spacex',
-    symbol: 'T-SPACEX',
-    name: 'T-SPACEX',
-    code: 'SPX-TX2002',
-    sector: 'Aerospace',
-    price: 95.4,
-    holders: 15420,
-    valuation: '$180B',
-  },
-  {
-    id: 'openai',
-    symbol: 'T-OPENAI',
-    name: 'T-OPENAI',
-    code: 'OAI-TX1001',
-    sector: 'Technology',
-    price: 127.85,
-    holders: 23150,
-    valuation: '$290B',
-  },
-]
+import { getTokenizedAssets } from '@/services'
 
 export function AssetsTable() {
   const [selectedAsset, setSelectedAsset] = useState<string>('spacex')
+
+  const { data: assets, isLoading } = useQuery({
+    queryKey: ['tokenizedAssets'],
+    queryFn: getTokenizedAssets,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  })
 
   return (
     <div className="bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl overflow-hidden">
@@ -63,11 +37,20 @@ export function AssetsTable() {
           </div>
 
           {/* Table Rows */}
-          {mockAssets.map((asset, index) => (
+          {isLoading ? (
+            <div className="p-4 text-center">
+              <span className="text-sm text-muted-foreground">Loading assets...</span>
+            </div>
+          ) : !assets || assets.length === 0 ? (
+            <div className="p-4 text-center">
+              <span className="text-sm text-muted-foreground">No assets available</span>
+            </div>
+          ) : (
+            assets.map((asset, index) => (
             <div
               key={asset.id}
               className={`flex items-center px-4 py-3 cursor-pointer transition-colors ${
-                index < mockAssets.length - 1 ? 'border-b' : ''
+                index < assets.length - 1 ? 'border-b' : ''
               } ${
                 selectedAsset === asset.id
                   ? 'bg-[#d2fb95] border-[#c5ed8a]'
@@ -124,7 +107,8 @@ export function AssetsTable() {
                 </p>
               </div>
             </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>

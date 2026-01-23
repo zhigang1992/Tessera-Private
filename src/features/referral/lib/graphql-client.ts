@@ -438,3 +438,53 @@ export async function fetchSwapEvents(
     total: data.facts_meteora_token_swap_events_aggregate.aggregate.count,
   }
 }
+
+// Dashboard statistics types
+export interface DashboardStatsResult {
+  totalTradingVolume: number
+  totalTraders: number
+}
+
+/**
+ * Fetch dashboard statistics: total trading volume and active traders
+ */
+export async function fetchDashboardStats(): Promise<DashboardStatsResult> {
+  const query = `
+    query GetDashboardStats {
+      public_marts_attributed_trading_volume_by_code_account_aggregate {
+        aggregate {
+          sum {
+            total_volume
+          }
+        }
+      }
+      facts_referral_system_user_registered_events_aggregate {
+        aggregate {
+          count
+        }
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_attributed_trading_volume_by_code_account_aggregate: {
+      aggregate: {
+        sum: {
+          total_volume: string | null
+        }
+      }
+    }
+    facts_referral_system_user_registered_events_aggregate: {
+      aggregate: {
+        count: number
+      }
+    }
+  }>(query)
+
+  const totalVolume = data.public_marts_attributed_trading_volume_by_code_account_aggregate.aggregate.sum.total_volume
+
+  return {
+    totalTradingVolume: totalVolume ? hasuraToNumber(totalVolume) : 0,
+    totalTraders: data.facts_referral_system_user_registered_events_aggregate.aggregate.count,
+  }
+}

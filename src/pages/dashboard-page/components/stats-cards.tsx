@@ -1,36 +1,52 @@
 import { TrendingUp } from 'lucide-react'
-// import { useQuery } from '@tanstack/react-query'
-// import { getDashboardStats } from '@/services'
+import { useQuery } from '@tanstack/react-query'
+import { getMarketStats } from '@/services'
+
+/**
+ * Format large numbers to readable strings (e.g., 485200000000 -> $485.2B)
+ */
+function formatLargeNumber(value: number): string {
+  if (value >= 1_000_000_000) {
+    return `$${(value / 1_000_000_000).toFixed(1)}B`
+  }
+  if (value >= 1_000_000) {
+    return `$${(value / 1_000_000).toFixed(1)}M`
+  }
+  if (value >= 1_000) {
+    return `$${(value / 1_000).toFixed(1)}K`
+  }
+  return `$${value.toFixed(2)}`
+}
 
 export function StatsCards() {
-  // Note: Currently using static data, will integrate with API later
-  // const { data: stats } = useQuery({
-  //   queryKey: ['dashboardStats'],
-  //   queryFn: getDashboardStats,
-  // })
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['marketStats'],
+    queryFn: getMarketStats,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  })
 
   const statCards = [
     {
       label: 'Total Market Cap',
-      value: '$485.2B',
+      value: isLoading || !stats ? '—' : formatLargeNumber(stats.totalMarketCap),
       change: '+4.2%',
       hasChange: true,
     },
     {
       label: 'Total Trading Volume',
-      value: '$42.5M',
+      value: isLoading || !stats ? '—' : formatLargeNumber(stats.totalTradingVolume),
       change: '+12.5%',
       hasChange: true,
     },
     {
       label: 'Active Traders',
-      value: '24,285',
+      value: isLoading || !stats ? '—' : stats.activeTraders.toLocaleString(),
       change: '124',
       hasChange: true,
     },
     {
       label: 'Assets Tokenized',
-      value: '6',
+      value: isLoading || !stats ? '—' : stats.assetsTokenized.toString(),
       hasChange: false,
     },
   ]
