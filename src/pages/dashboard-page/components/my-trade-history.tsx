@@ -18,11 +18,11 @@ export function MyTradeHistory() {
   const items = data?.items ?? []
 
   return (
-    <div className="rounded-2xl bg-white dark:bg-[#1e1f20] px-3.5 py-4 lg:py-6">
+    <div className="bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl px-3.5 py-4 lg:py-6">
       <div className="overflow-x-auto">
         <div className="flex flex-col gap-2.5 min-w-[600px]">
           {/* Header */}
-          <div className="flex items-center gap-2.5 px-2.5 text-xs text-muted-foreground dark:text-[#d2d2d2]/50">
+          <div className="flex items-center gap-2.5 px-2.5 text-xs text-muted-foreground dark:text-[#999999]">
             <div className="w-[140px] lg:w-[180px]">Token</div>
             <div className="w-[180px] lg:w-[250px]">Amount</div>
             <div className="w-[60px] lg:flex-1">Type</div>
