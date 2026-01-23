@@ -105,7 +105,7 @@ export function CodeSection() {
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg bg-black dark:bg-[#D2D2D2] px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/80"
+          className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg bg-black dark:bg-[#d2fb95] px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white dark:text-black hover:bg-black/80 dark:hover:bg-[#d2fb95]/80"
         >
           <AddIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           <span className="sm:inline">Create new code</span>
@@ -117,10 +117,10 @@ export function CodeSection() {
         <div className="rounded-[16px] bg-white dark:bg-[#323334] px-3 lg:px-[14px] py-4 lg:py-6 flex flex-col gap-[10px] overflow-x-auto border dark:border-[rgba(210,210,210,0.1)] border-[rgba(17,17,17,0.15)]">
           {/* Header - hidden on mobile */}
           <div className="hidden lg:flex items-center gap-[10px] px-[10px]">
-            <div className="w-[240px] text-[12px] leading-4 text-zinc-500">Referral Code</div>
-            <div className="flex-1 text-[12px] leading-4 text-zinc-500">Total Volume</div>
-            <div className="flex-1 text-[12px] leading-4 text-zinc-500">Traders Referred</div>
-            <div className="flex-1 text-[12px] leading-4 text-zinc-500">Total Rewards</div>
+            <div className="w-[240px] text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Referral Code</div>
+            <div className="flex-1 text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Total Volume</div>
+            <div className="flex-1 text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Traders Referred</div>
+            <div className="flex-1 text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Total Rewards</div>
             {/* Placeholder for Share button column */}
             <div className="w-[85px] shrink-0" />
           </div>
@@ -141,7 +141,7 @@ export function CodeSection() {
                 <WalletDropdown
                   triggerVariant="default"
                   triggerSize="lg"
-                  triggerClassName="h-11 rounded-lg bg-black px-8 text-sm font-medium text-white hover:bg-black/90"
+                  triggerClassName="h-11 rounded-lg bg-black dark:bg-[#d2fb95] px-8 text-sm font-medium text-white dark:text-black hover:bg-black/90 dark:hover:bg-[#d2fb95]/80"
                 />
               </div>
             ) : codes.length === 0 ? (
@@ -197,7 +197,7 @@ export function CodeSection() {
                     {/* Mobile: Share button */}
                     <button
                       onClick={(e) => handleOpenShareModal(e, row.code)}
-                      className="lg:hidden inline-flex items-center gap-1.5 rounded-lg bg-black dark:bg-[#D2D2D2] px-3 py-1.5 text-sm font-medium text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/80 transition-colors"
+                      className="lg:hidden inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-black/80 transition-colors"
                     >
                       <Share2 className="size-3.5" />
                       Share
@@ -246,7 +246,7 @@ export function CodeSection() {
                   <div className="hidden lg:block shrink-0">
                     <button
                       onClick={(e) => handleOpenShareModal(e, row.code)}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-black dark:bg-[#D2D2D2] px-3 py-1.5 text-sm font-medium text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/80 transition-colors"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-black/80 transition-colors"
                     >
                       <Share2 className="size-3.5" />
                       Share

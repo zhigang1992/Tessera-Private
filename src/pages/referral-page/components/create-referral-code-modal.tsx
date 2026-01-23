@@ -119,7 +119,7 @@ export function CreateReferralCodeModal({ open, onOpenChange }: CreateReferralCo
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isCreateDisabled}>
+              <Button type="submit" disabled={isCreateDisabled} className="bg-black dark:bg-[#d2fb95] text-white dark:text-black hover:bg-black/90 dark:hover:bg-[#d2fb95]/80">
                 {isCreatePending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 {isCreatePending ? 'Creating...' : 'Create code'}
               </Button>

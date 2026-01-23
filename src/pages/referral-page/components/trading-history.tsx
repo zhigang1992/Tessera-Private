@@ -38,11 +38,11 @@ export function TradingHistory() {
       <div className="flex flex-col gap-[10px]">
         {/* Header - hidden on mobile */}
         <div className="hidden lg:flex items-center gap-[10px] px-[10px]">
-          <div className="w-[180px] text-[12px] leading-4 text-zinc-500">Token</div>
-          <div className="w-[250px] text-[12px] leading-4 text-zinc-500">Amount</div>
-          <div className="flex-1 text-[12px] leading-4 text-zinc-500">Type</div>
-          <div className="flex-1 text-[12px] leading-4 text-zinc-500">Account</div>
-          <div className="flex-1 text-[12px] leading-4 text-zinc-500">Time</div>
+          <div className="w-[180px] text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Token</div>
+          <div className="w-[250px] text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Amount</div>
+          <div className="flex-1 text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Type</div>
+          <div className="flex-1 text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Account</div>
+          <div className="flex-1 text-[12px] leading-4 text-zinc-500 dark:text-zinc-400">Time</div>
         </div>
 
         {/* Divider - hidden on mobile */}
