@@ -1,6 +1,25 @@
 import { sleep } from './utils'
+import { fetchDashboardStats } from '@/features/referral/lib/graphql-client'
 
 // ============ Types ============
+
+export interface MarketStatsData {
+  totalMarketCap: number
+  totalTradingVolume: number
+  activeTraders: number
+  assetsTokenized: number
+}
+
+export interface AssetData {
+  id: string
+  symbol: string
+  name: string
+  code: string
+  sector: string
+  price: number
+  holders: number
+  valuation: string
+}
 
 export interface DashboardStats {
   protocolBackingRatio: number
@@ -129,6 +148,66 @@ function generateUserTradeHistory(): UserTradeHistoryItem[] {
 }
 
 const rawUserTradeHistory = generateUserTradeHistory()
+
+// ============ Market Data API Functions ============
+
+/**
+ * Get market overview statistics for the stats cards
+ */
+export async function getMarketStats(): Promise<MarketStatsData> {
+  try {
+    const stats = await fetchDashboardStats()
+
+    // For now, we'll use mock data for market cap and assets tokenized
+    // These would come from different sources (e.g., token prices, treasury data)
+    return {
+      totalMarketCap: 485200000000, // $485.2B mock value
+      totalTradingVolume: stats.totalTradingVolume,
+      activeTraders: stats.totalTraders,
+      assetsTokenized: 6, // Mock value - would come from token registry
+    }
+  } catch (error) {
+    console.error('Failed to fetch market stats:', error)
+    // Return mock data as fallback
+    return {
+      totalMarketCap: 485200000000,
+      totalTradingVolume: 42500000,
+      activeTraders: 24285,
+      assetsTokenized: 6,
+    }
+  }
+}
+
+/**
+ * Get list of tokenized assets for the assets table
+ */
+export async function getTokenizedAssets(): Promise<AssetData[]> {
+  await sleep(300)
+  // TODO: Replace with real data from token registry / GraphQL
+  // For now returning mock data
+  return [
+    {
+      id: 'spacex',
+      symbol: 'T-SPACEX',
+      name: 'T-SPACEX',
+      code: 'SPX-TX2002',
+      sector: 'Aerospace',
+      price: 95.4,
+      holders: 15420,
+      valuation: '$180B',
+    },
+    {
+      id: 'openai',
+      symbol: 'T-OPENAI',
+      name: 'T-OPENAI',
+      code: 'OAI-TX1001',
+      sector: 'Technology',
+      price: 127.85,
+      holders: 23150,
+      valuation: '$290B',
+    },
+  ]
+}
 
 // ============ API Functions ============
 
