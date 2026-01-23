@@ -116,19 +116,19 @@ export function DashboardPriceChart() {
         <div className="hidden lg:grid grid-cols-3 gap-4 mb-6">
           <div className="bg-[rgba(0,0,0,0.1)] rounded-lg px-4 py-3">
             <p className="text-xs font-normal text-black mb-1">Protocol Backing Ratio</p>
-            <p className="font-['Martian_Mono',monospace] font-medium text-xl text-black">
+            <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-black">
               {stats?.protocolBackingRatio ?? 0}%
             </p>
           </div>
           <div className="bg-[rgba(0,0,0,0.1)] rounded-lg px-4 py-3">
             <p className="text-xs font-normal text-black mb-1">T-SpaceX Supply</p>
-            <p className="font-['Martian_Mono',monospace] font-medium text-xl text-black">
+            <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-black">
               {stats?.tokenSupply ?? '0'}
             </p>
           </div>
           <div className="bg-[rgba(0,0,0,0.1)] rounded-lg px-4 py-3">
             <p className="text-xs font-normal text-black mb-1">T-SpaceX Price</p>
-            <p className="font-['Martian_Mono',monospace] font-medium text-xl text-black">
+            <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-black">
               ${stats?.tokenPrice.toFixed(1) ?? '0.0'}
             </p>
           </div>
@@ -138,10 +138,10 @@ export function DashboardPriceChart() {
         <div className="flex items-center justify-between mb-2.5 lg:hidden">
           <div className="flex items-center gap-2.5">
             <TokenSpacexIcon className="w-12 h-12" />
-            <p className="text-base font-extrabold text-black">{tokenInfo?.name ?? 'T-SpaceX'}</p>
+            <p className="text-[16px] font-extrabold text-black">{tokenInfo?.name ?? 'T-SpaceX'}</p>
           </div>
           <div className="flex flex-col items-end">
-            <p className="font-['Martian_Mono',monospace] font-medium text-xl text-[#111]">
+            <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-[#111]">
               ${tokenInfo?.price.toFixed(2) ?? '0.00'}
             </p>
             <div className="flex items-center gap-1.5">
@@ -178,11 +178,11 @@ export function DashboardPriceChart() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2.5">
               <TokenSpacexIcon className="w-12 h-12" />
-              <p className="text-base font-extrabold text-black">{tokenInfo?.name ?? 'T-SpaceX'}</p>
+              <p className="text-[16px] font-extrabold text-black">{tokenInfo?.name ?? 'T-SpaceX'}</p>
             </div>
             <div className="bg-[rgba(0,0,0,0.5)] h-10 w-px" />
             <div className="flex flex-col justify-center">
-              <p className="font-['Martian_Mono',monospace] font-medium text-2xl text-[#111]">
+              <p className="font-['Martian_Mono',monospace] font-medium text-[24px] text-[#111]">
                 ${tokenInfo?.price.toFixed(2) ?? '0.00'}
               </p>
               <div className="flex items-center gap-1.5">
