@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronLeft, Paperclip, Send, Bot, User, Loader2, X } from 'lucide-react'
+import { Paperclip, Send, Bot, User, Loader2, X } from 'lucide-react'
 import Markdown from 'react-markdown'
 import {
   type LiveIssue,
@@ -166,17 +166,6 @@ export function AiChat({ issue, initialQuery, onBack }: AiChatProps) {
 
   return (
     <div className="fixed inset-0 top-[64px] lg:left-64 bg-[#f5f5f5] dark:bg-[#131314] flex flex-col z-10">
-      {/* Back Button - Above header */}
-      <div className="bg-[#f5f5f5] dark:bg-[#131314] px-4 md:px-6 pt-3 md:pt-4 shrink-0">
-        <button
-          className="flex items-center gap-2 text-[12px] md:text-[14px] text-[#71717a] hover:text-black dark:hover:text-white transition-colors"
-          onClick={onBack}
-        >
-          <ChevronLeft className="w-3 h-3" />
-          Back to Support Center
-        </button>
-      </div>
-
       {/* Header - Fixed at top */}
       <div className="bg-[#f5f5f5] dark:bg-[#131314] border-b border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] px-4 md:px-6 py-3 md:py-4 shrink-0">
         <div className="flex items-start justify-between gap-2">
