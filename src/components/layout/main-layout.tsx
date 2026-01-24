@@ -20,7 +20,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-black">
+    <div className="min-h-screen bg-[#f5f5f5] dark:bg-[#131314]">
       <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
       <div className="lg:pl-64">
         <Header onMenuClick={handleMenuClick} backButton={backButton} />
