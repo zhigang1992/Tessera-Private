@@ -253,13 +253,13 @@ export function TokenSwapPanel() {
             </div>
             <div className="flex justify-between">
               <span className="text-[#52525b]">Min. received</span>
-              <span className="text-black">
+              <span className="text-[#1d8f00]">
                 {minOutput} {buyingToken}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-[#52525b]">Slippage</span>
-              <span className="text-black">1%</span>
+              <span className="text-[#1d8f00]">1%</span>
             </div>
           </div>
         )}
