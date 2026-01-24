@@ -10,13 +10,13 @@ export default function TradePage() {
 
       {/* Main Section - Stack on mobile, side by side on desktop */}
       <div className="flex flex-col md:flex-row gap-4 lg:gap-6">
-        {/* Left: Price Chart - 3 parts of 5 total (60%) */}
-        <div className="w-full md:w-3/5 min-w-0">
+        {/* Left: Price Chart - 3 parts of 5 total (60%) - order-2 on mobile, order-1 on desktop */}
+        <div className="w-full md:w-3/5 min-w-0 order-2 md:order-1">
           <PriceChart tokenSymbol="SOL" />
         </div>
 
-        {/* Right: Swap Panel - 2 parts of 5 total (40%) */}
-        <div className="w-full md:w-2/5 flex-shrink-0">
+        {/* Right: Swap Panel - 2 parts of 5 total (40%) - order-1 on mobile, order-2 on desktop */}
+        <div className="w-full md:w-2/5 flex-shrink-0 order-1 md:order-2">
           <TokenSwapPanel />
         </div>
       </div>

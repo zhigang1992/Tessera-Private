@@ -146,10 +146,10 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
           </div>
 
           {/* Right: Tab Switcher */}
-          <div className="bg-[rgba(0,0,0,0.1)] flex items-center p-1 rounded-lg shrink-0">
+          <div className="bg-[rgba(0,0,0,0.1)] flex items-center p-1 rounded-lg shrink-0 self-start">
             <button
               onClick={() => setActiveTab('price')}
-              className={`px-6 py-1 text-xs font-medium transition-all rounded ${
+              className={`px-4 lg:px-6 py-1 text-xs font-medium transition-all rounded ${
                 activeTab === 'price'
                   ? 'bg-white text-black shadow-sm'
                   : 'text-black opacity-50 hover:opacity-75 hover:bg-[rgba(255,255,255,0.3)]'
@@ -159,7 +159,7 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
             </button>
             <button
               onClick={() => setActiveTab('market-depth')}
-              className={`px-6 py-1 text-xs font-medium transition-all rounded ${
+              className={`px-4 lg:px-6 py-1 text-xs font-medium transition-all rounded whitespace-nowrap ${
                 activeTab === 'market-depth'
                   ? 'bg-white text-black shadow-sm'
                   : 'text-black opacity-50 hover:opacity-75 hover:bg-[rgba(255,255,255,0.3)]'
@@ -199,7 +199,7 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
           {activeTab === 'market-depth' && (
             <div className="flex-1 flex flex-col">
               {/* Bar Chart */}
-              <div className="flex-1 flex items-end justify-center gap-[2px] px-4 mb-4 min-h-0">
+              <div className="flex items-end justify-center gap-[2px] px-4 mb-4 h-[261px]">
                 {/* Generate bars with varying heights - simulating market depth distribution */}
                 {[29, 47, 56, 25, 60, 78, 60, 89, 47, 60, 97, 202, 246, 246, 227, 227, 246, 246, 219, 261, 236, 236, 236, 97, 66, 104, 89, 47, 60, 56, 78, 47, 60, 25, 29].map((height, index) => (
                   <div
@@ -209,7 +209,7 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
                         ? 'bg-[#1d8f00]' // Active bin - darker green
                         : 'bg-[#9eca87]' // Regular bins - lighter green
                     } rounded-tl-[999px] rounded-tr-[999px] shrink-0 w-[8px] lg:w-[12px] transition-all hover:opacity-80`}
-                    style={{ height: `${(height / 261) * 100}%`, maxHeight: `${Math.max(height * 0.6, 20)}px` }}
+                    style={{ height: `${height}px` }}
                     title={`Bin ${index + 1}`}
                   />
                 ))}
