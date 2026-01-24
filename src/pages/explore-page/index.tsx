@@ -23,20 +23,20 @@ export default function ExplorePage() {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">Explore</h1>
-        <button className="flex items-center gap-2 text-[13px] text-zinc-500 dark:text-zinc-400 hover:text-foreground transition-colors">
+        <h1 className="text-[24px] font-semibold text-black dark:text-[#d2d2d2]">Explore</h1>
+        <button className="flex items-center gap-1 text-[13px] text-[#71717a] hover:text-black dark:hover:text-[#d2d2d2] transition-colors">
           <HelpCircleIcon className="w-[18px] h-[18px]" />
           Learn More
         </button>
       </div>
 
       {/* Subtitle */}
-      <p className="text-[13px] text-zinc-500 dark:text-zinc-400">
+      <p className="text-[13px] text-[#71717a] mb-6 leading-normal">
         Discover and track the world's most innovative private companies.
       </p>
 
       {/* Asset Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
         {isLoading ? (
           <>
             <AssetCardSkeleton />

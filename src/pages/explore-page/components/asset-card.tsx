@@ -17,18 +17,18 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
   }
 
   return (
-    <Card className="overflow-hidden border border-zinc-200 dark:border-zinc-700">
+    <Card className="overflow-hidden rounded-2xl border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#323334] hover:shadow-[0px_4px_8px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 ease-out cursor-pointer">
       {/* Header */}
       <div
-        className="p-5 pt-5 pb-0 h-[118px] flex justify-between"
+        className="aspect-[4/3] px-5 py-5 flex justify-between items-start"
         style={{ backgroundColor: asset.headerColor }}
       >
-        <div className="flex flex-col gap-2">
-          <span className="bg-white/20 text-white text-[11px] font-medium px-2 py-1 rounded w-fit">
+        <div className="flex-1">
+          <div className="inline-block px-2 py-1 rounded bg-white/20 text-white text-[11px] font-medium mb-3 leading-normal">
             {asset.category}
-          </span>
-          <h3 className="text-xl font-semibold text-white">{asset.name}</h3>
-          <p className="text-xs text-white/70">{asset.ticker}</p>
+          </div>
+          <h3 className="text-xl font-semibold text-white mb-1 leading-normal">{asset.name}</h3>
+          <p className="text-xs text-white/70 leading-normal">{asset.ticker}</p>
         </div>
         <button className="text-white/70 hover:text-white transition-colors h-fit">
           <ExternalLinkIcon className="w-[14px] h-[14px]" />
@@ -36,43 +36,43 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
       </div>
 
       {/* Body */}
-      <div className="p-5 flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">Price</span>
-          <span className="text-base font-semibold text-foreground">
+      <div className="px-5 py-5">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs text-[#71717a] leading-normal">Price</span>
+          <span className="text-base font-semibold text-[#18181b] dark:text-[#d2d2d2] leading-normal">
             ${asset.price.toFixed(2)}
           </span>
         </div>
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">Valuation at Price</span>
-          <span className="text-base font-semibold text-foreground">{asset.valuation}</span>
+        <div className="flex items-center justify-between mb-5">
+          <span className="text-xs text-[#71717a] leading-normal">Valuation at Price</span>
+          <span className="text-base font-semibold text-[#18181b] dark:text-[#d2d2d2] leading-normal">{asset.valuation}</span>
         </div>
 
         {/* Action Button */}
         {asset.status === 'trading' && (
           <Button
             onClick={handleAction}
-            className="w-full h-9 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-[13px] font-medium"
+            className="w-full rounded-lg py-2.5 px-4 bg-[#18181b] dark:bg-white text-white dark:text-black hover:bg-[#27272a] dark:hover:bg-gray-100 text-[13px] font-medium leading-normal flex items-center justify-center gap-1.5"
           >
-            <SwapIcon className="w-4 h-4 mr-2" />
+            <SwapIcon className="w-4 h-4" />
             Buy / Sell
           </Button>
         )}
         {asset.status === 'auction' && (
           <Button
             onClick={handleAction}
-            className="w-full h-9 bg-[#d2fb95] text-zinc-900 hover:bg-[#c4ed87] text-[13px] font-medium"
+            className="w-full rounded-lg py-2.5 px-4 bg-[#d2fb95] text-[#18181b] hover:bg-[#c5ed88] text-[13px] font-medium leading-normal flex items-center justify-center gap-1.5"
           >
-            <GavelIcon className="w-4 h-4 mr-2" />
+            <GavelIcon className="w-4 h-4" />
             Join Auction
           </Button>
         )}
         {asset.status === 'coming_soon' && (
           <Button
             disabled
-            className="w-full h-9 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 text-[13px] font-medium cursor-not-allowed"
+            className="w-full rounded-lg py-2.5 px-4 bg-[#f4f4f5] dark:bg-[#3f3f46] text-[#a1a1aa] dark:text-[#71717a] text-[13px] font-medium leading-normal cursor-not-allowed flex items-center justify-center gap-1.5"
           >
-            <HourglassIcon className="w-4 h-4 mr-2" />
+            <HourglassIcon className="w-4 h-4" />
             Coming Soon
           </Button>
         )}
