@@ -18,7 +18,7 @@ export function TradeHistory() {
   const items = data?.items ?? []
 
   return (
-    <div className="rounded-2xl bg-white dark:bg-[#1e1f20] px-3.5 py-4 lg:py-6">
+    <div className="rounded-2xl bg-white dark:bg-[#1e1f20] px-3.5 py-4 lg:py-6 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
       <div className="overflow-x-auto">
         <div className="flex flex-col gap-2.5 min-w-[600px]">
           {/* Header */}

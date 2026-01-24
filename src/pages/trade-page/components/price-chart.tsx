@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createChart, ColorType, LineSeries } from 'lightweight-charts'
 import type { IChartApi, LineData, Time } from 'lightweight-charts'
@@ -9,7 +9,12 @@ interface PriceChartProps {
   tokenSymbol?: string
 }
 
+type ChartTab = 'price' | 'market-depth'
+type TimeRange = '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL'
+
 export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
+  const [activeTab, setActiveTab] = useState<ChartTab>('price')
+  const [timeRange, setTimeRange] = useState<TimeRange>('1D')
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -110,31 +115,117 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
   }, [priceHistory])
 
   return (
-    <div className="h-full rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95]">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 lg:mb-6">
-        <div className="flex items-center gap-2 lg:gap-2.5">
-          <TokenSolIcon className="w-10 h-10 lg:w-12 lg:h-12" />
-          <span className="text-sm lg:text-base font-extrabold text-black dark:text-[#d2d2d2]">
-            {token?.symbol ?? tokenSymbol}
-          </span>
+    <div className="h-full rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
+      <div className="flex flex-col h-full">
+        {/* Header with Tabs */}
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4 lg:mb-6 gap-4">
+          {/* Left: Token Info and Price */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 lg:gap-2.5">
+              <TokenSolIcon className="w-10 h-10 lg:w-12 lg:h-12" />
+              <span className="text-sm lg:text-base font-extrabold text-black dark:text-[#d2d2d2]">
+                {token?.symbol ?? tokenSymbol}
+              </span>
+            </div>
+            <div>
+              <div className="text-xl lg:text-[28px] font-bold text-[#111] dark:text-white">
+                ${token?.price?.toFixed(2) ?? '0.00'}
+              </div>
+              <div className="flex items-center gap-1 text-[10px] lg:text-xs">
+                <span className={isPositive ? 'text-[#269700]' : 'text-red-500'}>
+                  {isPositive ? '▲' : '▼'} ${Math.abs(token?.priceChange24h ?? 0).toFixed(2)} (
+                  {Math.abs(token?.priceChangePercent24h ?? 0).toFixed(2)}%)
+                </span>
+                <span className="text-[#999] dark:text-[#d2d2d2]">24H</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Tab Switcher */}
+          <div className="bg-[rgba(0,0,0,0.1)] flex items-center p-1 rounded-lg shrink-0">
+            <button
+              onClick={() => setActiveTab('price')}
+              className={`px-6 py-1 text-xs font-medium transition-all rounded ${
+                activeTab === 'price'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-black opacity-50 hover:opacity-75'
+              }`}
+            >
+              Price
+            </button>
+            <button
+              onClick={() => setActiveTab('market-depth')}
+              className={`px-6 py-1 text-xs font-medium transition-all rounded ${
+                activeTab === 'market-depth'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-black opacity-50 hover:opacity-75'
+              }`}
+            >
+              Market Depth
+            </button>
+          </div>
         </div>
-        <div className="text-right">
-          <div className="text-xl lg:text-[28px] font-bold text-[#111] dark:text-white">
-            ${token?.price?.toFixed(2) ?? '0.00'}
-          </div>
-          <div className="flex items-center justify-end gap-1 text-[10px] lg:text-xs">
-            <span className={isPositive ? 'text-[#269700]' : 'text-red-500'}>
-              {isPositive ? '▲' : '▼'} ${Math.abs(token?.priceChange24h ?? 0).toFixed(2)} (
-              {Math.abs(token?.priceChangePercent24h ?? 0).toFixed(2)}%)
-            </span>
-            <span className="text-[#999] dark:text-[#d2d2d2]">24H</span>
-          </div>
+
+        {/* Chart Content */}
+        <div className="flex-1 flex flex-col">
+          {activeTab === 'price' ? (
+            <>
+              {/* Price Chart */}
+              <div ref={chartContainerRef} className="w-full flex-1 mb-4" />
+
+              {/* Time Range Selector */}
+              <div className="flex items-center justify-center gap-1 bg-transparent">
+                {(['1D', '1W', '1M', '3M', '1Y', 'ALL'] as TimeRange[]).map((range) => (
+                  <button
+                    key={range}
+                    onClick={() => setTimeRange(range)}
+                    className={`px-3 py-1.5 text-xs font-medium transition-all rounded ${
+                      timeRange === range
+                        ? 'bg-white text-black'
+                        : 'text-black opacity-40 hover:opacity-60'
+                    }`}
+                  >
+                    {range}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            /* Market Depth View */
+            <div className="flex-1 flex flex-col justify-between">
+              {/* Bar Chart */}
+              <div className="flex-1 flex items-end justify-center gap-[2px] px-4">
+                {/* Generate bars with varying heights - simulating market depth distribution */}
+                {[29, 47, 56, 25, 60, 78, 60, 89, 47, 60, 97, 202, 246, 246, 227, 227, 246, 246, 219, 261, 236, 236, 236, 97, 66, 104, 89, 47, 60, 56, 78, 47, 60, 25, 29].map((height, index) => (
+                  <div
+                    key={index}
+                    className={`${
+                      index === 17
+                        ? 'bg-[#1d8f00]' // Active bin - darker green
+                        : 'bg-[#9eca87]' // Regular bins - lighter green
+                    } rounded-t-full shrink-0 w-[8px] lg:w-[12px] transition-all hover:opacity-80`}
+                    style={{ height: `${Math.max(height * 0.6, 20)}px` }}
+                    title={`Bin ${index + 1}`}
+                  />
+                ))}
+              </div>
+
+              {/* Legend */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 mt-4 px-2 text-[10px] lg:text-xs">
+                <p className="text-black opacity-50 font-medium">
+                  Bin Step: 10 (0.1%)
+                </p>
+                <p className="text-black font-medium">
+                  Total TVL: $245.2M
+                </p>
+                <p className="text-[#1d8f00] font-medium">
+                  Active Bin: 8,300,030
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Chart */}
-      <div ref={chartContainerRef} className="w-full" />
     </div>
   )
 }
