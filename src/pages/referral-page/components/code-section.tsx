@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { formatCurrency, getReferralUsersByCode } from '@/services'
 import { WalletDropdown } from '@/components/wallet-dropdown'
 import { Pagination } from '@/components/ui/pagination'
-import { TableContainer} from '@/components/ui/table-header'
+import { TableContainer, tableStyles } from '@/components/ui/table-header'
 import CopyIcon from './_/copy.svg?react'
 import XIcon from './_/x.svg?react'
 import AddIcon from './_/add.svg?react'
@@ -126,28 +126,18 @@ export function CodeSection() {
         {activeTab === 'code' && (
           <>
             {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[600px]">
+            <div className={tableStyles.wrapper}>
+              <table className={tableStyles.table}>
                 <thead>
-                  <tr className="border-b dark:border-[#393b3d] border-[#e0e0e0] bg-gray-50 dark:bg-[#27272a]">
-                    <th className="px-4 md:px-6 py-3 text-left text-[11px] md:text-[12px] font-medium text-gray-600 dark:text-[#71717a]">
-                      Referral Code
-                    </th>
-                    <th className="px-4 md:px-6 py-3 text-left text-[11px] md:text-[12px] font-medium whitespace-nowrap text-gray-600 dark:text-[#71717a]">
-                      Total Volume
-                    </th>
-                    <th className="px-4 md:px-6 py-3 text-left text-[11px] md:text-[12px] font-medium whitespace-nowrap text-gray-600 dark:text-[#71717a]">
-                      Traders Referred
-                    </th>
-                    <th className="px-4 md:px-6 py-3 text-left text-[11px] md:text-[12px] font-medium whitespace-nowrap text-gray-600 dark:text-[#71717a]">
-                      Total Rewards
-                    </th>
-                    <th className="px-4 md:px-6 py-3 text-left text-[11px] md:text-[12px] font-medium text-gray-600 dark:text-[#71717a]">
-                      {/* Share button column */}
-                    </th>
+                  <tr className={tableStyles.thead}>
+                    <th className={tableStyles.th}>Referral Code</th>
+                    <th className={cn(tableStyles.th, 'whitespace-nowrap')}>Total Volume</th>
+                    <th className={cn(tableStyles.th, 'whitespace-nowrap')}>Traders Referred</th>
+                    <th className={cn(tableStyles.th, 'whitespace-nowrap')}>Total Rewards</th>
+                    <th className={tableStyles.th}>{/* Share button column */}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className={tableStyles.tbody}>
                   {codesLoading ? (
                     <tr>
                       <td colSpan={5} className="px-4 py-10 text-center text-[14px] text-muted-foreground">
@@ -180,20 +170,14 @@ export function CodeSection() {
                         key={row.code}
                         onClick={() => setSelectedCode(row.code)}
                         className={cn(
-                          'border-b dark:border-[#393b3d] border-[#e0e0e0] cursor-pointer transition-colors',
-                          selectedCode === row.code
-                            ? 'bg-[#d2fb95]'
-                            : 'hover:bg-gray-50 dark:hover:bg-[#27272a]'
+                          tableStyles.tr,
+                          'cursor-pointer',
+                          selectedCode === row.code && 'bg-[#d2fb95]'
                         )}
                       >
-                        <td className="px-4 md:px-6 py-3 md:py-4">
+                        <td className={tableStyles.td}>
                           <div className="flex items-center gap-1 md:gap-2">
-                            <span
-                              className={cn(
-                                'text-[13px] md:text-[14px] font-medium',
-                                selectedCode === row.code ? 'text-black' : 'text-black dark:text-[#d2d2d2]'
-                              )}
-                            >
+                            <span className={cn('font-medium', selectedCode === row.code && 'text-black')}>
                               {row.code}
                             </span>
                             <button
@@ -212,33 +196,16 @@ export function CodeSection() {
                             </button>
                           </div>
                         </td>
-                        <td
-                          className={cn(
-                            'px-4 md:px-6 py-3 md:py-4 text-[13px] md:text-[14px] whitespace-nowrap',
-                            selectedCode === row.code ? 'text-black' : 'text-black dark:text-[#d2d2d2]'
-                          )}
-                        >
+                        <td className={cn(tableStyles.td, 'whitespace-nowrap')}>
                           {formatCurrency(row.totalVolume)}
                         </td>
-                        <td
-                          className={cn(
-                            'px-4 md:px-6 py-3 md:py-4 text-[13px] md:text-[14px]',
-                            selectedCode === row.code ? 'text-black' : 'text-black dark:text-[#d2d2d2]'
-                          )}
-                        >
+                        <td className={tableStyles.td}>
                           {row.tradersReferred}
                         </td>
-                        <td className="px-4 md:px-6 py-3 md:py-4">
-                          <span
-                            className={cn(
-                              'text-[13px] md:text-[14px] whitespace-nowrap',
-                              selectedCode === row.code ? 'text-black' : 'text-black dark:text-[#d2d2d2]'
-                            )}
-                          >
-                            {formatCurrency(row.totalRewards)}
-                          </span>
+                        <td className={cn(tableStyles.td, 'whitespace-nowrap')}>
+                          {formatCurrency(row.totalRewards)}
                         </td>
-                        <td className="px-4 md:px-6 py-3 md:py-4">
+                        <td className={tableStyles.td}>
                           <button
                             onClick={(e) => handleOpenShareModal(e, row.code)}
                             className="inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-black/80 transition-colors"
@@ -255,12 +222,14 @@ export function CodeSection() {
             </div>
 
             {/* Pagination */}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-              className="justify-center"
-            />
+            <div className={tableStyles.paginationWrapper}>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                className="justify-center"
+              />
+            </div>
           </>
         )}
 
