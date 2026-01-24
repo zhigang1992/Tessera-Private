@@ -171,34 +171,35 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
         </div>
 
         {/* Chart Content */}
-        <div className="flex-1 flex flex-col">
-          {activeTab === 'price' ? (
-            <>
-              {/* Price Chart */}
-              <div ref={chartContainerRef} className="w-full flex-1 mb-4" />
+        <div className="flex-1 flex flex-col relative">
+          {/* Price Chart - Always rendered but hidden when not active */}
+          <div className={activeTab === 'price' ? 'flex-1 flex flex-col' : 'hidden'}>
+            {/* Price Chart */}
+            <div ref={chartContainerRef} className="w-full flex-1 mb-4" />
 
-              {/* Time Range Selector */}
-              <div className="flex items-center p-1 rounded-lg bg-[rgba(0,0,0,0.1)] dark:bg-[rgba(255,255,255,0.1)]">
-                {(['1D', '1W', '1M', '3M', '1Y', 'ALL'] as TimeRange[]).map((range) => (
-                  <button
-                    key={range}
-                    onClick={() => setTimeRange(range)}
-                    className={`basis-0 grow flex items-center justify-center h-6 rounded text-xs font-medium transition-all ${
-                      timeRange === range
-                        ? 'bg-white dark:bg-[#D2FB95] text-black shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]'
-                        : 'text-black dark:text-[#d2d2d2] opacity-50 hover:bg-[rgba(255,255,255,0.3)] dark:hover:bg-[rgba(255,255,255,0.15)]'
-                    }`}
-                  >
-                    {range}
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : (
-            /* Market Depth View */
-            <div className="flex-1 flex flex-col justify-between">
+            {/* Time Range Selector */}
+            <div className="flex items-center p-1 rounded-lg bg-[rgba(0,0,0,0.1)] dark:bg-[rgba(255,255,255,0.1)]">
+              {(['1D', '1W', '1M', '3M', '1Y', 'ALL'] as TimeRange[]).map((range) => (
+                <button
+                  key={range}
+                  onClick={() => setTimeRange(range)}
+                  className={`basis-0 grow flex items-center justify-center h-6 rounded text-xs font-medium transition-all ${
+                    timeRange === range
+                      ? 'bg-white dark:bg-[#D2FB95] text-black shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]'
+                      : 'text-black dark:text-[#d2d2d2] opacity-50 hover:bg-[rgba(255,255,255,0.3)] dark:hover:bg-[rgba(255,255,255,0.15)]'
+                  }`}
+                >
+                  {range}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Market Depth View */}
+          {activeTab === 'market-depth' && (
+            <div className="flex-1 flex flex-col">
               {/* Bar Chart */}
-              <div className="flex-1 flex items-end justify-center gap-[2px] px-4">
+              <div className="flex-1 flex items-end justify-center gap-[2px] px-4 mb-4 min-h-0">
                 {/* Generate bars with varying heights - simulating market depth distribution */}
                 {[29, 47, 56, 25, 60, 78, 60, 89, 47, 60, 97, 202, 246, 246, 227, 227, 246, 246, 219, 261, 236, 236, 236, 97, 66, 104, 89, 47, 60, 56, 78, 47, 60, 25, 29].map((height, index) => (
                   <div
@@ -208,14 +209,14 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
                         ? 'bg-[#1d8f00]' // Active bin - darker green
                         : 'bg-[#9eca87]' // Regular bins - lighter green
                     } rounded-tl-[999px] rounded-tr-[999px] shrink-0 w-[8px] lg:w-[12px] transition-all hover:opacity-80`}
-                    style={{ height: `${Math.max(height * 0.6, 20)}px` }}
+                    style={{ height: `${(height / 261) * 100}%`, maxHeight: `${Math.max(height * 0.6, 20)}px` }}
                     title={`Bin ${index + 1}`}
                   />
                 ))}
               </div>
 
               {/* Legend */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 mt-4 px-2 text-[10px] lg:text-xs font-semibold">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 px-2 text-[10px] lg:text-xs font-semibold">
                 <p className="text-black opacity-50">
                   Bin Step: 10 (0.1%)
                 </p>
