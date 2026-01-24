@@ -77,11 +77,11 @@ export function DepositUSDCCard() {
   }
 
   return (
-    <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95] border-0 p-6 h-full">
+    <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] p-6 h-full">
       <div className="flex flex-col gap-4 h-full">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-semibold text-foreground">Deposit USDC</h3>
+            <h3 className="text-base font-semibold text-black">Deposit USDC</h3>
           </div>
           <span
             className="text-white text-[10px] font-semibold px-2 py-1 rounded tracking-wider"
@@ -92,22 +92,22 @@ export function DepositUSDCCard() {
         </div>
 
         {/* Input Section */}
-        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-[#dddbd0] dark:border-zinc-700 p-4">
+        <div className="bg-white dark:bg-[rgba(255,255,255,0.03)] rounded-lg border border-[#dddbd0] dark:border-[#666] p-4">
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-zinc-400">You Deposit</span>
+              <span className="text-sm font-bold text-[#666]">You Deposit</span>
               <button
                 onClick={handleMaxClick}
-                className="text-sm text-zinc-400 hover:text-foreground transition-colors"
+                className="text-sm text-[#666] hover:text-black transition-colors"
                 disabled={!canDeposit}
               >
                 MAX: {usdcBalance ?? '0.00'}
               </button>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <button className="flex items-center gap-2.5 border border-[#dddbd0] dark:border-zinc-700 rounded-md px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+              <button className="flex items-center gap-2.5 border border-[#dddbd0] rounded-md px-3 py-2 hover:bg-white/50 transition-colors">
                 <UsdcIcon className="w-8 h-8" />
-                <span className="text-xl font-semibold text-foreground">USDC</span>
+                <span className="text-xl font-semibold text-black">USDC</span>
               </button>
               <Input
                 type="text"
@@ -124,8 +124,8 @@ export function DepositUSDCCard() {
         {/* Info */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-zinc-600 dark:text-zinc-400">Your Deposit</span>
-            <span className="font-mono text-foreground">
+            <span className="text-[#666]">Your Deposit</span>
+            <span className="font-mono text-black">
               {escrowInfo
                 ? `${(parseFloat(escrowInfo.totalDeposited) / 10 ** 6).toLocaleString()} USDC`
                 : '0 USDC'}
@@ -133,8 +133,8 @@ export function DepositUSDCCard() {
           </div>
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-1">
-              <span className="text-zinc-600 dark:text-zinc-400">Est. Allocation</span>
-              <Info className="w-3 h-3 text-zinc-400" />
+              <span className="text-[#666]">Est. Allocation</span>
+              <Info className="w-3 h-3 text-[#666]" />
             </div>
             <span className="font-mono text-[#06a800]">{estimatedAllocation} TESS</span>
           </div>
@@ -174,9 +174,9 @@ export function DepositUSDCCard() {
 
           {/* Notice */}
           {escrowInfo && (
-            <div className="bg-white/50 dark:bg-white/10 rounded-lg px-3 pt-3 pb-0 flex items-start gap-2.5">
-              <Info className="w-3 h-3 text-foreground shrink-0" />
-              <p className="text-[10px] text-foreground leading-[1.65]">
+            <div className="bg-white/50 rounded-lg px-3 pt-3 pb-0 flex items-start gap-2.5">
+              <Info className="w-3 h-3 text-black shrink-0" />
+              <p className="text-[10px] text-black leading-[1.65]">
                 You have an active position in this auction. Check the top "My Position" card for
                 real-time allocation updates.
               </p>
@@ -185,16 +185,16 @@ export function DepositUSDCCard() {
         </div>
 
         {/* Pool Details */}
-        <div className="border-t border-zinc-200/10 dark:border-zinc-700/10 pt-4 flex flex-col gap-2">
+        <div className="border-t border-[rgba(17,17,17,0.1)] pt-4 flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-semibold text-foreground tracking-wider">
+            <span className="text-[10px] font-semibold text-black tracking-wider">
               VAULT DETAILS
             </span>
             <a
               href={ALPHA_VAULT_CONFIG.meteoraUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] text-zinc-500 hover:text-foreground flex items-center gap-1"
+              className="text-[10px] text-[#666] hover:text-black flex items-center gap-1"
             >
               View on Meteora
               <ExternalLink className="w-3 h-3" />
@@ -202,18 +202,18 @@ export function DepositUSDCCard() {
           </div>
           <div className="flex flex-col gap-2.5">
             <div className="flex items-center justify-between text-[10px]">
-              <span className="text-zinc-600 dark:text-zinc-400">Address</span>
-              <span className="bg-black/10 dark:bg-white/10 px-2 py-0.5 rounded font-mono text-foreground">
+              <span className="text-[#666]">Address</span>
+              <span className="bg-black/10 px-2 py-0.5 rounded font-mono text-black">
                 {shortenAddress(ALPHA_VAULT_CONFIG.vault)}
               </span>
             </div>
             <div className="flex items-center justify-between text-[10px]">
-              <span className="text-zinc-600 dark:text-zinc-400">Target Raise</span>
-              <span className="font-mono text-foreground">${targetRaise}</span>
+              <span className="text-[#666]">Target Raise</span>
+              <span className="font-mono text-black">${targetRaise}</span>
             </div>
             <div className="flex items-center justify-between text-[10px]">
-              <span className="text-zinc-600 dark:text-zinc-400">Current Raise</span>
-              <span className="font-mono text-foreground">${totalRaised}</span>
+              <span className="text-[#666]">Current Raise</span>
+              <span className="font-mono text-black">${totalRaised}</span>
             </div>
           </div>
         </div>
