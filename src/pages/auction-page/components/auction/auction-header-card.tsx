@@ -50,7 +50,7 @@ export function AuctionHeaderCard() {
         {/* Stats Grid - Mobile: vertical stack, Tablet: 2 cols, Desktop: 4 cols */}
         <div className="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Raised */}
-          <div className="bg-[#f6f6f6] dark:bg-[#323334] rounded-lg p-4 flex flex-col gap-4">
+          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col gap-4">
             <div className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">
               TOTAL RAISED
             </div>
@@ -64,7 +64,7 @@ export function AuctionHeaderCard() {
                 </span>
               </div>
               <div className="flex flex-col gap-2">
-                <div className="bg-zinc-200 dark:bg-[rgba(255,255,255,0.03)] rounded-full h-2 overflow-hidden">
+                <div className="bg-zinc-200 dark:bg-[rgba(255,255,255,0.1)] rounded-full h-2 overflow-hidden">
                   <div
                     className="bg-[#06a800] h-full rounded-full transition-all"
                     style={{ width: `${progressWidth}%` }}
@@ -83,7 +83,7 @@ export function AuctionHeaderCard() {
           </div>
 
           {/* Auction Status */}
-          <div className="bg-[#f6f6f6] dark:bg-[#323334] rounded-lg p-4 flex flex-col justify-between gap-4">
+          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col justify-between gap-4">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">
                 VAULT STATUS
@@ -129,7 +129,7 @@ export function AuctionHeaderCard() {
           </div>
 
           {/* My Position */}
-          <div className="bg-[#f6f6f6] dark:bg-[#323334] rounded-lg p-4 flex flex-col justify-between gap-4">
+          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col justify-between gap-4">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">
                 MY POSITION
@@ -183,7 +183,7 @@ export function AuctionHeaderCard() {
           </div>
 
           {/* Token Info */}
-          <div className="bg-[#f6f6f6] dark:bg-[#323334] rounded-lg p-4 flex flex-col justify-between gap-4">
+          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col justify-between gap-4">
             <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">
               TOKEN INFO
             </span>

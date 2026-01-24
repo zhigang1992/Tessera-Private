@@ -76,7 +76,7 @@ export function VestingHeaderCard() {
         {/* Status and Position Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Vesting Status */}
-          <div className="bg-[#f6f6f6] dark:bg-[#323334] rounded-lg p-4 flex flex-col gap-4">
+          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col gap-4">
             <div className="flex items-start justify-between">
               <div className="flex flex-col gap-2">
                 <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">
@@ -149,7 +149,7 @@ export function VestingHeaderCard() {
           </div>
 
           {/* My Vesting Position */}
-          <div className="bg-[#f6f6f6] dark:bg-[#323334] rounded-lg p-4 flex flex-col gap-9">
+          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col gap-9">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">
                 MY VESTING POSITION
