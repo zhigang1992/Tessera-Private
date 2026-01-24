@@ -92,22 +92,22 @@ export function DepositUSDCCard() {
         </div>
 
         {/* Input Section */}
-        <div className="bg-white dark:bg-[rgba(255,255,255,0.03)] rounded-lg border border-[#dddbd0] dark:border-[#666] p-4">
+        <div className="bg-white dark:bg-[rgba(0,0,0,0.6)] rounded-lg border border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)] p-4">
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-[#666]">You Deposit</span>
+              <span className="text-sm font-bold text-[#666] dark:text-white dark:opacity-50">You Deposit</span>
               <button
                 onClick={handleMaxClick}
-                className="text-sm text-[#666] hover:text-black transition-colors"
+                className="text-sm text-[#666] dark:text-white dark:opacity-50 hover:text-black dark:hover:text-white dark:hover:opacity-100 transition-colors"
                 disabled={!canDeposit}
               >
                 MAX: {usdcBalance ?? '0.00'}
               </button>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <button className="flex items-center gap-2.5 border border-[#dddbd0] rounded-md px-3 py-2 hover:bg-white/50 transition-colors">
+              <button className="flex items-center gap-2.5 border border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)] rounded-md px-3 py-2 hover:bg-white/50 dark:hover:bg-white/10 transition-colors">
                 <UsdcIcon className="w-8 h-8" />
-                <span className="text-xl font-semibold text-black">USDC</span>
+                <span className="text-xl font-semibold text-black dark:text-white">USDC</span>
               </button>
               <Input
                 type="text"
@@ -115,7 +115,7 @@ export function DepositUSDCCard() {
                 onChange={(e) => setDepositAmount(e.target.value)}
                 placeholder="0.0"
                 disabled={!canDeposit}
-                className="text-right text-4xl font-semibold border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="text-right text-4xl font-semibold border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-black dark:text-white placeholder:text-black dark:placeholder:text-white"
               />
             </div>
           </div>
