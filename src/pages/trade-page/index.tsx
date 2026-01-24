@@ -9,12 +9,16 @@ export default function TradePage() {
       <h1 className="text-xl lg:text-2xl font-bold text-foreground dark:text-[#d2d2d2]">Trade</h1>
 
       {/* Main Section - Stack on mobile, side by side on desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-        {/* Left: Price Chart */}
-        <PriceChart tokenSymbol="SOL" />
+      <div className="flex flex-col md:flex-row gap-4 lg:gap-6">
+        {/* Left: Price Chart - 3 parts of 5 total (60%) */}
+        <div className="w-full md:w-3/5 min-w-0">
+          <PriceChart tokenSymbol="SOL" />
+        </div>
 
-        {/* Right: Swap Panel */}
-        <TokenSwapPanel />
+        {/* Right: Swap Panel - 2 parts of 5 total (40%) */}
+        <div className="w-full md:w-2/5 flex-shrink-0">
+          <TokenSwapPanel />
+        </div>
       </div>
 
       {/* Trade History */}
