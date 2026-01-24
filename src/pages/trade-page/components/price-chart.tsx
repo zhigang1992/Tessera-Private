@@ -51,13 +51,17 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
     const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: '#111',
+        textColor: '#000',
         fontFamily: 'Inter, sans-serif',
         attributionLogo: false,
       },
       grid: {
         vertLines: { visible: false },
-        horzLines: { color: 'rgba(0, 0, 0, 0.05)', style: 1 },
+        horzLines: {
+          color: 'rgba(0, 0, 0, 0.2)',
+          style: 2, // 2 = dashed line
+          visible: true
+        },
       },
       width: chartContainerRef.current.clientWidth,
       height: 180,
@@ -79,8 +83,8 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
     })
 
     const lineSeries = chart.addSeries(LineSeries, {
-      color: '#111',
-      lineWidth: 2,
+      color: '#1D8F00',
+      lineWidth: 3,
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerVisible: false,
@@ -174,15 +178,15 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
               <div ref={chartContainerRef} className="w-full flex-1 mb-4" />
 
               {/* Time Range Selector */}
-              <div className="flex items-center justify-center gap-1 bg-transparent">
+              <div className="flex items-center p-1 rounded-lg bg-[rgba(0,0,0,0.1)] dark:bg-[rgba(255,255,255,0.1)]">
                 {(['1D', '1W', '1M', '3M', '1Y', 'ALL'] as TimeRange[]).map((range) => (
                   <button
                     key={range}
                     onClick={() => setTimeRange(range)}
-                    className={`px-3 py-1.5 text-xs font-medium transition-all rounded ${
+                    className={`basis-0 grow flex items-center justify-center h-6 rounded text-xs font-medium transition-all ${
                       timeRange === range
-                        ? 'bg-white text-black'
-                        : 'text-black opacity-40 hover:opacity-60'
+                        ? 'bg-white dark:bg-[#D2FB95] text-black shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]'
+                        : 'text-black dark:text-[#d2d2d2] opacity-50 hover:bg-[rgba(255,255,255,0.3)] dark:hover:bg-[rgba(255,255,255,0.15)]'
                     }`}
                   >
                     {range}
@@ -203,7 +207,7 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
                       index === 17
                         ? 'bg-[#1d8f00]' // Active bin - darker green
                         : 'bg-[#9eca87]' // Regular bins - lighter green
-                    } rounded-t-full shrink-0 w-[8px] lg:w-[12px] transition-all hover:opacity-80`}
+                    } rounded-tl-[999px] rounded-tr-[999px] shrink-0 w-[8px] lg:w-[12px] transition-all hover:opacity-80`}
                     style={{ height: `${Math.max(height * 0.6, 20)}px` }}
                     title={`Bin ${index + 1}`}
                   />
@@ -211,14 +215,14 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
               </div>
 
               {/* Legend */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 mt-4 px-2 text-[10px] lg:text-xs">
-                <p className="text-black opacity-50 font-medium">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 mt-4 px-2 text-[10px] lg:text-xs font-semibold">
+                <p className="text-black opacity-50">
                   Bin Step: 10 (0.1%)
                 </p>
-                <p className="text-black font-medium">
+                <p className="text-black">
                   Total TVL: $245.2M
                 </p>
-                <p className="text-[#1d8f00] font-medium">
+                <p className="text-[#1d8f00]">
                   Active Bin: 8,300,030
                 </p>
               </div>
