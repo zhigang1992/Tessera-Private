@@ -79,7 +79,7 @@ export function Header({ onMenuClick, backButton }: HeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border/15 bg-white px-6 dark:bg-[#111111]">
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white px-6 dark:bg-[#1e1f20]">
       {/* Mobile: logo (only show if no back button) */}
       <div className={`flex items-center lg:hidden ${backButton?.show ? 'hidden' : ''}`}>
         <Link to="/">
