@@ -93,7 +93,7 @@ export function ClaimTokensCard() {
       : '-'
 
   return (
-    <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95] border-0 p-6 h-full">
+    <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] p-6 h-full">
       <div className="flex flex-col items-center gap-6 h-full justify-between">
         {/* Icon and Title */}
         <div className="flex flex-col items-center gap-4 text-center">
@@ -101,8 +101,8 @@ export function ClaimTokensCard() {
             <LockOpenIcon className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">Claim Tokens</h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <h3 className="text-xl font-semibold text-black mb-2">Claim Tokens</h3>
+            <p className="text-sm text-[#666]">
               You have{' '}
               <span className="font-mono font-semibold text-[#aad36d]">
                 {availableToClaim} TESS
@@ -161,11 +161,11 @@ export function ClaimTokensCard() {
           )}
 
           {/* Next Unlock */}
-          <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-3 text-center">
-            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mb-1">
+          <div className="bg-white/50 rounded-lg p-3 text-center">
+            <p className="text-[11px] text-[#666] mb-1">
               {vaultInfo?.state === 'vesting_complete' ? 'Vesting complete' : 'Vesting ends in'}
             </p>
-            <p className="text-sm font-semibold font-mono text-foreground">
+            <p className="text-sm font-semibold font-mono text-black">
               {vaultInfo?.state === 'vesting_complete' ? 'All tokens unlocked' : nextUnlockDisplay}
             </p>
           </div>
@@ -174,20 +174,20 @@ export function ClaimTokensCard() {
           {claimInfo && (
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-zinc-600 dark:text-zinc-400">Total Allocation</span>
-                <span className="font-mono text-foreground">
+                <span className="text-[#666]">Total Allocation</span>
+                <span className="font-mono text-black">
                   {(parseFloat(claimInfo.totalAllocation) / 10 ** 6).toFixed(4)} TESS
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-zinc-600 dark:text-zinc-400">Already Claimed</span>
-                <span className="font-mono text-foreground">
+                <span className="text-[#666]">Already Claimed</span>
+                <span className="font-mono text-black">
                   {(parseFloat(claimInfo.totalClaimed) / 10 ** 6).toFixed(4)} TESS
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-zinc-600 dark:text-zinc-400">Locked</span>
-                <span className="font-mono text-foreground">
+                <span className="text-[#666]">Locked</span>
+                <span className="font-mono text-black">
                   {(parseFloat(claimInfo.lockedAmount) / 10 ** 6).toFixed(4)} TESS
                 </span>
               </div>

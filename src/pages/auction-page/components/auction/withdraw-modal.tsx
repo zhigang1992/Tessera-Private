@@ -80,14 +80,14 @@ export function WithdrawModal({ open, onOpenChange }: WithdrawModalProps) {
         <div className="flex flex-col gap-4 py-4">
           {/* Current deposit info */}
           <div className="flex items-center justify-between text-sm">
-            <span className="text-zinc-600 dark:text-zinc-400">Your Deposit</span>
+            <span className="text-[#71717a] dark:text-[#999]">Your Deposit</span>
             <span className="font-mono font-semibold">{userDeposited.toLocaleString()} USDC</span>
           </div>
 
           {/* Withdraw input */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-zinc-600 dark:text-zinc-400">Amount to Withdraw</span>
+              <span className="text-sm text-[#71717a] dark:text-[#999]">Amount to Withdraw</span>
               <button
                 onClick={handleMaxClick}
                 className="text-sm text-zinc-500 hover:text-foreground underline transition-colors"

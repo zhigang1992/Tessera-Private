@@ -14,7 +14,7 @@ export default function AuctionPage() {
   return (
     <div className="flex flex-col gap-4 lg:gap-6">
       {/* Header */}
-      <h1 className="text-xl lg:text-2xl font-bold text-foreground">Auction</h1>
+      <h1 className="text-xl lg:text-2xl font-bold text-foreground dark:text-[#d2d2d2]">Auction</h1>
 
       {/* Tabs */}
       <AuctionTabs activeTab={activeTab} onTabChange={setActiveTab} />
