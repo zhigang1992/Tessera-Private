@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Send, Bot, User, Loader2 } from 'lucide-react'
+import { Send, Bot, User, Loader2, ArrowLeft } from 'lucide-react'
 import Markdown from 'react-markdown'
+import { clsx } from 'clsx'
 import {
   type LiveIssue,
   type ChatMessage,
@@ -26,7 +27,7 @@ function generateMessageId(): string {
   return `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
 }
 
-export function AiChat({ issue, initialQuery}: AiChatProps) {
+export function AiChat({ issue, initialQuery, onBack}: AiChatProps) {
   const [replyText, setReplyText] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isWaitingForReply, setIsWaitingForReply] = useState(false)
@@ -126,48 +127,58 @@ export function AiChat({ issue, initialQuery}: AiChatProps) {
     <div className="fixed inset-0 top-14 lg:left-64 bg-[#f5f5f5] dark:bg-[#131314] flex flex-col z-10">
       {/* Header - Fixed at top */}
       <div className="bg-[#f5f5f5] dark:bg-[#131314] border-b border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] px-4 md:px-6 py-3 md:py-4 shrink-0">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            {issue ? (
-              <>
-                <div className="flex items-center gap-2 mb-1 md:mb-2 flex-wrap">
-                  <span className="text-[12px] md:text-[14px] text-[#71717a]">
-                    #{issue.id}
-                  </span>
-                  <span
-                    className="text-[10px] font-medium px-[6px] py-[2px] rounded-[4px] leading-[18px]"
-                    style={{
-                      backgroundColor:
-                        issue.status === 'checking' ? '#ffe6c1' : '#bbf6be',
-                      color: issue.status === 'checking' ? '#e07d00' : '#008806',
-                    }}
-                  >
-                    {issue.status === 'checking' ? 'Checking' : 'Complete'}
-                  </span>
-                </div>
-                <h1 className="text-[18px] md:text-[24px] font-semibold mb-0 text-black dark:text-[#d2d2d2] truncate">
-                  {issue.title}
-                </h1>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-2 mb-1 md:mb-2">
-                  <Bot className="w-5 h-5 text-[#71717a]" />
-                  <span className="text-[12px] md:text-[14px] text-[#71717a]">
-                    Tessera AI Agent
-                  </span>
-                </div>
-                <h1 className="text-[18px] md:text-[24px] font-semibold mb-0 text-black dark:text-[#d2d2d2]">
-                  AI Support Chat
-                </h1>
-              </>
+        <div className="flex items-start gap-3">
+          {/* Back Button - Mobile Only */}
+          <button
+            onClick={onBack}
+            className="md:hidden flex items-center justify-center w-[32px] h-[32px] rounded-[8px] hover:bg-[#f5f5f5] dark:hover:bg-[rgba(255,255,255,0.05)] transition-colors shrink-0 mt-1"
+          >
+            <ArrowLeft className="w-5 h-5 text-black dark:text-[#d2d2d2]" />
+          </button>
+
+          <div className="flex-1 flex items-start justify-between">
+            <div className="min-w-0 flex-1">
+              {issue ? (
+                <>
+                  <div className="flex items-center gap-2 mb-1 md:mb-2 flex-wrap">
+                    <span className="text-[12px] md:text-[14px] text-[#71717a]">
+                      #{issue.id}
+                    </span>
+                    <span
+                      className="text-[10px] font-medium px-[6px] py-[2px] rounded-[4px] leading-[18px]"
+                      style={{
+                        backgroundColor:
+                          issue.status === 'checking' ? '#ffe6c1' : '#bbf6be',
+                        color: issue.status === 'checking' ? '#e07d00' : '#008806',
+                      }}
+                    >
+                      {issue.status === 'checking' ? 'Checking' : 'Complete'}
+                    </span>
+                  </div>
+                  <h1 className="text-[18px] md:text-[24px] font-semibold mb-0 text-black dark:text-[#d2d2d2] truncate">
+                    {issue.title}
+                  </h1>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 mb-1 md:mb-2">
+                    <Bot className="w-5 h-5 text-[#71717a]" />
+                    <span className="text-[12px] md:text-[14px] text-[#71717a]">
+                      Tessera AI Agent
+                    </span>
+                  </div>
+                  <h1 className="text-[18px] md:text-[24px] font-semibold mb-0 text-black dark:text-[#d2d2d2]">
+                    AI Support Chat
+                  </h1>
+                </>
+              )}
+            </div>
+            {issue && (
+              <span className="text-[11px] md:text-[12px] text-[#71717a] whitespace-nowrap ml-2">
+                {issue.submittedTime}
+              </span>
             )}
           </div>
-          {issue && (
-            <span className="text-[11px] md:text-[12px] text-[#71717a] whitespace-nowrap ml-2">
-              {issue.submittedTime}
-            </span>
-          )}
         </div>
       </div>
 
@@ -193,11 +204,11 @@ export function AiChat({ issue, initialQuery}: AiChatProps) {
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex flex-col gap-[8px] ${message.type === 'user' ? 'items-end' : 'items-start'}`}
+                  className={clsx('flex flex-col gap-[8px]', message.type === 'user' ? 'items-end' : 'items-start')}
                 >
                   {/* Message Header */}
                   <div
-                    className={`flex items-center gap-[8px] ${message.type === 'user' ? 'flex-row-reverse' : ''}`}
+                    className={clsx('flex items-center gap-[8px]', message.type === 'user' && 'flex-row-reverse')}
                   >
                     {message.type === 'user' && (
                       <>
