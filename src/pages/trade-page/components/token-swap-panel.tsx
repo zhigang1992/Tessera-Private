@@ -205,7 +205,7 @@ export function TokenSwapPanel() {
             onClick={handleSwapDirection}
             className="absolute left-1/2 top-full -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-black border border-[#dddbd0] dark:border-[rgba(210,210,210,0.1)] rounded-full p-1.5 lg:p-2 hover:bg-gray-50 dark:hover:bg-[#27272a] transition-colors z-10"
           >
-            <SwapIcon className="w-4 h-4 lg:w-5 lg:h-5 rotate-90 text-[#999999] dark:text-white" />
+            <SwapIcon className="w-4 h-4 lg:w-5 lg:h-5 rotate-90 text-[#999999] dark:text-[#ffffff]" />
           </button>
         </div>
 
