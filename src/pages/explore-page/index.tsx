@@ -31,7 +31,7 @@ export default function ExplorePage() {
       </div>
 
       {/* Subtitle */}
-      <p className="text-[13px] text-[#71717a] mb-6 leading-normal">
+      <p className="text-[13px] text-[#71717a] leading-normal">
         Discover and track the world's most innovative private companies.
       </p>
 
