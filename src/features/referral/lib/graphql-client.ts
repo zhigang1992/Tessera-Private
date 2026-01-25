@@ -388,6 +388,102 @@ export async function fetchGlobalReferralStats(limit: number = 10, offset: numbe
   }>(query, { limit, offset })
 }
 
+// ============ Trading Leaderboard ============
+
+export interface TradingVolumeByAccount {
+  account: string
+  total_volume: string // numeric from GraphQL (18 decimals)
+}
+
+/**
+ * Fetch trading volume leaderboard
+ */
+export async function fetchTradingVolumeLeaderboard(
+  limit: number = 10,
+  offset: number = 0
+): Promise<{ items: TradingVolumeByAccount[]; total: number }> {
+  const query = `
+    query GetTradingVolumeLeaderboard($limit: Int!, $offset: Int!) {
+      public_marts_total_trading_volume_by_account(
+        limit: $limit
+        offset: $offset
+        order_by: { total_volume: desc }
+      ) {
+        account
+        total_volume
+      }
+      public_marts_total_trading_volume_by_account_aggregate {
+        aggregate {
+          count
+        }
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_total_trading_volume_by_account: TradingVolumeByAccount[]
+    public_marts_total_trading_volume_by_account_aggregate: { aggregate: { count: number } }
+  }>(query, { limit, offset })
+
+  return {
+    items: data.public_marts_total_trading_volume_by_account,
+    total: data.public_marts_total_trading_volume_by_account_aggregate.aggregate.count,
+  }
+}
+
+/**
+ * Fetch a specific user's trading volume rank
+ */
+export async function fetchUserTradingVolumeRank(
+  walletAddress: string
+): Promise<{ rank: number; totalVolume: number } | null> {
+  // First, get the user's total volume
+  const userQuery = `
+    query GetUserTradingVolume($account: String!) {
+      public_marts_total_trading_volume_by_account(
+        where: { account: { _eq: $account } }
+      ) {
+        account
+        total_volume
+      }
+    }
+  `
+
+  const userData = await graphqlRequest<{
+    public_marts_total_trading_volume_by_account: TradingVolumeByAccount[]
+  }>(userQuery, { account: walletAddress })
+
+  if (userData.public_marts_total_trading_volume_by_account.length === 0) {
+    return null
+  }
+
+  const userVolume = userData.public_marts_total_trading_volume_by_account[0].total_volume
+
+  // Count how many accounts have higher volume to determine rank
+  const rankQuery = `
+    query GetUserRank($volume: numeric!) {
+      public_marts_total_trading_volume_by_account_aggregate(
+        where: { total_volume: { _gt: $volume } }
+      ) {
+        aggregate {
+          count
+        }
+      }
+    }
+  `
+
+  const rankData = await graphqlRequest<{
+    public_marts_total_trading_volume_by_account_aggregate: { aggregate: { count: number } }
+  }>(rankQuery, { volume: userVolume })
+
+  const rank = rankData.public_marts_total_trading_volume_by_account_aggregate.aggregate.count + 1
+
+  return {
+    rank,
+    totalVolume: hasuraToNumber(userVolume),
+  }
+}
+
 /**
  * Fetch swap events for trade history with pagination
  */
