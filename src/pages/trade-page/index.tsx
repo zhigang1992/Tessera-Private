@@ -12,7 +12,7 @@ export default function TradePage() {
       <div className="flex flex-col md:flex-row gap-4 lg:gap-6">
         {/* Left: Price Chart - 3 parts of 5 total (60%) - order-2 on mobile, order-1 on desktop */}
         <div className="w-full md:w-3/5 min-w-0 order-2 md:order-1">
-          <PriceChart tokenSymbol="SOL" />
+          <PriceChart tokenSymbol="TESS" />
         </div>
 
         {/* Right: Swap Panel - 2 parts of 5 total (40%) - order-1 on mobile, order-2 on desktop */}
