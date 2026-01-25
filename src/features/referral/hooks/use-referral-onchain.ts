@@ -205,6 +205,9 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             referredTraderCount,
+            // Extended stats from GraphQL
+            totalVolume: codeStats?.tradingVolume ?? 0,
+            totalRewards: codeStats?.rewardsUsd ?? 0,
           })
         } catch (err) {
           console.warn('Failed to decode account:', accountPubkey.toBase58(), err)

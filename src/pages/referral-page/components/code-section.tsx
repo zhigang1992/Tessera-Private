@@ -33,9 +33,9 @@ export function CodeSection() {
     if (!affiliateData?.referralCodes) return []
     return affiliateData.referralCodes.map((code) => ({
       code: code.codeSlug,
-      totalVolume: 0, // This data is not available from affiliate endpoint
+      totalVolume: code.totalVolume ?? 0,
       tradersReferred: code.referredTraderCount,
-      totalRewards: 0, // This data is not available from affiliate endpoint
+      totalRewards: code.totalRewards ?? 0,
     }))
   }, [affiliateData])
 
@@ -318,9 +318,13 @@ export function CodeSection() {
                         {user.layer}
                       </td>
                       <td className="px-4 md:px-6 py-3 md:py-4 text-[12px] md:text-[13px] whitespace-pre-line dark:text-[#d2d2d2] text-black">
-                        {user.rewards.map((reward, idx) => (
-                          <div key={idx}>{reward.amount} {reward.token}</div>
-                        ))}
+                        {user.rewards.length > 0 ? (
+                          user.rewards.map((reward, idx) => (
+                            <div key={idx}>{reward.amount} {reward.token}</div>
+                          ))
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </td>
                     </tr>
                   ))

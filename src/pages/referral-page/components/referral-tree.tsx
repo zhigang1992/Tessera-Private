@@ -12,9 +12,11 @@ const emptyLayers = [
 ]
 
 export function ReferralTree() {
-  const { connected } = useWallet()
+  const { connected, publicKey } = useWallet()
+  const walletAddress = publicKey?.toBase58()
+
   const { data = [], isLoading } = useQuery({
-    queryKey: ['traderLayers'],
+    queryKey: ['traderLayers', walletAddress],
     queryFn: getTraderLayers,
     enabled: connected,
   })

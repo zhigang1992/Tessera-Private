@@ -35,6 +35,9 @@ export type ReferralCode = {
   walletAddress: string
   createdAt?: string
   updatedAt?: string
+  // Extended stats from GraphQL (populated by useAffiliateData hook)
+  totalVolume?: number
+  totalRewards?: number
 }
 
 export type TraderMetrics = {
