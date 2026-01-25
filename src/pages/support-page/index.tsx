@@ -407,7 +407,7 @@ export default function SupportPage() {
         {/* Right: Live Issues & Community */}
         <div className="flex flex-col gap-6 lg:row-span-2">
           {/* Live Issues - Desktop Only */}
-          <div className="hidden lg:flex lg:flex-1">
+          <div className="hidden lg:block lg:flex-1">
             <LiveIssuesPanel
               liveIssues={liveIssues}
               isLoadingIssues={isLoadingIssues}
