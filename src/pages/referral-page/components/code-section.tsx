@@ -172,12 +172,12 @@ export function CodeSection() {
                         className={cn(
                           tableStyles.tr,
                           'cursor-pointer',
-                          selectedCode === row.code && 'bg-[#d2fb95]'
+                          selectedCode === row.code && 'bg-[#d2fb95] dark:bg-[#d2fb95] hover:bg-[#d2fb95] dark:hover:bg-[#d2fb95]'
                         )}
                       >
                         <td className={tableStyles.td}>
                           <div className="flex items-center gap-1 md:gap-2">
-                            <span className={cn('font-medium', selectedCode === row.code && 'text-black')}>
+                            <span className={cn('font-medium', selectedCode === row.code && 'text-black dark:text-black')}>
                               {row.code}
                             </span>
                             <button
@@ -185,24 +185,24 @@ export function CodeSection() {
                               className="p-1 rounded hover:bg-gray-200 dark:hover:bg-[#3f3f46]"
                               title="Copy code"
                             >
-                              <CopyIcon className="size-[14px] text-zinc-500 dark:text-[#999]" />
+                              <CopyIcon className={cn('size-[14px]', selectedCode === row.code ? 'text-black dark:text-black' : 'text-zinc-500 dark:text-[#999]')} />
                             </button>
                             <button
                               onClick={(e) => handleShareOnX(e, row.code)}
                               className="p-1 rounded hover:bg-gray-200 dark:hover:bg-[#3f3f46] hidden sm:block"
                               title="Share on X"
                             >
-                              <XIcon className="size-[14px] text-zinc-500 dark:text-[#999]" />
+                              <XIcon className={cn('size-[14px]', selectedCode === row.code ? 'text-black dark:text-black' : 'text-zinc-500 dark:text-[#999]')} />
                             </button>
                           </div>
                         </td>
-                        <td className={cn(tableStyles.td, 'whitespace-nowrap')}>
+                        <td className={cn(tableStyles.td, 'whitespace-nowrap', selectedCode === row.code && 'text-black dark:text-black')}>
                           {formatCurrency(row.totalVolume)}
                         </td>
-                        <td className={tableStyles.td}>
+                        <td className={cn(tableStyles.td, selectedCode === row.code && 'text-black dark:text-black')}>
                           {row.tradersReferred}
                         </td>
-                        <td className={cn(tableStyles.td, 'whitespace-nowrap')}>
+                        <td className={cn(tableStyles.td, 'whitespace-nowrap', selectedCode === row.code && 'text-black dark:text-black')}>
                           {formatCurrency(row.totalRewards)}
                         </td>
                         <td className={tableStyles.td}>
