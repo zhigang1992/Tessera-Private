@@ -28,7 +28,7 @@ export function ReferralTree() {
       {/* Tree Visualization */}
       <div className="w-full md:w-auto flex justify-center md:justify-start shrink-0">
         <div className="bg-white p-[10px] rounded-[8px]">
-          <TreeIcon className="w-[300px] h-[220px] md:w-[320px] md:h-[235px] object-contain text-zinc-900 dark:text-zinc-100" />
+          <TreeIcon className="w-[300px] h-[220px] md:w-[320px] md:h-[235px] object-contain text-zinc-900" />
         </div>
       </div>
 

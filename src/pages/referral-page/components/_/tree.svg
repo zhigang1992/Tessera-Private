@@ -4,9 +4,6 @@
   .text { fill: currentColor; }
   .line { fill: currentColor; }
   .stroke-line { stroke: currentColor; }
-  @media (prefers-color-scheme: dark) {
-    .bar { fill: #3F3F46; }
-  }
 </style>
 <rect class="bar" y="55.9219" width="233.1" height="31.5" rx="7.2"/>
 <path class="text" d="M239.042 75.418V68.1452H240.58V74.1502H243.698V75.418H239.042ZM247.379 68.1452V75.418H245.841V69.6048H245.798L244.133 70.6488V69.2852L245.933 68.1452H247.379Z"/>
