@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { createChart, ColorType, LineSeries } from 'lightweight-charts'
 import type { IChartApi, LineData, Time } from 'lightweight-charts'
 import { getPriceHistory, getTokenPrice, type TimeRange } from '@/services/price'
+import { useMarketDepth, calculateBarHeights, formatTvl, formatBinStep } from '@/hooks/useMarketDepth'
 import TokenTessIcon from './_/token-tess.svg?react'
 
 interface PriceChartProps {
@@ -36,7 +37,18 @@ export function PriceChart({ tokenSymbol = 'TESS' }: PriceChartProps) {
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   })
 
+  // Fetch market depth data - only when tab is active
+  const { data: marketDepth, isLoading: isMarketDepthLoading } = useMarketDepth({
+    enabled: activeTab === 'market-depth',
+  })
+
   const isPositive = (token?.priceChange24h ?? 0) >= 0
+
+  // Calculate bar heights from market depth data
+  const barHeights = marketDepth ? calculateBarHeights(marketDepth.bins) : []
+  const activeBinIndex = marketDepth
+    ? marketDepth.bins.findIndex((bin) => bin.binId === marketDepth.activeBinId)
+    : -1
 
   // Initialize chart
   useEffect(() => {
@@ -194,31 +206,40 @@ export function PriceChart({ tokenSymbol = 'TESS' }: PriceChartProps) {
             <div className="flex-1 flex flex-col">
               {/* Bar Chart */}
               <div className="flex items-end justify-center gap-[2px] px-4 mb-4 h-[261px]">
-                {/* Generate bars with varying heights - simulating market depth distribution */}
-                {[29, 47, 56, 25, 60, 78, 60, 89, 47, 60, 97, 202, 246, 246, 227, 227, 246, 246, 219, 261, 236, 236, 236, 97, 66, 104, 89, 47, 60, 56, 78, 47, 60, 25, 29].map((height, index) => (
-                  <div
-                    key={index}
-                    className={`${
-                      index === 17
-                        ? 'bg-[#1d8f00]' // Active bin - darker green
-                        : 'bg-[#9eca87]' // Regular bins - lighter green
-                    } rounded-tl-[999px] rounded-tr-[999px] shrink-0 w-[8px] lg:w-[12px] transition-all hover:opacity-80`}
-                    style={{ height: `${height}px` }}
-                    title={`Bin ${index + 1}`}
-                  />
-                ))}
+                {isMarketDepthLoading ? (
+                  <div className="flex items-center justify-center w-full h-full">
+                    <div className="animate-pulse text-black opacity-50">Loading market depth...</div>
+                  </div>
+                ) : barHeights.length > 0 ? (
+                  barHeights.map((height, index) => (
+                    <div
+                      key={marketDepth?.bins[index]?.binId ?? index}
+                      className={`${
+                        index === activeBinIndex
+                          ? 'bg-[#1d8f00]' // Active bin - darker green
+                          : 'bg-[#9eca87]' // Regular bins - lighter green
+                      } rounded-tl-[999px] rounded-tr-[999px] shrink-0 w-[8px] lg:w-[12px] transition-all hover:opacity-80`}
+                      style={{ height: `${Math.max(height, 2)}px` }}
+                      title={marketDepth?.bins[index] ? `Bin ${marketDepth.bins[index].binId}: $${parseFloat(marketDepth.bins[index].price).toFixed(4)}` : `Bin ${index + 1}`}
+                    />
+                  ))
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full">
+                    <div className="text-black opacity-50">No liquidity data available</div>
+                  </div>
+                )}
               </div>
 
               {/* Legend */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 px-2 text-[10px] lg:text-xs font-semibold">
                 <p className="text-black opacity-50">
-                  Bin Step: 10 (0.1%)
+                  Bin Step: {marketDepth ? formatBinStep(marketDepth.binStep) : '--'}
                 </p>
                 <p className="text-black">
-                  Total TVL: $245.2M
+                  Total TVL: {marketDepth ? formatTvl(marketDepth.totalTvlX, marketDepth.totalTvlY) : '--'}
                 </p>
                 <p className="text-[#1d8f00]">
-                  Active Bin: 8,300,030
+                  Active Bin: {marketDepth ? marketDepth.activeBinId.toLocaleString() : '--'}
                 </p>
               </div>
             </div>

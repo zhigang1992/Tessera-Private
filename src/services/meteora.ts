@@ -69,6 +69,23 @@ export interface PoolInfo {
   currentPrice: string
 }
 
+export interface BinLiquidity {
+  binId: number
+  price: string
+  pricePerToken: string
+  xAmount: string
+  yAmount: string
+  supply: string
+}
+
+export interface MarketDepthData {
+  bins: BinLiquidity[]
+  activeBinId: number
+  binStep: number
+  totalTvlX: string
+  totalTvlY: string
+}
+
 export interface MeteoraSwapQuote {
   consumedInAmount: string
   outAmount: string
@@ -280,6 +297,49 @@ export class MeteoraClient {
    */
   clearCache(): void {
     this.poolCache.clear()
+  }
+
+  /**
+   * Get bins around the active bin for market depth visualization
+   * @param poolAddress - DLMM pool address
+   * @param binsToLeft - Number of bins to fetch to the left of active bin
+   * @param binsToRight - Number of bins to fetch to the right of active bin
+   */
+  async getBinsAroundActiveBin(
+    poolAddress: string,
+    binsToLeft: number = 17,
+    binsToRight: number = 17
+  ): Promise<MarketDepthData> {
+    const pool = await this.loadPool(poolAddress)
+
+    // Get bins around active bin using SDK method
+    const { activeBin, bins } = await pool.getBinsAroundActiveBin(binsToLeft, binsToRight)
+
+    // Calculate total TVL
+    let totalTvlX = new BN(0)
+    let totalTvlY = new BN(0)
+
+    const binLiquidities: BinLiquidity[] = bins.map((bin) => {
+      totalTvlX = totalTvlX.add(new BN(bin.xAmount.toString()))
+      totalTvlY = totalTvlY.add(new BN(bin.yAmount.toString()))
+
+      return {
+        binId: bin.binId,
+        price: bin.price,
+        pricePerToken: bin.pricePerToken,
+        xAmount: bin.xAmount.toString(),
+        yAmount: bin.yAmount.toString(),
+        supply: bin.supply.toString(),
+      }
+    })
+
+    return {
+      bins: binLiquidities,
+      activeBinId: activeBin,
+      binStep: pool.lbPair.binStep,
+      totalTvlX: totalTvlX.toString(),
+      totalTvlY: totalTvlY.toString(),
+    }
   }
 }
 
