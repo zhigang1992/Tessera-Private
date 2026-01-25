@@ -2,17 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createChart, ColorType, LineSeries } from 'lightweight-charts'
 import type { IChartApi, LineData, Time } from 'lightweight-charts'
-import { getPriceHistory, getTokenPrice } from '@/services/coingecko'
-import TokenSolIcon from './_/token-sol.svg?react'
+import { getPriceHistory, getTokenPrice, type TimeRange } from '@/services/price'
+import TokenTessIcon from './_/token-tess.svg?react'
 
 interface PriceChartProps {
   tokenSymbol?: string
 }
 
 type ChartTab = 'price' | 'market-depth'
-type TimeRange = '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL'
 
-export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
+export function PriceChart({ tokenSymbol = 'TESS' }: PriceChartProps) {
   const [activeTab, setActiveTab] = useState<ChartTab>('price')
   const [timeRange, setTimeRange] = useState<TimeRange>('1D')
   const chartContainerRef = useRef<HTMLDivElement>(null)
@@ -20,26 +19,21 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const seriesRef = useRef<any>(null)
 
-  // Fetch token price info from CoinGecko
-  // Using aggressive caching to avoid rate limiting (free tier: ~10 calls/minute)
+  // Fetch token price info from backend
   const { data: token } = useQuery({
     queryKey: ['tokenPrice', tokenSymbol],
     queryFn: () => getTokenPrice(tokenSymbol),
-    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
-    staleTime: 2 * 60 * 1000, // Consider data stale after 2 minutes
-    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
-    retry: false, // Don't retry on failure (avoid rate limit)
-    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchInterval: 30 * 1000, // Refresh every 30 seconds
+    staleTime: 15 * 1000, // Consider data stale after 15 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   })
 
-  // Fetch 1D price history from CoinGecko
+  // Fetch price history from backend - updates when timeRange changes
   const { data: priceHistory } = useQuery({
-    queryKey: ['priceHistory', tokenSymbol, '1D'],
-    queryFn: () => getPriceHistory(tokenSymbol, '1D'),
-    staleTime: 5 * 60 * 1000, // Consider data stale after 5 minutes
-    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
-    retry: false, // Don't retry on failure (avoid rate limit)
-    refetchOnWindowFocus: false, // Don't refetch on window focus
+    queryKey: ['priceHistory', tokenSymbol, timeRange],
+    queryFn: () => getPriceHistory(tokenSymbol, timeRange),
+    staleTime: 30 * 1000, // Consider data stale after 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   })
 
   const isPositive = (token?.priceChange24h ?? 0) >= 0
@@ -126,7 +120,7 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
           {/* Left: Token Info and Price */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 lg:gap-2.5">
-              <TokenSolIcon className="w-10 h-10 lg:w-12 lg:h-12" />
+              <TokenTessIcon className="w-10 h-10 lg:w-12 lg:h-12" />
               <span className="text-sm lg:text-base font-extrabold text-black">
                 {token?.symbol ?? tokenSymbol}
               </span>

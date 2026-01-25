@@ -532,3 +532,132 @@ export async function fetchUserSwapEvents(
     total: data.facts_meteora_token_swap_events_aggregate.aggregate.count,
   }
 }
+
+// ============ Token Price Data ============
+
+export interface TokenPriceDaily {
+  date: string
+  day_timestamp: number
+  price: string // numeric from GraphQL
+  token: string
+}
+
+export interface TokenPrice24hOHLC {
+  token: string
+  open_price_24h: string | null
+  high_price_24h: string | null
+  low_price_24h: string | null
+  close_price_24h: string | null
+  price_change_24h: string | null
+  price_change_pct_24h: string | null
+  swap_count_24h: number | null
+}
+
+interface TokenPricesQueryResult {
+  public_marts_token_prices_daily: TokenPriceDaily[]
+}
+
+interface TokenPrice24hQueryResult {
+  public_marts_token_prices_24h_ohlc: TokenPrice24hOHLC[]
+}
+
+interface SwapEventsForPriceQueryResult {
+  facts_meteora_token_swap_events: Array<{
+    block_time: number
+    amount_x: string
+    amount_y: string
+    type: string
+  }>
+}
+
+/**
+ * Fetch daily price data for a token
+ */
+export async function fetchTokenPricesDaily(
+  tokenMint: string,
+  limit: number = 365
+): Promise<TokenPriceDaily[]> {
+  const query = `
+    query GetTokenPricesDaily($token: String!, $limit: Int!) {
+      public_marts_token_prices_daily(
+        where: { token: { _eq: $token } }
+        order_by: { day_timestamp: desc }
+        limit: $limit
+      ) {
+        date
+        day_timestamp
+        price
+        token
+      }
+    }
+  `
+
+  const data = await graphqlRequest<TokenPricesQueryResult>(query, {
+    token: tokenMint,
+    limit,
+  })
+
+  return data.public_marts_token_prices_daily
+}
+
+/**
+ * Fetch 24h OHLC data for a token
+ */
+export async function fetchTokenPrice24hOHLC(
+  tokenMint: string
+): Promise<TokenPrice24hOHLC | null> {
+  const query = `
+    query GetTokenPrice24hOHLC($token: String!) {
+      public_marts_token_prices_24h_ohlc(
+        where: { token: { _eq: $token } }
+        limit: 1
+      ) {
+        token
+        open_price_24h
+        high_price_24h
+        low_price_24h
+        close_price_24h
+        price_change_24h
+        price_change_pct_24h
+        swap_count_24h
+      }
+    }
+  `
+
+  const data = await graphqlRequest<TokenPrice24hQueryResult>(query, {
+    token: tokenMint,
+  })
+
+  return data.public_marts_token_prices_24h_ohlc[0] ?? null
+}
+
+/**
+ * Fetch swap events for price chart (ordered by time)
+ * Returns events that can be used to calculate price at each swap
+ */
+export async function fetchSwapEventsForPrice(
+  poolAddress: string,
+  limit: number = 500
+): Promise<Array<{ block_time: number; amount_x: string; amount_y: string; type: string }>> {
+  const query = `
+    query GetSwapEventsForPrice($poolAddress: String!, $limit: Int!) {
+      facts_meteora_token_swap_events(
+        where: { pool_address: { _eq: $poolAddress } }
+        order_by: { block_time: asc }
+        limit: $limit
+      ) {
+        block_time
+        amount_x
+        amount_y
+        type
+      }
+    }
+  `
+
+  const data = await graphqlRequest<SwapEventsForPriceQueryResult>(query, {
+    poolAddress,
+    limit,
+  })
+
+  return data.facts_meteora_token_swap_events
+}
