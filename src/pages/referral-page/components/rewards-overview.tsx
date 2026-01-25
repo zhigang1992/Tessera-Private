@@ -5,9 +5,11 @@ import { getRewardsOverview, formatCurrency } from '@/services'
 import AwardIcon from './_/award.svg?react'
 
 export function RewardsOverview() {
-  const { connected } = useWallet()
+  const { connected, publicKey } = useWallet()
+  const walletAddress = publicKey?.toBase58()
+
   const { data, isLoading } = useQuery({
-    queryKey: ['rewardsOverview'],
+    queryKey: ['rewardsOverview', walletAddress],
     queryFn: getRewardsOverview,
     enabled: connected,
   })
