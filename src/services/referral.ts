@@ -3,6 +3,7 @@ import {
   fetchUserRegistration,
   fetchTradersForCode,
   fetchSwapEvents,
+  fetchUserTradingVolume,
   type AggregatedAffiliateStats,
   type UserRegisteredEvent,
 } from '@/features/referral/lib/graphql-client'
@@ -273,14 +274,16 @@ export async function getTradersOverview(): Promise<TradersOverviewData> {
     }
   }
 
-  // Fetch user registration to get active referral code
-  const registration = await fetchUserRegistration(currentWalletAddress)
+  // Fetch user registration and trading volume in parallel
+  const [registration, volumeData] = await Promise.all([
+    fetchUserRegistration(currentWalletAddress),
+    fetchUserTradingVolume(currentWalletAddress),
+  ])
+
   const activeReferralCode = registration?.referral_code ?? null
 
-  // For trading volume, we would need to aggregate from swap events
-  // For now, return 0 as the data model doesn't track per-user trading volume
   return {
-    tradingVolume: 0, // TODO: Implement swap volume aggregation
+    tradingVolume: volumeData.totalVolumeUsd,
     activeReferralCode,
     tradingPoints: 0, // Not tracked in current schema
   }
