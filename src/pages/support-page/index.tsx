@@ -30,6 +30,90 @@ type FAQCategory = {
   }>
 }
 
+// Live Issues Panel Component
+function LiveIssuesPanel({
+  liveIssues,
+  isLoadingIssues,
+  onIssueClick,
+}: {
+  liveIssues: LiveIssue[]
+  isLoadingIssues: boolean
+  onIssueClick: (issue: LiveIssue) => void
+}) {
+  return (
+    <div className="bg-white dark:bg-[#323334] rounded-[16px] p-6 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
+      <h3 className="text-[16px] font-semibold mb-4 dark:text-[#d2d2d2]">
+        Live Issues
+      </h3>
+
+      {isLoadingIssues ? (
+        <div className="flex flex-col gap-[12px]">
+          {[1, 2].map((i) => (
+            <div
+              key={i}
+              className="px-[16px] py-[12px] bg-[#f6f6f6] dark:bg-[#27272a] rounded-[8px] animate-pulse"
+            >
+              <div className="h-[21px] bg-[#e4e4e7] dark:bg-[#393b3d] rounded w-3/4 mb-2" />
+              <div className="flex items-center justify-between">
+                <div className="h-[18px] bg-[#e4e4e7] dark:bg-[#393b3d] rounded w-16" />
+                <div className="h-[18px] bg-[#e4e4e7] dark:bg-[#393b3d] rounded w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : liveIssues.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <div className="w-12 h-12 rounded-full bg-[#f6f6f6] dark:bg-[#27272a] flex items-center justify-center mb-3">
+            <MessageSquare className="w-6 h-6 text-[#a1a1aa]" />
+          </div>
+          <p className="text-[14px] text-[#71717a] mb-1">
+            No open issues
+          </p>
+          <p className="text-[12px] text-[#a1a1aa]">
+            Your support requests will appear here
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-[12px]">
+          {liveIssues.map((issue) => (
+            <button
+              key={issue.id}
+              className="px-[16px] py-[12px] bg-[#f6f6f6] dark:bg-[#27272a] rounded-[8px] hover:bg-[#ececec] dark:hover:bg-[#3f3f46] transition-colors w-full text-left"
+              onClick={() => onIssueClick(issue)}
+            >
+              <div className="flex flex-col gap-[5px]">
+                <span className="text-[14px] font-medium text-[#404040] dark:text-[#d2d2d2] tracking-[-0.1504px] leading-[21px]">
+                  #{issue.id} - {issue.title}
+                </span>
+                <div className="flex items-center justify-between">
+                  <span
+                    className="text-[10px] font-medium px-[6px] py-[2px] rounded-[4px] leading-[18px]"
+                    style={{
+                      backgroundColor:
+                        issue.status === 'checking'
+                          ? '#ffe6c1'
+                          : '#bbf6be',
+                      color:
+                        issue.status === 'checking'
+                          ? '#e07d00'
+                          : '#008806',
+                    }}
+                  >
+                    {issue.status === 'checking' ? 'Checking' : 'Complete'}
+                  </span>
+                  <span className="text-[10px] font-normal text-[#71717a] leading-[18px] text-right">
+                    Submitted {issue.submittedTime}
+                  </span>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function SupportPage() {
   const { setBackButton } = useHeader()
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(
@@ -239,6 +323,15 @@ export default function SupportPage() {
         </div>
       </div>
 
+      {/* Live Issues - Mobile Only */}
+      <div className="lg:hidden">
+        <LiveIssuesPanel
+          liveIssues={liveIssues}
+          isLoadingIssues={isLoadingIssues}
+          onIssueClick={setSelectedIssue}
+        />
+      </div>
+
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] lg:grid-rows-[auto_auto] gap-6">
         {/* Left: Knowledge Base */}
@@ -313,76 +406,13 @@ export default function SupportPage() {
 
         {/* Right: Live Issues & Community */}
         <div className="flex flex-col gap-6 lg:row-span-2">
-          {/* Live Issues */}
-          <div className="lg:flex-1 bg-white dark:bg-[#323334] rounded-[16px] p-6 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
-            <h3 className="text-[16px] font-semibold mb-4 dark:text-[#d2d2d2]">
-              Live Issues
-            </h3>
-
-            {isLoadingIssues ? (
-              <div className="flex flex-col gap-[12px]">
-                {[1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="px-[16px] py-[12px] bg-[#f6f6f6] dark:bg-[#27272a] rounded-[8px] animate-pulse"
-                  >
-                    <div className="h-[21px] bg-[#e4e4e7] dark:bg-[#393b3d] rounded w-3/4 mb-2" />
-                    <div className="flex items-center justify-between">
-                      <div className="h-[18px] bg-[#e4e4e7] dark:bg-[#393b3d] rounded w-16" />
-                      <div className="h-[18px] bg-[#e4e4e7] dark:bg-[#393b3d] rounded w-20" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : liveIssues.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="w-12 h-12 rounded-full bg-[#f6f6f6] dark:bg-[#27272a] flex items-center justify-center mb-3">
-                  <MessageSquare className="w-6 h-6 text-[#a1a1aa]" />
-                </div>
-                <p className="text-[14px] text-[#71717a] mb-1">
-                  No open issues
-                </p>
-                <p className="text-[12px] text-[#a1a1aa]">
-                  Your support requests will appear here
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-[12px]">
-                {liveIssues.map((issue) => (
-                  <button
-                    key={issue.id}
-                    className="px-[16px] py-[12px] bg-[#f6f6f6] dark:bg-[#27272a] rounded-[8px] hover:bg-[#ececec] dark:hover:bg-[#3f3f46] transition-colors w-full text-left"
-                    onClick={() => setSelectedIssue(issue)}
-                  >
-                    <div className="flex flex-col gap-[5px]">
-                      <span className="text-[14px] font-medium text-[#404040] dark:text-[#d2d2d2] tracking-[-0.1504px] leading-[21px]">
-                        #{issue.id} - {issue.title}
-                      </span>
-                      <div className="flex items-center justify-between">
-                        <span
-                          className="text-[10px] font-medium px-[6px] py-[2px] rounded-[4px] leading-[18px]"
-                          style={{
-                            backgroundColor:
-                              issue.status === 'checking'
-                                ? '#ffe6c1'
-                                : '#bbf6be',
-                            color:
-                              issue.status === 'checking'
-                                ? '#e07d00'
-                                : '#008806',
-                          }}
-                        >
-                          {issue.status === 'checking' ? 'Checking' : 'Complete'}
-                        </span>
-                        <span className="text-[10px] font-normal text-[#71717a] leading-[18px] text-right">
-                          Submitted {issue.submittedTime}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+          {/* Live Issues - Desktop Only */}
+          <div className="hidden lg:block lg:flex-1">
+            <LiveIssuesPanel
+              liveIssues={liveIssues}
+              isLoadingIssues={isLoadingIssues}
+              onIssueClick={setSelectedIssue}
+            />
           </div>
 
           {/* Community & Support */}
