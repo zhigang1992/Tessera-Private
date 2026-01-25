@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { cn } from '@/lib/utils'
-import { getTradingHistory } from '@/services'
+import { getUserTradeHistory } from '@/services'
 import { Pagination } from '@/components/ui/pagination'
 import { TableContainer, tableStyles } from '@/components/ui/table-header'
 import TokenIconIcon from './_/token-icon.svg?react'
@@ -22,10 +23,13 @@ function getTokenIcon(token: string) {
 
 export function TradingHistory() {
   const [currentPage, setCurrentPage] = useState(1)
+  const { connected, publicKey } = useWallet()
+  const walletAddress = publicKey?.toBase58()
 
   const { data, isLoading } = useQuery({
-    queryKey: ['tradingHistory', currentPage],
-    queryFn: () => getTradingHistory(currentPage, PAGE_SIZE),
+    queryKey: ['userTradeHistory', walletAddress, currentPage],
+    queryFn: () => getUserTradeHistory(walletAddress, currentPage, PAGE_SIZE),
+    enabled: connected,
   })
 
   const totalPages = data?.totalPages ?? 1
@@ -46,7 +50,15 @@ export function TradingHistory() {
             </tr>
           </thead>
           <tbody className={tableStyles.tbody}>
-            {isLoading ? (
+            {!connected ? (
+              <tr>
+                <td colSpan={5} className="p-4">
+                  <div className="flex items-center justify-center rounded-lg bg-zinc-50 dark:bg-[#27272A] py-16">
+                    <span className="text-[14px] text-muted-foreground">Please connect your wallet to view trading history</span>
+                  </div>
+                </td>
+              </tr>
+            ) : isLoading ? (
               <tr>
                 <td colSpan={5} className="px-4 py-10 text-center text-[14px] text-muted-foreground">
                   Loading...

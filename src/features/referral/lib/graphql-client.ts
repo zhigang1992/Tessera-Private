@@ -533,6 +533,44 @@ export async function fetchUserSwapEvents(
   }
 }
 
+export interface UserTradingVolumeResult {
+  totalVolumeUsd: number
+}
+
+/**
+ * Fetch user's total trading volume (sum of USDC amounts from all swaps)
+ * This represents the user's own trading volume, not volume from their referrals
+ */
+export async function fetchUserTradingVolume(userAddress: string): Promise<UserTradingVolumeResult> {
+  const query = `
+    query GetUserTradingVolume($sender: String!) {
+      facts_meteora_token_swap_events_aggregate(where: { sender: { _eq: $sender } }) {
+        aggregate {
+          sum {
+            amount_y
+          }
+        }
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    facts_meteora_token_swap_events_aggregate: {
+      aggregate: {
+        sum: {
+          amount_y: string | null
+        }
+      }
+    }
+  }>(query, { sender: userAddress })
+
+  const totalVolumeRaw = data.facts_meteora_token_swap_events_aggregate.aggregate.sum.amount_y
+
+  return {
+    totalVolumeUsd: totalVolumeRaw ? hasuraToNumber(totalVolumeRaw) : 0,
+  }
+}
+
 // ============ Token Price Data ============
 
 export interface TokenPriceDaily {

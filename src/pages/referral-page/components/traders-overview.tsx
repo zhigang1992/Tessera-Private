@@ -16,7 +16,7 @@ export function TradersOverview() {
 
   // Fetch traders overview for trading volume and points
   const { data, isLoading } = useQuery({
-    queryKey: ['tradersOverview'],
+    queryKey: ['tradersOverview', walletAddress],
     queryFn: getTradersOverview,
     enabled: connected,
   })
