@@ -5,7 +5,6 @@
 import { fromHasuraToNative, BigNumber, type BigNumberSource } from '@/lib/bignumber'
 
 const GRAPHQL_ENDPOINT = 'https://tracker-gql-dev.tessera.fun/v1/graphql'
-const HASURA_ADMIN_SECRET = 'xRkifHbnNykgVkQ6r7Ns'
 
 /**
  * Convert Hasura 18-decimal numeric value to native number
@@ -136,7 +135,6 @@ async function graphqlRequest<T>(query: string, variables?: Record<string, unkno
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-hasura-admin-secret': HASURA_ADMIN_SECRET,
     },
     body: JSON.stringify({
       query,
