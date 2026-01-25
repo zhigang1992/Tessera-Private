@@ -106,14 +106,9 @@ async function getCachedAffiliateStats(): Promise<AggregatedAffiliateStats | nul
     return cachedAffiliateStats
   }
 
-  try {
-    cachedAffiliateStats = await fetchAffiliateStats(currentWalletAddress)
-    cacheTimestamp = now
-    return cachedAffiliateStats
-  } catch (error) {
-    console.warn('Failed to fetch affiliate stats from GraphQL:', error)
-    return null
-  }
+  cachedAffiliateStats = await fetchAffiliateStats(currentWalletAddress)
+  cacheTimestamp = now
+  return cachedAffiliateStats
 }
 
 export async function getRewardsOverview(): Promise<RewardsData> {
@@ -212,20 +207,15 @@ export async function getReferralUsersByCode(code: string): Promise<ReferralUser
     return []
   }
 
-  try {
-    const traders = await fetchTradersForCode(code)
+  const traders = await fetchTradersForCode(code)
 
-    return traders.map((event) => ({
-      id: event.signature,
-      email: formatWalletAddress(event.user), // Using wallet address as identifier
-      dateJoined: formatBlockTime(event.block_time),
-      layer: determineUserTier(event, currentWalletAddress!),
-      rewards: [], // Rewards data would need separate query - leaving empty for now
-    }))
-  } catch (error) {
-    console.warn('Failed to fetch traders for code from GraphQL:', error)
-    return []
-  }
+  return traders.map((event) => ({
+    id: event.signature,
+    email: formatWalletAddress(event.user), // Using wallet address as identifier
+    dateJoined: formatBlockTime(event.block_time),
+    layer: determineUserTier(event, currentWalletAddress!),
+    rewards: [], // Rewards data would need separate query - leaving empty for now
+  }))
 }
 
 // Clear cache when wallet changes
@@ -274,29 +264,25 @@ function formatSwapAmount(rawAmount: BigNumberSource): string {
 // ============ Traders Tab API Functions ============
 
 export async function getTradersOverview(): Promise<TradersOverviewData> {
-  if (currentWalletAddress) {
-    try {
-      // Fetch user registration to get active referral code
-      const registration = await fetchUserRegistration(currentWalletAddress)
-      const activeReferralCode = registration?.referral_code ?? null
-
-      // For trading volume, we would need to aggregate from swap events
-      // For now, return 0 as the data model doesn't track per-user trading volume
-      return {
-        tradingVolume: 0, // TODO: Implement swap volume aggregation
-        activeReferralCode,
-        tradingPoints: 0, // Not tracked in current schema
-      }
-    } catch (error) {
-      console.warn('Failed to fetch traders overview from GraphQL:', error)
+  if (!currentWalletAddress) {
+    // Return zeros when no wallet connected
+    return {
+      tradingVolume: 0,
+      activeReferralCode: null,
+      tradingPoints: 0,
     }
   }
 
-  // Return zeros when no wallet connected or GraphQL failed
+  // Fetch user registration to get active referral code
+  const registration = await fetchUserRegistration(currentWalletAddress)
+  const activeReferralCode = registration?.referral_code ?? null
+
+  // For trading volume, we would need to aggregate from swap events
+  // For now, return 0 as the data model doesn't track per-user trading volume
   return {
-    tradingVolume: 0,
-    activeReferralCode: null,
-    tradingPoints: 0,
+    tradingVolume: 0, // TODO: Implement swap volume aggregation
+    activeReferralCode,
+    tradingPoints: 0, // Not tracked in current schema
   }
 }
 
@@ -304,49 +290,37 @@ export async function getTradingHistory(
   page: number = 1,
   pageSize: number = 10
 ): Promise<TradingHistoryResponse> {
-  try {
-    const offset = (page - 1) * pageSize
-    // Filter to only show trades from the TESS-USDC pool
-    const { events, total } = await fetchSwapEvents(pageSize, offset, TESS_USDC_POOL)
+  const offset = (page - 1) * pageSize
+  // Filter to only show trades from the TESS-USDC pool
+  const { events, total } = await fetchSwapEvents(pageSize, offset, TESS_USDC_POOL)
 
-    const items: TradingHistoryItem[] = events.map((event) => {
-      const isBuy = event.type === 'swap-y-for-x' // USDC -> TESS is a buy
-      const symbolX = MINT_TO_SYMBOL[event.mint_x] || 'Unknown'
-      const symbolY = MINT_TO_SYMBOL[event.mint_y] || 'Unknown'
+  const items: TradingHistoryItem[] = events.map((event) => {
+    const isBuy = event.type === 'swap-y-for-x' // USDC -> TESS is a buy
+    const symbolX = MINT_TO_SYMBOL[event.mint_x] || 'Unknown'
+    const symbolY = MINT_TO_SYMBOL[event.mint_y] || 'Unknown'
 
-      const amountX = formatSwapAmount(event.amount_x)
-      const amountY = formatSwapAmount(event.amount_y)
-
-      return {
-        id: event.signature,
-        token: symbolX, // TESS is always the main token
-        amountIn: isBuy ? `${amountY} ${symbolY}` : `${amountX} ${symbolX}`,
-        amountOut: isBuy ? `${amountX} ${symbolX}` : `${amountY} ${symbolY}`,
-        type: isBuy ? 'Buy' : 'Sell',
-        account: formatWalletAddress(event.sender),
-        time: formatBlockTimeWithTime(event.block_time),
-      }
-    })
-
-    const totalPages = Math.ceil(total / pageSize)
+    const amountX = formatSwapAmount(event.amount_x)
+    const amountY = formatSwapAmount(event.amount_y)
 
     return {
-      items,
-      total,
-      page,
-      pageSize,
-      totalPages,
+      id: event.signature,
+      token: symbolX, // TESS is always the main token
+      amountIn: isBuy ? `${amountY} ${symbolY}` : `${amountX} ${symbolX}`,
+      amountOut: isBuy ? `${amountX} ${symbolX}` : `${amountY} ${symbolY}`,
+      type: isBuy ? 'Buy' : 'Sell',
+      account: formatWalletAddress(event.sender),
+      time: formatBlockTimeWithTime(event.block_time),
     }
-  } catch (error) {
-    console.warn('Failed to fetch trading history from GraphQL:', error)
-    // Return empty result on error
-    return {
-      items: [],
-      total: 0,
-      page,
-      pageSize,
-      totalPages: 0,
-    }
+  })
+
+  const totalPages = Math.ceil(total / pageSize)
+
+  return {
+    items,
+    total,
+    page,
+    pageSize,
+    totalPages,
   }
 }
 

@@ -177,26 +177,15 @@ function formatWalletAddress(address: string): string {
  * Get market overview statistics for the stats cards
  */
 export async function getMarketStats(): Promise<MarketStatsData> {
-  try {
-    const stats = await fetchDashboardStats()
+  const stats = await fetchDashboardStats()
 
-    // For now, we'll use mock data for market cap and assets tokenized
-    // These would come from different sources (e.g., token prices, treasury data)
-    return {
-      totalMarketCap: 485200000000, // $485.2B mock value
-      totalTradingVolume: stats.totalTradingVolume,
-      activeTraders: stats.totalTraders,
-      assetsTokenized: 6, // Mock value - would come from token registry
-    }
-  } catch (error) {
-    console.error('Failed to fetch market stats:', error)
-    // Return mock data as fallback
-    return {
-      totalMarketCap: 485200000000,
-      totalTradingVolume: 42500000,
-      activeTraders: 24285,
-      assetsTokenized: 6,
-    }
+  // For now, we'll use mock data for market cap and assets tokenized
+  // These would come from different sources (e.g., token prices, treasury data)
+  return {
+    totalMarketCap: 485200000000, // $485.2B mock value
+    totalTradingVolume: stats.totalTradingVolume,
+    activeTraders: stats.totalTraders,
+    assetsTokenized: 6, // Mock value - would come from token registry
   }
 }
 
@@ -263,60 +252,48 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
     }
   }
 
+  // Get devnet RPC connection
+  const DEVNET_RPC_URL = import.meta.env.VITE_DEVNET_RPC_URL || clusterApiUrl('devnet')
+  const connection = new Connection(DEVNET_RPC_URL, 'confirmed')
+  const publicKey = new PublicKey(walletAddress)
+
+  // Get USDC balance (this represents user's USD balance)
+  let usdcBalance = 0
   try {
-    // Get devnet RPC connection
-    const DEVNET_RPC_URL = import.meta.env.VITE_DEVNET_RPC_URL || clusterApiUrl('devnet')
-    const connection = new Connection(DEVNET_RPC_URL, 'confirmed')
-    const publicKey = new PublicKey(walletAddress)
+    const usdcMint = new PublicKey(DEVNET_POOLS['TESS-USDC'].tokenY.mint)
+    const usdcAta = await getAssociatedTokenAddress(usdcMint, publicKey)
+    const usdcAccount = await getAccount(connection, usdcAta)
+    const usdcBigNum = fromTokenAmount(usdcAccount.amount.toString(), DEVNET_POOLS['TESS-USDC'].tokenY.decimals)
+    usdcBalance = BigNumber.toNumber(usdcBigNum)
+  } catch {
+    // Token account doesn't exist, balance is 0
+    usdcBalance = 0
+  }
 
-    // Get USDC balance (this represents user's USD balance)
-    let usdcBalance = 0
-    try {
-      const usdcMint = new PublicKey(DEVNET_POOLS['TESS-USDC'].tokenY.mint)
-      const usdcAta = await getAssociatedTokenAddress(usdcMint, publicKey)
-      const usdcAccount = await getAccount(connection, usdcAta)
-      const usdcBigNum = fromTokenAmount(usdcAccount.amount.toString(), DEVNET_POOLS['TESS-USDC'].tokenY.decimals)
-      usdcBalance = BigNumber.toNumber(usdcBigNum)
-    } catch {
-      // Token account doesn't exist, balance is 0
-      usdcBalance = 0
-    }
+  // Get TESS token balance (Token-2022)
+  let tessBalance = 0
+  try {
+    const tessMint = new PublicKey(DEVNET_POOLS['TESS-USDC'].tokenX.mint)
+    const tessAta = await getAssociatedTokenAddress(
+      tessMint,
+      publicKey,
+      false,
+      TOKEN_2022_PROGRAM_ID
+    )
+    const tessAccount = await getAccount(connection, tessAta, 'confirmed', TOKEN_2022_PROGRAM_ID)
+    const tessBigNum = fromTokenAmount(tessAccount.amount.toString(), DEVNET_POOLS['TESS-USDC'].tokenX.decimals)
+    tessBalance = BigNumber.toNumber(tessBigNum)
+  } catch {
+    // Token account doesn't exist, balance is 0
+    tessBalance = 0
+  }
 
-    // Get TESS token balance (Token-2022)
-    let tessBalance = 0
-    try {
-      const tessMint = new PublicKey(DEVNET_POOLS['TESS-USDC'].tokenX.mint)
-      const tessAta = await getAssociatedTokenAddress(
-        tessMint,
-        publicKey,
-        false,
-        TOKEN_2022_PROGRAM_ID
-      )
-      const tessAccount = await getAccount(connection, tessAta, 'confirmed', TOKEN_2022_PROGRAM_ID)
-      const tessBigNum = fromTokenAmount(tessAccount.amount.toString(), DEVNET_POOLS['TESS-USDC'].tokenX.decimals)
-      tessBalance = BigNumber.toNumber(tessBigNum)
-    } catch {
-      // Token account doesn't exist, balance is 0
-      tessBalance = 0
-    }
-
-    return {
-      balance: usdcBalance,
-      tokenBalance: tessBalance,
-      tokenSymbol: 'T-SPACEX',
-      tokenName: 'T-SPACEX Token',
-      healthFactor: 100, // TODO: Calculate health factor based on actual metrics
-    }
-  } catch (error) {
-    console.error('Failed to fetch user dashboard:', error)
-    // Return zeros on error
-    return {
-      balance: 0,
-      tokenBalance: 0,
-      tokenSymbol: 'T-SPACEX',
-      tokenName: 'T-SPACEX Token',
-      healthFactor: 100,
-    }
+  return {
+    balance: usdcBalance,
+    tokenBalance: tessBalance,
+    tokenSymbol: 'T-SPACEX',
+    tokenName: 'T-SPACEX Token',
+    healthFactor: 100, // TODO: Calculate health factor based on actual metrics
   }
 }
 
@@ -339,48 +316,36 @@ export async function getUserTradeHistory(
     }
   }
 
-  try {
-    const offset = (page - 1) * pageSize
-    const { events, total } = await fetchUserSwapEvents(walletAddress, pageSize, offset)
+  const offset = (page - 1) * pageSize
+  const { events, total } = await fetchUserSwapEvents(walletAddress, pageSize, offset)
 
-    // Transform swap events to trade history items
-    const items: UserTradeHistoryItem[] = events.map((event) => {
-      const isBuy = event.type === 'swap-y-for-x' // USDC -> Token is a buy
+  // Transform swap events to trade history items
+  const items: UserTradeHistoryItem[] = events.map((event) => {
+    const isBuy = event.type === 'swap-y-for-x' // USDC -> Token is a buy
 
-      // Format amounts using BigNumber utilities
-      const amountX = formatSwapAmount(event.amount_x)
-      const amountY = formatSwapAmount(event.amount_y)
-
-      return {
-        id: `${event.signature}-${event.block_time}`,
-        token: 'T-SPACEX', // TODO: Map mint addresses to token symbols
-        amountIn: isBuy ? `${amountY} USDC` : `${amountX} T-SPACEX`,
-        amountOut: isBuy ? `${amountX} T-SPACEX` : `${amountY} USDC`,
-        type: isBuy ? 'Buy' : 'Sell',
-        account: formatWalletAddress(event.sender),
-        time: formatBlockTimeWithTime(event.block_time),
-      }
-    })
-
-    const totalPages = Math.ceil(total / pageSize)
+    // Format amounts using BigNumber utilities
+    const amountX = formatSwapAmount(event.amount_x)
+    const amountY = formatSwapAmount(event.amount_y)
 
     return {
-      items,
-      total,
-      page,
-      pageSize,
-      totalPages,
+      id: `${event.signature}-${event.block_time}`,
+      token: 'T-SPACEX', // TODO: Map mint addresses to token symbols
+      amountIn: isBuy ? `${amountY} USDC` : `${amountX} T-SPACEX`,
+      amountOut: isBuy ? `${amountX} T-SPACEX` : `${amountY} USDC`,
+      type: isBuy ? 'Buy' : 'Sell',
+      account: formatWalletAddress(event.sender),
+      time: formatBlockTimeWithTime(event.block_time),
     }
-  } catch (error) {
-    console.error('Failed to fetch user trade history:', error)
-    // Return empty data on error
-    return {
-      items: [],
-      total: 0,
-      page,
-      pageSize,
-      totalPages: 0,
-    }
+  })
+
+  const totalPages = Math.ceil(total / pageSize)
+
+  return {
+    items,
+    total,
+    page,
+    pageSize,
+    totalPages,
   }
 }
 
