@@ -41,7 +41,7 @@ function LiveIssuesPanel({
   onIssueClick: (issue: LiveIssue) => void
 }) {
   return (
-    <div className="bg-white dark:bg-[#323334] rounded-[16px] p-6 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
+    <div className="h-full bg-white dark:bg-[#323334] rounded-[16px] p-6 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
       <h3 className="text-[16px] font-semibold mb-4 dark:text-[#d2d2d2]">
         Live Issues
       </h3>
@@ -407,7 +407,7 @@ export default function SupportPage() {
         {/* Right: Live Issues & Community */}
         <div className="flex flex-col gap-6 lg:row-span-2">
           {/* Live Issues - Desktop Only */}
-          <div className="hidden lg:block lg:flex-1">
+          <div className="hidden lg:flex lg:flex-1">
             <LiveIssuesPanel
               liveIssues={liveIssues}
               isLoadingIssues={isLoadingIssues}

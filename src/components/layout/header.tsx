@@ -13,6 +13,7 @@ import MoonIcon from './_/moon.svg?react'
 import ChevronRightIcon from './_/chevron-right.svg?react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
+import { clsx } from 'clsx'
 
 function ellipsify(str = '', len = 4, delimiter = '...') {
   const strLen = str.length
@@ -80,8 +81,8 @@ export function Header({ onMenuClick, backButton }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white px-6 dark:bg-[#1e1f20]">
-      {/* Mobile: logo (only show if no back button) */}
-      <div className={`flex items-center lg:hidden ${backButton?.show ? 'hidden' : ''}`}>
+      {/* Mobile: logo */}
+      <div className="flex items-center lg:hidden">
         <Link to="/">
           <TesseraLogoIcon className="size-8 text-[#111111] dark:text-white" />
         </Link>
@@ -101,22 +102,6 @@ export function Header({ onMenuClick, backButton }: HeaderProps) {
           </button>
         )}
       </div>
-
-      {/* Mobile: Back button (conditional, replaces logo) */}
-      <div className={`flex items-center lg:hidden ${backButton?.show ? '' : 'hidden'}`}>
-        {backButton?.show && (
-          <button
-            className="flex items-center gap-2 text-[14px] text-[#71717a] hover:text-black dark:text-[#a1a1aa] dark:hover:text-[#d2d2d2] transition-colors cursor-pointer"
-            onClick={backButton.onClick}
-          >
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15.41 7.41L14 6L8 12L14 18L15.41 16.59L10.83 12L15.41 7.41Z" fill="currentColor" />
-            </svg>
-            {backButton.text}
-          </button>
-        )}
-      </div>
-
       {/* Mobile: hamburger menu button */}
       <button onClick={onMenuClick} className="p-2 lg:hidden">
         <MenuIcon className="size-8" />
@@ -163,7 +148,7 @@ export function Header({ onMenuClick, backButton }: HeaderProps) {
                   </div>
                   <div className="flex items-center gap-1">
                     {getCurrentThemeIcon()}
-                    <ChevronRightIcon className={`size-5 transition-transform ${isThemeSubmenuOpen ? 'rotate-90' : ''}`} />
+                    <ChevronRightIcon className={clsx('size-5 transition-transform', isThemeSubmenuOpen && 'rotate-90')} />
                   </div>
                 </button>
 
