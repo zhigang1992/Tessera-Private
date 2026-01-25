@@ -1,7 +1,6 @@
 import type { LeaderboardQueryResult } from '../types'
 
 const GRAPHQL_ENDPOINT = 'https://tracker-gql-dev.tessera.fun/v1/graphql'
-const HASURA_ADMIN_SECRET = 'xRkifHbnNykgVkQ6r7Ns'
 
 export async function fetchLeaderboard(
   limit: number = 10,
@@ -29,7 +28,6 @@ export async function fetchLeaderboard(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-hasura-admin-secret': HASURA_ADMIN_SECRET,
     },
     body: JSON.stringify({
       query,
