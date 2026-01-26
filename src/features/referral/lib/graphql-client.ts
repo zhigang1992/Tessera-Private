@@ -1014,12 +1014,17 @@ export async function fetchAuctionDepositEvents(
 
 // ============ Reward Details by Code/Referral ============
 
+export interface FeeByToken {
+  fee: string // numeric from GraphQL (18 decimals)
+  mint: string
+}
+
 export interface RewardDetailByCodeReferral {
   code: string
   referral: string
   tier: number
   total_rewards_usd: string // numeric from GraphQL (18 decimals)
-  fees_by_token: Record<string, string> | null // jsonb - token mint -> amount
+  fees_by_token: FeeByToken[] | null // jsonb array of {fee, mint}
 }
 
 /**
