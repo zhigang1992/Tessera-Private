@@ -1,43 +1,54 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createChart, ColorType, LineSeries } from 'lightweight-charts'
 import type { IChartApi, LineData, Time } from 'lightweight-charts'
-import { getPriceHistory, getTokenPrice } from '@/services/coingecko'
-import TokenSolIcon from './_/token-sol.svg?react'
+import { getPriceHistory, getTokenPrice, type TimeRange } from '@/services/price'
+import { useMarketDepth, calculateBarHeights, formatTvl, formatBinStep } from '@/hooks/useMarketDepth'
+import TokenTessIcon from './_/token-tess.svg?react'
 
 interface PriceChartProps {
   tokenSymbol?: string
 }
 
-export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
+type ChartTab = 'price' | 'market-depth'
+
+export function PriceChart({ tokenSymbol = 'TESS' }: PriceChartProps) {
+  const [activeTab, setActiveTab] = useState<ChartTab>('price')
+  const [timeRange, setTimeRange] = useState<TimeRange>('1D')
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const seriesRef = useRef<any>(null)
 
-  // Fetch token price info from CoinGecko
-  // Using aggressive caching to avoid rate limiting (free tier: ~10 calls/minute)
+  // Fetch token price info from backend
   const { data: token } = useQuery({
     queryKey: ['tokenPrice', tokenSymbol],
     queryFn: () => getTokenPrice(tokenSymbol),
-    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
-    staleTime: 2 * 60 * 1000, // Consider data stale after 2 minutes
-    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
-    retry: false, // Don't retry on failure (avoid rate limit)
-    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchInterval: 30 * 1000, // Refresh every 30 seconds
+    staleTime: 15 * 1000, // Consider data stale after 15 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   })
 
-  // Fetch 1D price history from CoinGecko
+  // Fetch price history from backend - updates when timeRange changes
   const { data: priceHistory } = useQuery({
-    queryKey: ['priceHistory', tokenSymbol, '1D'],
-    queryFn: () => getPriceHistory(tokenSymbol, '1D'),
-    staleTime: 5 * 60 * 1000, // Consider data stale after 5 minutes
-    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
-    retry: false, // Don't retry on failure (avoid rate limit)
-    refetchOnWindowFocus: false, // Don't refetch on window focus
+    queryKey: ['priceHistory', tokenSymbol, timeRange],
+    queryFn: () => getPriceHistory(tokenSymbol, timeRange),
+    staleTime: 30 * 1000, // Consider data stale after 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+  })
+
+  // Fetch market depth data - only when tab is active
+  const { data: marketDepth, isLoading: isMarketDepthLoading } = useMarketDepth({
+    enabled: activeTab === 'market-depth',
   })
 
   const isPositive = (token?.priceChange24h ?? 0) >= 0
+
+  // Calculate bar heights from market depth data
+  const barHeights = marketDepth ? calculateBarHeights(marketDepth.bins) : []
+  const activeBinIndex = marketDepth
+    ? marketDepth.bins.findIndex((bin) => bin.binId === marketDepth.activeBinId)
+    : -1
 
   // Initialize chart
   useEffect(() => {
@@ -46,13 +57,17 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
     const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: '#111',
+        textColor: '#000',
         fontFamily: 'Inter, sans-serif',
         attributionLogo: false,
       },
       grid: {
         vertLines: { visible: false },
-        horzLines: { color: 'rgba(0, 0, 0, 0.05)', style: 1 },
+        horzLines: {
+          color: 'rgba(0, 0, 0, 0.2)',
+          style: 2, // 2 = dashed line
+          visible: true
+        },
       },
       width: chartContainerRef.current.clientWidth,
       height: 180,
@@ -74,8 +89,8 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
     })
 
     const lineSeries = chart.addSeries(LineSeries, {
-      color: '#111',
-      lineWidth: 2,
+      color: '#1D8F00',
+      lineWidth: 3,
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerVisible: false,
@@ -110,31 +125,127 @@ export function PriceChart({ tokenSymbol = 'SOL' }: PriceChartProps) {
   }, [priceHistory])
 
   return (
-    <div className="h-full rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95]">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 lg:mb-6">
-        <div className="flex items-center gap-2 lg:gap-2.5">
-          <TokenSolIcon className="w-10 h-10 lg:w-12 lg:h-12" />
-          <span className="text-sm lg:text-base font-extrabold text-black dark:text-[#d2d2d2]">
-            {token?.symbol ?? tokenSymbol}
-          </span>
+    <div className="h-full rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
+      <div className="flex flex-col h-full">
+        {/* Header with Tabs */}
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4 lg:mb-6 gap-4">
+          {/* Left: Token Info and Price */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 lg:gap-2.5">
+              <TokenTessIcon className="w-10 h-10 lg:w-12 lg:h-12" />
+              <span className="text-sm lg:text-base font-extrabold text-black">
+                {token?.symbol ?? tokenSymbol}
+              </span>
+            </div>
+            <div>
+              <div className="text-xl lg:text-[28px] font-bold text-[#111]">
+                ${token?.price?.toFixed(2) ?? '0.00'}
+              </div>
+              <div className="flex items-center gap-1 text-[10px] lg:text-xs">
+                <span className={isPositive ? 'text-[#269700]' : 'text-red-500'}>
+                  {isPositive ? '▲' : '▼'} ${Math.abs(token?.priceChange24h ?? 0).toFixed(2)} (
+                  {Math.abs(token?.priceChangePercent24h ?? 0).toFixed(2)}%)
+                </span>
+                <span className="text-[#999]">24H</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Tab Switcher */}
+          <div className="bg-[rgba(0,0,0,0.1)] flex items-center p-1 rounded-lg shrink-0 self-start">
+            <button
+              onClick={() => setActiveTab('price')}
+              className={`px-4 lg:px-6 py-1 text-xs font-medium transition-all rounded ${
+                activeTab === 'price'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-black opacity-50 hover:opacity-75 hover:bg-[rgba(255,255,255,0.3)]'
+              }`}
+            >
+              Price
+            </button>
+            <button
+              onClick={() => setActiveTab('market-depth')}
+              className={`px-4 lg:px-6 py-1 text-xs font-medium transition-all rounded whitespace-nowrap ${
+                activeTab === 'market-depth'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-black opacity-50 hover:opacity-75 hover:bg-[rgba(255,255,255,0.3)]'
+              }`}
+            >
+              Market Depth
+            </button>
+          </div>
         </div>
-        <div className="text-right">
-          <div className="text-xl lg:text-[28px] font-bold text-[#111] dark:text-white">
-            ${token?.price?.toFixed(2) ?? '0.00'}
+
+        {/* Chart Content */}
+        <div className="flex-1 flex flex-col relative">
+          {/* Price Chart - Always rendered but hidden when not active */}
+          <div className={activeTab === 'price' ? 'flex-1 flex flex-col' : 'hidden'}>
+            {/* Price Chart */}
+            <div ref={chartContainerRef} className="w-full flex-1 mb-4" />
+
+            {/* Time Range Selector */}
+            <div className="flex items-center p-1 rounded-lg bg-[rgba(0,0,0,0.1)]">
+              {(['1D', '1W', '1M', '3M', '1Y', 'ALL'] as TimeRange[]).map((range) => (
+                <button
+                  key={range}
+                  onClick={() => setTimeRange(range)}
+                  className={`basis-0 grow flex items-center justify-center h-6 rounded text-xs font-medium transition-all ${
+                    timeRange === range
+                      ? 'bg-white text-black shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]'
+                      : 'text-black opacity-50 hover:bg-[rgba(255,255,255,0.3)]'
+                  }`}
+                >
+                  {range}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center justify-end gap-1 text-[10px] lg:text-xs">
-            <span className={isPositive ? 'text-[#269700]' : 'text-red-500'}>
-              {isPositive ? '▲' : '▼'} ${Math.abs(token?.priceChange24h ?? 0).toFixed(2)} (
-              {Math.abs(token?.priceChangePercent24h ?? 0).toFixed(2)}%)
-            </span>
-            <span className="text-[#999] dark:text-[#d2d2d2]">24H</span>
-          </div>
+
+          {/* Market Depth View */}
+          {activeTab === 'market-depth' && (
+            <div className="flex-1 flex flex-col">
+              {/* Bar Chart */}
+              <div className="flex items-end justify-center gap-[2px] px-4 mb-4 h-[261px]">
+                {isMarketDepthLoading ? (
+                  <div className="flex items-center justify-center w-full h-full">
+                    <div className="animate-pulse text-black opacity-50">Loading market depth...</div>
+                  </div>
+                ) : barHeights.length > 0 ? (
+                  barHeights.map((height, index) => (
+                    <div
+                      key={marketDepth?.bins[index]?.binId ?? index}
+                      className={`${
+                        index === activeBinIndex
+                          ? 'bg-[#1d8f00]' // Active bin - darker green
+                          : 'bg-[#9eca87]' // Regular bins - lighter green
+                      } rounded-tl-[999px] rounded-tr-[999px] shrink-0 w-[8px] lg:w-[12px] transition-all hover:opacity-80`}
+                      style={{ height: `${Math.max(height, 2)}px` }}
+                      title={marketDepth?.bins[index] ? `Bin ${marketDepth.bins[index].binId}: $${parseFloat(marketDepth.bins[index].price).toFixed(4)}` : `Bin ${index + 1}`}
+                    />
+                  ))
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full">
+                    <div className="text-black opacity-50">No liquidity data available</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Legend */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 px-2 text-[10px] lg:text-xs font-semibold">
+                <p className="text-black opacity-50">
+                  Bin Step: {marketDepth ? formatBinStep(marketDepth.binStep) : '--'}
+                </p>
+                <p className="text-black">
+                  Total TVL: {marketDepth ? formatTvl(marketDepth.totalTvlX, marketDepth.totalTvlY) : '--'}
+                </p>
+                <p className="text-[#1d8f00]">
+                  Active Bin: {marketDepth ? marketDepth.activeBinId.toLocaleString() : '--'}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Chart */}
-      <div ref={chartContainerRef} className="w-full" />
     </div>
   )
 }

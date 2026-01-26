@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Search,
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { AiChat } from './components/ai-chat'
 import { getLiveIssues, type LiveIssue } from '@/services'
+import { useHeader } from '@/contexts/header-context'
 import ChatBubbleOutlineIcon from './components/_/chat-bubble-outline.svg?react'
 import SupportAgentIcon from './components/_/support-agent.svg?react'
 
@@ -29,7 +30,92 @@ type FAQCategory = {
   }>
 }
 
+// Live Issues Panel Component
+function LiveIssuesPanel({
+  liveIssues,
+  isLoadingIssues,
+  onIssueClick,
+}: {
+  liveIssues: LiveIssue[]
+  isLoadingIssues: boolean
+  onIssueClick: (issue: LiveIssue) => void
+}) {
+  return (
+    <div className="h-full bg-white dark:bg-[#323334] rounded-[16px] p-6 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
+      <h3 className="text-[16px] font-semibold mb-4 dark:text-[#d2d2d2]">
+        Live Issues
+      </h3>
+
+      {isLoadingIssues ? (
+        <div className="flex flex-col gap-[12px]">
+          {[1, 2].map((i) => (
+            <div
+              key={i}
+              className="px-[16px] py-[12px] bg-[#f6f6f6] dark:bg-[#27272a] rounded-[8px] animate-pulse"
+            >
+              <div className="h-[21px] bg-[#e4e4e7] dark:bg-[#393b3d] rounded w-3/4 mb-2" />
+              <div className="flex items-center justify-between">
+                <div className="h-[18px] bg-[#e4e4e7] dark:bg-[#393b3d] rounded w-16" />
+                <div className="h-[18px] bg-[#e4e4e7] dark:bg-[#393b3d] rounded w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : liveIssues.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <div className="w-12 h-12 rounded-full bg-[#f6f6f6] dark:bg-[#27272a] flex items-center justify-center mb-3">
+            <MessageSquare className="w-6 h-6 text-[#a1a1aa]" />
+          </div>
+          <p className="text-[14px] text-[#71717a] mb-1">
+            No open issues
+          </p>
+          <p className="text-[12px] text-[#a1a1aa]">
+            Your support requests will appear here
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-[12px]">
+          {liveIssues.map((issue) => (
+            <button
+              key={issue.id}
+              className="px-[16px] py-[12px] bg-[#f6f6f6] dark:bg-[#27272a] rounded-[8px] hover:bg-[#ececec] dark:hover:bg-[#3f3f46] transition-colors w-full text-left"
+              onClick={() => onIssueClick(issue)}
+            >
+              <div className="flex flex-col gap-[5px]">
+                <span className="text-[14px] font-medium text-[#404040] dark:text-[#d2d2d2] tracking-[-0.1504px] leading-[21px]">
+                  #{issue.id} - {issue.title}
+                </span>
+                <div className="flex items-center justify-between">
+                  <span
+                    className="text-[10px] font-medium px-[6px] py-[2px] rounded-[4px] leading-[18px]"
+                    style={{
+                      backgroundColor:
+                        issue.status === 'checking'
+                          ? '#ffe6c1'
+                          : '#bbf6be',
+                      color:
+                        issue.status === 'checking'
+                          ? '#e07d00'
+                          : '#008806',
+                    }}
+                  >
+                    {issue.status === 'checking' ? 'Checking' : 'Complete'}
+                  </span>
+                  <span className="text-[10px] font-normal text-[#71717a] leading-[18px] text-right">
+                    Submitted {issue.submittedTime}
+                  </span>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function SupportPage() {
+  const { setBackButton } = useHeader()
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(
     new Set()
   )
@@ -59,6 +145,24 @@ export default function SupportPage() {
     setSelectedIssue(null)
     setChatQuery(null)
   }
+
+  // Set back button in header when chat is active
+  useEffect(() => {
+    if (selectedIssue || chatQuery) {
+      setBackButton({
+        show: true,
+        text: 'Back to Support Center',
+        onClick: handleBackFromChat,
+      })
+    } else {
+      setBackButton(undefined)
+    }
+
+    // Cleanup on unmount
+    return () => {
+      setBackButton(undefined)
+    }
+  }, [selectedIssue, chatQuery, setBackButton])
 
   const toggleQuestion = (questionKey: string) => {
     setExpandedQuestions((prev) => {
@@ -153,79 +257,90 @@ export default function SupportPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 m-6">
       {/* AI Search Section */}
-      <div className="bg-[#d2fb95] dark:bg-[#d2fb95] rounded-[16px] px-4 py-8 md:p-12">
-        <div className="max-w-[600px] mx-auto">
-          <div className="flex items-center justify-center gap-2 mb-4">
+      <div className="bg-[#d2fb95] dark:bg-[#d2fb95] rounded-[16px] p-6 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
+        <div className="flex flex-col gap-[19px] items-center">
+          <div className="flex items-center justify-center gap-2">
             <Bot className="w-5 h-5 text-black" />
-            <span className="text-black text-[16px]">Tessera AI Agent</span>
+            <span className="text-black text-[16px] tracking-[-0.3125px] leading-[24px]">Tessera AI Agent</span>
           </div>
 
-          <h2 className="text-black text-center text-[24px] md:text-[32px] font-semibold mb-6">
+          <h2 className="text-black text-center text-[32px] font-semibold leading-[32px] tracking-[0.4063px]">
             What would you like to know?
           </h2>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              handleSearch()
-            }}
-            className="bg-white rounded-[12px] pl-[16px] pr-[8px] py-[8px] mb-4 flex items-center gap-[12px]"
-          >
-            <Search className="w-5 h-5 text-[#666]" />
-            <input
-              type="text"
-              placeholder="Ask anything..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 bg-transparent text-black text-[16px] tracking-[-0.3125px] outline-none placeholder:text-[#999]"
-            />
+          <div className="flex gap-[16px] items-center w-full">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleSearch()
+              }}
+              className="flex-1 bg-white rounded-[8px] flex items-center gap-[8px] p-[16px]"
+            >
+              <Search className="w-5 h-5 text-[#666]" />
+              <input
+                type="text"
+                placeholder="Ask anything..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent text-black text-[16px] tracking-[-0.625px] leading-normal outline-none placeholder:text-[#999]"
+              />
+            </form>
             <button
-              type="submit"
-              className="bg-black rounded-[8px] w-[40px] h-[40px] p-[8px] hover:bg-[#333] transition-colors flex items-center justify-center shrink-0"
+              onClick={handleSearch}
+              className="bg-black rounded-[8px] size-[56px] hover:bg-[#333] transition-colors flex items-center justify-center shrink-0"
             >
               <ArrowUpRight className="w-5 h-5 text-white" />
             </button>
-          </form>
+          </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
+          <div className="flex flex-col md:flex-row gap-[12px] items-center justify-center">
+            <div className="flex flex-row items-center justify-center gap-[12px]">
+              <button
+                onClick={() => handleQuickQuestion('Do I need KYC?')}
+                className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-4 py-2 text-black text-[14px] font-medium leading-[21px] tracking-[-0.1504px] flex items-center gap-2"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                Do I need KYC?
+              </button>
+              <button
+                onClick={() => handleQuickQuestion('What are the fees and gas costs?')}
+                className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-4 py-2 text-black text-[14px] font-medium leading-[21px] tracking-[-0.1504px] flex items-center gap-2"
+              >
+                <Fuel className="w-4 h-4" />
+                Fees & Gas
+              </button>
+            </div>
             <button
               onClick={() => handleQuickQuestion('How to trade SpaceX?')}
-              className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-3 md:px-4 py-2 text-black text-[12px] md:text-[14px] flex items-center gap-2"
+              className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-4 py-2 text-black text-[14px] font-medium leading-[21px] tracking-[-0.1504px] flex items-center gap-2"
             >
               <Rocket className="w-4 h-4" />
-              <span className="hidden sm:inline">How to trade SpaceX?</span>
-              <span className="sm:hidden">Trade SpaceX</span>
-            </button>
-            <button
-              onClick={() => handleQuickQuestion('Do I need KYC?')}
-              className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-3 md:px-4 py-2 text-black text-[12px] md:text-[14px] flex items-center gap-2"
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span className="hidden sm:inline">Do I need KYC?</span>
-              <span className="sm:hidden">KYC?</span>
-            </button>
-            <button
-              onClick={() => handleQuickQuestion('What are the fees and gas costs?')}
-              className="bg-white hover:bg-gray-100 transition-colors rounded-[999px] px-3 md:px-4 py-2 text-black text-[12px] md:text-[14px] flex items-center gap-2"
-            >
-              <Fuel className="w-4 h-4" />
-              Fees & Gas
+              How to trade SpaceX?
             </button>
           </div>
         </div>
       </div>
 
+      {/* Live Issues - Mobile Only */}
+      <div className="lg:hidden">
+        <LiveIssuesPanel
+          liveIssues={liveIssues}
+          isLoadingIssues={isLoadingIssues}
+          onIssueClick={setSelectedIssue}
+        />
+      </div>
+
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] lg:grid-rows-[auto_auto] gap-6">
         {/* Left: Knowledge Base */}
-        <div className="bg-white dark:bg-zinc-900 rounded-[16px] p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-[20px] font-semibold dark:text-white">
+        <div className="lg:row-span-2 bg-white dark:bg-[#323334] rounded-[16px] p-6 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
+          <div className="flex flex-col items-start mb-6">
+            <h3 className="text-[20px] font-semibold leading-[30px] tracking-[-0.4492px] dark:text-[#d2d2d2]">
               Browse Knowledge Base
             </h3>
-            <span className="text-[12px] text-[#71717a]">Updated today</span>
+            <span className="text-[12px] leading-[18px] text-[#71717a]">Updated today</span>
           </div>
 
           <div className="flex flex-col">
@@ -233,16 +348,16 @@ export default function SupportPage() {
               return (
                 <div key={category.id}>
                   {categoryIndex > 0 && (
-                    <div className="bg-[#e4e4e7] dark:bg-zinc-700 h-px w-full my-6" />
+                    <div className="bg-[#e4e4e7] dark:bg-[#393b3d] h-px w-full my-6" />
                   )}
 
                   {/* Category Header */}
                   <div className="mb-4">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-[8px] border border-[#e4e4e7] dark:border-zinc-700 dark:text-white">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-[8px] border border-[#e4e4e7] dark:border-[#393b3d] dark:text-white">
                         {category.icon}
                       </div>
-                      <span className="font-semibold text-[16px] dark:text-white">
+                      <span className="font-semibold text-[16px] dark:text-[#d2d2d2]">
                         {category.title}
                       </span>
                     </div>
@@ -257,13 +372,13 @@ export default function SupportPage() {
                         return (
                           <div
                             key={questionKey}
-                            className="border-b border-[#f4f4f5] dark:border-zinc-800 last:border-b-0 pb-3 last:pb-0"
+                            className="border-b border-[#f4f4f5] dark:border-[#393b3d] last:border-b-0 pb-3 last:pb-0"
                           >
                             <button
                               onClick={() => toggleQuestion(questionKey)}
                               className="flex items-start justify-between w-full text-left hover:opacity-70 transition-opacity py-1"
                             >
-                              <span className="text-[14px] text-[#404040] dark:text-zinc-300 pr-4 leading-[20px]">
+                              <span className="text-[14px] text-[#404040] dark:text-[#d2d2d2] pr-4 leading-[20px]">
                                 {q.question}
                               </span>
                               {isQuestionExpanded ? (
@@ -290,82 +405,19 @@ export default function SupportPage() {
         </div>
 
         {/* Right: Live Issues & Community */}
-        <div className="flex flex-col gap-6">
-          {/* Live Issues */}
-          <div className="bg-white dark:bg-zinc-900 rounded-[16px] p-6">
-            <h3 className="text-[16px] font-semibold mb-4 dark:text-white">
-              Live Issues
-            </h3>
-
-            {isLoadingIssues ? (
-              <div className="flex flex-col gap-[12px]">
-                {[1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="px-[16px] py-[12px] bg-[#f6f6f6] dark:bg-zinc-800 rounded-[8px] animate-pulse"
-                  >
-                    <div className="h-[21px] bg-[#e4e4e7] dark:bg-zinc-700 rounded w-3/4 mb-2" />
-                    <div className="flex items-center justify-between">
-                      <div className="h-[18px] bg-[#e4e4e7] dark:bg-zinc-700 rounded w-16" />
-                      <div className="h-[18px] bg-[#e4e4e7] dark:bg-zinc-700 rounded w-20" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : liveIssues.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="w-12 h-12 rounded-full bg-[#f6f6f6] dark:bg-zinc-800 flex items-center justify-center mb-3">
-                  <MessageSquare className="w-6 h-6 text-[#a1a1aa]" />
-                </div>
-                <p className="text-[14px] text-[#71717a] mb-1">
-                  No open issues
-                </p>
-                <p className="text-[12px] text-[#a1a1aa]">
-                  Your support requests will appear here
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-[12px]">
-                {liveIssues.map((issue) => (
-                  <button
-                    key={issue.id}
-                    className="px-[16px] py-[12px] bg-[#f6f6f6] dark:bg-zinc-800 rounded-[8px] hover:bg-[#ececec] dark:hover:bg-zinc-700 transition-colors w-full text-left"
-                    onClick={() => setSelectedIssue(issue)}
-                  >
-                    <div className="flex flex-col gap-[5px]">
-                      <span className="text-[14px] font-medium text-[#404040] dark:text-zinc-300 tracking-[-0.1504px] leading-[21px]">
-                        #{issue.id} - {issue.title}
-                      </span>
-                      <div className="flex items-center justify-between">
-                        <span
-                          className="text-[10px] font-medium px-[6px] py-[2px] rounded-[4px] leading-[18px]"
-                          style={{
-                            backgroundColor:
-                              issue.status === 'checking'
-                                ? '#ffe6c1'
-                                : '#bbf6be',
-                            color:
-                              issue.status === 'checking'
-                                ? '#e07d00'
-                                : '#008806',
-                          }}
-                        >
-                          {issue.status === 'checking' ? 'Checking' : 'Complete'}
-                        </span>
-                        <span className="text-[10px] font-normal text-[#71717a] leading-[18px] text-right">
-                          Submitted {issue.submittedTime}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+        <div className="flex flex-col gap-6 lg:row-span-2">
+          {/* Live Issues - Desktop Only */}
+          <div className="hidden lg:block lg:flex-1">
+            <LiveIssuesPanel
+              liveIssues={liveIssues}
+              isLoadingIssues={isLoadingIssues}
+              onIssueClick={setSelectedIssue}
+            />
           </div>
 
           {/* Community & Support */}
-          <div className="bg-white dark:bg-zinc-900 rounded-[16px] p-6">
-            <h3 className="text-[16px] font-semibold mb-2 dark:text-white">
+          <div className="lg:flex-1 bg-white dark:bg-[#323334] rounded-[16px] p-6 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
+            <h3 className="text-[16px] font-semibold mb-2 dark:text-[#d2d2d2]">
               Community & Support
             </h3>
             <p className="text-[14px] text-[#71717a] mb-4 leading-[20px]">
@@ -400,11 +452,11 @@ export default function SupportPage() {
               </a>
 
               <button
-                className="bg-white dark:bg-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors border border-[#a1a1aa] dark:border-zinc-600 rounded-[8px] px-4 py-3 flex items-center justify-center gap-2"
+                className="bg-white dark:bg-white hover:bg-gray-50 dark:hover:bg-gray-100 transition-colors border border-[#a1a1aa] dark:border-[rgba(17,17,17,0.15)] rounded-[8px] px-4 py-3 flex items-center justify-center gap-2"
                 onClick={() => setChatQuery('I need technical support')}
               >
-                <SupportAgentIcon className="w-[18px] h-[18px] dark:text-white" />
-                <span className="text-[14px] font-medium dark:text-white">
+                <SupportAgentIcon className="w-[18px] h-[18px] text-black dark:text-black" />
+                <span className="text-[14px] font-medium text-black dark:text-black">
                   Technical Support
                 </span>
               </button>

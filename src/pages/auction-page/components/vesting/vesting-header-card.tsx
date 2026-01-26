@@ -63,7 +63,7 @@ export function VestingHeaderCard() {
   const lockedPercent = totalAllocation > 0 ? 100 - unlockedPercent : 0
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 bg-white dark:bg-[#323334]">
       <div className="flex flex-col gap-6">
         {/* Title and Badge */}
         <div className="flex items-center gap-3">
@@ -76,10 +76,10 @@ export function VestingHeaderCard() {
         {/* Status and Position Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Vesting Status */}
-          <div className="bg-[#f6f6f6] dark:bg-zinc-900 rounded-lg p-4 flex flex-col gap-4">
+          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col gap-4">
             <div className="flex items-start justify-between">
               <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 tracking-wider">
+                <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">
                   VESTING STATUS
                 </span>
                 <div className="flex items-center gap-2.5">
@@ -121,7 +121,7 @@ export function VestingHeaderCard() {
 
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">
+                <div className="flex items-center gap-1.5 text-[#71717a] dark:text-[#999]">
                   <CalendarIcon className="w-4 h-4 text-zinc-400" />
                   <span>Start</span>
                 </div>
@@ -130,7 +130,7 @@ export function VestingHeaderCard() {
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">
+                <div className="flex items-center gap-1.5 text-[#71717a] dark:text-[#999]">
                   <CalendarIcon className="w-4 h-4 text-zinc-400" />
                   <span>End</span>
                 </div>
@@ -140,18 +140,18 @@ export function VestingHeaderCard() {
               </div>
             </div>
 
-            <div className="border-t border-zinc-200 dark:border-zinc-700 pt-4">
+            <div className="border-t border-[rgba(17,17,17,0.15)] dark:border-[rgba(255,255,255,0.1)] pt-4">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-zinc-600 dark:text-zinc-400">Unlock Rate</span>
+                <span className="text-[#71717a] dark:text-[#999]">Unlock Rate</span>
                 <span className="font-medium text-[#06a800]">{vestingDuration}</span>
               </div>
             </div>
           </div>
 
           {/* My Vesting Position */}
-          <div className="bg-[#f6f6f6] dark:bg-zinc-900 rounded-lg p-4 flex flex-col gap-9">
+          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col gap-9">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 tracking-wider">
+              <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">
                 MY VESTING POSITION
               </span>
               {isEligible && (
@@ -170,7 +170,7 @@ export function VestingHeaderCard() {
                   <span className="text-2xl font-semibold font-mono text-foreground">
                     {totalAllocation.toFixed(2)}
                   </span>
-                  <span className="text-[10px] text-zinc-600 dark:text-zinc-400">TESS Tokens</span>
+                  <span className="text-[10px] text-[#71717a] dark:text-[#999]">TESS Tokens</span>
                 </div>
 
                 {/* Unlocked */}
@@ -181,20 +181,20 @@ export function VestingHeaderCard() {
                   <span className="text-2xl font-semibold font-mono text-foreground">
                     {unlockedAmount.toFixed(2)}
                   </span>
-                  <span className="text-[10px] text-zinc-600 dark:text-zinc-400">
+                  <span className="text-[10px] text-[#71717a] dark:text-[#999]">
                     Available to claim
                   </span>
                 </div>
 
                 {/* Locked */}
                 <div className="bg-[rgba(17,17,17,0.03)] dark:bg-[rgba(255,255,255,0.05)] rounded-[10px] p-2 lg:pt-4 lg:px-4 lg:pb-0 flex flex-col gap-2">
-                  <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                  <span className="text-xs font-medium text-[#71717a] dark:text-[#999]">
                     Locked ({lockedPercent}%)
                   </span>
                   <span className="text-2xl font-semibold font-mono text-foreground">
                     {lockedAmount.toFixed(2)}
                   </span>
-                  <span className="text-[10px] text-zinc-600 dark:text-zinc-400">
+                  <span className="text-[10px] text-[#71717a] dark:text-[#999]">
                     Unlocks linearly
                   </span>
                 </div>

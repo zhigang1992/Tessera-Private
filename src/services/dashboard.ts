@@ -1,6 +1,29 @@
 import { sleep } from './utils'
+import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap, fetchAllTokenDetails } from '@/features/referral/lib/graphql-client'
+import { fromHasuraToNative, formatBigNumber, BigNumber, math, mathIs, type BigNumberSource, fromTokenAmount, type BigNumberValue } from '@/lib/bignumber'
+import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
+import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
+import { DEVNET_POOLS } from './meteora'
 
 // ============ Types ============
+
+export interface MarketStatsData {
+  totalMarketCap: number
+  totalTradingVolume: number
+  activeTraders: number
+  assetsTokenized: number
+}
+
+export interface AssetData {
+  id: string
+  symbol: string
+  name: string
+  code: string
+  sector: string
+  price: number
+  holders: number
+  valuation: string
+}
 
 export interface DashboardStats {
   protocolBackingRatio: number
@@ -86,77 +109,461 @@ const tokenInfo: TokenInfo = {
   sharesPerToken: '1 T-SPACEX = 1.00 SPACEX EQUITY',
 }
 
-const tokenStatistics: TokenStatistics = {
-  tokenPrice24h: {
-    open: 440.37,
-    high: 449.63,
-    low: 433.41,
-  },
-  underlyingAssetPrice24h: {
-    open: 440.37,
-    high: 449.63,
-    low: 433.41,
-  },
-}
+// ============ Helper Functions ============
 
-const userDashboard: UserDashboard = {
-  balance: 1355.87,
-  tokenBalance: 13.27,
-  tokenSymbol: 'T-SpaceX',
-  tokenName: 'T-SpaceX Token',
-  healthFactor: 100,
-}
+/**
+ * Format swap amount from Hasura 18-decimal precision
+ * Adjusts decimal places based on the magnitude of the number
+ */
+function formatSwapAmount(rawAmount: BigNumberSource): string {
+  const bigNum = fromHasuraToNative(rawAmount)
+  const numValue = BigNumber.toNumber(bigNum)
 
-// Generate user trade history
-function generateUserTradeHistory(): UserTradeHistoryItem[] {
-  const items: UserTradeHistoryItem[] = []
-  const accounts = ['0xA8D0...6006']
-  const times = ['Today at 3:20 PM', 'Today at 2:45 PM', 'Today at 1:30 PM', 'Yesterday at 5:00 PM', 'Yesterday at 11:20 AM']
-
-  for (let i = 1; i <= 100; i++) {
-    items.push({
-      id: `user-trade-${i}`,
-      token: 'T-SPACEX',
-      amountIn: '1,000 USDC',
-      amountOut: '300.2 T-SPACEX',
-      type: 'Buy',
-      account: accounts[0],
-      time: times[Math.floor(Math.random() * times.length)],
-    })
+  // For very small amounts (< 0.01), show more precision
+  if (numValue < 0.01 && numValue > 0) {
+    return formatBigNumber(bigNum, { minimumFractionDigits: 2, maximumFractionDigits: 6 })
   }
 
-  return items
+  // For regular amounts, show 2 decimal places
+  return formatBigNumber(bigNum, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-const rawUserTradeHistory = generateUserTradeHistory()
+/**
+ * Format block time to readable date with time
+ */
+function formatBlockTimeWithTime(blockTime: number): string {
+  const date = new Date(blockTime * 1000)
+  const now = new Date()
+  const isToday = date.toDateString() === now.toDateString()
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const isYesterday = date.toDateString() === yesterday.toDateString()
+
+  const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+
+  if (isToday) {
+    return `Today at ${timeStr}`
+  } else if (isYesterday) {
+    return `Yesterday at ${timeStr}`
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ` at ${timeStr}`
+  }
+}
+
+/**
+ * Format wallet address for display
+ */
+function formatWalletAddress(address: string): string {
+  if (address.length <= 12) return address
+  return `${address.slice(0, 6)}...${address.slice(-4)}`
+}
+
+// ============ Market Data API Functions ============
+
+/**
+ * Get market overview statistics for the stats cards
+ */
+export async function getMarketStats(): Promise<MarketStatsData> {
+  const [stats, marketCapData] = await Promise.all([
+    fetchDashboardStats(),
+    fetchTotalMarketCap(),
+  ])
+
+  // Convert market cap from 18-decimal Hasura format
+  let totalMarketCap = 0
+  let assetsTokenized = 0
+  if (marketCapData) {
+    totalMarketCap = BigNumber.toNumber(fromHasuraToNative(marketCapData.total_market_cap))
+    assetsTokenized = Number(marketCapData.token_count) || 0
+  }
+
+  return {
+    totalMarketCap,
+    totalTradingVolume: stats.totalTradingVolume,
+    activeTraders: stats.totalTraders,
+    assetsTokenized,
+  }
+}
+
+// ============ Token Registry ============
+// Static metadata for tokens (not available in GraphQL)
+// This could be moved to a separate config file as more tokens are added
+
+interface TokenMetadata {
+  id: string
+  symbol: string
+  name: string
+  code: string
+  sector: string
+  mint: string
+}
+
+const TOKEN_REGISTRY: Record<string, TokenMetadata> = {
+  // TESS token on DevNet
+  '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj': {
+    id: 'tess',
+    symbol: 'TESS',
+    name: 'TESS',
+    code: 'TESS-001',
+    sector: 'DeFi',
+    mint: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj',
+  },
+}
+
+/**
+ * Format market cap to human-readable valuation string
+ */
+function formatValuation(value: number): string {
+  if (value >= 1_000_000_000_000) {
+    return `$${(value / 1_000_000_000_000).toFixed(1)}T`
+  }
+  if (value >= 1_000_000_000) {
+    return `$${(value / 1_000_000_000).toFixed(1)}B`
+  }
+  if (value >= 1_000_000) {
+    return `$${(value / 1_000_000).toFixed(1)}M`
+  }
+  if (value >= 1_000) {
+    return `$${(value / 1_000).toFixed(1)}K`
+  }
+  return `$${value.toFixed(2)}`
+}
+
+/**
+ * Get list of tokenized assets for the assets table
+ * Fetches real data from GraphQL and merges with token metadata
+ */
+export async function getTokenizedAssets(): Promise<AssetData[]> {
+  const tokenDetails = await fetchAllTokenDetails()
+
+  if (tokenDetails.length === 0) {
+    return []
+  }
+
+  return tokenDetails.map((token) => {
+    const metadata = TOKEN_REGISTRY[token.token]
+    const price = BigNumber.toNumber(fromHasuraToNative(token.price))
+    const marketCap = BigNumber.toNumber(fromHasuraToNative(token.market_cap))
+    const holders = Number(token.holder_count) || 0
+
+    // If we have metadata for this token, use it; otherwise create generic entry
+    if (metadata) {
+      return {
+        id: metadata.id,
+        symbol: metadata.symbol,
+        name: metadata.name,
+        code: metadata.code,
+        sector: metadata.sector,
+        price,
+        holders,
+        valuation: formatValuation(marketCap),
+      }
+    }
+
+    // Fallback for unknown tokens
+    const shortMint = `${token.token.slice(0, 4)}...${token.token.slice(-4)}`
+    return {
+      id: token.token,
+      symbol: shortMint,
+      name: shortMint,
+      code: token.token.slice(0, 8),
+      sector: 'Unknown',
+      price,
+      holders,
+      valuation: formatValuation(marketCap),
+    }
+  })
+}
 
 // ============ API Functions ============
 
+/**
+ * Format large number to human-readable string (e.g., 107958426 -> "107.96M")
+ */
+function formatSupply(value: number): string {
+  if (value >= 1_000_000_000) {
+    return `${(value / 1_000_000_000).toFixed(2)}B`
+  }
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(2)}M`
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(2)}K`
+  }
+  return value.toFixed(0)
+}
+
+/**
+ * Get dashboard stats including real token price and supply from backend
+ */
 export async function getDashboardStats(): Promise<DashboardStats> {
-  await sleep(300)
-  return dashboardStats
+  const poolAddress = DEVNET_POOLS['TESS-USDC'].address
+  const tokenMint = DEVNET_POOLS['TESS-USDC'].tokenX.mint
+
+  const [events, tokenData] = await Promise.all([
+    fetchSwapEventsForPrice(poolAddress, 10),
+    fetchTokenMarketCap(tokenMint),
+  ])
+
+  let tokenPrice = 0
+  if (events.length > 0) {
+    // Get price from most recent swap
+    const latestEvent = events[events.length - 1]
+    const x = fromHasuraToNative(latestEvent.amount_x)
+    const y = fromHasuraToNative(latestEvent.amount_y)
+    if (mathIs`${x} > ${0}`) {
+      tokenPrice = BigNumber.toNumber(math`${y} / ${x}`)
+    }
+  }
+
+  // Get circulating supply from token market cap data
+  let tokenSupply = dashboardStats.tokenSupply
+  if (tokenData) {
+    const supplyValue = BigNumber.toNumber(fromHasuraToNative(tokenData.circulating_supply))
+    tokenSupply = formatSupply(supplyValue)
+  }
+
+  return {
+    ...dashboardStats,
+    tokenPrice: tokenPrice > 0 ? tokenPrice : dashboardStats.tokenPrice,
+    tokenSupply,
+  }
 }
 
+/**
+ * Get token info with real price data from swap events
+ */
 export async function getDashboardTokenInfo(): Promise<TokenInfo> {
-  await sleep(400)
-  return tokenInfo
+  const poolAddress = DEVNET_POOLS['TESS-USDC'].address
+  const events = await fetchSwapEventsForPrice(poolAddress, 100)
+
+  if (events.length === 0) {
+    return tokenInfo
+  }
+
+  // Get latest price from most recent swap
+  const latestEvent = events[events.length - 1]
+  const x = fromHasuraToNative(latestEvent.amount_x)
+  const y = fromHasuraToNative(latestEvent.amount_y)
+  let currentPrice = 0
+  if (mathIs`${x} > ${0}`) {
+    currentPrice = BigNumber.toNumber(math`${y} / ${x}`)
+  }
+
+  if (currentPrice === 0) {
+    return tokenInfo
+  }
+
+  // Calculate 24h change by finding price 24h ago
+  const now = Math.floor(Date.now() / 1000)
+  const dayAgo = now - 24 * 60 * 60
+
+  let price24hAgo = currentPrice
+  for (const event of events) {
+    if (event.block_time <= dayAgo) {
+      const eventX = fromHasuraToNative(event.amount_x)
+      const eventY = fromHasuraToNative(event.amount_y)
+      if (mathIs`${eventX} > ${0}`) {
+        price24hAgo = BigNumber.toNumber(math`${eventY} / ${eventX}`)
+      }
+    } else {
+      break
+    }
+  }
+
+  const priceChange24h = currentPrice - price24hAgo
+  const priceChangePercent24h = price24hAgo !== 0 ? (priceChange24h / price24hAgo) * 100 : 0
+
+  return {
+    ...tokenInfo,
+    price: currentPrice,
+    priceChange24h,
+    priceChangePercent24h,
+  }
 }
 
+/**
+ * Calculate price from swap event amounts
+ * For TESS-USDC pool: price = amount_y (USDC) / amount_x (TESS)
+ */
+function calculatePriceFromSwap(amountX: string, amountY: string): BigNumberValue {
+  const x = fromHasuraToNative(amountX)
+  const y = fromHasuraToNative(amountY)
+
+  // Avoid division by zero
+  if (mathIs`${x} === ${0}`) {
+    return BigNumber.from(0)
+  }
+
+  return math`${y} / ${x}`
+}
+
+/**
+ * Get dashboard statistics with 24h OHLC data calculated from swap events
+ */
 export async function getDashboardStatistics(): Promise<TokenStatistics> {
-  await sleep(300)
-  return tokenStatistics
+  const poolAddress = DEVNET_POOLS['TESS-USDC'].address
+  const swapEvents = await fetchSwapEventsLast24h(poolAddress)
+
+  if (swapEvents.length === 0) {
+    // No swap events in last 24h, return default values
+    return {
+      tokenPrice24h: {
+        open: 0,
+        high: 0,
+        low: 0,
+      },
+      underlyingAssetPrice24h: {
+        open: 0,
+        high: 0,
+        low: 0,
+      },
+    }
+  }
+
+  // Calculate prices for each swap event
+  const prices: number[] = swapEvents.map((event) => {
+    const price = calculatePriceFromSwap(event.amount_x, event.amount_y)
+    return BigNumber.toNumber(price)
+  }).filter((price) => price > 0) // Filter out zero prices
+
+  if (prices.length === 0) {
+    return {
+      tokenPrice24h: {
+        open: 0,
+        high: 0,
+        low: 0,
+      },
+      underlyingAssetPrice24h: {
+        open: 0,
+        high: 0,
+        low: 0,
+      },
+    }
+  }
+
+  // Events are already sorted by block_time ascending, so first is open
+  const openPrice = prices[0]
+  const highPrice = Math.max(...prices)
+  const lowPrice = Math.min(...prices)
+
+  return {
+    tokenPrice24h: {
+      open: openPrice,
+      high: highPrice,
+      low: lowPrice,
+    },
+    // For now, underlying asset price mirrors token price
+    // TODO: Fetch actual underlying asset price when available
+    underlyingAssetPrice24h: {
+      open: openPrice,
+      high: highPrice,
+      low: lowPrice,
+    },
+  }
 }
 
-export async function getUserDashboard(): Promise<UserDashboard> {
-  await sleep(300)
-  return userDashboard
+/**
+ * Get user dashboard data including balances
+ */
+export async function getUserDashboard(walletAddress?: string): Promise<UserDashboard> {
+  if (!walletAddress) {
+    // Return default/empty data when no wallet connected
+    return {
+      balance: 0,
+      tokenBalance: 0,
+      tokenSymbol: 'T-SPACEX',
+      tokenName: 'T-SPACEX Token',
+      healthFactor: 100,
+    }
+  }
+
+  // Get devnet RPC connection
+  const DEVNET_RPC_URL = import.meta.env.VITE_DEVNET_RPC_URL || clusterApiUrl('devnet')
+  const connection = new Connection(DEVNET_RPC_URL, 'confirmed')
+  const publicKey = new PublicKey(walletAddress)
+
+  // Get USDC balance (this represents user's USD balance)
+  let usdcBalance = 0
+  try {
+    const usdcMint = new PublicKey(DEVNET_POOLS['TESS-USDC'].tokenY.mint)
+    const usdcAta = await getAssociatedTokenAddress(usdcMint, publicKey)
+    const usdcAccount = await getAccount(connection, usdcAta)
+    const usdcBigNum = fromTokenAmount(usdcAccount.amount.toString(), DEVNET_POOLS['TESS-USDC'].tokenY.decimals)
+    usdcBalance = BigNumber.toNumber(usdcBigNum)
+  } catch {
+    // Token account doesn't exist, balance is 0
+    usdcBalance = 0
+  }
+
+  // Get TESS token balance (Token-2022)
+  let tessBalance = 0
+  try {
+    const tessMint = new PublicKey(DEVNET_POOLS['TESS-USDC'].tokenX.mint)
+    const tessAta = await getAssociatedTokenAddress(
+      tessMint,
+      publicKey,
+      false,
+      TOKEN_2022_PROGRAM_ID
+    )
+    const tessAccount = await getAccount(connection, tessAta, 'confirmed', TOKEN_2022_PROGRAM_ID)
+    const tessBigNum = fromTokenAmount(tessAccount.amount.toString(), DEVNET_POOLS['TESS-USDC'].tokenX.decimals)
+    tessBalance = BigNumber.toNumber(tessBigNum)
+  } catch {
+    // Token account doesn't exist, balance is 0
+    tessBalance = 0
+  }
+
+  return {
+    balance: usdcBalance,
+    tokenBalance: tessBalance,
+    tokenSymbol: 'T-SPACEX',
+    tokenName: 'T-SPACEX Token',
+    healthFactor: 100, // TODO: Calculate health factor based on actual metrics
+  }
 }
 
-export async function getUserTradeHistory(page: number = 1, pageSize: number = 10): Promise<UserTradeHistoryResponse> {
-  await sleep(500)
-  const start = (page - 1) * pageSize
-  const items = rawUserTradeHistory.slice(start, start + pageSize)
-  const total = rawUserTradeHistory.length
+/**
+ * Get user-specific trade history from GraphQL
+ */
+export async function getUserTradeHistory(
+  walletAddress: string | undefined,
+  page: number = 1,
+  pageSize: number = 10
+): Promise<UserTradeHistoryResponse> {
+  if (!walletAddress) {
+    // Return empty data if no wallet connected
+    return {
+      items: [],
+      total: 0,
+      page,
+      pageSize,
+      totalPages: 0,
+    }
+  }
+
+  const offset = (page - 1) * pageSize
+  const { events, total } = await fetchUserSwapEvents(walletAddress, pageSize, offset)
+
+  // Transform swap events to trade history items
+  const items: UserTradeHistoryItem[] = events.map((event) => {
+    const isBuy = event.type === 'swap-y-for-x' // USDC -> Token is a buy
+
+    // Format amounts using BigNumber utilities
+    const amountX = formatSwapAmount(event.amount_x)
+    const amountY = formatSwapAmount(event.amount_y)
+
+    return {
+      id: `${event.signature}-${event.block_time}`,
+      token: 'T-SPACEX', // TODO: Map mint addresses to token symbols
+      amountIn: isBuy ? `${amountY} USDC` : `${amountX} T-SPACEX`,
+      amountOut: isBuy ? `${amountX} T-SPACEX` : `${amountY} USDC`,
+      type: isBuy ? 'Buy' : 'Sell',
+      account: formatWalletAddress(event.sender),
+      time: formatBlockTimeWithTime(event.block_time),
+    }
+  })
+
   const totalPages = Math.ceil(total / pageSize)
 
   return {

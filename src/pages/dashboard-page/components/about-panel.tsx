@@ -15,11 +15,11 @@ export function AboutPanel() {
   const displayDescription = showMore ? description : description
 
   return (
-    <div className="bg-white dark:bg-[#1e1f20] rounded-2xl p-4 lg:p-6">
-      <h2 className="text-lg font-normal text-foreground dark:text-[#d2d2d2] mb-4 lg:mb-6">About</h2>
+    <div className="bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl p-4 lg:p-6">
+      <h2 className="text-sm lg:text-base font-semibold text-black dark:text-[#d2d2d2] mb-4 lg:mb-6">About</h2>
 
       {/* Description */}
-      <p className="text-sm text-foreground dark:text-[#d2d2d2] leading-5 mb-6">
+      <p className="text-sm text-black dark:text-[#d2d2d2] leading-5 mb-6">
         {displayDescription}{' '}
         <button
           onClick={() => setShowMore(!showMore)}
@@ -35,20 +35,20 @@ export function AboutPanel() {
         <div className="flex flex-col">
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
           <div className="flex items-center justify-between py-2.5">
-            <span className="text-sm text-foreground dark:text-[#d2d2d2]">Supported Chains</span>
+            <span className="text-xs lg:text-sm text-[#999]">Supported Chains</span>
             <div className="flex items-center gap-1.5">
               <SolanaIcon className="w-6 h-6" />
-              <span className="text-sm text-foreground dark:text-[#d2d2d2]">Solana</span>
+              <span className="text-sm lg:text-base text-black dark:text-[#d2d2d2]">Solana</span>
             </div>
           </div>
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
           <div className="flex items-center justify-between py-2.5">
-            <span className="text-sm text-foreground dark:text-[#d2d2d2]">Onchain Address</span>
+            <span className="text-xs lg:text-sm text-[#999]">Onchain Address</span>
             <div className="flex items-center gap-1.5">
               <SolanaIcon className="w-6 h-6" />
-              <span className="text-sm text-foreground dark:text-[#d2d2d2]">{tokenInfo?.onchainAddress ?? '0x...'}</span>
+              <span className="text-sm lg:text-base text-black dark:text-[#d2d2d2]">{tokenInfo?.onchainAddress ?? '0x...'}</span>
               <svg
-                className="w-4 h-4 opacity-50 dark:text-[#d2d2d2]"
+                className="w-4 h-4 opacity-50 text-black dark:text-[#d2d2d2]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -59,7 +59,7 @@ export function AboutPanel() {
           </div>
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
           <div className="flex items-center justify-between py-2.5">
-            <span className="text-sm text-foreground dark:text-[#d2d2d2]">Category</span>
+            <span className="text-xs lg:text-sm text-[#999]">Category</span>
             <div className="flex items-center gap-2.5">
               {tokenInfo?.categories.map((category) => (
                 <span
@@ -78,18 +78,18 @@ export function AboutPanel() {
         <div className="flex flex-col">
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
           <div className="flex items-center justify-between py-2.5">
-            <span className="text-sm text-foreground dark:text-[#d2d2d2]">Underlying Asset Name</span>
-            <span className="text-sm text-foreground dark:text-[#d2d2d2]">{tokenInfo?.underlyingAssetName ?? '-'}</span>
+            <span className="text-xs lg:text-sm text-[#999]">Underlying Asset Name</span>
+            <span className="text-sm lg:text-base text-black dark:text-[#d2d2d2]">{tokenInfo?.underlyingAssetName ?? '-'}</span>
           </div>
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
           <div className="flex items-center justify-between py-2.5">
-            <span className="text-sm text-foreground dark:text-[#d2d2d2]">Underlying Asset Company</span>
-            <span className="text-sm text-foreground dark:text-[#d2d2d2]">{tokenInfo?.underlyingAssetCompany ?? '-'}</span>
+            <span className="text-xs lg:text-sm text-[#999]">Underlying Asset Company</span>
+            <span className="text-sm lg:text-base text-black dark:text-[#d2d2d2]">{tokenInfo?.underlyingAssetCompany ?? '-'}</span>
           </div>
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
           <div className="flex items-center justify-between py-2.5">
-            <span className="text-sm text-foreground dark:text-[#d2d2d2]">Shares Per Token</span>
-            <span className="text-sm text-foreground dark:text-[#d2d2d2]">{tokenInfo?.sharesPerToken ?? '-'}</span>
+            <span className="text-xs lg:text-sm text-[#999]">Shares Per Token</span>
+            <span className="text-sm lg:text-base text-black dark:text-[#d2d2d2]">{tokenInfo?.sharesPerToken ?? '-'}</span>
           </div>
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
         </div>

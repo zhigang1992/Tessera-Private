@@ -5,7 +5,6 @@
 import { fromHasuraToNative, BigNumber, type BigNumberSource } from '@/lib/bignumber'
 
 const GRAPHQL_ENDPOINT = 'https://tracker-gql-dev.tessera.fun/v1/graphql'
-const HASURA_ADMIN_SECRET = 'xRkifHbnNykgVkQ6r7Ns'
 
 /**
  * Convert Hasura 18-decimal numeric value to native number
@@ -136,7 +135,6 @@ async function graphqlRequest<T>(query: string, variables?: Record<string, unkno
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-hasura-admin-secret': HASURA_ADMIN_SECRET,
     },
     body: JSON.stringify({
       query,
@@ -390,6 +388,102 @@ export async function fetchGlobalReferralStats(limit: number = 10, offset: numbe
   }>(query, { limit, offset })
 }
 
+// ============ Trading Leaderboard ============
+
+export interface TradingVolumeByAccount {
+  account: string
+  total_volume: string // numeric from GraphQL (18 decimals)
+}
+
+/**
+ * Fetch trading volume leaderboard
+ */
+export async function fetchTradingVolumeLeaderboard(
+  limit: number = 10,
+  offset: number = 0
+): Promise<{ items: TradingVolumeByAccount[]; total: number }> {
+  const query = `
+    query GetTradingVolumeLeaderboard($limit: Int!, $offset: Int!) {
+      public_marts_total_trading_volume_by_account(
+        limit: $limit
+        offset: $offset
+        order_by: { total_volume: desc }
+      ) {
+        account
+        total_volume
+      }
+      public_marts_total_trading_volume_by_account_aggregate {
+        aggregate {
+          count
+        }
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_total_trading_volume_by_account: TradingVolumeByAccount[]
+    public_marts_total_trading_volume_by_account_aggregate: { aggregate: { count: number } }
+  }>(query, { limit, offset })
+
+  return {
+    items: data.public_marts_total_trading_volume_by_account,
+    total: data.public_marts_total_trading_volume_by_account_aggregate.aggregate.count,
+  }
+}
+
+/**
+ * Fetch a specific user's trading volume rank
+ */
+export async function fetchUserTradingVolumeRank(
+  walletAddress: string
+): Promise<{ rank: number; totalVolume: number } | null> {
+  // First, get the user's total volume
+  const userQuery = `
+    query GetUserTradingVolume($account: String!) {
+      public_marts_total_trading_volume_by_account(
+        where: { account: { _eq: $account } }
+      ) {
+        account
+        total_volume
+      }
+    }
+  `
+
+  const userData = await graphqlRequest<{
+    public_marts_total_trading_volume_by_account: TradingVolumeByAccount[]
+  }>(userQuery, { account: walletAddress })
+
+  if (userData.public_marts_total_trading_volume_by_account.length === 0) {
+    return null
+  }
+
+  const userVolume = userData.public_marts_total_trading_volume_by_account[0].total_volume
+
+  // Count how many accounts have higher volume to determine rank
+  const rankQuery = `
+    query GetUserRank($volume: numeric!) {
+      public_marts_total_trading_volume_by_account_aggregate(
+        where: { total_volume: { _gt: $volume } }
+      ) {
+        aggregate {
+          count
+        }
+      }
+    }
+  `
+
+  const rankData = await graphqlRequest<{
+    public_marts_total_trading_volume_by_account_aggregate: { aggregate: { count: number } }
+  }>(rankQuery, { volume: userVolume })
+
+  const rank = rankData.public_marts_total_trading_volume_by_account_aggregate.aggregate.count + 1
+
+  return {
+    rank,
+    totalVolume: hasuraToNumber(userVolume),
+  }
+}
+
 /**
  * Fetch swap events for trade history with pagination
  */
@@ -437,4 +531,526 @@ export async function fetchSwapEvents(
     events: data.facts_meteora_token_swap_events,
     total: data.facts_meteora_token_swap_events_aggregate.aggregate.count,
   }
+}
+
+// Dashboard statistics types
+export interface DashboardStatsResult {
+  totalTradingVolume: number
+  totalTraders: number
+}
+
+/**
+ * Fetch dashboard statistics: total trading volume and active traders
+ */
+export async function fetchDashboardStats(): Promise<DashboardStatsResult> {
+  const query = `
+    query GetDashboardStats {
+      public_marts_attributed_trading_volume_by_code_account_aggregate {
+        aggregate {
+          sum {
+            total_volume
+          }
+        }
+      }
+      facts_referral_system_user_registered_events_aggregate {
+        aggregate {
+          count
+        }
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_attributed_trading_volume_by_code_account_aggregate: {
+      aggregate: {
+        sum: {
+          total_volume: string | null
+        }
+      }
+    }
+    facts_referral_system_user_registered_events_aggregate: {
+      aggregate: {
+        count: number
+      }
+    }
+  }>(query)
+
+  const totalVolume = data.public_marts_attributed_trading_volume_by_code_account_aggregate.aggregate.sum.total_volume
+
+  return {
+    totalTradingVolume: totalVolume ? hasuraToNumber(totalVolume) : 0,
+    totalTraders: data.facts_referral_system_user_registered_events_aggregate.aggregate.count,
+  }
+}
+
+/**
+ * Fetch user-specific swap events (trade history) with pagination
+ */
+export async function fetchUserSwapEvents(
+  userAddress: string,
+  limit: number = 10,
+  offset: number = 0
+): Promise<{ events: MeteoraSwapEvent[]; total: number }> {
+  const query = `
+    query GetUserSwapEvents($sender: String!, $limit: Int!, $offset: Int!) {
+      facts_meteora_token_swap_events(
+        where: { sender: { _eq: $sender } }
+        limit: $limit
+        offset: $offset
+        order_by: { block_time: desc }
+      ) {
+        signature
+        sender
+        mint_x
+        mint_y
+        amount_x
+        amount_y
+        type
+        block_time
+        pool_address
+      }
+      facts_meteora_token_swap_events_aggregate(where: { sender: { _eq: $sender } }) {
+        aggregate {
+          count
+        }
+      }
+    }
+  `
+
+  const data = await graphqlRequest<SwapEventsQueryResult>(query, {
+    sender: userAddress,
+    limit,
+    offset,
+  })
+
+  return {
+    events: data.facts_meteora_token_swap_events,
+    total: data.facts_meteora_token_swap_events_aggregate.aggregate.count,
+  }
+}
+
+export interface UserTradingVolumeResult {
+  totalVolumeUsd: number
+}
+
+/**
+ * Fetch user's total trading volume (sum of USDC amounts from all swaps)
+ * This represents the user's own trading volume, not volume from their referrals
+ */
+export async function fetchUserTradingVolume(userAddress: string): Promise<UserTradingVolumeResult> {
+  const query = `
+    query GetUserTradingVolume($sender: String!) {
+      facts_meteora_token_swap_events_aggregate(where: { sender: { _eq: $sender } }) {
+        aggregate {
+          sum {
+            amount_y
+          }
+        }
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    facts_meteora_token_swap_events_aggregate: {
+      aggregate: {
+        sum: {
+          amount_y: string | null
+        }
+      }
+    }
+  }>(query, { sender: userAddress })
+
+  const totalVolumeRaw = data.facts_meteora_token_swap_events_aggregate.aggregate.sum.amount_y
+
+  return {
+    totalVolumeUsd: totalVolumeRaw ? hasuraToNumber(totalVolumeRaw) : 0,
+  }
+}
+
+// ============ Token Price Data ============
+
+export interface TokenPriceDaily {
+  date: string
+  day_timestamp: number
+  price: string // numeric from GraphQL
+  token: string
+}
+
+export interface TokenPrice24hOHLC {
+  token: string
+  open_price_24h: string | null
+  high_price_24h: string | null
+  low_price_24h: string | null
+  close_price_24h: string | null
+  price_change_24h: string | null
+  price_change_pct_24h: string | null
+  swap_count_24h: number | null
+}
+
+interface TokenPricesQueryResult {
+  public_marts_token_prices_daily: TokenPriceDaily[]
+}
+
+interface TokenPrice24hQueryResult {
+  public_marts_token_prices_24h_ohlc: TokenPrice24hOHLC[]
+}
+
+interface SwapEventsForPriceQueryResult {
+  facts_meteora_token_swap_events: Array<{
+    block_time: number
+    amount_x: string
+    amount_y: string
+    type: string
+  }>
+}
+
+/**
+ * Fetch daily price data for a token
+ */
+export async function fetchTokenPricesDaily(
+  tokenMint: string,
+  limit: number = 365
+): Promise<TokenPriceDaily[]> {
+  const query = `
+    query GetTokenPricesDaily($token: String!, $limit: Int!) {
+      public_marts_token_prices_daily(
+        where: { token: { _eq: $token } }
+        order_by: { day_timestamp: desc }
+        limit: $limit
+      ) {
+        date
+        day_timestamp
+        price
+        token
+      }
+    }
+  `
+
+  const data = await graphqlRequest<TokenPricesQueryResult>(query, {
+    token: tokenMint,
+    limit,
+  })
+
+  return data.public_marts_token_prices_daily
+}
+
+/**
+ * Fetch 24h OHLC data for a token
+ */
+export async function fetchTokenPrice24hOHLC(
+  tokenMint: string
+): Promise<TokenPrice24hOHLC | null> {
+  const query = `
+    query GetTokenPrice24hOHLC($token: String!) {
+      public_marts_token_prices_24h_ohlc(
+        where: { token: { _eq: $token } }
+        limit: 1
+      ) {
+        token
+        open_price_24h
+        high_price_24h
+        low_price_24h
+        close_price_24h
+        price_change_24h
+        price_change_pct_24h
+        swap_count_24h
+      }
+    }
+  `
+
+  const data = await graphqlRequest<TokenPrice24hQueryResult>(query, {
+    token: tokenMint,
+  })
+
+  return data.public_marts_token_prices_24h_ohlc[0] ?? null
+}
+
+/**
+ * Fetch swap events for price chart (ordered by time)
+ * Returns events that can be used to calculate price at each swap
+ */
+export async function fetchSwapEventsForPrice(
+  poolAddress: string,
+  limit: number = 500
+): Promise<Array<{ block_time: number; amount_x: string; amount_y: string; type: string }>> {
+  const query = `
+    query GetSwapEventsForPrice($poolAddress: String!, $limit: Int!) {
+      facts_meteora_token_swap_events(
+        where: { pool_address: { _eq: $poolAddress } }
+        order_by: { block_time: asc }
+        limit: $limit
+      ) {
+        block_time
+        amount_x
+        amount_y
+        type
+      }
+    }
+  `
+
+  const data = await graphqlRequest<SwapEventsForPriceQueryResult>(query, {
+    poolAddress,
+    limit,
+  })
+
+  return data.facts_meteora_token_swap_events
+}
+
+/**
+ * Fetch swap events from the last 24 hours for OHLC calculation
+ */
+export async function fetchSwapEventsLast24h(
+  poolAddress: string
+): Promise<Array<{ block_time: number; amount_x: string; amount_y: string; type: string }>> {
+  // Calculate timestamp for 24 hours ago
+  const now = Math.floor(Date.now() / 1000)
+  const twentyFourHoursAgo = now - 24 * 60 * 60
+
+  const query = `
+    query GetSwapEventsLast24h($poolAddress: String!, $since: Int!) {
+      facts_meteora_token_swap_events(
+        where: {
+          pool_address: { _eq: $poolAddress }
+          block_time: { _gte: $since }
+        }
+        order_by: { block_time: asc }
+      ) {
+        block_time
+        amount_x
+        amount_y
+        type
+      }
+    }
+  `
+
+  const data = await graphqlRequest<SwapEventsForPriceQueryResult>(query, {
+    poolAddress,
+    since: twentyFourHoursAgo,
+  })
+
+  return data.facts_meteora_token_swap_events
+}
+
+// ============ Market Cap & Token Stats ============
+
+export interface TotalMarketCapData {
+  latest_price_block: number
+  token_count: number
+  total_market_cap: string // numeric from GraphQL (18 decimals)
+}
+
+export interface TokenMarketCapData {
+  token: string
+  circulating_supply: string // numeric from GraphQL (18 decimals)
+  market_cap: string // numeric from GraphQL (18 decimals)
+  price: string // numeric from GraphQL (18 decimals)
+}
+
+/**
+ * Fetch total market cap and assets tokenized count
+ */
+export async function fetchTotalMarketCap(): Promise<TotalMarketCapData | null> {
+  const query = `
+    query GetTotalMarketCap {
+      public_marts_total_market_cap(limit: 1) {
+        latest_price_block
+        token_count
+        total_market_cap
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_total_market_cap: TotalMarketCapData[]
+  }>(query)
+
+  return data.public_marts_total_market_cap[0] ?? null
+}
+
+/**
+ * Fetch token market cap data for a specific token
+ */
+export async function fetchTokenMarketCap(tokenMint: string): Promise<TokenMarketCapData | null> {
+  const query = `
+    query GetTokenMarketCap($token: String!) {
+      public_marts_token_market_cap(where: { token: { _eq: $token } }, limit: 1) {
+        token
+        circulating_supply
+        market_cap
+        price
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_token_market_cap: TokenMarketCapData[]
+  }>(query, { token: tokenMint })
+
+  return data.public_marts_token_market_cap[0] ?? null
+}
+
+/**
+ * Fetch all token market cap data
+ */
+export async function fetchAllTokenMarketCaps(): Promise<TokenMarketCapData[]> {
+  const query = `
+    query GetAllTokenMarketCaps {
+      public_marts_token_market_cap {
+        token
+        circulating_supply
+        market_cap
+        price
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_token_market_cap: TokenMarketCapData[]
+  }>(query)
+
+  return data.public_marts_token_market_cap
+}
+
+// ============ Token Details (with holder count) ============
+
+export interface TokenDetailsData {
+  token: string
+  circulating_supply: string // numeric from GraphQL (18 decimals)
+  holder_count: number // bigint from GraphQL
+  market_cap: string // numeric from GraphQL (18 decimals)
+  price: string // numeric from GraphQL (18 decimals)
+  price_block: number // bigint from GraphQL
+}
+
+/**
+ * Fetch all token details including holder count
+ */
+export async function fetchAllTokenDetails(): Promise<TokenDetailsData[]> {
+  const query = `
+    query GetAllTokenDetails {
+      public_marts_token_details {
+        token
+        circulating_supply
+        holder_count
+        market_cap
+        price
+        price_block
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_token_details: TokenDetailsData[]
+  }>(query)
+
+  return data.public_marts_token_details
+}
+
+// ============ Auction Data ============
+
+export interface AuctionTotalRaisedData {
+  pool: string
+  total_raised_amount: string // numeric from GraphQL (18 decimals)
+}
+
+export interface EscrowDepositEvent {
+  amount: string // numeric from GraphQL (18 decimals)
+  block_time: number
+  owner: string
+  pool: string
+  signature: string
+}
+
+/**
+ * Fetch total raised amount for an auction pool
+ */
+export async function fetchAuctionTotalRaised(poolAddress: string): Promise<AuctionTotalRaisedData | null> {
+  const query = `
+    query GetAuctionTotalRaised($pool: String!) {
+      public_marts_auction_total_raised(where: { pool: { _eq: $pool } }, limit: 1) {
+        pool
+        total_raised_amount
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_auction_total_raised: AuctionTotalRaisedData[]
+  }>(query, { pool: poolAddress })
+
+  return data.public_marts_auction_total_raised[0] ?? null
+}
+
+/**
+ * Fetch all escrow deposit events for an auction pool (for chart data)
+ * Returns events ordered by block_time ascending
+ */
+export async function fetchAuctionDepositEvents(
+  poolAddress: string,
+  limit: number = 1000
+): Promise<EscrowDepositEvent[]> {
+  const query = `
+    query GetAuctionDepositEvents($pool: String!, $limit: Int!) {
+      facts_meteora_escrow_deposited_events(
+        where: { pool: { _eq: $pool } }
+        order_by: { block_time: asc }
+        limit: $limit
+      ) {
+        amount
+        block_time
+        owner
+        pool
+        signature
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    facts_meteora_escrow_deposited_events: EscrowDepositEvent[]
+  }>(query, { pool: poolAddress, limit })
+
+  return data.facts_meteora_escrow_deposited_events
+}
+
+// ============ Reward Details by Code/Referral ============
+
+export interface FeeByToken {
+  fee: string // numeric from GraphQL (18 decimals)
+  mint: string
+}
+
+export interface RewardDetailByCodeReferral {
+  code: string
+  referral: string
+  tier: number
+  total_rewards_usd: string // numeric from GraphQL (18 decimals)
+  fees_by_token: FeeByToken[] | null // jsonb array of {fee, mint}
+}
+
+/**
+ * Fetch reward details for all referrals under a specific code
+ * Returns reward data per referral (user) for the given code
+ */
+export async function fetchRewardDetailsByCode(
+  code: string
+): Promise<RewardDetailByCodeReferral[]> {
+  const query = `
+    query GetRewardDetailsByCode($code: String!) {
+      public_marts_reward_detail_by_code_referral(
+        where: { code: { _eq: $code } }
+      ) {
+        code
+        referral
+        tier
+        total_rewards_usd
+        fees_by_token
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_reward_detail_by_code_referral: RewardDetailByCodeReferral[]
+  }>(query, { code })
+
+  return data.public_marts_reward_detail_by_code_referral
 }

@@ -68,16 +68,16 @@ export function TransparencyPanel() {
       {/* Top Row - Two Panels Side by Side */}
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
         {/* Custodian Attestations Panel */}
-        <div className="flex-1 bg-white dark:bg-[#1e1f20] rounded-2xl p-4 lg:p-6">
+        <div className="flex-1 bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl p-4 lg:p-6">
           <div className="flex flex-col gap-4 lg:gap-6">
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
               <div>
-                <h3 className="text-lg font-normal text-foreground dark:text-white">Custodian Attestations</h3>
-                <p className="text-xs text-muted-foreground dark:text-white">Last Updated: {transparencyData?.lastUpdated}</p>
+                <h3 className="text-base font-semibold text-foreground dark:text-white">Custodian Attestations</h3>
+                <p className="text-xs text-muted-foreground dark:text-[#d2d2d2]">Last Updated: {transparencyData?.lastUpdated}</p>
               </div>
               {/* Year Filter Tabs */}
-              <div className="flex items-center gap-1 p-1 bg-zinc-200 dark:bg-[#141516] rounded-lg w-fit">
+              <div className="flex items-center gap-1 p-1 bg-zinc-200 dark:bg-[#1e1f20] rounded-lg w-fit">
                 {(['all', 2025, 2024] as YearFilter[]).map((year) => (
                   <button
                     key={year}
@@ -85,7 +85,7 @@ export function TransparencyPanel() {
                     className={`px-4 lg:px-6 py-1 text-xs font-medium rounded transition-all ${
                       yearFilter === year
                         ? 'bg-white dark:bg-[#323334] text-foreground dark:text-white shadow-sm'
-                        : 'text-muted-foreground dark:text-white/50 hover:text-foreground'
+                        : 'text-muted-foreground dark:text-[#d2d2d2]/50 hover:text-foreground'
                     }`}
                   >
                     {year === 'all' ? 'All' : year}
@@ -102,7 +102,7 @@ export function TransparencyPanel() {
                     <a
                       key={attestation.id}
                       href={attestation.url}
-                      className="flex-1 flex items-center justify-between p-2 bg-[#f0ffda] dark:bg-[rgba(210,251,149,0.2)] rounded text-xs text-black dark:text-white hover:bg-[#e5f5cc] dark:hover:bg-[rgba(210,251,149,0.3)] transition-colors"
+                      className="flex-1 flex items-center justify-between p-2 bg-[#f0ffda] dark:bg-[rgba(210,251,149,0.2)] rounded text-xs text-foreground dark:text-white hover:bg-[#e5f5cc] dark:hover:bg-[rgba(210,251,149,0.3)] transition-colors"
                     >
                       <span>
                         {attestation.month} {attestation.year}
@@ -118,12 +118,12 @@ export function TransparencyPanel() {
         </div>
 
         {/* Proof of Reserves Panel */}
-        <div className="flex-1 bg-white dark:bg-[#1e1f20] rounded-2xl p-4 lg:p-6">
+        <div className="flex-1 bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl p-4 lg:p-6">
           <div className="flex flex-col gap-4 lg:gap-6">
             {/* Header */}
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-lg font-normal text-foreground dark:text-[#d2d2d2]">Proof of Reserves</h3>
+                <h3 className="text-base font-semibold text-foreground dark:text-[#d2d2d2]">Proof of Reserves</h3>
                 <p className="text-xs text-muted-foreground dark:text-[#d2d2d2]">Last Updated: {proofOfReserves?.lastUpdated}</p>
               </div>
               <button className="text-xs text-[#06a800] dark:text-[#d2fb95] hover:underline">Learn More</button>
@@ -185,10 +185,10 @@ export function TransparencyPanel() {
       </div>
 
       {/* Third Party Data Links Panel */}
-      <div className="bg-white dark:bg-[#1e1f20] rounded-2xl p-4 lg:p-6">
+      <div className="bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl p-4 lg:p-6">
         <div className="flex flex-col gap-4 lg:gap-6">
           {/* Header */}
-          <h3 className="text-lg font-normal text-foreground dark:text-white">Independent Third Party Data Links</h3>
+          <h3 className="text-base font-semibold text-foreground dark:text-white">Independent Third Party Data Links</h3>
 
           {/* Links Grid */}
           <div className="flex flex-col gap-2">
@@ -198,7 +198,7 @@ export function TransparencyPanel() {
                   <a
                     key={link.id}
                     href={link.url}
-                    className="flex-1 flex items-center justify-between p-2 bg-[#f0ffda] dark:bg-[rgba(210,251,149,0.2)] rounded text-xs text-black dark:text-white hover:bg-[#e5f5cc] dark:hover:bg-[rgba(210,251,149,0.3)] transition-colors"
+                    className="flex-1 flex items-center justify-between p-2 bg-[#f0ffda] dark:bg-[rgba(210,251,149,0.2)] rounded text-xs text-foreground dark:text-white hover:bg-[#e5f5cc] dark:hover:bg-[rgba(210,251,149,0.3)] transition-colors"
                   >
                     <span>{link.name}</span>
                     <ArrowOutwardIcon className="w-4 h-4" />

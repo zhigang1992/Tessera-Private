@@ -11,7 +11,7 @@ export function TokenInfoCard() {
   })
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 bg-white dark:bg-[#323334]">
       <div className="flex flex-col gap-4">
         {/* Header */}
         <div className="flex items-start gap-4">
@@ -23,7 +23,7 @@ export function TokenInfoCard() {
             <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-2 mb-1">
               <h3 className="text-xl font-semibold text-foreground">{tokenInfo?.name ?? 'Loading...'}</h3>
               <div className="flex items-center gap-2">
-                <span className="bg-[#f5f5f5] dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-semibold px-2 py-1 rounded tracking-wider">
+                <span className="bg-[#f5f5f5] dark:bg-[rgba(255,255,255,0.03)] text-[#71717a] dark:text-[#999] text-[10px] font-semibold px-2 py-1 rounded tracking-wider">
                   {tokenInfo?.type ?? '-'}
                 </span>
                 <button className="text-zinc-400 hover:text-foreground transition-colors">
@@ -49,21 +49,21 @@ export function TokenInfoCard() {
 
         {/* Info Boxes - Mobile: vertical stack, Desktop: 2 cols */}
         <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4">
-          <div className="bg-[#f6f6f6] dark:bg-zinc-900 rounded-lg p-4">
+          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3">
               <Info className="w-4 h-4 text-zinc-400" />
               <h4 className="text-sm font-semibold text-foreground">Vesting Terms</h4>
             </div>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+            <p className="text-xs text-[#71717a] dark:text-[#999] leading-relaxed">
               {tokenInfo?.vestingTerms ?? ''}
             </p>
           </div>
-          <div className="bg-[#f6f6f6] dark:bg-zinc-900 rounded-lg p-4">
+          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3">
               <Info className="w-4 h-4 text-zinc-400" />
               <h4 className="text-sm font-semibold text-foreground">Auction Mechanism</h4>
             </div>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+            <p className="text-xs text-[#71717a] dark:text-[#999] leading-relaxed">
               {tokenInfo?.auctionMechanism ?? ''}
             </p>
           </div>

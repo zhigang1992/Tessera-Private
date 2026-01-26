@@ -11,14 +11,14 @@ export function AuctionProgressCard() {
   })
 
   return (
-    <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95] border-0 p-6 h-full">
+    <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] p-6 h-full">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-            <h3 className="text-base font-semibold text-foreground">Auction Progress</h3>
+            <h3 className="text-base font-semibold text-black">Auction Progress</h3>
             <div className="flex items-center gap-1.5">
               <div className="w-2.5 h-2.5 bg-[#1d8f00] rounded-full" />
-              <span className="text-xs text-zinc-600 dark:text-zinc-400">Total Raised</span>
+              <span className="text-xs text-[#666]">Total Raised</span>
             </div>
           </div>
           <div className="flex items-center gap-2 text-[#06a800] font-bold text-sm">

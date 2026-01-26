@@ -37,7 +37,7 @@ export function AuctionHeaderCard() {
   const hasPosition = escrowInfo && parseFloat(escrowInfo.totalDeposited) > 0
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 bg-white dark:bg-[#323334]">
       <div className="flex flex-col gap-6">
         {/* Title and Badge */}
         <div className="flex items-center gap-3">
@@ -50,8 +50,8 @@ export function AuctionHeaderCard() {
         {/* Stats Grid - Mobile: vertical stack, Tablet: 2 cols, Desktop: 4 cols */}
         <div className="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Raised */}
-          <div className="bg-[#f6f6f6] dark:bg-zinc-900 rounded-lg p-4 flex flex-col gap-4">
-            <div className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 tracking-wider">
+          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col gap-4">
+            <div className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">
               TOTAL RAISED
             </div>
             <div className="flex flex-col gap-4">
@@ -64,14 +64,14 @@ export function AuctionHeaderCard() {
                 </span>
               </div>
               <div className="flex flex-col gap-2">
-                <div className="bg-zinc-200 dark:bg-zinc-800 rounded-full h-2 overflow-hidden">
+                <div className="bg-zinc-200 dark:bg-[rgba(255,255,255,0.1)] rounded-full h-2 overflow-hidden">
                   <div
                     className="bg-[#06a800] h-full rounded-full transition-all"
                     style={{ width: `${progressWidth}%` }}
                   />
                 </div>
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-zinc-600 dark:text-zinc-400">Target: ${targetRaise}</span>
+                  <span className="text-[#71717a] dark:text-[#999]">Target: ${targetRaise}</span>
                   {vaultInfo?.isOversubscribed && (
                     <span className="text-[#06a800] font-medium">
                       {oversubscribedRatio}x Oversubscribed
@@ -83,9 +83,9 @@ export function AuctionHeaderCard() {
           </div>
 
           {/* Auction Status */}
-          <div className="bg-[#f6f6f6] dark:bg-zinc-900 rounded-lg p-4 flex flex-col justify-between gap-4">
+          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col justify-between gap-4">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 tracking-wider">
+              <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">
                 VAULT STATUS
               </span>
               <div
@@ -106,7 +106,7 @@ export function AuctionHeaderCard() {
             </div>
             <div className="flex flex-col gap-2">
               <div className="flex flex-col">
-                <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                <span className="text-xs text-[#71717a] dark:text-[#999]">
                   {vaultInfo?.state === 'deposit_open' ? 'Deposits Close in' : 'Deposits Closed'}
                 </span>
                 {depositEndsIn ? (
@@ -120,7 +120,7 @@ export function AuctionHeaderCard() {
                 )}
               </div>
               <div className="flex flex-col">
-                <span className="text-xs text-zinc-600 dark:text-zinc-400">Mode</span>
+                <span className="text-xs text-[#71717a] dark:text-[#999]">Mode</span>
                 <p className="text-xs text-foreground font-medium capitalize">
                   {vaultInfo?.mode ?? '-'}
                 </p>
@@ -129,9 +129,9 @@ export function AuctionHeaderCard() {
           </div>
 
           {/* My Position */}
-          <div className="bg-[#f6f6f6] dark:bg-zinc-900 rounded-lg p-4 flex flex-col justify-between gap-4">
+          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col justify-between gap-4">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 tracking-wider">
+              <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">
                 MY POSITION
               </span>
               {hasPosition && (
@@ -143,7 +143,7 @@ export function AuctionHeaderCard() {
             {wallet.connected ? (
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-zinc-600 dark:text-zinc-400">Deposited</span>
+                  <span className="text-xs text-[#71717a] dark:text-[#999]">Deposited</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold font-mono text-foreground">
                       ${userDeposited}
@@ -159,14 +159,14 @@ export function AuctionHeaderCard() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-zinc-600 dark:text-zinc-400">Est. Alloc</span>
+                  <span className="text-xs text-[#71717a] dark:text-[#999]">Est. Alloc</span>
                   <span className="text-sm font-semibold font-mono text-foreground">
                     {estimatedAllocation} TESS
                   </span>
                 </div>
                 {vaultInfo?.mode === 'prorata' && vaultInfo?.isOversubscribed && (
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-600 dark:text-zinc-400">Est. Refund</span>
+                    <span className="text-xs text-[#71717a] dark:text-[#999]">Est. Refund</span>
                     <span className="text-sm font-semibold font-mono text-foreground">
                       ${estimatedRefund}
                     </span>
@@ -183,8 +183,8 @@ export function AuctionHeaderCard() {
           </div>
 
           {/* Token Info */}
-          <div className="bg-[#f6f6f6] dark:bg-zinc-900 rounded-lg p-4 flex flex-col justify-between gap-4">
-            <span className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 tracking-wider">
+          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col justify-between gap-4">
+            <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">
               TOKEN INFO
             </span>
             <div className="flex flex-col gap-2.5">
@@ -194,14 +194,14 @@ export function AuctionHeaderCard() {
                   Token-2022
                 </span>
               </div>
-              <div className="h-px bg-zinc-300 dark:bg-zinc-700" />
+              <div className="h-px bg-zinc-300 dark:bg-[#666]" />
               <div className="flex flex-col gap-1 text-[10px]">
                 <div className="flex items-center justify-between">
-                  <span className="text-zinc-600 dark:text-zinc-400">Quote Token</span>
+                  <span className="text-[#71717a] dark:text-[#999]">Quote Token</span>
                   <span className="font-mono text-foreground">USDC</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-zinc-600 dark:text-zinc-400">Vesting</span>
+                  <span className="text-[#71717a] dark:text-[#999]">Vesting</span>
                   <span className="font-mono text-foreground">{vestingDuration}</span>
                 </div>
               </div>

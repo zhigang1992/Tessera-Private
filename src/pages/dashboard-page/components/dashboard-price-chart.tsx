@@ -1,34 +1,42 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { createChart, ColorType, LineSeries } from 'lightweight-charts'
-import type { IChartApi, LineData, Time } from 'lightweight-charts'
-import { getPriceHistory, getDashboardTokenInfo } from '@/services'
-import TokenSpacexIcon from './_/token-spacex.svg?react'
+import { createChart, ColorType, LineStyle, AreaSeries } from 'lightweight-charts'
+import type { IChartApi, ISeriesApi, LineData, Time } from 'lightweight-charts'
+import { getDashboardStats } from '@/services'
+import { getTokenPrice, getPriceHistory, type TimeRange } from '@/services/price'
+import TokenTessIcon from '@/pages/trade-page/components/_/token-tess.svg?react'
 
-type TimeRange = '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL'
+const TOKEN_SYMBOL = 'TESS'
+const TOKEN_DISPLAY_NAME = 'TESS'
 
 export function DashboardPriceChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const seriesRef = useRef<any>(null)
+  const seriesRef = useRef<ISeriesApi<'Area'> | null>(null)
   const [selectedRange, setSelectedRange] = useState<TimeRange>('1D')
 
   const timeRanges: TimeRange[] = ['1D', '1W', '1M', '3M', '1Y', 'ALL']
 
-  // Fetch token info
+  // Fetch token price info from backend (same as trade page)
   const { data: tokenInfo } = useQuery({
-    queryKey: ['dashboardTokenInfo'],
-    queryFn: getDashboardTokenInfo,
+    queryKey: ['tokenPrice', TOKEN_SYMBOL],
+    queryFn: () => getTokenPrice(TOKEN_SYMBOL),
+    refetchInterval: 30 * 1000,
+    staleTime: 15 * 1000,
   })
 
-  // Fetch price history
+  // Fetch stats for top cards
+  const { data: stats } = useQuery({
+    queryKey: ['dashboardStats'],
+    queryFn: getDashboardStats,
+  })
+
+  // Fetch price history from backend (using TESS symbol)
   const { data: priceHistory } = useQuery({
-    queryKey: ['priceHistory', 'T-SpaceX', selectedRange],
-    queryFn: () => getPriceHistory('T-SpaceX', selectedRange),
+    queryKey: ['priceHistory', TOKEN_SYMBOL, selectedRange],
+    queryFn: () => getPriceHistory(TOKEN_SYMBOL, selectedRange),
+    staleTime: 30 * 1000,
   })
-
-  const isPositive = (tokenInfo?.priceChange24h ?? 0) >= 0
 
   // Initialize chart
   useEffect(() => {
@@ -37,15 +45,18 @@ export function DashboardPriceChart() {
     const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: '#111',
+        textColor: '#000',
         fontFamily: 'Inter, sans-serif',
       },
       grid: {
         vertLines: { visible: false },
-        horzLines: { color: 'rgba(0, 0, 0, 0.05)', style: 1 },
+        horzLines: {
+          color: 'rgba(0, 0, 0, 0.2)',
+          style: LineStyle.Dashed,
+        },
       },
       width: chartContainerRef.current.clientWidth,
-      height: 200,
+      height: 235,
       rightPriceScale: {
         borderVisible: false,
         scaleMargins: { top: 0.1, bottom: 0.1 },
@@ -63,16 +74,18 @@ export function DashboardPriceChart() {
       },
     })
 
-    const lineSeries = chart.addSeries(LineSeries, {
-      color: '#111',
-      lineWidth: 2,
+    const areaSeries = chart.addSeries(AreaSeries, {
+      lineColor: '#1D8F00',
+      lineWidth: 3,
+      topColor: 'rgba(29, 143, 0, 0.3)',
+      bottomColor: 'rgba(29, 143, 0, 0)',
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerVisible: false,
     })
 
     chartRef.current = chart
-    seriesRef.current = lineSeries
+    seriesRef.current = areaSeries
 
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
@@ -99,50 +112,119 @@ export function DashboardPriceChart() {
     }
   }, [priceHistory])
 
+  const isPositive = (tokenInfo?.priceChange24h ?? 0) >= 0
+
   return (
-    <div className="rounded-2xl p-4 lg:p-6 lg:px-6 lg:py-10 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95]">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 lg:mb-6">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2.5">
-            <TokenSpacexIcon className="w-10 h-10 lg:w-12 lg:h-12" />
-            <span className="text-sm lg:text-base font-extrabold text-black dark:text-[#d2d2d2]">
-              {tokenInfo?.name ?? 'T-SpaceX'}
-            </span>
+    <div>
+      <h2 className="font-semibold text-sm text-foreground dark:text-[#d2d2d2] mb-4">{TOKEN_DISPLAY_NAME}</h2>
+
+      <div className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] rounded-2xl p-4 lg:p-6">
+        {/* Top Stats - Desktop Only */}
+        <div className="hidden lg:grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-[rgba(0,0,0,0.1)] rounded-lg px-4 py-3">
+            <p className="text-xs font-normal text-black mb-1">Protocol Backing Ratio</p>
+            <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-black">
+              {stats?.protocolBackingRatio ?? 0}%
+            </p>
           </div>
-          <div className="h-10 w-px bg-black/50 hidden lg:block" />
-          <div className="flex flex-col">
-            <div className="text-xl lg:text-[28px] font-bold text-[#111] dark:text-white">
-              ${tokenInfo?.price.toFixed(2) ?? '0.00'}
-            </div>
-            <div className="flex items-center gap-1 text-[10px] lg:text-xs">
-              <span className={isPositive ? 'text-[#269700]' : 'text-red-500'}>
-                {isPositive ? '▲' : '▼'} ${Math.abs(tokenInfo?.priceChange24h ?? 0).toFixed(2)} (
-                {Math.abs(tokenInfo?.priceChangePercent24h ?? 0).toFixed(2)}%)
+          <div className="bg-[rgba(0,0,0,0.1)] rounded-lg px-4 py-3">
+            <p className="text-xs font-normal text-black mb-1">{TOKEN_DISPLAY_NAME} Supply</p>
+            <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-black">
+              {stats?.tokenSupply ?? '0'}
+            </p>
+          </div>
+          <div className="bg-[rgba(0,0,0,0.1)] rounded-lg px-4 py-3">
+            <p className="text-xs font-normal text-black mb-1">{TOKEN_DISPLAY_NAME} Price</p>
+            <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-black">
+              ${stats?.tokenPrice.toFixed(1) ?? '0.0'}
+            </p>
+          </div>
+        </div>
+
+        {/* Mobile - Token Info and Price */}
+        <div className="flex items-center justify-between mb-2.5 lg:hidden">
+          <div className="flex items-center gap-2.5">
+            <TokenTessIcon className="w-12 h-12" />
+            <p className="text-[16px] font-extrabold text-black">{tokenInfo?.symbol ?? TOKEN_DISPLAY_NAME}</p>
+          </div>
+          <div className="flex flex-col items-end">
+            <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-[#111]">
+              ${tokenInfo?.price?.toFixed(2) ?? '0.00'}
+            </p>
+            <div className="flex items-center gap-1.5">
+              <span className={`text-xs ${isPositive ? 'text-[#269700]' : 'text-red-500'}`}>
+                {isPositive ? '▲' : '▼'}
               </span>
-              <span className="text-black dark:text-[#d2d2d2]">24H</span>
+              <p className="text-[10px] font-medium text-black">
+                ${Math.abs(tokenInfo?.priceChange24h ?? 0).toFixed(2)} (
+                {Math.abs(tokenInfo?.priceChangePercent24h ?? 0).toFixed(2)}%) 24H
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Time Range Tabs */}
-        <div className="flex items-center gap-0.5 lg:gap-1 p-1 bg-black/10 rounded-lg w-fit">
+        {/* Mobile - Time Range */}
+        <div className="bg-[rgba(0,0,0,0.1)] flex items-center p-1 rounded-lg mb-6 lg:hidden">
           {timeRanges.map((range) => (
             <button
               key={range}
               onClick={() => setSelectedRange(range)}
-              className={`py-1 px-3 lg:px-6 text-[10px] lg:text-xs font-medium rounded transition-all ${
-                selectedRange === range ? 'bg-white dark:bg-black text-black dark:text-white shadow-sm' : 'text-black hover:bg-white/50'
+              className={`flex-1 py-0.5 rounded text-xs font-medium transition-all ${
+                selectedRange === range
+                  ? 'bg-white shadow-sm text-black'
+                  : 'opacity-50 hover:opacity-100 text-black'
               }`}
             >
               {range}
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Chart */}
-      <div ref={chartContainerRef} className="w-full" />
+        {/* Desktop - Token Info and Time Range */}
+        <div className="hidden lg:flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2.5">
+              <TokenTessIcon className="w-12 h-12" />
+              <p className="text-[16px] font-extrabold text-black">{tokenInfo?.symbol ?? TOKEN_DISPLAY_NAME}</p>
+            </div>
+            <div className="bg-[rgba(0,0,0,0.5)] h-10 w-px" />
+            <div className="flex flex-col justify-center">
+              <p className="font-['Martian_Mono',monospace] font-medium text-[24px] text-[#111]">
+                ${tokenInfo?.price?.toFixed(2) ?? '0.00'}
+              </p>
+              <div className="flex items-center gap-1.5">
+                <span className={`text-xs ${isPositive ? 'text-[#269700]' : 'text-red-500'}`}>
+                  {isPositive ? '▲' : '▼'}
+                </span>
+                <p className="text-xs font-medium text-black">
+                  ${Math.abs(tokenInfo?.priceChange24h ?? 0).toFixed(2)} (
+                  {Math.abs(tokenInfo?.priceChangePercent24h ?? 0).toFixed(2)}%) 24H
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Time Range Selector */}
+          <div className="bg-[rgba(0,0,0,0.1)] flex items-center p-1 rounded-lg">
+            {timeRanges.map((range) => (
+              <button
+                key={range}
+                onClick={() => setSelectedRange(range)}
+                className={`px-6 py-1 rounded text-xs font-medium transition-all ${
+                  selectedRange === range
+                    ? 'bg-white shadow-sm text-black'
+                    : 'opacity-50 hover:opacity-100 text-black'
+                }`}
+              >
+                {range}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Chart */}
+        <div ref={chartContainerRef} className="w-full" />
+      </div>
     </div>
   )
 }

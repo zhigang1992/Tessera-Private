@@ -275,31 +275,19 @@ export async function getPriceHistory(
 const TESS_USDC_POOL = DEVNET_POOLS['TESS-USDC'].address
 
 export async function getTradeHistory(page: number = 1, pageSize: number = 10): Promise<TradeHistoryResponse> {
-  try {
-    const offset = (page - 1) * pageSize
-    // Filter to only show trades from the TESS-USDC pool
-    const { events, total } = await fetchSwapEvents(pageSize, offset, TESS_USDC_POOL)
+  const offset = (page - 1) * pageSize
+  // Filter to only show trades from the TESS-USDC pool
+  const { events, total } = await fetchSwapEvents(pageSize, offset, TESS_USDC_POOL)
 
-    const items = events.map(transformSwapEvent)
-    const totalPages = Math.ceil(total / pageSize)
+  const items = events.map(transformSwapEvent)
+  const totalPages = Math.ceil(total / pageSize)
 
-    return {
-      items,
-      total,
-      page,
-      pageSize,
-      totalPages,
-    }
-  } catch (error) {
-    console.warn('Failed to fetch trade history from GraphQL:', error)
-    // Return empty result on error
-    return {
-      items: [],
-      total: 0,
-      page,
-      pageSize,
-      totalPages: 0,
-    }
+  return {
+    items,
+    total,
+    page,
+    pageSize,
+    totalPages,
   }
 }
 

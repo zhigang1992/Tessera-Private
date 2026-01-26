@@ -67,12 +67,12 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
           onClick={() => handlePageClick(page)}
           disabled={typeof page !== 'number'}
           className={cn(
-            'flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-lg text-xs lg:text-sm',
+            'flex h-7 w-7 lg:h-10 lg:w-10 items-center justify-center rounded-lg text-xs lg:text-sm font-normal',
             page === currentPage
-              ? 'bg-black dark:bg-[#d2d2d2] text-white dark:text-black'
+              ? 'bg-black dark:bg-[#d2fb95] text-white dark:text-black'
               : typeof page === 'number'
-                ? 'text-muted-foreground dark:text-[#d2d2d2] hover:bg-gray-100 dark:bg-black/40 dark:hover:bg-black/50'
-                : 'text-muted-foreground dark:text-[#d2d2d2] dark:bg-black/40 cursor-default',
+                ? 'bg-[rgba(212,212,216,0.4)] dark:bg-[rgba(212,212,216,0.4)] text-black dark:text-[#d2d2d2] hover:bg-gray-100 dark:hover:bg-[#3f3f46]'
+                : 'bg-[rgba(212,212,216,0.4)] dark:bg-[rgba(212,212,216,0.4)] text-black dark:text-[#d2d2d2] cursor-default',
           )}
         >
           {page}

@@ -1,4 +1,9 @@
-import { fetchGlobalReferralStats } from '@/features/referral/lib/graphql-client'
+import {
+  fetchGlobalReferralStats,
+  fetchTradingVolumeLeaderboard,
+  fetchUserTradingVolumeRank,
+} from '@/features/referral/lib/graphql-client'
+import { fromHasuraToNative, BigNumber } from '@/lib/bignumber'
 
 // ============ Types ============
 
@@ -39,22 +44,31 @@ function formatWalletAddress(address: string): string {
 // ============ API Functions ============
 
 /**
- * Get trading leaderboard
- * TODO: Waiting for backend view `view_trader_volume_stats` to be created
- * Currently returns empty data
+ * Get trading leaderboard from GraphQL
  */
 export async function getTradingLeaderboard(
-  _page: number = 1,
+  page: number = 1,
   pageSize: number = 10
 ): Promise<LeaderboardResponse<TradingLeaderboardItem>> {
-  // Trading leaderboard data not yet available from GraphQL
-  // Return empty results until backend creates the view
+  const offset = (page - 1) * pageSize
+  const data = await fetchTradingVolumeLeaderboard(pageSize, offset)
+
+  const items: TradingLeaderboardItem[] = data.items.map((item, index) => ({
+    rank: offset + index + 1,
+    user: formatWalletAddress(item.account),
+    tradingVolume: BigNumber.toNumber(fromHasuraToNative(item.total_volume)),
+    tradingPoints: 0, // Not tracked in current schema
+    feeRebates: 0, // Not tracked in current schema
+  }))
+
+  const totalPages = Math.ceil(data.total / pageSize)
+
   return {
-    items: [],
-    total: 0,
-    page: _page,
+    items,
+    total: data.total,
+    page,
     pageSize,
-    totalPages: 0,
+    totalPages,
   }
 }
 
@@ -65,47 +79,37 @@ export async function getReferralLeaderboard(
   page: number = 1,
   pageSize: number = 10
 ): Promise<LeaderboardResponse<ReferralLeaderboardItem>> {
-  try {
-    const offset = (page - 1) * pageSize
-    const data = await fetchGlobalReferralStats(pageSize, offset)
+  const offset = (page - 1) * pageSize
+  const data = await fetchGlobalReferralStats(pageSize, offset)
 
-    const items: ReferralLeaderboardItem[] = data.view_owner_referral_stats.map((stat, index) => ({
-      rank: offset + index + 1,
-      user: formatWalletAddress(stat.owner),
-      traderReferral: Number(stat.invited_count) || 0,
-      tradingPoints: 0, // Not tracked in current schema
-      feeRewards: 0, // Not tracked in current schema
-    }))
+  const items: ReferralLeaderboardItem[] = data.view_owner_referral_stats.map((stat, index) => ({
+    rank: offset + index + 1,
+    user: formatWalletAddress(stat.owner),
+    traderReferral: Number(stat.invited_count) || 0,
+    tradingPoints: 0, // Not tracked in current schema
+    feeRewards: 0, // Not tracked in current schema
+  }))
 
-    const total = data.view_owner_referral_stats_aggregate.aggregate.count
-    const totalPages = Math.ceil(total / pageSize)
+  const total = data.view_owner_referral_stats_aggregate.aggregate.count
+  const totalPages = Math.ceil(total / pageSize)
 
-    return {
-      items,
-      total,
-      page,
-      pageSize,
-      totalPages,
-    }
-  } catch (error) {
-    console.warn('Failed to fetch referral leaderboard from GraphQL:', error)
-    return {
-      items: [],
-      total: 0,
-      page,
-      pageSize,
-      totalPages: 0,
-    }
+  return {
+    items,
+    total,
+    page,
+    pageSize,
+    totalPages,
   }
 }
 
 /**
  * Get current user's trading rank
- * TODO: Implement when trading leaderboard view is available
  */
-export async function getCurrentUserTradingRank(_walletAddress?: string): Promise<number | null> {
-  // Not implemented until trading leaderboard view is available
-  return null
+export async function getCurrentUserTradingRank(walletAddress?: string): Promise<number | null> {
+  if (!walletAddress) return null
+
+  const result = await fetchUserTradingVolumeRank(walletAddress)
+  return result?.rank ?? null
 }
 
 /**
@@ -114,18 +118,13 @@ export async function getCurrentUserTradingRank(_walletAddress?: string): Promis
 export async function getCurrentUserReferralRank(walletAddress?: string): Promise<number | null> {
   if (!walletAddress) return null
 
-  try {
-    // Fetch all stats to find user's rank
-    // Note: This is inefficient for large datasets, ideally backend should provide a rank lookup
-    const data = await fetchGlobalReferralStats(100, 0)
+  // Fetch all stats to find user's rank
+  // Note: This is inefficient for large datasets, ideally backend should provide a rank lookup
+  const data = await fetchGlobalReferralStats(100, 0)
 
-    const userIndex = data.view_owner_referral_stats.findIndex(
-      (stat) => stat.owner === walletAddress
-    )
+  const userIndex = data.view_owner_referral_stats.findIndex(
+    (stat) => stat.owner === walletAddress
+  )
 
-    return userIndex >= 0 ? userIndex + 1 : null
-  } catch (error) {
-    console.warn('Failed to fetch user referral rank:', error)
-    return null
-  }
+  return userIndex >= 0 ? userIndex + 1 : null
 }

@@ -1,35 +1,44 @@
 import { useQuery } from '@tanstack/react-query'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { getUserDashboard } from '@/services'
 import TokenSpacexIcon from './_/token-spacex.svg?react'
 
 export function MyBalanceCard() {
+  const { connected, publicKey } = useWallet()
+  const walletAddress = publicKey?.toBase58()
+
   const { data: userDashboard } = useQuery({
-    queryKey: ['userDashboard'],
-    queryFn: getUserDashboard,
+    queryKey: ['userDashboard', walletAddress],
+    queryFn: () => getUserDashboard(walletAddress),
+    enabled: connected && !!walletAddress,
+    refetchInterval: 10000, // Refetch every 10 seconds
   })
 
+  const displayBalance = !connected ? '—' : userDashboard?.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) ?? '0.00'
+  const displayTokenBalance = !connected ? '—' : userDashboard?.tokenBalance.toFixed(2) ?? '0.00'
+
   return (
-    <div className="rounded-2xl p-4 flex flex-col lg:flex-row gap-2.5 bg-gradient-to-b from-white to-[#d2fb95] dark:from-[#1e1f20] dark:to-[#d2fb95]">
+    <div className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] rounded-2xl p-4 flex flex-col lg:flex-row gap-2.5">
       {/* My Balance */}
-      <div className="bg-white/50 dark:bg-black/10 rounded-lg px-4 lg:px-6 py-4 w-full lg:w-[240px]">
-        <p className="text-sm font-medium text-black dark:text-[#d2d2d2] leading-5">My Balance</p>
-        <p className="text-2xl lg:text-3xl font-semibold text-black dark:text-white leading-9">
-          ${userDashboard?.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) ?? '0.00'}
+      <div className="bg-[rgba(255,255,255,0.5)] rounded-lg px-4 lg:px-6 py-4 w-full lg:w-[240px]">
+        <p className="text-sm font-medium text-black leading-5">My Balance</p>
+        <p className="text-2xl lg:text-3xl font-semibold text-black leading-9">
+          {connected ? '$' : ''}{displayBalance}
         </p>
       </div>
 
       {/* Token Info */}
-      <div className="flex-1 bg-white/50 dark:bg-black/10 rounded-lg px-4 lg:px-6 py-4">
+      <div className="flex-1 bg-[rgba(255,255,255,0.5)] rounded-lg px-4 lg:px-6 py-4">
         <div className="flex flex-col gap-2.5">
           {/* Token Header */}
           <div className="flex items-center gap-2.5">
             <TokenSpacexIcon className="w-14 h-14 lg:w-[72px] lg:h-[72px]" />
             <div className="flex flex-col">
-              <p className="text-sm font-bold text-black dark:text-[#d2d2d2] leading-5">
+              <p className="text-sm font-bold text-black leading-5">
                 {userDashboard?.tokenName ?? 'T-SpaceX Token'}
               </p>
-              <p className="text-2xl lg:text-3xl font-semibold text-black dark:text-white leading-9">
-                {userDashboard?.tokenBalance.toFixed(2) ?? '0.00'}
+              <p className="text-2xl lg:text-3xl font-semibold text-black leading-9">
+                {displayTokenBalance}
               </p>
             </div>
           </div>
@@ -37,7 +46,7 @@ export function MyBalanceCard() {
           {/* Health Factor */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-black dark:text-white">Health Factor</span>
+              <span className="text-sm font-medium text-black">Health Factor</span>
               <svg
                 className="w-6 h-6"
                 viewBox="0 0 24 24"
@@ -50,7 +59,7 @@ export function MyBalanceCard() {
                 />
               </svg>
             </div>
-            <div className="w-full bg-black/10 rounded-full h-2.5">
+            <div className="w-full bg-[rgba(0,0,0,0.1)] rounded-full h-2.5">
               <div
                 className="bg-black h-2.5 rounded-full transition-all"
                 style={{ width: `${userDashboard?.healthFactor ?? 0}%` }}

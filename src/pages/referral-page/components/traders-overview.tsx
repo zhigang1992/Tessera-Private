@@ -16,7 +16,7 @@ export function TradersOverview() {
 
   // Fetch traders overview for trading volume and points
   const { data, isLoading } = useQuery({
-    queryKey: ['tradersOverview'],
+    queryKey: ['tradersOverview', walletAddress],
     queryFn: getTradersOverview,
     enabled: connected,
   })
@@ -71,7 +71,7 @@ export function TradersOverview() {
     <>
       <div className="flex flex-col md:flex-row gap-[10px]">
         {/* Trading Volume Card */}
-        <div className="flex-1 flex items-center justify-between bg-[#d2fb95] dark:bg-[#d2fb95] rounded-[16px] p-6 overflow-hidden">
+        <div className="flex-1 flex items-center justify-between bg-[#d2fb95] dark:bg-[#d2fb95] rounded-[16px] p-6 overflow-hidden border dark:border-[rgba(210,210,210,0.1)] border-[rgba(17,17,17,0.15)]">
           <div className="flex flex-col gap-[5px]">
             <p className="text-[12px] text-zinc-900 dark:text-zinc-900">Your trading vol</p>
             <p className="text-[28px] font-light text-zinc-900 dark:text-zinc-900 font-martian leading-none h-10 flex items-center">
@@ -82,9 +82,9 @@ export function TradersOverview() {
         </div>
 
         {/* Active Referral Code Card */}
-        <div className="flex-1 flex items-center justify-between bg-white rounded-[16px] px-4 py-6">
+        <div className="flex-1 flex items-center justify-between bg-white dark:bg-[#323334] rounded-[16px] px-4 py-6 border dark:border-[rgba(210,210,210,0.1)] border-[rgba(17,17,17,0.15)]">
           <div className="flex flex-col gap-[5px] w-full">
-            <p className="text-[12px] text-zinc-900">Active referral code</p>
+            <p className="text-[12px] text-zinc-900 dark:text-[#d2d2d2]">Active referral code</p>
             <div className="flex items-center w-full">
               {showCodeDash ? (
                 <div className="bg-[#d2fb95] w-full rounded-[4px] px-6 h-10 flex items-center justify-center">
@@ -99,9 +99,9 @@ export function TradersOverview() {
               ) : (
                 <button
                   onClick={handleReferralCodeClick}
-                  className="bg-zinc-900 hover:bg-zinc-800 w-full rounded-[4px] px-6 h-10 flex items-center justify-center transition-colors"
+                  className="bg-zinc-900 dark:bg-[#d2fb95] hover:bg-zinc-800 dark:hover:bg-[#d2fb95]/80 w-full rounded-[4px] px-6 h-10 flex items-center justify-center transition-colors"
                 >
-                  <span className="text-[14px] font-semibold text-white">
+                  <span className="text-[14px] font-semibold text-white dark:text-black">
                     Bind Referral Code
                   </span>
                 </button>
@@ -111,10 +111,10 @@ export function TradersOverview() {
         </div>
 
         {/* Trading Points Card */}
-        <div className="flex-1 flex items-center justify-between bg-white rounded-[16px] px-4 py-6">
+        <div className="flex-1 flex items-center justify-between bg-white dark:bg-[#323334] rounded-[16px] px-4 py-6 border dark:border-[rgba(210,210,210,0.1)] border-[rgba(17,17,17,0.15)]">
           <div className="flex flex-col gap-[5px]">
-            <p className="text-[12px] text-zinc-900">Your trading point</p>
-            <p className="text-[28px] font-light text-zinc-900 font-martian leading-none h-10 flex items-center">
+            <p className="text-[12px] text-zinc-900 dark:text-[#d2d2d2]">Your trading point</p>
+            <p className="text-[28px] font-light text-zinc-900 dark:text-[#d2d2d2] font-martian leading-none h-10 flex items-center">
               {showDash ? '—' : (data?.tradingPoints?.toLocaleString() ?? '—')}
             </p>
           </div>
@@ -123,15 +123,15 @@ export function TradersOverview() {
 
       {/* Bind Referral Code Modal */}
       <Dialog open={isBindModalOpen} onOpenChange={setIsBindModalOpen}>
-        <DialogContent className="w-[342px] max-w-[342px] rounded-2xl bg-[#F4F4F5] p-0 dark:bg-[#F4F4F5]">
+        <DialogContent className="w-[342px] max-w-[342px] rounded-2xl bg-[#F4F4F5] dark:bg-[#323334] p-0">
           <div className="flex flex-col gap-4 p-6">
             <DialogHeader className="p-0">
-              <DialogTitle className="text-base font-normal text-black">
+              <DialogTitle className="text-base font-normal text-black dark:text-[#d2d2d2]">
                 Bind Referral Code
               </DialogTitle>
             </DialogHeader>
 
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Enter the referral code of the person who invited you. They will earn rewards based on your trading volume.
             </p>
 
@@ -141,7 +141,7 @@ export function TradersOverview() {
                 onChange={handleInputChange}
                 placeholder="Enter referral code"
                 disabled={bindMutation.isPending}
-                className="h-[42px] rounded-lg border border-[#D4D4D8] bg-white px-4 text-base text-[#111111] placeholder:text-[#9CA3AF] focus-visible:ring-[#111111]/20"
+                className="h-[42px] rounded-lg border border-[#D4D4D8] dark:border-[#393b3d] bg-white dark:bg-[#27272A] px-4 text-base text-[#111111] dark:text-[#d2d2d2] placeholder:text-[#9CA3AF] dark:placeholder:text-gray-500 focus-visible:ring-[#111111]/20 dark:focus-visible:ring-white/20"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && referralCodeInput.trim()) {
                     handleBindCode()
@@ -151,7 +151,7 @@ export function TradersOverview() {
               <Button
                 onClick={handleBindCode}
                 disabled={!connected || !referralCodeInput.trim() || bindMutation.isPending}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-black py-3 text-sm font-medium text-white hover:bg-black/90 disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-black dark:bg-[#d2fb95] py-3 text-sm font-medium text-white dark:text-black hover:bg-black/90 dark:hover:bg-[#d2fb95]/80 disabled:opacity-50"
               >
                 {bindMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                 {bindMutation.isPending ? 'Binding...' : 'Bind Code'}
@@ -160,7 +160,7 @@ export function TradersOverview() {
 
             <button
               onClick={() => setIsBindModalOpen(false)}
-              className="mx-auto text-xs text-gray-500 hover:text-gray-700"
+              className="mx-auto text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             >
               Cancel
             </button>

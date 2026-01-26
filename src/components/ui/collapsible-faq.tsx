@@ -56,7 +56,7 @@ export function CollapsibleFaq({
     <div
       id={id}
       className={cn(
-        'rounded-2xl bg-white dark:bg-[#18181B] px-4 lg:px-6 pt-4 lg:pt-6 pb-6 lg:pb-10',
+        'rounded-2xl bg-white dark:bg-[#323334] px-4 lg:px-6 pt-4 lg:pt-6 pb-6 lg:pb-10 border dark:border-[rgba(210,210,210,0.1)] border-[rgba(17,17,17,0.15)]',
         className
       )}
     >
@@ -80,8 +80,8 @@ export function CollapsibleFaq({
               className={cn(
                 'h-8 lg:h-10 rounded-full px-3 lg:px-4 text-sm lg:text-base font-medium transition-colors',
                 activeCategory === index
-                  ? 'bg-black text-white dark:bg-white dark:text-black'
-                  : 'border-2 border-black text-black hover:bg-black/5 dark:border-white dark:text-white dark:hover:bg-white/5'
+                  ? 'bg-black text-white dark:bg-[#D2FB95] dark:text-black'
+                  : 'border-2 border-black text-black hover:bg-black/5 dark:border-[rgba(210,210,210,0.3)] dark:text-[#d2d2d2] dark:hover:bg-[rgba(255,255,255,0.05)]'
               )}
             >
               {category.label}
