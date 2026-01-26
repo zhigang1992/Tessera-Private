@@ -910,3 +910,38 @@ export async function fetchAllTokenMarketCaps(): Promise<TokenMarketCapData[]> {
 
   return data.public_marts_token_market_cap
 }
+
+// ============ Token Details (with holder count) ============
+
+export interface TokenDetailsData {
+  token: string
+  circulating_supply: string // numeric from GraphQL (18 decimals)
+  holder_count: number // bigint from GraphQL
+  market_cap: string // numeric from GraphQL (18 decimals)
+  price: string // numeric from GraphQL (18 decimals)
+  price_block: number // bigint from GraphQL
+}
+
+/**
+ * Fetch all token details including holder count
+ */
+export async function fetchAllTokenDetails(): Promise<TokenDetailsData[]> {
+  const query = `
+    query GetAllTokenDetails {
+      public_marts_token_details {
+        token
+        circulating_supply
+        holder_count
+        market_cap
+        price
+        price_block
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_token_details: TokenDetailsData[]
+  }>(query)
+
+  return data.public_marts_token_details
+}
