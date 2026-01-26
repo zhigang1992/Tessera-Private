@@ -1,5 +1,5 @@
 import { sleep } from './utils'
-import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap, fetchAllTokenMarketCaps } from '@/features/referral/lib/graphql-client'
+import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap, fetchAllTokenDetails } from '@/features/referral/lib/graphql-client'
 import { fromHasuraToNative, formatBigNumber, BigNumber, math, mathIs, type BigNumberSource, fromTokenAmount, type BigNumberValue } from '@/lib/bignumber'
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
@@ -247,16 +247,17 @@ function formatValuation(value: number): string {
  * Fetches real data from GraphQL and merges with token metadata
  */
 export async function getTokenizedAssets(): Promise<AssetData[]> {
-  const tokenMarketCaps = await fetchAllTokenMarketCaps()
+  const tokenDetails = await fetchAllTokenDetails()
 
-  if (tokenMarketCaps.length === 0) {
+  if (tokenDetails.length === 0) {
     return []
   }
 
-  return tokenMarketCaps.map((token) => {
+  return tokenDetails.map((token) => {
     const metadata = TOKEN_REGISTRY[token.token]
     const price = BigNumber.toNumber(fromHasuraToNative(token.price))
     const marketCap = BigNumber.toNumber(fromHasuraToNative(token.market_cap))
+    const holders = Number(token.holder_count) || 0
 
     // If we have metadata for this token, use it; otherwise create generic entry
     if (metadata) {
@@ -267,7 +268,7 @@ export async function getTokenizedAssets(): Promise<AssetData[]> {
         code: metadata.code,
         sector: metadata.sector,
         price,
-        holders: 0, // TODO: Fetch holder count when available in backend
+        holders,
         valuation: formatValuation(marketCap),
       }
     }
@@ -281,7 +282,7 @@ export async function getTokenizedAssets(): Promise<AssetData[]> {
       code: token.token.slice(0, 8),
       sector: 'Unknown',
       price,
-      holders: 0,
+      holders,
       valuation: formatValuation(marketCap),
     }
   })
