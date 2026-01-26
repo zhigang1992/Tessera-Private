@@ -3,13 +3,13 @@ import {
   fetchAuctionDepositEvents,
 } from '@/features/referral/lib/graphql-client'
 import { fromHasuraToNative, BigNumber } from '@/lib/bignumber'
-import { DEVNET_POOLS } from './meteora'
+import { ALPHA_VAULT_CONFIG } from './alpha-vault'
 import { sleep } from './utils'
 
 // ============ Constants ============
 
-// Use TESS-USDC pool for auction
-const AUCTION_POOL = DEVNET_POOLS['TESS-USDC'].address
+// Use the Alpha Vault DLMM pool for auction data
+const AUCTION_POOL = ALPHA_VAULT_CONFIG.dlmmPool
 
 // ============ Types ============
 
