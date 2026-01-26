@@ -17,8 +17,8 @@ export function ReferralTree() {
 
   const { data = [], isLoading } = useQuery({
     queryKey: ['traderLayers', walletAddress],
-    queryFn: getTraderLayers,
-    enabled: connected,
+    queryFn: () => getTraderLayers(walletAddress!),
+    enabled: connected && !!walletAddress,
   })
 
   // Use empty data when wallet not connected, otherwise use fetched data

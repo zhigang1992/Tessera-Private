@@ -41,9 +41,10 @@ export function CodeSection() {
 
   // Fetch users for selected code
   const { data: users = [], isLoading: usersLoading } = useQuery({
-    queryKey: ['referralUsers', selectedCode],
+    queryKey: ['referralUsers', walletAddress, selectedCode],
     queryFn: () => getReferralUsersByCode(selectedCode!),
-    enabled: !!selectedCode,
+    enabled: !!selectedCode && codes.length > 0,
+    staleTime: 0, // Always refetch when code changes
   })
 
   // Pagination logic
