@@ -1,4 +1,15 @@
+import {
+  fetchAuctionTotalRaised,
+  fetchAuctionDepositEvents,
+} from '@/features/referral/lib/graphql-client'
+import { fromHasuraToNative, BigNumber } from '@/lib/bignumber'
+import { DEVNET_POOLS } from './meteora'
 import { sleep } from './utils'
+
+// ============ Constants ============
+
+// Use TESS-USDC pool for auction
+const AUCTION_POOL = DEVNET_POOLS['TESS-USDC'].address
 
 // ============ Types ============
 
@@ -240,7 +251,22 @@ const vestingChartData: VestingChartData = {
 // ============ API Functions ============
 
 export async function getAuctionStats(): Promise<AuctionStats> {
-  await sleep(300)
+  const totalRaisedData = await fetchAuctionTotalRaised(AUCTION_POOL)
+
+  if (totalRaisedData) {
+    const totalRaised = BigNumber.toNumber(fromHasuraToNative(totalRaisedData.total_raised_amount))
+    const targetRaise = auctionStats.targetRaise
+    const oversubscribedRatio = targetRaise > 0 ? totalRaised / targetRaise : 0
+    const percentageOfTarget = oversubscribedRatio * 100
+
+    return {
+      ...auctionStats,
+      totalRaised,
+      oversubscribedRatio: Math.round(oversubscribedRatio * 100) / 100,
+      percentageOfTarget: Math.round(percentageOfTarget),
+    }
+  }
+
   return auctionStats
 }
 
@@ -285,7 +311,42 @@ export async function getClaimInfo(): Promise<ClaimInfo> {
 }
 
 export async function getAuctionChartData(): Promise<AuctionChartData> {
-  await sleep(400)
+  const events = await fetchAuctionDepositEvents(AUCTION_POOL)
+
+  if (events.length === 0) {
+    // Return mock data if no events found
+    return auctionChartData
+  }
+
+  // Sort events by block_time and calculate cumulative totals
+  const sortedEvents = [...events].sort((a, b) => a.block_time - b.block_time)
+
+  // Get the start time (first deposit)
+  const startTime = sortedEvents[0].block_time
+
+  // Build cumulative chart data
+  let cumulativeTotal = BigNumber.from(0)
+  const chartPoints: AuctionChartDataPoint[] = []
+
+  for (const event of sortedEvents) {
+    const amount = fromHasuraToNative(event.amount)
+    cumulativeTotal = BigNumber.add(cumulativeTotal, amount)
+
+    // Calculate hours since start
+    const hoursSinceStart = (event.block_time - startTime) / 3600
+
+    chartPoints.push({
+      hour: hoursSinceStart,
+      value: BigNumber.toNumber(cumulativeTotal),
+    })
+  }
+
+  // If we have data points, return them
+  if (chartPoints.length > 0) {
+    return chartPoints
+  }
+
+  // Fallback to mock data
   return auctionChartData
 }
 

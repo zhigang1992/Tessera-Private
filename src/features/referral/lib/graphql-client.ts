@@ -945,3 +945,69 @@ export async function fetchAllTokenDetails(): Promise<TokenDetailsData[]> {
 
   return data.public_marts_token_details
 }
+
+// ============ Auction Data ============
+
+export interface AuctionTotalRaisedData {
+  pool: string
+  total_raised_amount: string // numeric from GraphQL (18 decimals)
+}
+
+export interface EscrowDepositEvent {
+  amount: string // numeric from GraphQL (18 decimals)
+  block_time: number
+  owner: string
+  pool: string
+  signature: string
+}
+
+/**
+ * Fetch total raised amount for an auction pool
+ */
+export async function fetchAuctionTotalRaised(poolAddress: string): Promise<AuctionTotalRaisedData | null> {
+  const query = `
+    query GetAuctionTotalRaised($pool: String!) {
+      public_marts_auction_total_raised(where: { pool: { _eq: $pool } }, limit: 1) {
+        pool
+        total_raised_amount
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_auction_total_raised: AuctionTotalRaisedData[]
+  }>(query, { pool: poolAddress })
+
+  return data.public_marts_auction_total_raised[0] ?? null
+}
+
+/**
+ * Fetch all escrow deposit events for an auction pool (for chart data)
+ * Returns events ordered by block_time ascending
+ */
+export async function fetchAuctionDepositEvents(
+  poolAddress: string,
+  limit: number = 1000
+): Promise<EscrowDepositEvent[]> {
+  const query = `
+    query GetAuctionDepositEvents($pool: String!, $limit: Int!) {
+      facts_meteora_escrow_deposited_events(
+        where: { pool: { _eq: $pool } }
+        order_by: { block_time: asc }
+        limit: $limit
+      ) {
+        amount
+        block_time
+        owner
+        pool
+        signature
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    facts_meteora_escrow_deposited_events: EscrowDepositEvent[]
+  }>(query, { pool: poolAddress, limit })
+
+  return data.facts_meteora_escrow_deposited_events
+}
