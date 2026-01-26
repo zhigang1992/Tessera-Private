@@ -10,8 +10,8 @@ export function RewardsOverview() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['rewardsOverview', walletAddress],
-    queryFn: getRewardsOverview,
-    enabled: connected,
+    queryFn: () => getRewardsOverview(walletAddress!),
+    enabled: connected && !!walletAddress,
   })
 
   // Show dash when wallet not connected or loading

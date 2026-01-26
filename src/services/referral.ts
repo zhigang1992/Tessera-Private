@@ -4,8 +4,10 @@ import {
   fetchTradersForCode,
   fetchSwapEvents,
   fetchUserTradingVolume,
+  fetchRewardDetailsByCode,
   type AggregatedAffiliateStats,
   type UserRegisteredEvent,
+  type RewardDetailByCodeReferral,
 } from '@/features/referral/lib/graphql-client'
 import { DEVNET_POOLS } from './meteora'
 import { fromHasuraToNative, formatBigNumber, type BigNumberSource } from '@/lib/bignumber'
@@ -99,21 +101,22 @@ let cachedAffiliateStats: AggregatedAffiliateStats | null = null
 let cacheTimestamp: number = 0
 const CACHE_TTL = 30000 // 30 seconds
 
-async function getCachedAffiliateStats(): Promise<AggregatedAffiliateStats | null> {
-  if (!currentWalletAddress) return null
+async function getCachedAffiliateStats(walletAddress?: string): Promise<AggregatedAffiliateStats | null> {
+  const address = walletAddress || currentWalletAddress
+  if (!address) return null
 
   const now = Date.now()
   if (cachedAffiliateStats && now - cacheTimestamp < CACHE_TTL) {
     return cachedAffiliateStats
   }
 
-  cachedAffiliateStats = await fetchAffiliateStats(currentWalletAddress)
+  cachedAffiliateStats = await fetchAffiliateStats(address)
   cacheTimestamp = now
   return cachedAffiliateStats
 }
 
-export async function getRewardsOverview(): Promise<RewardsData> {
-  const stats = await getCachedAffiliateStats()
+export async function getRewardsOverview(walletAddress?: string): Promise<RewardsData> {
+  const stats = await getCachedAffiliateStats(walletAddress)
 
   // Always return GraphQL data (which may be zeros if no data exists)
   // Only fall back to mock if GraphQL fetch failed entirely (stats is null)
@@ -131,8 +134,8 @@ export async function getRewardsOverview(): Promise<RewardsData> {
   }
 }
 
-export async function getTraderLayers(): Promise<TraderLayer[]> {
-  const stats = await getCachedAffiliateStats()
+export async function getTraderLayers(walletAddress?: string): Promise<TraderLayer[]> {
+  const stats = await getCachedAffiliateStats(walletAddress)
 
   // Always return GraphQL data (which may be zeros if no data exists)
   if (stats) {
@@ -203,20 +206,59 @@ function formatBlockTime(blockTime: number): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+/**
+ * Convert fees_by_token jsonb to array of RewardItem
+ * Maps token mints to symbols and formats amounts
+ */
+function parseFeesToRewards(
+  fees: Record<string, string> | null
+): RewardItem[] {
+  if (!fees) return []
+
+  const rewards: RewardItem[] = []
+  for (const [mint, amount] of Object.entries(fees)) {
+    // Map mint to symbol (use MINT_TO_SYMBOL or fallback to shortened mint)
+    const symbol = MINT_TO_SYMBOL[mint] || mint.slice(0, 4) + '...'
+    // Convert from Hasura 18-decimal precision
+    const formattedAmount = formatBigNumber(fromHasuraToNative(amount), { maximumFractionDigits: 4 })
+    const numAmount = parseFloat(formattedAmount)
+    if (numAmount > 0) {
+      rewards.push({ amount: numAmount, token: symbol })
+    }
+  }
+  return rewards
+}
+
 export async function getReferralUsersByCode(code: string): Promise<ReferralUser[]> {
-  if (!currentWalletAddress) {
-    return []
+  // Fetch traders and their reward details in parallel
+  const [traders, rewardDetails] = await Promise.all([
+    fetchTradersForCode(code),
+    fetchRewardDetailsByCode(code),
+  ])
+
+  // Create a map of referral address -> reward details for quick lookup
+  const rewardMap = new Map<string, RewardDetailByCodeReferral>()
+  for (const reward of rewardDetails) {
+    rewardMap.set(reward.referral, reward)
   }
 
-  const traders = await fetchTradersForCode(code)
+  return traders.map((event) => {
+    const rewardDetail = rewardMap.get(event.user)
+    const rewards = rewardDetail ? parseFeesToRewards(rewardDetail.fees_by_token) : []
 
-  return traders.map((event) => ({
-    id: event.signature,
-    email: formatWalletAddress(event.user), // Using wallet address as identifier
-    dateJoined: formatBlockTime(event.block_time),
-    layer: determineUserTier(event, currentWalletAddress!),
-    rewards: [], // Rewards data would need separate query - leaving empty for now
-  }))
+    // Determine tier - if wallet address not set, default to L1
+    const layer = currentWalletAddress
+      ? determineUserTier(event, currentWalletAddress)
+      : 'L1'
+
+    return {
+      id: event.signature,
+      email: formatWalletAddress(event.user), // Using wallet address as identifier
+      dateJoined: formatBlockTime(event.block_time),
+      layer,
+      rewards,
+    }
+  })
 }
 
 // Clear cache when wallet changes
