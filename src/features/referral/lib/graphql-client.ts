@@ -795,3 +795,118 @@ export async function fetchSwapEventsForPrice(
 
   return data.facts_meteora_token_swap_events
 }
+
+/**
+ * Fetch swap events from the last 24 hours for OHLC calculation
+ */
+export async function fetchSwapEventsLast24h(
+  poolAddress: string
+): Promise<Array<{ block_time: number; amount_x: string; amount_y: string; type: string }>> {
+  // Calculate timestamp for 24 hours ago
+  const now = Math.floor(Date.now() / 1000)
+  const twentyFourHoursAgo = now - 24 * 60 * 60
+
+  const query = `
+    query GetSwapEventsLast24h($poolAddress: String!, $since: Int!) {
+      facts_meteora_token_swap_events(
+        where: {
+          pool_address: { _eq: $poolAddress }
+          block_time: { _gte: $since }
+        }
+        order_by: { block_time: asc }
+      ) {
+        block_time
+        amount_x
+        amount_y
+        type
+      }
+    }
+  `
+
+  const data = await graphqlRequest<SwapEventsForPriceQueryResult>(query, {
+    poolAddress,
+    since: twentyFourHoursAgo,
+  })
+
+  return data.facts_meteora_token_swap_events
+}
+
+// ============ Market Cap & Token Stats ============
+
+export interface TotalMarketCapData {
+  latest_price_block: number
+  token_count: number
+  total_market_cap: string // numeric from GraphQL (18 decimals)
+}
+
+export interface TokenMarketCapData {
+  token: string
+  circulating_supply: string // numeric from GraphQL (18 decimals)
+  market_cap: string // numeric from GraphQL (18 decimals)
+  price: string // numeric from GraphQL (18 decimals)
+}
+
+/**
+ * Fetch total market cap and assets tokenized count
+ */
+export async function fetchTotalMarketCap(): Promise<TotalMarketCapData | null> {
+  const query = `
+    query GetTotalMarketCap {
+      public_marts_total_market_cap(limit: 1) {
+        latest_price_block
+        token_count
+        total_market_cap
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_total_market_cap: TotalMarketCapData[]
+  }>(query)
+
+  return data.public_marts_total_market_cap[0] ?? null
+}
+
+/**
+ * Fetch token market cap data for a specific token
+ */
+export async function fetchTokenMarketCap(tokenMint: string): Promise<TokenMarketCapData | null> {
+  const query = `
+    query GetTokenMarketCap($token: String!) {
+      public_marts_token_market_cap(where: { token: { _eq: $token } }, limit: 1) {
+        token
+        circulating_supply
+        market_cap
+        price
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_token_market_cap: TokenMarketCapData[]
+  }>(query, { token: tokenMint })
+
+  return data.public_marts_token_market_cap[0] ?? null
+}
+
+/**
+ * Fetch all token market cap data
+ */
+export async function fetchAllTokenMarketCaps(): Promise<TokenMarketCapData[]> {
+  const query = `
+    query GetAllTokenMarketCaps {
+      public_marts_token_market_cap {
+        token
+        circulating_supply
+        market_cap
+        price
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_token_market_cap: TokenMarketCapData[]
+  }>(query)
+
+  return data.public_marts_token_market_cap
+}

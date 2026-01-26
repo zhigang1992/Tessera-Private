@@ -1,6 +1,6 @@
 import { sleep } from './utils'
-import { fetchDashboardStats, fetchUserSwapEvents } from '@/features/referral/lib/graphql-client'
-import { fromHasuraToNative, formatBigNumber, BigNumber, type BigNumberSource, fromTokenAmount } from '@/lib/bignumber'
+import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap } from '@/features/referral/lib/graphql-client'
+import { fromHasuraToNative, formatBigNumber, BigNumber, math, mathIs, type BigNumberSource, fromTokenAmount, type BigNumberValue } from '@/lib/bignumber'
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { DEVNET_POOLS } from './meteora'
@@ -177,15 +177,24 @@ function formatWalletAddress(address: string): string {
  * Get market overview statistics for the stats cards
  */
 export async function getMarketStats(): Promise<MarketStatsData> {
-  const stats = await fetchDashboardStats()
+  const [stats, marketCapData] = await Promise.all([
+    fetchDashboardStats(),
+    fetchTotalMarketCap(),
+  ])
 
-  // For now, we'll use mock data for market cap and assets tokenized
-  // These would come from different sources (e.g., token prices, treasury data)
+  // Convert market cap from 18-decimal Hasura format
+  let totalMarketCap = 0
+  let assetsTokenized = 0
+  if (marketCapData) {
+    totalMarketCap = BigNumber.toNumber(fromHasuraToNative(marketCapData.total_market_cap))
+    assetsTokenized = Number(marketCapData.token_count) || 0
+  }
+
   return {
-    totalMarketCap: 485200000000, // $485.2B mock value
+    totalMarketCap,
     totalTradingVolume: stats.totalTradingVolume,
     activeTraders: stats.totalTraders,
-    assetsTokenized: 6, // Mock value - would come from token registry
+    assetsTokenized,
   }
 }
 
@@ -222,19 +231,190 @@ export async function getTokenizedAssets(): Promise<AssetData[]> {
 
 // ============ API Functions ============
 
+/**
+ * Format large number to human-readable string (e.g., 107958426 -> "107.96M")
+ */
+function formatSupply(value: number): string {
+  if (value >= 1_000_000_000) {
+    return `${(value / 1_000_000_000).toFixed(2)}B`
+  }
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(2)}M`
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(2)}K`
+  }
+  return value.toFixed(0)
+}
+
+/**
+ * Get dashboard stats including real token price and supply from backend
+ */
 export async function getDashboardStats(): Promise<DashboardStats> {
-  await sleep(300)
-  return dashboardStats
+  const poolAddress = DEVNET_POOLS['TESS-USDC'].address
+  const tokenMint = DEVNET_POOLS['TESS-USDC'].tokenX.mint
+
+  const [events, tokenData] = await Promise.all([
+    fetchSwapEventsForPrice(poolAddress, 10),
+    fetchTokenMarketCap(tokenMint),
+  ])
+
+  let tokenPrice = 0
+  if (events.length > 0) {
+    // Get price from most recent swap
+    const latestEvent = events[events.length - 1]
+    const x = fromHasuraToNative(latestEvent.amount_x)
+    const y = fromHasuraToNative(latestEvent.amount_y)
+    if (mathIs`${x} > ${0}`) {
+      tokenPrice = BigNumber.toNumber(math`${y} / ${x}`)
+    }
+  }
+
+  // Get circulating supply from token market cap data
+  let tokenSupply = dashboardStats.tokenSupply
+  if (tokenData) {
+    const supplyValue = BigNumber.toNumber(fromHasuraToNative(tokenData.circulating_supply))
+    tokenSupply = formatSupply(supplyValue)
+  }
+
+  return {
+    ...dashboardStats,
+    tokenPrice: tokenPrice > 0 ? tokenPrice : dashboardStats.tokenPrice,
+    tokenSupply,
+  }
 }
 
+/**
+ * Get token info with real price data from swap events
+ */
 export async function getDashboardTokenInfo(): Promise<TokenInfo> {
-  await sleep(400)
-  return tokenInfo
+  const poolAddress = DEVNET_POOLS['TESS-USDC'].address
+  const events = await fetchSwapEventsForPrice(poolAddress, 100)
+
+  if (events.length === 0) {
+    return tokenInfo
+  }
+
+  // Get latest price from most recent swap
+  const latestEvent = events[events.length - 1]
+  const x = fromHasuraToNative(latestEvent.amount_x)
+  const y = fromHasuraToNative(latestEvent.amount_y)
+  let currentPrice = 0
+  if (mathIs`${x} > ${0}`) {
+    currentPrice = BigNumber.toNumber(math`${y} / ${x}`)
+  }
+
+  if (currentPrice === 0) {
+    return tokenInfo
+  }
+
+  // Calculate 24h change by finding price 24h ago
+  const now = Math.floor(Date.now() / 1000)
+  const dayAgo = now - 24 * 60 * 60
+
+  let price24hAgo = currentPrice
+  for (const event of events) {
+    if (event.block_time <= dayAgo) {
+      const eventX = fromHasuraToNative(event.amount_x)
+      const eventY = fromHasuraToNative(event.amount_y)
+      if (mathIs`${eventX} > ${0}`) {
+        price24hAgo = BigNumber.toNumber(math`${eventY} / ${eventX}`)
+      }
+    } else {
+      break
+    }
+  }
+
+  const priceChange24h = currentPrice - price24hAgo
+  const priceChangePercent24h = price24hAgo !== 0 ? (priceChange24h / price24hAgo) * 100 : 0
+
+  return {
+    ...tokenInfo,
+    price: currentPrice,
+    priceChange24h,
+    priceChangePercent24h,
+  }
 }
 
+/**
+ * Calculate price from swap event amounts
+ * For TESS-USDC pool: price = amount_y (USDC) / amount_x (TESS)
+ */
+function calculatePriceFromSwap(amountX: string, amountY: string): BigNumberValue {
+  const x = fromHasuraToNative(amountX)
+  const y = fromHasuraToNative(amountY)
+
+  // Avoid division by zero
+  if (mathIs`${x} === ${0}`) {
+    return BigNumber.from(0)
+  }
+
+  return math`${y} / ${x}`
+}
+
+/**
+ * Get dashboard statistics with 24h OHLC data calculated from swap events
+ */
 export async function getDashboardStatistics(): Promise<TokenStatistics> {
-  await sleep(300)
-  return tokenStatistics
+  const poolAddress = DEVNET_POOLS['TESS-USDC'].address
+  const swapEvents = await fetchSwapEventsLast24h(poolAddress)
+
+  if (swapEvents.length === 0) {
+    // No swap events in last 24h, return default values
+    return {
+      tokenPrice24h: {
+        open: 0,
+        high: 0,
+        low: 0,
+      },
+      underlyingAssetPrice24h: {
+        open: 0,
+        high: 0,
+        low: 0,
+      },
+    }
+  }
+
+  // Calculate prices for each swap event
+  const prices: number[] = swapEvents.map((event) => {
+    const price = calculatePriceFromSwap(event.amount_x, event.amount_y)
+    return BigNumber.toNumber(price)
+  }).filter((price) => price > 0) // Filter out zero prices
+
+  if (prices.length === 0) {
+    return {
+      tokenPrice24h: {
+        open: 0,
+        high: 0,
+        low: 0,
+      },
+      underlyingAssetPrice24h: {
+        open: 0,
+        high: 0,
+        low: 0,
+      },
+    }
+  }
+
+  // Events are already sorted by block_time ascending, so first is open
+  const openPrice = prices[0]
+  const highPrice = Math.max(...prices)
+  const lowPrice = Math.min(...prices)
+
+  return {
+    tokenPrice24h: {
+      open: openPrice,
+      high: highPrice,
+      low: lowPrice,
+    },
+    // For now, underlying asset price mirrors token price
+    // TODO: Fetch actual underlying asset price when available
+    underlyingAssetPrice24h: {
+      open: openPrice,
+      high: highPrice,
+      low: lowPrice,
+    },
+  }
 }
 
 /**

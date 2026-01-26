@@ -25,24 +25,23 @@ export function StatsCards() {
     refetchInterval: 30000, // Refetch every 30 seconds
   })
 
+  // Note: 24h change data not available in backend yet
+  // Change badges are hidden until backend provides this data
   const statCards = [
     {
       label: 'Total Market Cap',
       value: isLoading || !stats ? '—' : formatLargeNumber(stats.totalMarketCap),
-      change: '+4.2%',
-      hasChange: true,
+      hasChange: false,
     },
     {
       label: 'Total Trading Volume',
       value: isLoading || !stats ? '—' : formatLargeNumber(stats.totalTradingVolume),
-      change: '+12.5%',
-      hasChange: true,
+      hasChange: false,
     },
     {
       label: 'Active Traders',
       value: isLoading || !stats ? '—' : stats.activeTraders.toLocaleString(),
-      change: '124',
-      hasChange: true,
+      hasChange: false,
     },
     {
       label: 'Assets Tokenized',
