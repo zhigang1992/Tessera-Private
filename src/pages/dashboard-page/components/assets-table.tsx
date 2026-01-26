@@ -87,13 +87,13 @@ export function AssetsTable() {
               </div>
               <div className="w-[17.5%] min-w-[100px]">
                 <div className="flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3 text-[#269700]" />
+                  {asset.holders > 0 && <TrendingUp className="w-3 h-3 text-[#269700]" />}
                   <p
                     className={`text-sm font-semibold ${
                       selectedAsset === asset.id ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
                     }`}
                   >
-                    {asset.holders.toLocaleString()}
+                    {asset.holders > 0 ? asset.holders.toLocaleString() : '—'}
                   </p>
                 </div>
               </div>

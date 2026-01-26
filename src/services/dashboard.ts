@@ -1,5 +1,5 @@
 import { sleep } from './utils'
-import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap } from '@/features/referral/lib/graphql-client'
+import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap, fetchAllTokenMarketCaps } from '@/features/referral/lib/graphql-client'
 import { fromHasuraToNative, formatBigNumber, BigNumber, math, mathIs, type BigNumberSource, fromTokenAmount, type BigNumberValue } from '@/lib/bignumber'
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
@@ -198,35 +198,93 @@ export async function getMarketStats(): Promise<MarketStatsData> {
   }
 }
 
+// ============ Token Registry ============
+// Static metadata for tokens (not available in GraphQL)
+// This could be moved to a separate config file as more tokens are added
+
+interface TokenMetadata {
+  id: string
+  symbol: string
+  name: string
+  code: string
+  sector: string
+  mint: string
+}
+
+const TOKEN_REGISTRY: Record<string, TokenMetadata> = {
+  // TESS token on DevNet
+  '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj': {
+    id: 'tess',
+    symbol: 'TESS',
+    name: 'TESS',
+    code: 'TESS-001',
+    sector: 'DeFi',
+    mint: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj',
+  },
+}
+
+/**
+ * Format market cap to human-readable valuation string
+ */
+function formatValuation(value: number): string {
+  if (value >= 1_000_000_000_000) {
+    return `$${(value / 1_000_000_000_000).toFixed(1)}T`
+  }
+  if (value >= 1_000_000_000) {
+    return `$${(value / 1_000_000_000).toFixed(1)}B`
+  }
+  if (value >= 1_000_000) {
+    return `$${(value / 1_000_000).toFixed(1)}M`
+  }
+  if (value >= 1_000) {
+    return `$${(value / 1_000).toFixed(1)}K`
+  }
+  return `$${value.toFixed(2)}`
+}
+
 /**
  * Get list of tokenized assets for the assets table
+ * Fetches real data from GraphQL and merges with token metadata
  */
 export async function getTokenizedAssets(): Promise<AssetData[]> {
-  await sleep(300)
-  // TODO: Replace with real data from token registry / GraphQL
-  // For now returning mock data
-  return [
-    {
-      id: 'spacex',
-      symbol: 'T-SPACEX',
-      name: 'T-SPACEX',
-      code: 'SPX-TX2002',
-      sector: 'Aerospace',
-      price: 95.4,
-      holders: 15420,
-      valuation: '$180B',
-    },
-    {
-      id: 'openai',
-      symbol: 'T-OPENAI',
-      name: 'T-OPENAI',
-      code: 'OAI-TX1001',
-      sector: 'Technology',
-      price: 127.85,
-      holders: 23150,
-      valuation: '$290B',
-    },
-  ]
+  const tokenMarketCaps = await fetchAllTokenMarketCaps()
+
+  if (tokenMarketCaps.length === 0) {
+    return []
+  }
+
+  return tokenMarketCaps.map((token) => {
+    const metadata = TOKEN_REGISTRY[token.token]
+    const price = BigNumber.toNumber(fromHasuraToNative(token.price))
+    const marketCap = BigNumber.toNumber(fromHasuraToNative(token.market_cap))
+
+    // If we have metadata for this token, use it; otherwise create generic entry
+    if (metadata) {
+      return {
+        id: metadata.id,
+        symbol: metadata.symbol,
+        name: metadata.name,
+        code: metadata.code,
+        sector: metadata.sector,
+        price,
+        holders: 0, // TODO: Fetch holder count when available in backend
+        valuation: formatValuation(marketCap),
+      }
+    }
+
+    // Fallback for unknown tokens
+    const shortMint = `${token.token.slice(0, 4)}...${token.token.slice(-4)}`
+    return {
+      id: token.token,
+      symbol: shortMint,
+      name: shortMint,
+      code: token.token.slice(0, 8),
+      sector: 'Unknown',
+      price,
+      holders: 0,
+      valuation: formatValuation(marketCap),
+    }
+  })
 }
 
 // ============ API Functions ============
