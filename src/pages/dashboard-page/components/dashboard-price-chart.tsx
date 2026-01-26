@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createChart, ColorType, LineStyle, AreaSeries } from 'lightweight-charts'
 import type { IChartApi, ISeriesApi, LineData, Time } from 'lightweight-charts'
-import { getPriceHistory, getDashboardTokenInfo, getDashboardStats } from '@/services'
-import TokenSpacexIcon from './_/token-spacex.svg?react'
+import { getDashboardStats } from '@/services'
+import { getTokenPrice, getPriceHistory, type TimeRange } from '@/services/price'
+import TokenTessIcon from '@/pages/trade-page/components/_/token-tess.svg?react'
 
-type TimeRange = '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL'
+const TOKEN_SYMBOL = 'TESS'
+const TOKEN_DISPLAY_NAME = 'TESS'
 
 export function DashboardPriceChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null)
@@ -15,10 +17,12 @@ export function DashboardPriceChart() {
 
   const timeRanges: TimeRange[] = ['1D', '1W', '1M', '3M', '1Y', 'ALL']
 
-  // Fetch token info
+  // Fetch token price info from backend (same as trade page)
   const { data: tokenInfo } = useQuery({
-    queryKey: ['dashboardTokenInfo'],
-    queryFn: getDashboardTokenInfo,
+    queryKey: ['tokenPrice', TOKEN_SYMBOL],
+    queryFn: () => getTokenPrice(TOKEN_SYMBOL),
+    refetchInterval: 30 * 1000,
+    staleTime: 15 * 1000,
   })
 
   // Fetch stats for top cards
@@ -27,10 +31,11 @@ export function DashboardPriceChart() {
     queryFn: getDashboardStats,
   })
 
-  // Fetch price history
+  // Fetch price history from backend (using TESS symbol)
   const { data: priceHistory } = useQuery({
-    queryKey: ['priceHistory', 'T-SpaceX', selectedRange],
-    queryFn: () => getPriceHistory('T-SpaceX', selectedRange),
+    queryKey: ['priceHistory', TOKEN_SYMBOL, selectedRange],
+    queryFn: () => getPriceHistory(TOKEN_SYMBOL, selectedRange),
+    staleTime: 30 * 1000,
   })
 
   // Initialize chart
@@ -107,9 +112,11 @@ export function DashboardPriceChart() {
     }
   }, [priceHistory])
 
+  const isPositive = (tokenInfo?.priceChange24h ?? 0) >= 0
+
   return (
     <div>
-      <h2 className="font-semibold text-sm text-foreground dark:text-[#d2d2d2] mb-4">T-SpaceX</h2>
+      <h2 className="font-semibold text-sm text-foreground dark:text-[#d2d2d2] mb-4">{TOKEN_DISPLAY_NAME}</h2>
 
       <div className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] rounded-2xl p-4 lg:p-6">
         {/* Top Stats - Desktop Only */}
@@ -121,13 +128,13 @@ export function DashboardPriceChart() {
             </p>
           </div>
           <div className="bg-[rgba(0,0,0,0.1)] rounded-lg px-4 py-3">
-            <p className="text-xs font-normal text-black mb-1">T-SpaceX Supply</p>
+            <p className="text-xs font-normal text-black mb-1">{TOKEN_DISPLAY_NAME} Supply</p>
             <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-black">
               {stats?.tokenSupply ?? '0'}
             </p>
           </div>
           <div className="bg-[rgba(0,0,0,0.1)] rounded-lg px-4 py-3">
-            <p className="text-xs font-normal text-black mb-1">T-SpaceX Price</p>
+            <p className="text-xs font-normal text-black mb-1">{TOKEN_DISPLAY_NAME} Price</p>
             <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-black">
               ${stats?.tokenPrice.toFixed(1) ?? '0.0'}
             </p>
@@ -137,20 +144,20 @@ export function DashboardPriceChart() {
         {/* Mobile - Token Info and Price */}
         <div className="flex items-center justify-between mb-2.5 lg:hidden">
           <div className="flex items-center gap-2.5">
-            <TokenSpacexIcon className="w-12 h-12" />
-            <p className="text-[16px] font-extrabold text-black">{tokenInfo?.name ?? 'T-SpaceX'}</p>
+            <TokenTessIcon className="w-12 h-12" />
+            <p className="text-[16px] font-extrabold text-black">{tokenInfo?.symbol ?? TOKEN_DISPLAY_NAME}</p>
           </div>
           <div className="flex flex-col items-end">
             <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-[#111]">
-              ${tokenInfo?.price.toFixed(2) ?? '0.00'}
+              ${tokenInfo?.price?.toFixed(2) ?? '0.00'}
             </p>
             <div className="flex items-center gap-1.5">
-              <svg className="w-3 h-2" viewBox="0 0 12 8" fill="none">
-                <path d="M0 8L6 0L12 8H0Z" fill="black" />
-              </svg>
+              <span className={`text-xs ${isPositive ? 'text-[#269700]' : 'text-red-500'}`}>
+                {isPositive ? '▲' : '▼'}
+              </span>
               <p className="text-[10px] font-medium text-black">
                 ${Math.abs(tokenInfo?.priceChange24h ?? 0).toFixed(2)} (
-                {Math.abs(tokenInfo?.priceChangePercent24h ?? 0).toFixed(4)}%) 24H
+                {Math.abs(tokenInfo?.priceChangePercent24h ?? 0).toFixed(2)}%) 24H
               </p>
             </div>
           </div>
@@ -177,21 +184,21 @@ export function DashboardPriceChart() {
         <div className="hidden lg:flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2.5">
-              <TokenSpacexIcon className="w-12 h-12" />
-              <p className="text-[16px] font-extrabold text-black">{tokenInfo?.name ?? 'T-SpaceX'}</p>
+              <TokenTessIcon className="w-12 h-12" />
+              <p className="text-[16px] font-extrabold text-black">{tokenInfo?.symbol ?? TOKEN_DISPLAY_NAME}</p>
             </div>
             <div className="bg-[rgba(0,0,0,0.5)] h-10 w-px" />
             <div className="flex flex-col justify-center">
               <p className="font-['Martian_Mono',monospace] font-medium text-[24px] text-[#111]">
-                ${tokenInfo?.price.toFixed(2) ?? '0.00'}
+                ${tokenInfo?.price?.toFixed(2) ?? '0.00'}
               </p>
               <div className="flex items-center gap-1.5">
-                <svg className="w-3 h-2" viewBox="0 0 12 8" fill="none">
-                  <path d="M0 8L6 0L12 8H0Z" fill="black" />
-                </svg>
+                <span className={`text-xs ${isPositive ? 'text-[#269700]' : 'text-red-500'}`}>
+                  {isPositive ? '▲' : '▼'}
+                </span>
                 <p className="text-xs font-medium text-black">
                   ${Math.abs(tokenInfo?.priceChange24h ?? 0).toFixed(2)} (
-                  {Math.abs(tokenInfo?.priceChangePercent24h ?? 0).toFixed(4)}%) 24H
+                  {Math.abs(tokenInfo?.priceChangePercent24h ?? 0).toFixed(2)}%) 24H
                 </p>
               </div>
             </div>
