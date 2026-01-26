@@ -109,19 +109,6 @@ const tokenInfo: TokenInfo = {
   sharesPerToken: '1 T-SPACEX = 1.00 SPACEX EQUITY',
 }
 
-const tokenStatistics: TokenStatistics = {
-  tokenPrice24h: {
-    open: 440.37,
-    high: 449.63,
-    low: 433.41,
-  },
-  underlyingAssetPrice24h: {
-    open: 440.37,
-    high: 449.63,
-    low: 433.41,
-  },
-}
-
 // ============ Helper Functions ============
 
 /**

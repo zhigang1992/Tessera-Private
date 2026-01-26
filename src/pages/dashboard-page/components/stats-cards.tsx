@@ -69,12 +69,7 @@ export function StatsCards() {
                     {card.value}
                   </p>
                 </div>
-                {card.hasChange && (
-                  <div className="bg-[rgba(210,251,149,0.5)] flex items-center gap-1.5 px-2 py-1 rounded w-fit">
-                    <TrendingUp className="w-3 h-3 text-foreground dark:text-white" />
-                    <p className="text-xs font-normal text-foreground dark:text-white">{card.change}</p>
-                  </div>
-                )}
+                {/* Note: 24h change badges hidden until backend provides this data */}
               </div>
             </div>
           </div>
