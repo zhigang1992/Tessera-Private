@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { motion } from 'framer-motion'
+import { cn } from '@/lib/utils'
 import { ThemeToggleButton } from '@/components/theme-toggle-button'
 import LeaderboardHeader from '../ui/leaderboard-header'
 import { LeaderboardTable } from '../ui/leaderboard-table'
 import { useLeaderboard } from '../hooks/use-leaderboard'
+import type { LeaderboardType } from '../types'
 import infoImg1 from '@/assets/info/info1.png'
 import infoImg2 from '@/assets/info/info2.png'
 import infoImg3 from '@/assets/info/info3.png'
@@ -25,10 +27,21 @@ const brainVariants = {
   },
 }
 
+const tabs: { id: LeaderboardType; label: string }[] = [
+  { id: 'trading', label: 'Trading Leaderboard' },
+  { id: 'referral', label: 'Referral Leaderboard' },
+]
+
 export function LeaderboardPage() {
+  const [activeTab, setActiveTab] = useState<LeaderboardType>('trading')
   const [page, setPage] = useState(1)
   const { publicKey } = useWallet()
-  const { data, isLoading, error } = useLeaderboard(page)
+  const { data, isLoading, error } = useLeaderboard(page, activeTab)
+
+  const handleTabChange = (tab: LeaderboardType) => {
+    setActiveTab(tab)
+    setPage(1) // Reset to first page when switching tabs
+  }
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-white dark:bg-black sm:pb-24">
@@ -39,7 +52,25 @@ export function LeaderboardPage() {
 
           <div className="h-px rounded-full bg-[#000] dark:bg-[#27272A]" />
 
-          <h1 className="text-2xl font-bold text-black dark:text-white font-[Poppins]">Referral Leaderboard</h1>
+          <h1 className="text-2xl font-bold text-black dark:text-white font-[Poppins]">Leaderboard</h1>
+
+          {/* Tabs */}
+          <div className="flex items-center gap-2 border border-black/15 dark:border-white/15 rounded-lg p-1 w-fit">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                className={cn(
+                  'px-4 py-2 text-sm font-medium rounded-md transition-colors',
+                  activeTab === tab.id
+                    ? 'bg-black text-white dark:bg-white dark:text-black'
+                    : 'text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white'
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
           {error ? (
             <div className="flex min-h-[300px] flex-col items-center justify-center">
@@ -53,6 +84,7 @@ export function LeaderboardPage() {
               onPageChange={setPage}
               isLoading={isLoading}
               currentUserAddress={publicKey?.toBase58()}
+              type={activeTab}
             />
           )}
 

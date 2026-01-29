@@ -1,22 +1,35 @@
-import type { LeaderboardQueryResult } from '../types'
+import type { LeaderboardQueryResult, LeaderboardType } from '../types'
 
 const GRAPHQL_ENDPOINT = 'https://tracker-gql-dev.tessera.fun/v1/graphql'
 
+/**
+ * Fetch leaderboard data from public_marts.leaderboard_summary
+ * Supports sorting by trading volume or referral count
+ */
 export async function fetchLeaderboard(
   limit: number = 10,
-  offset: number = 0
+  offset: number = 0,
+  type: LeaderboardType = 'trading'
 ): Promise<LeaderboardQueryResult> {
+  // Determine sort order based on leaderboard type
+  const orderBy = type === 'trading'
+    ? '{ total_trading_volume: desc_nulls_last }'
+    : '{ total_referrals: desc_nulls_last }'
+
   const query = `
     query GetLeaderboard($limit: Int!, $offset: Int!) {
-      view_owner_referral_stats(
+      public_marts_leaderboard_summary(
         limit: $limit
         offset: $offset
-        order_by: { invited_count: desc }
+        order_by: ${orderBy}
       ) {
-        owner
-        invited_count
+        account
+        total_referrals
+        total_rewards_usd
+        total_trading_points
+        total_trading_volume
       }
-      view_owner_referral_stats_aggregate {
+      public_marts_leaderboard_summary_aggregate {
         aggregate {
           count
         }

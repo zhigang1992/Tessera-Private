@@ -1,9 +1,8 @@
 import { cn } from '@/lib/utils'
 import { ellipsify } from '@/lib/utils'
 import { CrownIcon } from './crown-icon'
-import { PersonIcon } from './person-icon'
 import { Pagination } from './pagination'
-import type { LeaderboardEntry } from '../types'
+import type { LeaderboardEntry, LeaderboardType } from '../types'
 
 interface LeaderboardTableProps {
   entries: LeaderboardEntry[]
@@ -12,6 +11,33 @@ interface LeaderboardTableProps {
   onPageChange: (page: number) => void
   isLoading?: boolean
   currentUserAddress?: string
+  type: LeaderboardType
+}
+
+/**
+ * Format currency value for display
+ */
+function formatCurrency(value: number): string {
+  if (value >= 1_000_000) {
+    return `$${(value / 1_000_000).toFixed(2)}M`
+  }
+  if (value >= 1_000) {
+    return `$${(value / 1_000).toFixed(2)}K`
+  }
+  return `$${value.toFixed(value < 10 ? 3 : 2)}`
+}
+
+/**
+ * Format number for display
+ */
+function formatNumber(value: number): string {
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(2)}M`
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(2)}K`
+  }
+  return value.toLocaleString()
 }
 
 export function LeaderboardTable({
@@ -21,6 +47,7 @@ export function LeaderboardTable({
   onPageChange,
   isLoading,
   currentUserAddress,
+  type,
 }: LeaderboardTableProps) {
   const isCurrentUser = (address: string) => {
     return currentUserAddress?.toLowerCase() === address.toLowerCase()
@@ -41,14 +68,23 @@ export function LeaderboardTable({
     )
   }
 
+  const isTradingLeaderboard = type === 'trading'
+
   return (
     <div className="flex flex-col gap-6 rounded-lg bg-white dark:bg-black p-4 sm:p-6">
       {/* Header */}
       <div className="flex flex-col gap-[10px]">
         <div className="flex items-center gap-[10px] px-[10px]">
-          <div className="w-[240px] text-xs text-[#71717A]">Rank (Top100)</div>
+          <div className="w-[140px] sm:w-[180px] text-xs text-[#71717A]">Rank (Top100)</div>
           <div className="flex-1 text-xs text-[#71717A]">User</div>
-          <div className="flex-1 text-xs text-[#71717A]">Trader Referral</div>
+          {isTradingLeaderboard ? (
+            <>
+              <div className="w-[100px] sm:w-[120px] text-xs text-[#71717A] text-right">Trading Vol.</div>
+              <div className="w-[100px] sm:w-[120px] text-xs text-[#71717A] text-right">Trading Points</div>
+            </>
+          ) : (
+            <div className="w-[120px] sm:w-[150px] text-xs text-[#71717A] text-right">Trader Referral</div>
+          )}
         </div>
 
         {/* Divider */}
@@ -59,12 +95,12 @@ export function LeaderboardTable({
         {/* List */}
         <div className="flex flex-col gap-[5px]">
           {entries.map((entry, index) => {
-            const isUserRow = isCurrentUser(entry.owner)
+            const isUserRow = isCurrentUser(entry.account)
             const isOddRow = index % 2 === 0
 
             return (
               <div
-                key={entry.owner}
+                key={entry.account}
                 className={cn(
                   'flex items-center gap-[10px] rounded p-[10px]',
                   isUserRow
@@ -75,9 +111,9 @@ export function LeaderboardTable({
                 )}
               >
                 {/* Rank */}
-                <div className="w-[240px] flex items-center gap-[5px]">
+                <div className="w-[140px] sm:w-[180px] flex items-center gap-[5px]">
                   <span className={cn('text-sm', isUserRow ? 'text-black' : 'text-black dark:text-white')}>
-                    #{entry.rank}
+                    {entry.rank}
                   </span>
                   {isTopThree(entry.rank) && <CrownIcon />}
                   {isUserRow && (
@@ -88,15 +124,28 @@ export function LeaderboardTable({
                 {/* User Address */}
                 <div className="flex-1">
                   <span className={cn('text-sm', isUserRow ? 'text-black' : 'text-black dark:text-white')}>
-                    {ellipsify(entry.owner, 5, '...')}
+                    {ellipsify(entry.account, 4, '...')}
                   </span>
                 </div>
 
-                {/* Trader Referral Count */}
-                <div className="flex-1 flex items-center gap-[5px]">
-                  <PersonIcon className={isUserRow ? 'text-black' : undefined} />
-                  <span className="text-sm text-[#2B664B]">{entry.invited_count.toLocaleString()}</span>
-                </div>
+                {/* Trading Leaderboard: Volume + Points */}
+                {isTradingLeaderboard ? (
+                  <>
+                    <div className="w-[100px] sm:w-[120px] text-right">
+                      <span className="text-sm text-[#2B664B]">{formatCurrency(entry.total_trading_volume)}</span>
+                    </div>
+                    <div className="w-[100px] sm:w-[120px] text-right">
+                      <span className={cn('text-sm', isUserRow ? 'text-black' : 'text-black dark:text-white')}>
+                        {formatNumber(entry.total_trading_points)}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  /* Referral Leaderboard: Referral Count */
+                  <div className="w-[120px] sm:w-[150px] text-right">
+                    <span className="text-sm text-[#2B664B]">{entry.total_referrals.toLocaleString()}</span>
+                  </div>
+                )}
               </div>
             )
           })}
