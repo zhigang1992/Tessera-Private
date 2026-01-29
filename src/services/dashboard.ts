@@ -1,5 +1,5 @@
 import { sleep } from './utils'
-import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap, fetchAllTokenDetails } from '@/features/referral/lib/graphql-client'
+import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap, fetchAllTokenDetails, fetchDashboardSummary, fetchTokenPrice24hOHLC } from '@/features/referral/lib/graphql-client'
 import { fromHasuraToNative, formatBigNumber, BigNumber, math, mathIs, type BigNumberSource, fromTokenAmount, type BigNumberValue } from '@/lib/bignumber'
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
@@ -9,8 +9,11 @@ import { DEVNET_POOLS } from './meteora'
 
 export interface MarketStatsData {
   totalMarketCap: number
+  totalMarketCap24hChangePct: number | null
   totalTradingVolume: number
+  totalVolume24hChangePct: number | null
   activeTraders: number
+  activeTraders24hChange: number | null
   assetsTokenized: number
 }
 
@@ -162,26 +165,54 @@ function formatWalletAddress(address: string): string {
 
 /**
  * Get market overview statistics for the stats cards
+ * Uses new dashboard_summary view with 24h change data
  */
 export async function getMarketStats(): Promise<MarketStatsData> {
-  const [stats, marketCapData] = await Promise.all([
-    fetchDashboardStats(),
-    fetchTotalMarketCap(),
-  ])
+  const summary = await fetchDashboardSummary()
 
-  // Convert market cap from 18-decimal Hasura format
-  let totalMarketCap = 0
-  let assetsTokenized = 0
-  if (marketCapData) {
-    totalMarketCap = BigNumber.toNumber(fromHasuraToNative(marketCapData.total_market_cap))
-    assetsTokenized = Number(marketCapData.token_count) || 0
+  if (!summary) {
+    // Fallback to old method if dashboard_summary is not available
+    const [stats, marketCapData] = await Promise.all([
+      fetchDashboardStats(),
+      fetchTotalMarketCap(),
+    ])
+
+    let totalMarketCap = 0
+    let assetsTokenized = 0
+    if (marketCapData) {
+      totalMarketCap = BigNumber.toNumber(fromHasuraToNative(marketCapData.total_market_cap))
+      assetsTokenized = Number(marketCapData.token_count) || 0
+    }
+
+    return {
+      totalMarketCap,
+      totalMarketCap24hChangePct: null,
+      totalTradingVolume: stats.totalTradingVolume,
+      totalVolume24hChangePct: null,
+      activeTraders: stats.totalTraders,
+      activeTraders24hChange: null,
+      assetsTokenized,
+    }
   }
+
+  // Use dashboard_summary data with 24h changes
+  const totalMarketCap = BigNumber.toNumber(fromHasuraToNative(summary.total_market_cap))
+  const totalTradingVolume = BigNumber.toNumber(fromHasuraToNative(summary.total_trading_volume))
+  const totalMarketCap24hChangePct = summary.total_market_cap_24h_change_pct
+    ? BigNumber.toNumber(fromHasuraToNative(summary.total_market_cap_24h_change_pct))
+    : null
+  const totalVolume24hChangePct = summary.total_volume_24h_change_pct
+    ? BigNumber.toNumber(fromHasuraToNative(summary.total_volume_24h_change_pct))
+    : null
 
   return {
     totalMarketCap,
-    totalTradingVolume: stats.totalTradingVolume,
-    activeTraders: stats.totalTraders,
-    assetsTokenized,
+    totalMarketCap24hChangePct,
+    totalTradingVolume,
+    totalVolume24hChangePct,
+    activeTraders: Number(summary.total_active_traders) || 0,
+    activeTraders24hChange: summary.total_traders_24h_change ?? null,
+    assetsTokenized: Number(summary.total_assets_tokenized) || 0,
   }
 }
 
@@ -331,30 +362,53 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 }
 
 /**
- * Get token info with real price data from swap events
+ * Get token info with real price data from backend
+ * Falls back to calculating from swap events if backend data unavailable
  */
 export async function getDashboardTokenInfo(): Promise<TokenInfo> {
+  const tokenMint = DEVNET_POOLS['TESS-USDC'].tokenX.mint
   const poolAddress = DEVNET_POOLS['TESS-USDC'].address
-  const events = await fetchSwapEventsForPrice(poolAddress, 100)
 
-  if (events.length === 0) {
-    return tokenInfo
+  // Fetch 24h OHLC data and swap events in parallel
+  const [ohlcData, events] = await Promise.all([
+    fetchTokenPrice24hOHLC(tokenMint),
+    fetchSwapEventsForPrice(poolAddress, 100),
+  ])
+
+  // Get current price from most recent swap
+  let currentPrice = 0
+  if (events.length > 0) {
+    const latestEvent = events[events.length - 1]
+    const x = fromHasuraToNative(latestEvent.amount_x)
+    const y = fromHasuraToNative(latestEvent.amount_y)
+    if (mathIs`${x} > ${0}`) {
+      currentPrice = BigNumber.toNumber(math`${y} / ${x}`)
+    }
   }
 
-  // Get latest price from most recent swap
-  const latestEvent = events[events.length - 1]
-  const x = fromHasuraToNative(latestEvent.amount_x)
-  const y = fromHasuraToNative(latestEvent.amount_y)
-  let currentPrice = 0
-  if (mathIs`${x} > ${0}`) {
-    currentPrice = BigNumber.toNumber(math`${y} / ${x}`)
+  // Use close_price_24h if available, otherwise fall back to current price
+  if (ohlcData?.close_price_24h) {
+    currentPrice = BigNumber.toNumber(fromHasuraToNative(ohlcData.close_price_24h))
   }
 
   if (currentPrice === 0) {
     return tokenInfo
   }
 
-  // Calculate 24h change by finding price 24h ago
+  // Use backend 24h change data if available
+  if (ohlcData?.price_change_24h && ohlcData?.price_change_pct_24h) {
+    const priceChange24h = BigNumber.toNumber(fromHasuraToNative(ohlcData.price_change_24h))
+    const priceChangePercent24h = BigNumber.toNumber(fromHasuraToNative(ohlcData.price_change_pct_24h))
+
+    return {
+      ...tokenInfo,
+      price: currentPrice,
+      priceChange24h,
+      priceChangePercent24h,
+    }
+  }
+
+  // Fallback: Calculate 24h change from swap events
   const now = Math.floor(Date.now() / 1000)
   const dayAgo = now - 24 * 60 * 60
 
@@ -399,14 +453,44 @@ function calculatePriceFromSwap(amountX: string, amountY: string): BigNumberValu
 }
 
 /**
- * Get dashboard statistics with 24h OHLC data calculated from swap events
+ * Get dashboard statistics with 24h OHLC data from backend
+ * Falls back to calculating from swap events if backend data unavailable
  */
 export async function getDashboardStatistics(): Promise<TokenStatistics> {
+  const tokenMint = DEVNET_POOLS['TESS-USDC'].tokenX.mint
+
+  // Try to get 24h OHLC from backend first
+  const ohlcData = await fetchTokenPrice24hOHLC(tokenMint)
+
+  if (ohlcData && ohlcData.open_price_24h) {
+    const openPrice = BigNumber.toNumber(fromHasuraToNative(ohlcData.open_price_24h))
+    const highPrice = ohlcData.high_price_24h
+      ? BigNumber.toNumber(fromHasuraToNative(ohlcData.high_price_24h))
+      : openPrice
+    const lowPrice = ohlcData.low_price_24h
+      ? BigNumber.toNumber(fromHasuraToNative(ohlcData.low_price_24h))
+      : openPrice
+
+    return {
+      tokenPrice24h: {
+        open: openPrice,
+        high: highPrice,
+        low: lowPrice,
+      },
+      // For now, underlying asset price mirrors token price
+      underlyingAssetPrice24h: {
+        open: openPrice,
+        high: highPrice,
+        low: lowPrice,
+      },
+    }
+  }
+
+  // Fallback: Calculate from swap events if backend data unavailable
   const poolAddress = DEVNET_POOLS['TESS-USDC'].address
   const swapEvents = await fetchSwapEventsLast24h(poolAddress)
 
   if (swapEvents.length === 0) {
-    // No swap events in last 24h, return default values
     return {
       tokenPrice24h: {
         open: 0,
@@ -425,7 +509,7 @@ export async function getDashboardStatistics(): Promise<TokenStatistics> {
   const prices: number[] = swapEvents.map((event) => {
     const price = calculatePriceFromSwap(event.amount_x, event.amount_y)
     return BigNumber.toNumber(price)
-  }).filter((price) => price > 0) // Filter out zero prices
+  }).filter((price) => price > 0)
 
   if (prices.length === 0) {
     return {
@@ -442,7 +526,6 @@ export async function getDashboardStatistics(): Promise<TokenStatistics> {
     }
   }
 
-  // Events are already sorted by block_time ascending, so first is open
   const openPrice = prices[0]
   const highPrice = Math.max(...prices)
   const lowPrice = Math.min(...prices)
@@ -453,8 +536,6 @@ export async function getDashboardStatistics(): Promise<TokenStatistics> {
       high: highPrice,
       low: lowPrice,
     },
-    // For now, underlying asset price mirrors token price
-    // TODO: Fetch actual underlying asset price when available
     underlyingAssetPrice24h: {
       open: openPrice,
       high: highPrice,

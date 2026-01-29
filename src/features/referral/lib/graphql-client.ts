@@ -1012,6 +1012,47 @@ export async function fetchAuctionDepositEvents(
   return data.facts_meteora_escrow_deposited_events
 }
 
+// ============ Dashboard Summary ============
+
+export interface DashboardSummaryData {
+  total_active_traders: number // bigint from GraphQL
+  total_assets_tokenized: number // bigint from GraphQL
+  total_market_cap: string // numeric from GraphQL (18 decimals)
+  total_market_cap_24h_change: string | null // numeric from GraphQL (18 decimals)
+  total_market_cap_24h_change_pct: string | null // numeric from GraphQL (18 decimals)
+  total_traders_24h_change: number | null // bigint from GraphQL
+  total_trading_volume: string // numeric from GraphQL (18 decimals)
+  total_volume_24h_change: string | null // numeric from GraphQL (18 decimals)
+  total_volume_24h_change_pct: string | null // numeric from GraphQL (18 decimals)
+}
+
+/**
+ * Fetch dashboard summary with all 24h change data
+ */
+export async function fetchDashboardSummary(): Promise<DashboardSummaryData | null> {
+  const query = `
+    query GetDashboardSummary {
+      public_marts_dashboard_summary(limit: 1) {
+        total_active_traders
+        total_assets_tokenized
+        total_market_cap
+        total_market_cap_24h_change
+        total_market_cap_24h_change_pct
+        total_traders_24h_change
+        total_trading_volume
+        total_volume_24h_change
+        total_volume_24h_change_pct
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_dashboard_summary: DashboardSummaryData[]
+  }>(query)
+
+  return data.public_marts_dashboard_summary[0] ?? null
+}
+
 // ============ Reward Details by Code/Referral ============
 
 export interface FeeByToken {
