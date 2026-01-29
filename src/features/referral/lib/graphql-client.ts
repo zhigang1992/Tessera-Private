@@ -1053,6 +1053,49 @@ export async function fetchDashboardSummary(): Promise<DashboardSummaryData | nu
   return data.public_marts_dashboard_summary[0] ?? null
 }
 
+// ============ Trading Points by Account ============
+
+export interface TradingPointsByAccountData {
+  account: string
+  own_trading_points: string // numeric from GraphQL (18 decimals)
+  referral_trading_points: string // numeric from GraphQL (18 decimals)
+  tier1_referral_points: string // numeric from GraphQL (18 decimals)
+  tier2_referral_points: string // numeric from GraphQL (18 decimals)
+  tier3_referral_points: string // numeric from GraphQL (18 decimals)
+  total_trading_points: string // numeric from GraphQL (18 decimals)
+}
+
+/**
+ * Fetch trading points for a specific account
+ * Returns referral points breakdown (own, referral total, tier1/2/3)
+ */
+export async function fetchTradingPointsByAccount(
+  account: string
+): Promise<TradingPointsByAccountData | null> {
+  const query = `
+    query GetTradingPointsByAccount($account: String!) {
+      public_marts_trading_points_by_account(
+        where: { account: { _eq: $account } }
+        limit: 1
+      ) {
+        account
+        own_trading_points
+        referral_trading_points
+        tier1_referral_points
+        tier2_referral_points
+        tier3_referral_points
+        total_trading_points
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_trading_points_by_account: TradingPointsByAccountData[]
+  }>(query, { account })
+
+  return data.public_marts_trading_points_by_account[0] ?? null
+}
+
 // ============ Reward Details by Code/Referral ============
 
 export interface FeeByToken {

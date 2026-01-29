@@ -5,11 +5,13 @@ import {
   fetchUserTradingVolume,
   fetchRewardDetailsByCode,
   fetchTradersForCode,
+  fetchTradingPointsByAccount,
   type AggregatedAffiliateStats,
   type FeeByToken,
+  type TradingPointsByAccountData,
 } from '@/features/referral/lib/graphql-client'
 import { DEVNET_POOLS } from './meteora'
-import { fromHasuraToNative, formatBigNumber, type BigNumberSource } from '@/lib/bignumber'
+import { fromHasuraToNative, formatBigNumber, BigNumber, type BigNumberSource } from '@/lib/bignumber'
 
 // ============ Types ============
 
@@ -100,6 +102,11 @@ let cachedAffiliateStats: AggregatedAffiliateStats | null = null
 let cacheTimestamp: number = 0
 const CACHE_TTL = 30000 // 30 seconds
 
+// Cache for trading points
+let cachedTradingPoints: TradingPointsByAccountData | null = null
+let tradingPointsCacheTimestamp: number = 0
+let tradingPointsCacheAddress: string | null = null
+
 async function getCachedAffiliateStats(walletAddress?: string): Promise<AggregatedAffiliateStats | null> {
   const address = walletAddress || currentWalletAddress
   if (!address) return null
@@ -114,42 +121,82 @@ async function getCachedAffiliateStats(walletAddress?: string): Promise<Aggregat
   return cachedAffiliateStats
 }
 
-export async function getRewardsOverview(walletAddress?: string): Promise<RewardsData> {
-  const stats = await getCachedAffiliateStats(walletAddress)
+async function getCachedTradingPoints(walletAddress?: string): Promise<TradingPointsByAccountData | null> {
+  const address = walletAddress || currentWalletAddress
+  if (!address) return null
 
-  // Always return GraphQL data (which may be zeros if no data exists)
-  // Only fall back to mock if GraphQL fetch failed entirely (stats is null)
+  const now = Date.now()
+  // Check if cache is valid (same address and within TTL)
+  if (cachedTradingPoints && tradingPointsCacheAddress === address && now - tradingPointsCacheTimestamp < CACHE_TTL) {
+    return cachedTradingPoints
+  }
+
+  cachedTradingPoints = await fetchTradingPointsByAccount(address)
+  tradingPointsCacheTimestamp = now
+  tradingPointsCacheAddress = address
+  return cachedTradingPoints
+}
+
+export async function getRewardsOverview(walletAddress?: string): Promise<RewardsData> {
+  // Fetch affiliate stats and trading points in parallel
+  const [stats, tradingPoints] = await Promise.all([
+    getCachedAffiliateStats(walletAddress),
+    getCachedTradingPoints(walletAddress),
+  ])
+
+  // Get referral points from trading_points_by_account (referral_trading_points)
+  let referralPoints: number | null = null
+  if (tradingPoints?.referral_trading_points) {
+    referralPoints = Math.round(BigNumber.toNumber(fromHasuraToNative(tradingPoints.referral_trading_points)))
+  }
+
+  // Get rewards from affiliate stats
   if (stats) {
     return {
       rewards: stats.totalRewardsUsd,
-      referralPoints: stats.totalReferrals,
+      referralPoints,
     }
   }
 
   // Return zeros when no wallet connected or GraphQL failed
   return {
     rewards: 0,
-    referralPoints: 0,
+    referralPoints,
   }
 }
 
 export async function getTraderLayers(walletAddress?: string): Promise<TraderLayer[]> {
-  const stats = await getCachedAffiliateStats(walletAddress)
+  // Fetch affiliate stats and trading points in parallel
+  const [stats, tradingPoints] = await Promise.all([
+    getCachedAffiliateStats(walletAddress),
+    getCachedTradingPoints(walletAddress),
+  ])
 
-  // Always return GraphQL data (which may be zeros if no data exists)
+  // Get tier points from trading_points_by_account
+  const tier1Points = tradingPoints?.tier1_referral_points
+    ? Math.round(BigNumber.toNumber(fromHasuraToNative(tradingPoints.tier1_referral_points)))
+    : 0
+  const tier2Points = tradingPoints?.tier2_referral_points
+    ? Math.round(BigNumber.toNumber(fromHasuraToNative(tradingPoints.tier2_referral_points)))
+    : 0
+  const tier3Points = tradingPoints?.tier3_referral_points
+    ? Math.round(BigNumber.toNumber(fromHasuraToNative(tradingPoints.tier3_referral_points)))
+    : 0
+
+  // Get traders referred count from affiliate stats
   if (stats) {
     return [
-      { layer: 'L1', tradersReferred: stats.tier1Referrals, points: Math.round(stats.tier1Rewards) },
-      { layer: 'L2', tradersReferred: stats.tier2Referrals, points: Math.round(stats.tier2Rewards) },
-      { layer: 'L3', tradersReferred: stats.tier3Referrals, points: Math.round(stats.tier3Rewards) },
+      { layer: 'L1', tradersReferred: stats.tier1Referrals, points: tier1Points },
+      { layer: 'L2', tradersReferred: stats.tier2Referrals, points: tier2Points },
+      { layer: 'L3', tradersReferred: stats.tier3Referrals, points: tier3Points },
     ]
   }
 
   // Return zeros when no wallet connected or GraphQL failed
   return [
-    { layer: 'L1', tradersReferred: 0, points: 0 },
-    { layer: 'L2', tradersReferred: 0, points: 0 },
-    { layer: 'L3', tradersReferred: 0, points: 0 },
+    { layer: 'L1', tradersReferred: 0, points: tier1Points },
+    { layer: 'L2', tradersReferred: 0, points: tier2Points },
+    { layer: 'L3', tradersReferred: 0, points: tier3Points },
   ]
 }
 
@@ -272,6 +319,9 @@ export async function getReferralUsersByCode(code: string): Promise<ReferralUser
 export function clearAffiliateStatsCache() {
   cachedAffiliateStats = null
   cacheTimestamp = 0
+  cachedTradingPoints = null
+  tradingPointsCacheTimestamp = 0
+  tradingPointsCacheAddress = null
 }
 
 // ============ Traders Tab Data ============
