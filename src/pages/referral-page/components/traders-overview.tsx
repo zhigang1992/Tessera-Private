@@ -17,8 +17,8 @@ export function TradersOverview() {
   // Fetch traders overview for trading volume and points
   const { data, isLoading } = useQuery({
     queryKey: ['tradersOverview', walletAddress],
-    queryFn: getTradersOverview,
-    enabled: connected,
+    queryFn: () => getTradersOverview(walletAddress!),
+    enabled: connected && !!walletAddress,
   })
 
   // Fetch on-chain trader data for active referral code

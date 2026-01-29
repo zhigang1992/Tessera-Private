@@ -363,8 +363,9 @@ function formatSwapAmount(rawAmount: BigNumberSource): string {
 
 // ============ Traders Tab API Functions ============
 
-export async function getTradersOverview(): Promise<TradersOverviewData> {
-  if (!currentWalletAddress) {
+export async function getTradersOverview(walletAddress?: string): Promise<TradersOverviewData> {
+  const address = walletAddress || currentWalletAddress
+  if (!address) {
     // Return zeros when no wallet connected
     return {
       tradingVolume: 0,
@@ -373,18 +374,25 @@ export async function getTradersOverview(): Promise<TradersOverviewData> {
     }
   }
 
-  // Fetch user registration and trading volume in parallel
-  const [registration, volumeData] = await Promise.all([
-    fetchUserRegistration(currentWalletAddress),
-    fetchUserTradingVolume(currentWalletAddress),
+  // Fetch user registration, trading volume, and trading points in parallel
+  const [registration, volumeData, tradingPoints] = await Promise.all([
+    fetchUserRegistration(address),
+    fetchUserTradingVolume(address),
+    getCachedTradingPoints(address),
   ])
 
   const activeReferralCode = registration?.referral_code ?? null
 
+  // Get own trading points from trading_points_by_account
+  let ownTradingPoints = 0
+  if (tradingPoints?.own_trading_points) {
+    ownTradingPoints = Math.round(BigNumber.toNumber(fromHasuraToNative(tradingPoints.own_trading_points)))
+  }
+
   return {
     tradingVolume: volumeData.totalVolumeUsd,
     activeReferralCode,
-    tradingPoints: 0, // Not tracked in current schema
+    tradingPoints: ownTradingPoints,
   }
 }
 
