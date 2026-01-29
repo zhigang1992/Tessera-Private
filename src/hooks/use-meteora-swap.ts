@@ -216,8 +216,12 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
         swapTx.feePayer = wallet.publicKey
 
         // Sign and send to devnet
+        // skipPreflight: true to avoid simulation errors when tx was already processed
+        // (simulation can return false positives for duplicate detection)
         const signed = await wallet.signTransaction(swapTx)
-        const signature = await devnetConnection.sendRawTransaction(signed.serialize())
+        const signature = await devnetConnection.sendRawTransaction(signed.serialize(), {
+          skipPreflight: true,
+        })
 
         // Confirm transaction on devnet
         await devnetConnection.confirmTransaction({
@@ -228,6 +232,10 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
 
         setTxSignature(signature)
 
+        // Clear quote and pool cache to avoid stale data on subsequent swaps
+        setQuote(null)
+        client.clearCache()
+
         // Refresh balances after successful swap
         await refreshBalances()
 
@@ -235,6 +243,8 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Swap failed'
         setError(message)
+        // Clear pool cache on error to avoid stale state
+        client.clearCache()
         return null
       } finally {
         setIsLoading(false)
