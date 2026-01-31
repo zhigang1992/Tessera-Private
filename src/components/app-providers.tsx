@@ -2,6 +2,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { ReactQueryProvider } from './react-query-provider'
 import { SolanaProvider } from '@/components/solana/solana-provider'
 import { HeaderProvider } from '@/contexts/header-context'
+import { GeoBlockModal } from '@/components/geo-block-modal'
 import { Toaster } from 'sonner'
 import React from 'react'
 
@@ -13,6 +14,7 @@ export function AppProviders({ children }: Readonly<{ children: React.ReactNode 
           <HeaderProvider>
             {children}
             <Toaster position="bottom-left" />
+            <GeoBlockModal />
           </HeaderProvider>
         </SolanaProvider>
       </ThemeProvider>
