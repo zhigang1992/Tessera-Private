@@ -74,14 +74,15 @@ export function GeoBlockModal() {
             </DialogPrimitive.Title>
             <DialogPrimitive.Description className="text-muted-foreground text-sm text-center space-y-4 pt-4">
               <p className="text-base">
-                We're sorry, but Tessera is not available in {countryName || 'your jurisdiction'}.
+                We're sorry, but Tessera is not available in your location.
               </p>
               <p className="text-sm text-muted-foreground">
                 Due to regulatory requirements, we cannot provide services to users located in certain jurisdictions
-                including the United States, China, and other restricted territories.
+                including the United States, China, and other restricted territories as outlined in our Terms of
+                Service.
               </p>
               <p className="text-sm text-muted-foreground">
-                For more information, please review our{' '}
+                For the complete list of restricted jurisdictions and more information, please review our{' '}
                 <a
                   href="https://terms.tessera.pe"
                   target="_blank"
