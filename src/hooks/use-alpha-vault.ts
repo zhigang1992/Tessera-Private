@@ -21,6 +21,7 @@ import {
 } from '@/services/alpha-vault'
 import { getTimeRemaining } from '@/services/alpha-vault-helpers'
 import { getAccount, getAssociatedTokenAddress } from '@solana/spl-token'
+import { addTermsAcceptanceMemo, MemoType } from '@/lib/transaction-memo'
 
 // Get devnet RPC URL from environment or use default
 const DEVNET_RPC_URL = import.meta.env.VITE_DEVNET_RPC_URL || clusterApiUrl('devnet')
@@ -258,6 +259,9 @@ export function useAlphaVault(): UseAlphaVaultReturn {
           amountBN,
           merkleProof ?? undefined
         )
+
+        // Add terms acceptance memo
+        addTermsAcceptanceMemo(tx, wallet.publicKey, MemoType.VAULT_DEPOSIT)
 
         // Set recent blockhash and fee payer
         const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash()

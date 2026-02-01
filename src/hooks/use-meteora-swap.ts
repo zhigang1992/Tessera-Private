@@ -25,6 +25,7 @@ import {
   ZERO,
   isZero,
 } from '@/lib/bignumber'
+import { addTermsAcceptanceMemo, MemoType } from '@/lib/transaction-memo'
 
 // Get devnet RPC URL from environment or use default
 const DEVNET_RPC_URL = import.meta.env.VITE_DEVNET_RPC_URL || clusterApiUrl('devnet')
@@ -209,6 +210,9 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
           swapQuote,
           wallet.publicKey
         )
+
+        // Add terms acceptance memo
+        addTermsAcceptanceMemo(swapTx, wallet.publicKey, MemoType.TRADING)
 
         // Set recent blockhash and fee payer using devnet connection
         const { blockhash, lastValidBlockHeight } = await devnetConnection.getLatestBlockhash()
