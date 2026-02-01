@@ -19,8 +19,8 @@ const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfc
  * Predefined memo messages for different transaction types
  */
 export enum MemoType {
-  TRADING = 'I accept Tessera trading terms and conditions',
-  VAULT_DEPOSIT = 'I accept Tessera vault deposit terms and conditions',
+  TRADING = "I acknowledge that I have read and accept Tessera's Terms and Conditions available at https://terms.tessera.pe/",
+  VAULT_DEPOSIT = "I acknowledge that I have read and accept Tessera's Terms and Conditions available at https://terms.tessera.pe/",
 }
 
 /**
