@@ -4,7 +4,7 @@ import { useAlphaVault } from '@/hooks/use-alpha-vault'
 
 export function ClaimHeaderCard() {
   const wallet = useWallet()
-  const { claimInfo } = useAlphaVault()
+  const { claimInfo, estimatedRefund } = useAlphaVault()
 
   // Check if user is eligible (has allocation)
   const isEligible =
@@ -14,9 +14,7 @@ export function ClaimHeaderCard() {
   const totalTokens = claimInfo
     ? parseFloat(claimInfo.totalAllocation) / 10 ** 6
     : 0
-  const refundAmount = claimInfo
-    ? parseFloat(claimInfo.refundAmount) / 10 ** 6
-    : 0
+  const refundAmount = estimatedRefund ? parseFloat(estimatedRefund) : 0
 
   if (!isEligible) {
     return (

@@ -46,7 +46,6 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
   const sellingBalance = isBuying ? usdcBalance : tSpaceXBalance
   // Formatted strings for display
   const sellingBalanceFormatted = isBuying ? usdcBalanceFormatted : tSpaceXBalanceFormatted
-  const buyingBalanceFormatted = isBuying ? tSpaceXBalanceFormatted : usdcBalanceFormatted
 
   // Load pool and balances on mount (skip if disabled)
   useEffect(() => {
@@ -141,7 +140,6 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
   }, [quote, direction, executeSwap])
 
   const outputAmount = quote?.outAmountFormatted ?? '0'
-  const minOutput = quote?.minOutAmountFormatted ?? '0'
   const rate = quote?.rate ?? '0'
 
   // Button state

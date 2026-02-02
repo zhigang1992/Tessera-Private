@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { Info, ExternalLink, Loader2 } from 'lucide-react'
+import { Info, Loader2 } from 'lucide-react'
 import { useAlphaVault } from '@/hooks/use-alpha-vault'
 import { ALPHA_VAULT_CONFIG } from '@/services/alpha-vault'
 import { toast } from 'sonner'
