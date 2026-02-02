@@ -3,6 +3,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useMeteoraSwap, type SwapDirection } from '@/hooks/use-meteora-swap'
 import { getExplorerUrl } from '@/lib/solana/config'
+import { formatBigNumber } from '@/lib/bignumber'
 import TokenUsdcIcon from './_/token-usdc.svg?react'
 import TokenTessIcon from './_/token-tess.svg?react'
 import SwapIcon from './_/swap-icon.svg?react'
@@ -108,8 +109,14 @@ export function TokenSwapPanel() {
 
   const handleMaxClick = () => {
     if (sellingBalance) {
-      // Convert BigNumber to string for input (full precision, no formatting)
-      setInputAmount(sellingBalance.toString())
+      // Format BigNumber to string for input (full precision, no thousands separators)
+      // Use maximumFractionDigits to show full precision based on token type
+      const maxDecimals = isBuying ? 6 : 6 // Both USDC and TESS have 6 decimals
+      const formatted = formatBigNumber(sellingBalance, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: maxDecimals,
+      })
+      setInputAmount(formatted)
     }
   }
 

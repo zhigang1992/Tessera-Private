@@ -8,11 +8,12 @@ import TokenTessIcon from './_/token-tess.svg?react'
 
 interface PriceChartProps {
   tokenSymbol?: string
+  disabled?: boolean
 }
 
 type ChartTab = 'price' | 'market-depth'
 
-export function PriceChart({ tokenSymbol = 'TESS' }: PriceChartProps) {
+export function PriceChart({ tokenSymbol = 'TESS', disabled = false }: PriceChartProps) {
   const [activeTab, setActiveTab] = useState<ChartTab>('price')
   const [timeRange, setTimeRange] = useState<TimeRange>('1D')
   const chartContainerRef = useRef<HTMLDivElement>(null)
@@ -20,26 +21,28 @@ export function PriceChart({ tokenSymbol = 'TESS' }: PriceChartProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const seriesRef = useRef<any>(null)
 
-  // Fetch token price info from backend
+  // Fetch token price info from backend (skip if disabled)
   const { data: token } = useQuery({
     queryKey: ['tokenPrice', tokenSymbol],
     queryFn: () => getTokenPrice(tokenSymbol),
     refetchInterval: 30 * 1000, // Refresh every 30 seconds
     staleTime: 15 * 1000, // Consider data stale after 15 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    enabled: !disabled,
   })
 
-  // Fetch price history from backend - updates when timeRange changes
+  // Fetch price history from backend - updates when timeRange changes (skip if disabled)
   const { data: priceHistory } = useQuery({
     queryKey: ['priceHistory', tokenSymbol, timeRange],
     queryFn: () => getPriceHistory(tokenSymbol, timeRange),
     staleTime: 30 * 1000, // Consider data stale after 30 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    enabled: !disabled,
   })
 
-  // Fetch market depth data - only when tab is active
+  // Fetch market depth data - only when tab is active and not disabled
   const { data: marketDepth, isLoading: isMarketDepthLoading } = useMarketDepth({
-    enabled: activeTab === 'market-depth',
+    enabled: !disabled && activeTab === 'market-depth',
   })
 
   const isPositive = (token?.priceChange24h ?? 0) >= 0
@@ -123,6 +126,21 @@ export function PriceChart({ tokenSymbol = 'TESS' }: PriceChartProps) {
       seriesRef.current.setData(chartData)
     }
   }, [priceHistory])
+
+  // If disabled, show empty state with message
+  if (disabled) {
+    return (
+      <div className="h-full rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
+        <div className="flex flex-col items-center justify-center h-full text-center space-y-3">
+          <div className="text-3xl opacity-30">📊</div>
+          <p className="text-base font-semibold text-black opacity-50">Chart Coming Soon</p>
+          <p className="text-xs text-black opacity-30 max-w-xs">
+            Live price data will be available when trading is enabled
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="h-full rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">

@@ -135,6 +135,24 @@ export const TRANSACTION_CONFIG = {
 }
 
 /**
+ * Feature flags
+ */
+export const FEATURE_FLAGS = {
+  /**
+   * Enable/disable trading functionality
+   * When false: shows "Trading not available yet" message, disables swaps and real data
+   */
+  TRADING_ENABLED: import.meta.env.VITE_TRADING_ENABLED !== 'false', // Defaults to true unless explicitly disabled
+} as const
+
+/**
+ * Check if trading is enabled
+ */
+export function isTradingEnabled(): boolean {
+  return FEATURE_FLAGS.TRADING_ENABLED
+}
+
+/**
  * Check if running on devnet
  */
 export function isDevnet(): boolean {
