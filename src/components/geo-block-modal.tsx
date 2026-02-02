@@ -14,7 +14,6 @@ import { cn } from '@/lib/utils'
  */
 export function GeoBlockModal() {
   const [isBlocked, setIsBlocked] = useState(false)
-  const [countryName, setCountryName] = useState<string | null>(null)
   const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
@@ -22,7 +21,6 @@ export function GeoBlockModal() {
       try {
         const result = await isBlockedCountry()
         setIsBlocked(result.blocked)
-        setCountryName(result.countryName)
       } catch (error) {
         console.error('Failed to perform geo-blocking check:', error)
         // Fail open - don't block if check fails

@@ -5,7 +5,7 @@
  * and retrieving merkle proof information for the Alpha Vault.
  */
 
-import { BigNumber, type BigNumberValue } from '@/lib/bignumber'
+import { BigNumber, math, type BigNumberValue } from '@/lib/bignumber'
 import { LOCAL_MERKLE_PROOFS } from '@/services/alpha-vault'
 
 export interface WhitelistInfo {
@@ -35,7 +35,7 @@ export function getWhitelistInfo(walletAddress: string): WhitelistInfo {
 
   // maxCap is stored in smallest units (e.g., 10000000000 = 10,000 USDC with 6 decimals)
   // Convert to human-readable format
-  const maxCapBigNumber = BigNumber.from(proofData.maxCap).div(BigNumber.from(10).pow(6))
+  const maxCapBigNumber = math`${BigNumber.from(proofData.maxCap)} / ${math`${10} ^ ${6}`}`
 
   return {
     isWhitelisted: true,
