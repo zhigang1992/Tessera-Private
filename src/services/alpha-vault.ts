@@ -506,20 +506,10 @@ export class AlphaVaultClient {
 
   /**
    * Get merkle proof for a whitelisted user
-   * First tries Meteora's API, then falls back to local proofs
+   * Uses local proofs since this vault has a custom whitelist
    */
   async getMerkleProof(owner: PublicKey): Promise<DepositWithProofParams | null> {
-    const vault = await this.initialize()
-
-    // First try Meteora's API
-    try {
-      const proof = await vault.getMerkleProofForDeposit(owner)
-      if (proof) return proof
-    } catch {
-      // API doesn't have our proofs, fall through to local
-    }
-
-    // Fall back to local merkle proofs
+    // Use local merkle proofs (custom whitelist for this vault)
     const ownerStr = owner.toBase58()
     const localProof = LOCAL_MERKLE_PROOFS[ownerStr]
 
