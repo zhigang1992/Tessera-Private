@@ -10,36 +10,16 @@ import DLMM from '@meteora-ag/dlmm'
 import BN from 'bn.js'
 import { BigNumber, math, mathIs, formatBigNumber } from '@/lib/bignumber'
 
-// Mainnet SOL-USDC DLMM Pool
-// Pool: BGm1tav58oGcsQJehL9WXBFXF7D27vZsKefj4xJKD5Y
-// SOL (Wrapped): So11111111111111111111111111111111111111112
-// USDC: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
-export const MAINNET_POOLS = {
-  'SOL-USDC': {
-    address: 'BGm1tav58oGcsQJehL9WXBFXF7D27vZsKefj4xJKD5Y',
-    tokenX: {
-      mint: 'So11111111111111111111111111111111111111112',
-      symbol: 'SOL',
-      decimals: 9,
-    },
-    tokenY: {
-      mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-      symbol: 'USDC',
-      decimals: 6,
-    },
-  },
-} as const
-
-// DevNet TESS-USDC Pool (Updated Feb 2, 2026 - Token-2022 USDC)
+// DevNet T-SpaceX-USDC Pool (Updated Feb 2, 2026 - Token-2022 USDC)
 // Pool: 6Pydbux4SGN87doBPbjAtPgprsEwTP4trEANmQFcNEKR
-// TESS Mint (Token-2022): 767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj
+// T-SpaceX Mint (Token-2022): 767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj
 // USDC Mint (Token-2022): 7Ns2X7yAACNujx8L8pUU27ctAvhoEtikD7R3nZcd9Mox
 export const DEVNET_POOLS = {
-  'TESS-USDC': {
+  'T-SpaceX-USDC': {
     address: '6Pydbux4SGN87doBPbjAtPgprsEwTP4trEANmQFcNEKR',
     tokenX: {
       mint: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj',
-      symbol: 'TESS',
+      symbol: 'T-SpaceX',
       decimals: 6,
     },
     tokenY: {
@@ -50,9 +30,8 @@ export const DEVNET_POOLS = {
   },
 } as const
 
-export type MainnetPoolId = keyof typeof MAINNET_POOLS
 export type DevnetPoolId = keyof typeof DEVNET_POOLS
-export type PoolId = MainnetPoolId | DevnetPoolId
+export type PoolId = DevnetPoolId
 
 export interface TokenInfo {
   mint: string
@@ -268,17 +247,6 @@ export class MeteoraClient {
     const paddedDec = decPart.padEnd(decimals, '0').slice(0, decimals)
     const fullAmount = intPart + paddedDec
     return new BN(fullAmount)
-  }
-
-  /**
-   * Get pool tokens for mainnet
-   */
-  getMainnetPoolTokens(poolId: MainnetPoolId): { tokenX: TokenInfo; tokenY: TokenInfo } {
-    const pool = MAINNET_POOLS[poolId]
-    return {
-      tokenX: { ...pool.tokenX },
-      tokenY: { ...pool.tokenY },
-    }
   }
 
   /**

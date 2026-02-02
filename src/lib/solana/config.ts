@@ -139,11 +139,8 @@ export const TRANSACTION_CONFIG = {
  * Maps pool IDs to their trading enabled status
  */
 export const POOL_TRADING_CONFIG = {
-  // Mainnet pools
-  'SOL-USDC': false, // Set to true to enable SOL-USDC trading on mainnet
-
   // Devnet pools
-  'TESS-USDC': false, // Set to true to enable TESS-USDC trading on devnet
+  'T-SpaceX-USDC': false, // Set to true to enable T-SpaceX-USDC trading on devnet
 } as const
 
 export type TradingPoolId = keyof typeof POOL_TRADING_CONFIG

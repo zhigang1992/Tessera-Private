@@ -23,9 +23,9 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
     quote,
     txSignature,
     usdcBalance,
-    tessBalance,
+    tSpaceXBalance,
     usdcBalanceFormatted,
-    tessBalanceFormatted,
+    tSpaceXBalanceFormatted,
     loadPool,
     getQuote,
     executeSwap,
@@ -33,20 +33,20 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
     clearError,
   } = useMeteoraSwap()
 
-  // Default: USDC -> TESS (buying TESS)
-  const [direction, setDirection] = useState<SwapDirection>('USDC_TO_TESS')
+  // Default: USDC -> T-SpaceX (buying T-SpaceX)
+  const [direction, setDirection] = useState<SwapDirection>('USDC_TO_TSPACEX')
   const [inputAmount, setInputAmount] = useState('')
   const [isSwapping, setIsSwapping] = useState(false)
 
   // Derived state
-  const isBuying = direction === 'USDC_TO_TESS' // Buying TESS with USDC
-  const sellingToken = isBuying ? 'USDC' : 'TESS'
-  const buyingToken = isBuying ? 'TESS' : 'USDC'
+  const isBuying = direction === 'USDC_TO_TSPACEX' // Buying T-SpaceX with USDC
+  const sellingToken = isBuying ? 'USDC' : 'T-SpaceX'
+  const buyingToken = isBuying ? 'T-SpaceX' : 'USDC'
   // BigNumber value for max button calculation
-  const sellingBalance = isBuying ? usdcBalance : tessBalance
+  const sellingBalance = isBuying ? usdcBalance : tSpaceXBalance
   // Formatted strings for display
-  const sellingBalanceFormatted = isBuying ? usdcBalanceFormatted : tessBalanceFormatted
-  const buyingBalanceFormatted = isBuying ? tessBalanceFormatted : usdcBalanceFormatted
+  const sellingBalanceFormatted = isBuying ? usdcBalanceFormatted : tSpaceXBalanceFormatted
+  const buyingBalanceFormatted = isBuying ? tSpaceXBalanceFormatted : usdcBalanceFormatted
 
   // Load pool and balances on mount (skip if disabled)
   useEffect(() => {
@@ -104,7 +104,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
   }, [txSignature])
 
   const handleSwapDirection = () => {
-    setDirection((prev) => (prev === 'USDC_TO_TESS' ? 'TESS_TO_USDC' : 'USDC_TO_TESS'))
+    setDirection((prev) => (prev === 'USDC_TO_TSPACEX' ? 'TSPACEX_TO_USDC' : 'USDC_TO_TSPACEX'))
     setInputAmount('')
   }
 
@@ -119,7 +119,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
     if (sellingBalance) {
       // Format BigNumber to string for input (full precision, no thousands separators)
       // Use maximumFractionDigits to show full precision based on token type
-      const maxDecimals = isBuying ? 6 : 6 // Both USDC and TESS have 6 decimals
+      const maxDecimals = isBuying ? 6 : 6 // Both USDC and T-SpaceX have 6 decimals
       const formatted = formatBigNumber(sellingBalance, {
         minimumFractionDigits: 0,
         maximumFractionDigits: maxDecimals,
@@ -156,7 +156,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
     if (isSwapping) return 'Swapping...'
     if (isLoading) return 'Loading...'
     if (!hasValidInput) return 'Enter amount'
-    return isBuying ? 'Buy TESS' : 'Sell TESS'
+    return isBuying ? 'Buy T-SpaceX' : 'Sell T-SpaceX'
   }
 
   const handleButtonClick = () => {

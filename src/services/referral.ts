@@ -328,12 +328,12 @@ export function clearAffiliateStatsCache() {
 
 // Token mint to symbol mapping for trade history
 const MINT_TO_SYMBOL: Record<string, string> = {
-  [DEVNET_POOLS['TESS-USDC'].tokenX.mint]: 'TESS',
-  [DEVNET_POOLS['TESS-USDC'].tokenY.mint]: 'USDC',
+  [DEVNET_POOLS['T-SpaceX-USDC'].tokenX.mint]: 'TESS',
+  [DEVNET_POOLS['T-SpaceX-USDC'].tokenY.mint]: 'USDC',
 }
 
 // TESS-USDC pool address for filtering
-const TESS_USDC_POOL = DEVNET_POOLS['TESS-USDC'].address
+const TESS_USDC_POOL = DEVNET_POOLS['T-SpaceX-USDC'].address
 
 // Format block time to readable date with time
 function formatBlockTimeWithTime(blockTime: number): string {

@@ -1,14 +1,11 @@
 import { PriceChart } from './components/price-chart'
 import { TokenSwapPanel } from './components/token-swap-panel'
 import { TradeHistory } from './components/trade-history'
-import { isTradingEnabledForPool, getCurrentNetwork } from '@/lib/solana/config'
+import { isTradingEnabledForPool } from '@/lib/solana/config'
 
 export default function TradePage() {
-  // Determine which pool to use based on network
-  // On devnet: TESS-USDC, on mainnet: SOL-USDC (in future)
-  const network = getCurrentNetwork()
-  const poolId = network === 'devnet' ? 'TESS-USDC' : 'SOL-USDC'
-  const tradingEnabled = isTradingEnabledForPool(poolId)
+  // Use T-SpaceX-USDC pool on devnet
+  const tradingEnabled = isTradingEnabledForPool('T-SpaceX-USDC')
 
   return (
     <div className="flex flex-col gap-4 lg:gap-6">
@@ -19,7 +16,7 @@ export default function TradePage() {
       <div className="flex flex-col md:flex-row gap-4 lg:gap-6">
         {/* Left: Price Chart - 3 parts of 5 total (60%) - order-2 on mobile, order-1 on desktop */}
         <div className="w-full md:w-3/5 min-w-0 order-2 md:order-1">
-          <PriceChart tokenSymbol="TESS" disabled={!tradingEnabled} />
+          <PriceChart tokenSymbol="T-SpaceX" disabled={!tradingEnabled} />
         </div>
 
         {/* Right: Swap Panel - 2 parts of 5 total (40%) - order-1 on mobile, order-2 on desktop */}

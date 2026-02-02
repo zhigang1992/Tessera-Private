@@ -328,8 +328,8 @@ function formatSupply(value: number): string {
  * Get dashboard stats including real token price and supply from backend
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const poolAddress = DEVNET_POOLS['TESS-USDC'].address
-  const tokenMint = DEVNET_POOLS['TESS-USDC'].tokenX.mint
+  const poolAddress = DEVNET_POOLS['T-SpaceX-USDC'].address
+  const tokenMint = DEVNET_POOLS['T-SpaceX-USDC'].tokenX.mint
 
   const [events, tokenData] = await Promise.all([
     fetchSwapEventsForPrice(poolAddress, 10),
@@ -366,8 +366,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
  * Falls back to calculating from swap events if backend data unavailable
  */
 export async function getDashboardTokenInfo(): Promise<TokenInfo> {
-  const tokenMint = DEVNET_POOLS['TESS-USDC'].tokenX.mint
-  const poolAddress = DEVNET_POOLS['TESS-USDC'].address
+  const tokenMint = DEVNET_POOLS['T-SpaceX-USDC'].tokenX.mint
+  const poolAddress = DEVNET_POOLS['T-SpaceX-USDC'].address
 
   // Fetch 24h OHLC data and swap events in parallel
   const [ohlcData, events] = await Promise.all([
@@ -457,7 +457,7 @@ function calculatePriceFromSwap(amountX: string, amountY: string): BigNumberValu
  * Falls back to calculating from swap events if backend data unavailable
  */
 export async function getDashboardStatistics(): Promise<TokenStatistics> {
-  const tokenMint = DEVNET_POOLS['TESS-USDC'].tokenX.mint
+  const tokenMint = DEVNET_POOLS['T-SpaceX-USDC'].tokenX.mint
 
   // Try to get 24h OHLC from backend first
   const ohlcData = await fetchTokenPrice24hOHLC(tokenMint)
@@ -487,7 +487,7 @@ export async function getDashboardStatistics(): Promise<TokenStatistics> {
   }
 
   // Fallback: Calculate from swap events if backend data unavailable
-  const poolAddress = DEVNET_POOLS['TESS-USDC'].address
+  const poolAddress = DEVNET_POOLS['T-SpaceX-USDC'].address
   const swapEvents = await fetchSwapEventsLast24h(poolAddress)
 
   if (swapEvents.length === 0) {
@@ -567,10 +567,10 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
   // Get USDC balance (this represents user's USD balance)
   let usdcBalance = 0
   try {
-    const usdcMint = new PublicKey(DEVNET_POOLS['TESS-USDC'].tokenY.mint)
+    const usdcMint = new PublicKey(DEVNET_POOLS['T-SpaceX-USDC'].tokenY.mint)
     const usdcAta = await getAssociatedTokenAddress(usdcMint, publicKey)
     const usdcAccount = await getAccount(connection, usdcAta)
-    const usdcBigNum = fromTokenAmount(usdcAccount.amount.toString(), DEVNET_POOLS['TESS-USDC'].tokenY.decimals)
+    const usdcBigNum = fromTokenAmount(usdcAccount.amount.toString(), DEVNET_POOLS['T-SpaceX-USDC'].tokenY.decimals)
     usdcBalance = BigNumber.toNumber(usdcBigNum)
   } catch {
     // Token account doesn't exist, balance is 0
@@ -580,7 +580,7 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
   // Get TESS token balance (Token-2022)
   let tessBalance = 0
   try {
-    const tessMint = new PublicKey(DEVNET_POOLS['TESS-USDC'].tokenX.mint)
+    const tessMint = new PublicKey(DEVNET_POOLS['T-SpaceX-USDC'].tokenX.mint)
     const tessAta = await getAssociatedTokenAddress(
       tessMint,
       publicKey,
@@ -588,7 +588,7 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
       TOKEN_2022_PROGRAM_ID
     )
     const tessAccount = await getAccount(connection, tessAta, 'confirmed', TOKEN_2022_PROGRAM_ID)
-    const tessBigNum = fromTokenAmount(tessAccount.amount.toString(), DEVNET_POOLS['TESS-USDC'].tokenX.decimals)
+    const tessBigNum = fromTokenAmount(tessAccount.amount.toString(), DEVNET_POOLS['T-SpaceX-USDC'].tokenX.decimals)
     tessBalance = BigNumber.toNumber(tessBigNum)
   } catch {
     // Token account doesn't exist, balance is 0

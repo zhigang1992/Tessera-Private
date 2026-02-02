@@ -184,8 +184,8 @@ function generatePriceHistory(
 
 // Token mint to symbol mapping
 const MINT_TO_SYMBOL: Record<string, string> = {
-  [DEVNET_POOLS['TESS-USDC'].tokenX.mint]: 'TESS',
-  [DEVNET_POOLS['TESS-USDC'].tokenY.mint]: 'USDC',
+  [DEVNET_POOLS['T-SpaceX-USDC'].tokenX.mint]: 'TESS',
+  [DEVNET_POOLS['T-SpaceX-USDC'].tokenY.mint]: 'USDC',
 }
 
 // Format wallet address for display
@@ -272,7 +272,7 @@ export async function getPriceHistory(
 }
 
 // TESS-USDC pool address for filtering
-const TESS_USDC_POOL = DEVNET_POOLS['TESS-USDC'].address
+const TESS_USDC_POOL = DEVNET_POOLS['T-SpaceX-USDC'].address
 
 export async function getTradeHistory(page: number = 1, pageSize: number = 10): Promise<TradeHistoryResponse> {
   const offset = (page - 1) * pageSize

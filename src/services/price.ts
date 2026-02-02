@@ -32,9 +32,9 @@ export type TimeRange = '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL'
 // ============ Constants ============
 
 // TESS token mint address
-const TESS_MINT = DEVNET_POOLS['TESS-USDC'].tokenX.mint
+const TESS_MINT = DEVNET_POOLS['T-SpaceX-USDC'].tokenX.mint
 // TESS-USDC pool address
-const TESS_USDC_POOL = DEVNET_POOLS['TESS-USDC'].address
+const TESS_USDC_POOL = DEVNET_POOLS['T-SpaceX-USDC'].address
 
 // ============ Helper Functions ============
 

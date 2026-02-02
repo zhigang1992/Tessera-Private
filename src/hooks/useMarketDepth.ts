@@ -59,7 +59,7 @@ async function fetchMarketDepth(
  * @returns Market depth data, loading state, and error state
  */
 export function useMarketDepth({
-  poolAddress = DEVNET_POOLS['TESS-USDC'].address,
+  poolAddress = DEVNET_POOLS['T-SpaceX-USDC'].address,
   binsToLeft = 17,
   binsToRight = 17,
   enabled = true,
