@@ -156,7 +156,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
     if (isSwapping) return 'Swapping...'
     if (isLoading) return 'Loading...'
     if (!hasValidInput) return 'Enter amount'
-    return isBuying ? 'Buy T-SpaceX' : 'Sell T-SpaceX'
+    return 'Swap'
   }
 
   const handleButtonClick = () => {
@@ -168,126 +168,188 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
   }
 
   return (
-    <div className="h-full rounded-2xl p-4 lg:p-6 py-6 lg:py-8 bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
-      {/* Network indicator */}
-      <div className="flex justify-end mb-2">
-        <span className="text-xs px-2 py-1 rounded bg-black/10 dark:bg-white/10 text-muted-foreground">
-          Devnet
-        </span>
-      </div>
-
-      <div className="flex flex-col gap-3 lg:gap-4">
+    <div className="relative rounded-2xl w-full bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
+      <div className="size-full">
+        <div className="flex flex-col items-start px-6 py-8 w-full">
+          <div className="flex flex-col gap-4 items-center w-full">
         {/* Token Input Blocks with centered swap button */}
         <div className="relative">
-          {/* Selling Input */}
-          <div className="bg-white dark:bg-[rgba(0,0,0,0.6)] border border-[#dddbd0] dark:border-[#393b3d] rounded-lg px-3 lg:px-4 pt-2 pb-3 lg:pb-4">
-            <div className="flex justify-between items-center">
-              <p className="text-xs lg:text-sm font-bold text-[#a1a1aa] dark:text-white dark:opacity-50 leading-5">
-                Selling
-              </p>
-              {sellingBalanceFormatted && (
-                <button
-                  onClick={handleMaxClick}
-                  className="text-xs text-zinc-600 dark:text-white dark:opacity-50 hover:text-black dark:hover:text-white dark:hover:opacity-100 transition-colors"
-                >
-                  Balance: {sellingBalanceFormatted} {sellingToken}
-                </button>
-              )}
-            </div>
-            <div className="flex items-center gap-3 mt-1 lg:mt-1.5">
-              <div className="flex-shrink-0 flex items-center gap-1.5 lg:gap-2.5 border border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)] rounded-md px-2 lg:px-3 py-1.5 lg:py-2">
-                {sellingToken === 'USDC' ? (
-                  <TokenUsdcIcon className="w-6 h-6 lg:w-8 lg:h-8" />
-                ) : (
-                  <TokenTessIcon className="w-6 h-6 lg:w-8 lg:h-8" />
-                )}
-                <span className="text-base lg:text-xl font-semibold text-black dark:text-white">
-                  {sellingToken}
-                </span>
+          {/* Pay Input */}
+          <div className="relative rounded-lg w-full group bg-white dark:bg-[rgba(0,0,0,0.6)]">
+            <div className="rounded-[inherit] size-full">
+              <div className="flex flex-col gap-1.5 items-start pb-4 pt-2 px-4 w-full">
+                <div className="flex items-center justify-between leading-5 text-sm w-full text-[#a1a1aa] dark:text-[#ffffff] dark:opacity-50">
+                  <p className="font-bold">Pay</p>
+                  <div className="flex items-center gap-2">
+                    {sellingBalanceFormatted && (
+                      <button
+                        onClick={handleMaxClick}
+                        className="text-xs text-zinc-600 dark:text-white dark:opacity-50 hover:text-black dark:hover:text-white dark:hover:opacity-100 transition-colors"
+                      >
+                        MAX: {sellingBalanceFormatted}
+                      </button>
+                    )}
+                    {inputAmount && (
+                      <button
+                        onClick={() => setInputAmount('')}
+                        className="flex items-center justify-center size-4 transition-opacity hover:opacity-60"
+                      >
+                        <svg className="size-4" fill="none" viewBox="0 0 16 16">
+                          <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.2" fill="none" className="text-[#a1a1aa] dark:text-[#d2d2d2]" />
+                          <path d="M10 6L6 10M6 6L10 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" className="text-[#a1a1aa] dark:text-[#d2d2d2]" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between w-full">
+                  <div className="relative rounded-md flex-shrink-0">
+                    <div className="flex gap-2.5 items-center overflow-clip px-3 py-2 rounded-[inherit]">
+                      <div className="relative flex-shrink-0 size-8">
+                        {sellingToken === 'USDC' ? (
+                          <TokenUsdcIcon className="block size-full" />
+                        ) : (
+                          <TokenTessIcon className="block size-full" />
+                        )}
+                      </div>
+                      <div className="flex gap-1 items-center flex-shrink-0">
+                        <p className="font-semibold leading-7 text-xl text-black dark:text-[#ffffff]">
+                          {sellingToken}
+                        </p>
+                      </div>
+                    </div>
+                    <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-md border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)]" />
+                  </div>
+                  <div className="flex flex-col items-end justify-center flex-1 min-w-0">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={inputAmount}
+                      onChange={(e) => handleInputChange(e.target.value)}
+                      placeholder="0.0"
+                      className={`font-semibold leading-10 bg-transparent outline-none border-none text-right w-full overflow-hidden text-black dark:text-white placeholder:text-black dark:placeholder:text-white ${
+                        inputAmount.length <= 6 ? 'text-[36px]' : inputAmount.length <= 10 ? 'text-[28px]' : 'text-[20px]'
+                      }`}
+                    />
+                  </div>
+                </div>
               </div>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={inputAmount}
-                onChange={(e) => handleInputChange(e.target.value)}
-                placeholder="0.00"
-                className="flex-1 min-w-0 text-2xl lg:text-4xl font-semibold text-black dark:text-white text-right bg-transparent outline-none placeholder:text-black dark:placeholder:text-white"
-              />
             </div>
+            <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-lg transition-colors border-[#dddbd0] dark:border-[#393b3d] group-focus-within:border-black dark:group-focus-within:border-[#d2fb95]" />
           </div>
 
           {/* Swap Button - positioned between the two input blocks */}
           <button
             onClick={handleSwapDirection}
-            className="absolute left-1/2 top-full -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-black border border-[#dddbd0] dark:border-[rgba(210,210,210,0.1)] rounded-full p-1.5 lg:p-2 hover:bg-gray-50 dark:hover:bg-[#27272a] transition-colors z-10"
+            className="absolute left-1/2 top-[86px] -translate-x-1/2 bg-white dark:bg-black border border-[#dddbd0] dark:border-[rgba(210,210,210,0.1)] rounded-full p-2 hover:bg-gray-50 dark:hover:bg-[#27272a] transition-colors z-10"
           >
-            <SwapIcon className="w-4 h-4 lg:w-5 lg:h-5 rotate-90 text-[#999999] dark:text-[#ffffff]" />
+            <SwapIcon className="w-5 h-5 rotate-[270deg] text-[#999999] dark:text-[#ffffff]" />
           </button>
         </div>
 
-        {/* Buying Input */}
-        <div className="bg-white dark:bg-[rgba(0,0,0,0.6)] border border-[#dddbd0] dark:border-[#393b3d] rounded-lg px-3 lg:px-4 pt-2 pb-3 lg:pb-4">
-          <div className="flex justify-between items-center">
-            <p className="text-xs lg:text-sm font-bold text-[#a1a1aa] dark:text-white dark:opacity-50 leading-5">
-              Buying
-            </p>
-            {buyingBalanceFormatted && (
-              <span className="text-xs text-zinc-600 dark:text-white dark:opacity-50">
-                Balance: {buyingBalanceFormatted} {buyingToken}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-3 mt-1 lg:mt-1.5">
-            <div className="flex-shrink-0 flex items-center gap-1.5 lg:gap-2.5 border border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)] rounded-md px-2 lg:px-3 py-1.5 lg:py-2">
-              {buyingToken === 'USDC' ? (
-                <TokenUsdcIcon className="w-6 h-6 lg:w-8 lg:h-8" />
-              ) : (
-                <TokenTessIcon className="w-6 h-6 lg:w-8 lg:h-8" />
-              )}
-              <span className="text-base lg:text-xl font-semibold text-black dark:text-white">
-                {buyingToken}
-              </span>
+        {/* Receive Input */}
+        <div className="relative rounded-lg w-full group bg-white dark:bg-[rgba(0,0,0,0.6)]">
+          <div className="rounded-[inherit] size-full">
+            <div className="flex flex-col gap-1.5 items-start pb-4 pt-2 px-4 w-full">
+              <div className="flex items-center justify-between leading-5 text-sm w-full text-[#a1a1aa] dark:text-[#ffffff] dark:opacity-50">
+                <p className="font-bold">Receive</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs">Estimated</p>
+                  {outputAmount && outputAmount !== '0' && (
+                    <button
+                      className="flex items-center justify-center size-4 transition-opacity hover:opacity-60"
+                    >
+                      <svg className="size-4" fill="none" viewBox="0 0 16 16">
+                        <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.2" fill="none" className="text-[#a1a1aa] dark:text-[#d2d2d2]" />
+                        <path d="M10 6L6 10M6 6L10 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" className="text-[#a1a1aa] dark:text-[#d2d2d2]" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center justify-between w-full">
+                <div className="relative rounded-md flex-shrink-0">
+                  <div className="flex gap-2.5 items-center overflow-clip px-3 py-2 rounded-[inherit]">
+                    <div className="relative flex-shrink-0 size-8">
+                      {buyingToken === 'USDC' ? (
+                        <TokenUsdcIcon className="block size-full" />
+                      ) : (
+                        <TokenTessIcon className="block size-full" />
+                      )}
+                    </div>
+                    <div className="flex gap-1 items-center flex-shrink-0">
+                      <p className="font-semibold leading-7 text-xl text-black dark:text-[#ffffff]">
+                        {buyingToken}
+                      </p>
+                    </div>
+                  </div>
+                  <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-md border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)]" />
+                </div>
+                <div className="flex flex-col items-end justify-center flex-1 min-w-0">
+                  <input
+                    type="text"
+                    value={isLoading ? '...' : outputAmount}
+                    readOnly
+                    placeholder="0.0"
+                    className={`font-semibold leading-10 bg-transparent outline-none border-none text-right w-full overflow-hidden text-black dark:text-white placeholder:text-black dark:placeholder:text-white ${
+                      outputAmount && outputAmount !== '0' ? '' : 'opacity-20'
+                    } ${
+                      outputAmount.length <= 6 ? 'text-[36px]' : outputAmount.length <= 10 ? 'text-[28px]' : 'text-[20px]'
+                    }`}
+                  />
+                </div>
+              </div>
             </div>
-            <input
-              type="text"
-              value={isLoading ? '...' : outputAmount}
-              readOnly
-              placeholder="0"
-              className="flex-1 min-w-0 text-2xl lg:text-4xl font-semibold text-black dark:text-white text-right bg-transparent outline-none placeholder:text-black dark:placeholder:text-white opacity-20"
-            />
           </div>
+          <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-lg transition-colors border-[#dddbd0] dark:border-[#393b3d] group-focus-within:border-black dark:group-focus-within:border-[#d2fb95]" />
         </div>
 
-        {/* Swap Info */}
+        {/* Rate Info */}
         {quote && hasValidInput && (
-          <div className="bg-[rgba(255,255,255,0.5)] rounded-lg px-3 py-2 text-xs space-y-1">
-            <div className="flex justify-between">
-              <span className="text-[#52525b]">Rate</span>
-              <span className="text-black">
-                1 {sellingToken} = {rate} {buyingToken}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#52525b]">Min. received</span>
-              <span className="text-[#1d8f00]">
-                {minOutput} {buyingToken}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#52525b]">Slippage</span>
-              <span className="text-[#1d8f00]">1%</span>
+          <div className="bg-[rgba(255,255,255,0.5)] rounded-lg px-6 py-4">
+            <div className="flex flex-col gap-2.5">
+              <div className="flex items-center justify-between text-xs leading-4">
+                <div className="flex flex-col justify-center text-[#52525b]">
+                  <p className="leading-4">Rate</p>
+                </div>
+                <div className="flex flex-col justify-center text-black">
+                  <p className="leading-4">1 {sellingToken} = {rate} {buyingToken}</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-xs leading-4">
+                <div className="flex flex-col justify-center text-[#52525b]">
+                  <p className="leading-4">Dynamic Fee</p>
+                </div>
+                <div className="flex flex-col justify-center text-[#1d8f00]">
+                  <p className="leading-4">0.25%</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-xs leading-4">
+                <div className="flex flex-col justify-center text-[#52525b]">
+                  <p className="leading-4">Price Impact</p>
+                </div>
+                <div className="flex flex-col justify-center text-[#1d8f00]">
+                  <p className="leading-4">0.00%</p>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Action Button */}
-        <button
-          onClick={handleButtonClick}
-          disabled={disabled || (isWalletConnected && isDisabled)}
-          className="w-full h-12 lg:h-14 bg-black text-white text-base lg:text-lg font-semibold rounded-lg hover:bg-[#333] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {getButtonText()}
-        </button>
+            {/* SWAP Button */}
+            <button
+              onClick={handleButtonClick}
+              disabled={disabled || (isWalletConnected && isDisabled)}
+              className="w-full h-14 bg-black text-white rounded-lg hover:bg-[#333] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="flex items-center justify-center size-full px-6 py-0">
+                <div className="flex gap-2 items-center justify-center">
+                  <p className="font-semibold text-lg leading-7">{getButtonText()}</p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
