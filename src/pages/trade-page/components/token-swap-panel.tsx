@@ -9,7 +9,11 @@ import TokenTessIcon from './_/token-tess.svg?react'
 import SwapIcon from './_/swap-icon.svg?react'
 import { toast } from 'sonner'
 
-export function TokenSwapPanel() {
+interface TokenSwapPanelProps {
+  disabled?: boolean
+}
+
+export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
   const wallet = useWallet()
   const { setVisible } = useWalletModal()
 
@@ -44,20 +48,24 @@ export function TokenSwapPanel() {
   const sellingBalanceFormatted = isBuying ? usdcBalanceFormatted : tessBalanceFormatted
   const buyingBalanceFormatted = isBuying ? tessBalanceFormatted : usdcBalanceFormatted
 
-  // Load pool and balances on mount
+  // Load pool and balances on mount (skip if disabled)
   useEffect(() => {
-    loadPool()
-  }, [loadPool])
+    if (!disabled) {
+      loadPool()
+    }
+  }, [loadPool, disabled])
 
-  // Refresh balances when wallet changes
+  // Refresh balances when wallet changes (skip if disabled)
   useEffect(() => {
-    if (wallet.publicKey) {
+    if (!disabled && wallet.publicKey) {
       refreshBalances()
     }
-  }, [wallet.publicKey, refreshBalances])
+  }, [wallet.publicKey, refreshBalances, disabled])
 
-  // Get quote when input changes (debounced)
+  // Get quote when input changes (debounced) - skip if disabled
   useEffect(() => {
+    if (disabled) return
+
     const timer = setTimeout(() => {
       if (inputAmount && parseFloat(inputAmount) > 0) {
         getQuote(inputAmount, direction)
@@ -65,7 +73,7 @@ export function TokenSwapPanel() {
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [inputAmount, direction, getQuote])
+  }, [inputAmount, direction, getQuote, disabled])
 
   // Show error toast
   useEffect(() => {
@@ -140,9 +148,10 @@ export function TokenSwapPanel() {
   const isWalletConnected = wallet.connected
   const hasValidInput = inputAmount && parseFloat(inputAmount) > 0
   const hasQuote = !!quote
-  const isDisabled = !isWalletConnected || !hasValidInput || !hasQuote || isLoading || isSwapping
+  const isDisabled = !isWalletConnected || !hasValidInput || !hasQuote || isLoading || isSwapping || disabled
 
   const getButtonText = () => {
+    if (disabled) return 'Trading Not Enabled Yet'
     if (!isWalletConnected) return 'Connect Wallet'
     if (isSwapping) return 'Swapping...'
     if (isLoading) return 'Loading...'
@@ -274,7 +283,7 @@ export function TokenSwapPanel() {
         {/* Action Button */}
         <button
           onClick={handleButtonClick}
-          disabled={isWalletConnected && isDisabled}
+          disabled={disabled || (isWalletConnected && isDisabled)}
           className="w-full h-12 lg:h-14 bg-black text-white text-base lg:text-lg font-semibold rounded-lg hover:bg-[#333] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {getButtonText()}

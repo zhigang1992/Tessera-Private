@@ -127,21 +127,6 @@ export function PriceChart({ tokenSymbol = 'TESS', disabled = false }: PriceChar
     }
   }, [priceHistory])
 
-  // If disabled, show empty state with message
-  if (disabled) {
-    return (
-      <div className="h-full rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
-        <div className="flex flex-col items-center justify-center h-full text-center space-y-3">
-          <div className="text-3xl opacity-30">📊</div>
-          <p className="text-base font-semibold text-black opacity-50">Chart Coming Soon</p>
-          <p className="text-xs text-black opacity-30 max-w-xs">
-            Live price data will be available when trading is enabled
-          </p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="h-full rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
       <div className="flex flex-col h-full">

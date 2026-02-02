@@ -135,21 +135,24 @@ export const TRANSACTION_CONFIG = {
 }
 
 /**
- * Feature flags
+ * Per-pool trading configuration
+ * Maps pool IDs to their trading enabled status
  */
-export const FEATURE_FLAGS = {
-  /**
-   * Enable/disable trading functionality
-   * When false: shows "Trading not available yet" message, disables swaps and real data
-   */
-  TRADING_ENABLED: false, // Set to true to enable trading
+export const POOL_TRADING_CONFIG = {
+  // Mainnet pools
+  'SOL-USDC': false, // Set to true to enable SOL-USDC trading on mainnet
+
+  // Devnet pools
+  'TESS-USDC': false, // Set to true to enable TESS-USDC trading on devnet
 } as const
 
+export type TradingPoolId = keyof typeof POOL_TRADING_CONFIG
+
 /**
- * Check if trading is enabled
+ * Check if trading is enabled for a specific pool
  */
-export function isTradingEnabled(): boolean {
-  return FEATURE_FLAGS.TRADING_ENABLED
+export function isTradingEnabledForPool(poolId: TradingPoolId): boolean {
+  return POOL_TRADING_CONFIG[poolId] ?? false
 }
 
 /**
