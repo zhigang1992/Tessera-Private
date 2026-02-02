@@ -30,20 +30,20 @@ export const MAINNET_POOLS = {
   },
 } as const
 
-// DevNet TESS-USDC Pool
-// Pool: Dd6kCyHuaLStsXRnBpCXpDcLKhDud1VCS3rJjQ1cZnky
+// DevNet TESS-USDC Pool (Updated Feb 2, 2026 - Token-2022 USDC)
+// Pool: 6Pydbux4SGN87doBPbjAtPgprsEwTP4trEANmQFcNEKR
 // TESS Mint (Token-2022): 767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj
-// USDC Mint: ELFPGFJCALgJ12oAoLTyzPVxKEmKNFRz7GxMbQftpdzE
+// USDC Mint (Token-2022): 7Ns2X7yAACNujx8L8pUU27ctAvhoEtikD7R3nZcd9Mox
 export const DEVNET_POOLS = {
   'TESS-USDC': {
-    address: 'Dd6kCyHuaLStsXRnBpCXpDcLKhDud1VCS3rJjQ1cZnky',
+    address: '6Pydbux4SGN87doBPbjAtPgprsEwTP4trEANmQFcNEKR',
     tokenX: {
       mint: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj',
       symbol: 'TESS',
       decimals: 6,
     },
     tokenY: {
-      mint: 'ELFPGFJCALgJ12oAoLTyzPVxKEmKNFRz7GxMbQftpdzE',
+      mint: '7Ns2X7yAACNujx8L8pUU27ctAvhoEtikD7R3nZcd9Mox',
       symbol: 'USDC',
       decimals: 6,
     },
