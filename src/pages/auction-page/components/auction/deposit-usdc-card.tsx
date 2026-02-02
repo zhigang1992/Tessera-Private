@@ -5,6 +5,7 @@ import { useAlphaVault } from '@/hooks/use-alpha-vault'
 import { ALPHA_VAULT_CONFIG } from '@/services/alpha-vault'
 import { toast } from 'sonner'
 import UsdcIcon from '@/pages/trade-page/components/_/token-usdc.svg?react'
+import { BigNumber, math, fromTokenAmount } from '@/lib/bignumber'
 
 export function DepositUSDCCard() {
   const wallet = useWallet()
@@ -62,11 +63,18 @@ export function DepositUSDCCard() {
 
   const handleMaxClick = () => {
     // Use the smaller of: user's USDC balance or remaining deposit quota
-    const balance = parseFloat(usdcBalance ?? '0')
-    const quota = parseFloat(depositQuota?.remainingQuota ?? '0') / 10 ** 6
+    // Convert both to BigNumber for precise comparison
+    const balanceStr = (usdcBalance ?? '0').replace(/,/g, '') // Remove locale formatting
+    const balanceBN = BigNumber.from(balanceStr)
 
-    const maxAmount = Math.min(balance, quota)
-    setDepositAmount(maxAmount > 0 ? maxAmount.toFixed(2) : '0')
+    // remainingQuota is a raw token amount (with USDC decimals)
+    const quotaBN = fromTokenAmount(depositQuota?.remainingQuota ?? '0', ALPHA_VAULT_CONFIG.usdcDecimals)
+
+    // Use BigNumber min function for precise comparison
+    const maxAmountBN = math`min(${balanceBN}, ${quotaBN})`
+
+    // Convert to plain numeric string for input (no locale formatting)
+    setDepositAmount(BigNumber.toString(maxAmountBN))
   }
 
   const shortenAddress = (address: string) => {
