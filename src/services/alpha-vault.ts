@@ -35,8 +35,8 @@ export const ALPHA_VAULT_CONFIG = {
   tessToken: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj', // TESS (Token-2022)
   usdcToken: '7Ns2X7yAACNujx8L8pUU27ctAvhoEtikD7R3nZcd9Mox', // USDC (Token-2022)
 
-  // Merkle root config for whitelisted wallets (15 wallets: 2 with 10k cap, 13 with 1k cap)
-  merkleRootConfig: '3BzgZmY2tMj5hjooK9McbKPqJMKVVsBFLaPCsfg5QtSS',
+  // Merkle root config for whitelisted wallets (16 wallets: 2 with 10k cap, 14 with 1k cap)
+  merkleRootConfig: 'HzxG7BpAiwtu7hVWSFsdXjhctubge4bsw2JcZm49wqCR',
 
   // View on Meteora
   meteoraUrl: 'https://devnet.app.meteora.ag/vault/4XZgfngUDMPzCHceq6GoTdmEDpcNAVThKidRua2nvhqM',
