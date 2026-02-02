@@ -1,3 +1,5 @@
+import { ALPHA_VAULT_CONFIG } from '@/services/alpha-vault'
+
 interface AuctionTabsProps {
   activeTab: string
   onTabChange: (tab: string) => void
@@ -5,7 +7,7 @@ interface AuctionTabsProps {
 
 const tabs = [
   { id: 'auction', label: 'Auction' },
-  { id: 'vesting', label: 'Vesting' },
+  { id: 'vesting', label: ALPHA_VAULT_CONFIG.hasVestingPeriod ? 'Vesting' : 'Claim' },
 ]
 
 export function AuctionTabs({ activeTab, onTabChange }: AuctionTabsProps) {

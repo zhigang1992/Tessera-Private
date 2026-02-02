@@ -44,6 +44,11 @@ export const ALPHA_VAULT_CONFIG = {
   // Token decimals
   tessDecimals: 6,
   usdcDecimals: 6,
+
+  // UI Configuration
+  // Set to false for auctions with no vesting (immediate claim)
+  // Set to true for auctions with time-based vesting schedule
+  hasVestingPeriod: false,
 } as const
 
 /**

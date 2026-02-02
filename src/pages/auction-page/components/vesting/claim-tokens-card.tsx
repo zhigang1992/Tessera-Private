@@ -1,10 +1,11 @@
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Lock, ArrowRight } from 'lucide-react'
 import { useAlphaVault } from '@/hooks/use-alpha-vault'
 import { formatDuration } from '@/services/alpha-vault-helpers'
 import { toast } from 'sonner'
+import { ALPHA_VAULT_CONFIG } from '@/services/alpha-vault'
 import LockOpenIcon from './_/lock-open.svg?react'
 
 export function ClaimTokensCard() {
@@ -92,6 +93,71 @@ export function ClaimTokensCard() {
       ? formatDuration(claimInfo.nextUnlockTime.getTime() - Date.now())
       : '-'
 
+  // Render different layouts based on config
+  if (!ALPHA_VAULT_CONFIG.hasVestingPeriod) {
+    // Simplified Claim layout (matching reference design)
+    return (
+      <div className="w-full rounded-2xl border p-6 bg-white dark:bg-[#323334] border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] flex flex-col justify-center items-center text-center">
+        {/* Lock Icon */}
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#f59e0b] to-[#f97316] flex items-center justify-center">
+          <Lock className="w-10 h-10 text-white" strokeWidth={2} />
+        </div>
+
+        {/* Title */}
+        <h3 className="text-2xl font-semibold leading-8 mb-3 text-black dark:text-[#d2d2d2]">
+          Claim Tokens
+        </h3>
+
+        {/* Description */}
+        <p className="text-sm font-normal leading-[21px] mb-8 text-[#666] dark:text-[#999]">
+          Transfer your allocated TESS tokens and any USDC refund directly to your wallet.
+        </p>
+
+        {/* Claim All Button */}
+        {wallet.connected ? (
+          <button
+            onClick={handleClaimTokens}
+            disabled={isLoading || !canClaim}
+            className="h-14 w-full rounded-lg bg-black hover:bg-[#333] transition-colors mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <div className="flex items-center justify-center gap-2">
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin text-white" />
+                  <span className="text-lg font-semibold leading-7 text-white">
+                    Processing...
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="text-lg font-semibold leading-7 text-white">
+                    {!canClaim ? 'No Tokens to Claim' : 'Claim All'}
+                  </span>
+                  {canClaim && <ArrowRight className="w-5 h-5 text-white" strokeWidth={2.5} />}
+                </>
+              )}
+            </div>
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              /* Trigger wallet modal */
+            }}
+            className="h-14 w-full rounded-lg bg-black hover:bg-[#333] transition-colors mb-4"
+          >
+            <span className="text-lg font-semibold leading-7 text-white">Connect Wallet</span>
+          </button>
+        )}
+
+        {/* Transaction Fee Notice */}
+        <p className="text-[10px] font-normal leading-[15px] text-[#999] dark:text-[#666]">
+          Transaction will imply a small network fee.
+        </p>
+      </div>
+    )
+  }
+
+  // Original Vesting layout (with gradients and detailed info)
   return (
     <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] p-6 h-full">
       <div className="flex flex-col items-center gap-6 h-full justify-between">
