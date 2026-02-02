@@ -35,8 +35,8 @@ export const ALPHA_VAULT_CONFIG = {
   tessToken: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj', // TESS (Token-2022)
   usdcToken: '7Ns2X7yAACNujx8L8pUU27ctAvhoEtikD7R3nZcd9Mox', // USDC (Token-2022)
 
-  // Merkle root config for whitelisted wallets (13 wallets: 2 with 10k cap, 11 with 1k cap)
-  merkleRootConfig: 'FNnuzHZbgDApJ5s7WF9uRq2oZ2mJ1gXVze9VdU2aB2oc',
+  // Merkle root config for whitelisted wallets (14 wallets: 2 with 10k cap, 12 with 1k cap)
+  merkleRootConfig: 'GhRSwPTMQ9nFf5enY4SkTd6wfAb7EbFbERmjVsiCxB9v',
 
   // View on Meteora
   meteoraUrl: 'https://devnet.app.meteora.ag/vault/4XZgfngUDMPzCHceq6GoTdmEDpcNAVThKidRua2nvhqM',
@@ -52,8 +52,8 @@ export const ALPHA_VAULT_CONFIG = {
  * These are used because Meteora's API doesn't have our custom whitelist proofs
  *
  * Imported from contract/.keypairs/merkle-proofs-t22.json
- * Contains 13 whitelisted wallets (2 with 10k cap, 11 with 1k cap)
- * Merkle Root: 2942d4a08052b852346133828f34dfa9d904ddbfb341462c95687225c44f91fe
+ * Contains 14 whitelisted wallets (2 with 10k cap, 12 with 1k cap)
+ * Merkle Root: 536db5ede0a55e23f74e2589dc0d02b4c12c5eedfe488cf1de80b821360abac9
  */
 export const LOCAL_MERKLE_PROOFS: Record<string, { proof: string[]; maxCap: string }> = merkleProofsT22
 
