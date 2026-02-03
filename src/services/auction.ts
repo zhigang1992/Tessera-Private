@@ -314,8 +314,8 @@ export async function getAuctionChartData(): Promise<AuctionChartData> {
   const events = await fetchAuctionDepositEvents(AUCTION_POOL)
 
   if (events.length === 0) {
-    // Return mock data if no events found
-    return auctionChartData
+    // Return empty array if no events found
+    return []
   }
 
   // Sort events by block_time and calculate cumulative totals
@@ -341,13 +341,7 @@ export async function getAuctionChartData(): Promise<AuctionChartData> {
     })
   }
 
-  // If we have data points, return them
-  if (chartPoints.length > 0) {
-    return chartPoints
-  }
-
-  // Fallback to mock data
-  return auctionChartData
+  return chartPoints
 }
 
 export async function getVestingChartData(): Promise<VestingChartData> {

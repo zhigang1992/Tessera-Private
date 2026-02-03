@@ -14,7 +14,7 @@ export function AuctionChart() {
   })
 
   useEffect(() => {
-    if (!chartContainerRef.current || !chartData) return
+    if (!chartContainerRef.current || !chartData || chartData.length === 0) return
 
     const chart = createChart(chartContainerRef.current, {
       layout: {
@@ -150,6 +150,15 @@ export function AuctionChart() {
       chart.remove()
     }
   }, [chartData])
+
+  // Show message when no data is available
+  if (!chartData || chartData.length === 0) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-[#666]">
+        Data not available yet
+      </div>
+    )
+  }
 
   return <div ref={chartContainerRef} className="w-full h-full" />
 }
