@@ -46,6 +46,10 @@ export interface PoolInfo {
   activeBinId: number
   binStep: number
   currentPrice: string
+  baseFeePercentage: string
+  maxFeePercentage: string
+  protocolFeePercentage: string
+  dynamicFeePercentage: string
 }
 
 export interface BinLiquidity {
@@ -126,6 +130,10 @@ export class MeteoraClient {
     const pool = await this.loadPool(poolAddress)
     const activeBin = await pool.getActiveBin()
 
+    // Get fee information from the pool
+    const feeInfo = pool.getFeeInfo()
+    const dynamicFee = pool.getDynamicFee()
+
     return {
       address: poolAddress,
       tokenX: {
@@ -141,6 +149,10 @@ export class MeteoraClient {
       activeBinId: activeBin.binId,
       binStep: pool.lbPair.binStep,
       currentPrice: activeBin.price,
+      baseFeePercentage: feeInfo.baseFeeRatePercentage.toString(),
+      maxFeePercentage: feeInfo.maxFeeRatePercentage.toString(),
+      protocolFeePercentage: feeInfo.protocolFeePercentage.toString(),
+      dynamicFeePercentage: dynamicFee.toString(),
     }
   }
 

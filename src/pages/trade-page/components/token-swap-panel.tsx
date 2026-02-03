@@ -20,6 +20,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
   const {
     isLoading,
     error,
+    poolInfo,
     quote,
     txSignature,
     usdcBalance,
@@ -319,7 +320,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
                   <p className="leading-4">Dynamic Fee</p>
                 </div>
                 <div className="flex flex-col justify-center text-[#1d8f00]">
-                  <p className="leading-4">0.25%</p>
+                  <p className="leading-4">{poolInfo?.dynamicFeePercentage ?? '...'}%</p>
                 </div>
               </div>
               <div className="flex items-center justify-between text-xs leading-4">
@@ -327,7 +328,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
                   <p className="leading-4">Price Impact</p>
                 </div>
                 <div className="flex flex-col justify-center text-[#1d8f00]">
-                  <p className="leading-4">0.00%</p>
+                  <p className="leading-4">{quote.priceImpact}%</p>
                 </div>
               </div>
             </div>
