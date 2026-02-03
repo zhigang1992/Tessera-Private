@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
+import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Info, Loader2, AlertCircle } from 'lucide-react'
 import { useAlphaVault } from '@/hooks/use-alpha-vault'
 import { ALPHA_VAULT_CONFIG } from '@/services/alpha-vault'
@@ -9,6 +10,7 @@ import { BigNumber, math, fromTokenAmount, mathIs } from '@/lib/bignumber'
 
 export function DepositUSDCCard() {
   const wallet = useWallet()
+  const { setVisible } = useWalletModal()
   const [depositAmount, setDepositAmount] = useState('')
 
   const {
@@ -220,9 +222,7 @@ export function DepositUSDCCard() {
             </button>
           ) : (
             <button
-              onClick={() => {
-                /* Trigger wallet modal via wallet adapter */
-              }}
+              onClick={() => setVisible(true)}
               className="bg-black h-14 rounded-lg w-full hover:bg-[#333] transition-colors"
             >
               <div className="flex items-center justify-center size-full px-6 py-0">
