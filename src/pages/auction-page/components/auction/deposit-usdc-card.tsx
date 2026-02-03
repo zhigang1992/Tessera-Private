@@ -7,11 +7,13 @@ import { ALPHA_VAULT_CONFIG } from '@/services/alpha-vault'
 import { toast } from 'sonner'
 import UsdcIcon from '@/pages/trade-page/components/_/token-usdc.svg?react'
 import { BigNumber, math, fromTokenAmount, mathIs } from '@/lib/bignumber'
+import * as Tooltip from '@radix-ui/react-tooltip'
 
 export function DepositUSDCCard() {
   const wallet = useWallet()
   const { setVisible } = useWalletModal()
   const [depositAmount, setDepositAmount] = useState('')
+  const [tooltipOpen, setTooltipOpen] = useState(false)
 
   const {
     isLoading,
@@ -125,11 +127,7 @@ export function DepositUSDCCard() {
         description: `Transaction: ${signature.slice(0, 8)}...`,
         action: {
           label: 'View',
-          onClick: () =>
-            window.open(
-              `https://explorer.solana.com/tx/${signature}?cluster=devnet`,
-              '_blank'
-            ),
+          onClick: () => window.open(`https://explorer.solana.com/tx/${signature}?cluster=devnet`, '_blank'),
         },
       })
       setDepositAmount('')
@@ -174,7 +172,6 @@ export function DepositUSDCCard() {
       </div>
 
       <div className="flex flex-col gap-4">
-
         {/* Input Section */}
         <div className="relative rounded-lg w-full group bg-white dark:bg-[rgba(0,0,0,0.6)]">
           <div className="rounded-[inherit] size-full">
@@ -196,12 +193,13 @@ export function DepositUSDCCard() {
                       <UsdcIcon className="block size-full" />
                     </div>
                     <div className="flex gap-1 items-center flex-shrink-0">
-                      <p className="font-semibold leading-7 text-xl text-black dark:text-[#ffffff]">
-                        USDC
-                      </p>
+                      <p className="font-semibold leading-7 text-xl text-black dark:text-[#ffffff]">USDC</p>
                     </div>
                   </div>
-                  <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-md border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)]" />
+                  <div
+                    aria-hidden="true"
+                    className="absolute border border-solid inset-0 pointer-events-none rounded-md border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)]"
+                  />
                 </div>
                 <div className="flex flex-col items-end justify-center flex-1 min-w-0">
                   <input
@@ -216,7 +214,10 @@ export function DepositUSDCCard() {
               </div>
             </div>
           </div>
-          <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-lg transition-colors border-[#dddbd0] dark:border-[#393b3d] group-focus-within:border-black dark:group-focus-within:border-[#d2fb95]" />
+          <div
+            aria-hidden="true"
+            className="absolute border border-solid inset-0 pointer-events-none rounded-lg transition-colors border-[#dddbd0] dark:border-[#393b3d] group-focus-within:border-black dark:group-focus-within:border-[#d2fb95]"
+          />
         </div>
 
         {/* Balance Warning */}
@@ -232,25 +233,42 @@ export function DepositUSDCCard() {
         {/* Info */}
         <div className="flex flex-col gap-2">
           <div className="flex items-start justify-between h-[18px]">
-            <span className="font-normal leading-[18px] text-xs text-[#666]">
-              Current Deposit
-            </span>
-            <span className="font-normal leading-[18px] text-xs text-black font-mono">
-              {calculatedCurrentDeposit}
-            </span>
+            <span className="font-normal leading-[18px] text-xs text-[#666]">Current Deposit</span>
+            <span className="font-normal leading-[18px] text-xs text-black font-mono">{calculatedCurrentDeposit}</span>
           </div>
           <div className="flex items-start justify-between h-[18px]">
             <div className="flex items-center gap-1">
-              <span className="font-normal leading-[18px] text-xs text-[#666]">
-                Est. Allocation
-              </span>
-              <div className="relative group">
-                <Info className="w-3 h-3 text-[#666] cursor-help" />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-black text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 pointer-events-none">
-                  In pro-rata mode, your final allocation may change as more users deposit before the auction ends.
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-black"></div>
-                </div>
-              </div>
+              <span className="font-normal leading-[18px] text-xs text-[#666]">Est. Allocation</span>
+              <Tooltip.Provider delayDuration={0} skipDelayDuration={0}>
+                <Tooltip.Root open={tooltipOpen} onOpenChange={setTooltipOpen}>
+                  <Tooltip.Trigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center touch-manipulation p-1 -m-1"
+                      onPointerDown={(e) => {
+                        e.preventDefault()
+                        setTooltipOpen(!tooltipOpen)
+                      }}
+                    >
+                      <Info className="w-4 h-4 text-[#666] cursor-help" />
+                    </button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content
+                      className="max-w-[220px] sm:max-w-xs px-3 py-2 bg-black text-white text-xs leading-[1.4] rounded-lg z-50 shadow-lg"
+                      sideOffset={8}
+                      side="top"
+                      align="end"
+                      alignOffset={-8}
+                      collisionPadding={16}
+                      onPointerDownOutside={() => setTooltipOpen(false)}
+                    >
+                      In pro-rata mode, your final allocation may change as more users deposit before the auction ends.
+                      <Tooltip.Arrow className="fill-black" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
             </div>
             <span className="font-normal leading-[18px] text-xs text-[#06a800] font-mono">
               {calculatedEstAllocation}
@@ -278,8 +296,8 @@ export function DepositUSDCCard() {
                       {!isDepositOpen
                         ? 'Deposits Closed'
                         : !depositQuota?.canDeposit
-                        ? depositQuota?.reason ?? 'Cannot Deposit'
-                        : 'Confirm Deposit'}
+                          ? (depositQuota?.reason ?? 'Cannot Deposit')
+                          : 'Confirm Deposit'}
                     </p>
                   )}
                 </div>
@@ -303,8 +321,8 @@ export function DepositUSDCCard() {
             <div className="bg-[rgba(255,255,255,0.5)] flex gap-2.5 items-start p-3 rounded-lg w-full">
               <Info className="w-3 h-3 text-[#666666] shrink-0" />
               <p className="flex-1 font-normal leading-[16.5px] text-[10px] text-black tracking-[0.0645px]">
-                You have an active position in this auction. Check the top "My Position" card for
-                real-time allocation updates.
+                You have an active position in this auction. Check the top "My Position" card for real-time allocation
+                updates.
               </p>
             </div>
           )}
@@ -312,17 +330,16 @@ export function DepositUSDCCard() {
 
         {/* Pool Details */}
         <div className="relative flex flex-col gap-2 pt-4">
-          <div aria-hidden="true" className="absolute border-t border-[rgba(210,210,210,0.1)] inset-x-0 top-0 pointer-events-none" />
+          <div
+            aria-hidden="true"
+            className="absolute border-t border-[rgba(210,210,210,0.1)] inset-x-0 top-0 pointer-events-none"
+          />
           <div className="flex items-center w-full">
-            <p className="font-semibold leading-[15px] text-[10px] text-black tracking-[0.1172px]">
-              POOL DETAILS
-            </p>
+            <p className="font-semibold leading-[15px] text-[10px] text-black tracking-[0.1172px]">POOL DETAILS</p>
           </div>
           <div className="flex flex-col gap-2.5 items-start w-full">
             <div className="flex h-[15px] items-start justify-between w-full">
-              <p className="font-normal leading-[15px] text-[#666] text-[10px] tracking-[0.1172px]">
-                Address
-              </p>
+              <p className="font-normal leading-[15px] text-[#666] text-[10px] tracking-[0.1172px]">Address</p>
               <div className="bg-[rgba(0,0,0,0.1)] rounded flex items-center justify-center px-2 py-0.5">
                 <p className="font-mono font-normal leading-[15px] text-[10px] text-black">
                   {shortenAddress(ALPHA_VAULT_CONFIG.vault)}
@@ -330,20 +347,12 @@ export function DepositUSDCCard() {
               </div>
             </div>
             <div className="flex items-center justify-between w-full">
-              <p className="font-normal leading-[15px] text-[#666] text-[10px] tracking-[0.1172px]">
-                Target Raise
-              </p>
-              <p className="font-mono font-normal leading-[15px] text-[10px] text-black">
-                ${targetRaise}
-              </p>
+              <p className="font-normal leading-[15px] text-[#666] text-[10px] tracking-[0.1172px]">Target Raise</p>
+              <p className="font-mono font-normal leading-[15px] text-[10px] text-black">${targetRaise}</p>
             </div>
             <div className="flex items-center justify-between w-full">
-              <p className="font-normal leading-[15px] text-[#666] text-[10px] tracking-[0.1172px]">
-                Current Raise
-              </p>
-              <p className="font-mono font-normal leading-[15px] text-[10px] text-black">
-                ${totalRaised}
-              </p>
+              <p className="font-normal leading-[15px] text-[#666] text-[10px] tracking-[0.1172px]">Current Raise</p>
+              <p className="font-mono font-normal leading-[15px] text-[10px] text-black">${totalRaised}</p>
             </div>
           </div>
         </div>
