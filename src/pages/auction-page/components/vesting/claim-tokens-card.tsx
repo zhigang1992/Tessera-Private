@@ -14,6 +14,7 @@ export function ClaimTokensCard() {
   const {
     isLoading,
     vaultInfo,
+    escrowInfo,
     claimInfo,
     availableToClaim,
     vestingEndsIn,
@@ -115,11 +116,11 @@ export function ClaimTokensCard() {
           </p>
 
           {/* Deposit Amount Info */}
-          {claimInfo && parseFloat(claimInfo.totalDeposit) > 0 && (
+          {escrowInfo && parseFloat(escrowInfo.totalDeposited) > 0 && (
             <div className="w-full bg-[#f5f5f5] dark:bg-[#2a2b2c] rounded-lg p-4 mb-6">
               <p className="text-xs text-[#666] dark:text-[#999] mb-1">Your Deposited Amount</p>
               <p className="text-xl font-semibold font-mono text-black dark:text-[#d2d2d2]">
-                {(parseFloat(claimInfo.totalDeposit) / 1e6).toFixed(2)} USDC
+                {(parseFloat(escrowInfo.totalDeposited) / 1e6).toFixed(2)} USDC
               </p>
             </div>
           )}
@@ -251,11 +252,11 @@ export function ClaimTokensCard() {
 
           {/* Withdraw Button */}
           <div className="w-full flex flex-col gap-4">
-            {claimInfo && parseFloat(claimInfo.totalDeposit) > 0 && (
+            {escrowInfo && parseFloat(escrowInfo.totalDeposited) > 0 && (
               <div className="bg-white/50 rounded-lg p-3 text-center">
                 <p className="text-[11px] text-[#666] mb-1">Your Deposited Amount</p>
                 <p className="text-sm font-semibold font-mono text-black">
-                  {(parseFloat(claimInfo.totalDeposit) / 1e6).toFixed(2)} USDC
+                  {(parseFloat(escrowInfo.totalDeposited) / 1e6).toFixed(2)} USDC
                 </p>
               </div>
             )}
