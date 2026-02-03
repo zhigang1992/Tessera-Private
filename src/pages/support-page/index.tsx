@@ -165,19 +165,19 @@ export default function SupportPage() {
       icon: <Globe className="w-5 h-5" />,
       questions: [
         {
-          question: 'Do I need to complete KYC or accreditation?',
+          question: 'Do I need to complete KYC or accreditation to use Tessera?',
           answer:
-            'No, Tessera is built on a permissionless infrastructure. You do not need to provide personal identification or prove accreditation status to trade. Just connect your wallet.',
+            'No. Tessera is a fully permissionless platform and does not require KYC or investor accreditation. Anyone can participate by simply connecting a supported wallet, regardless of income level, net worth, or geographic location.',
         },
         {
           question: 'Who can trade on Tessera?',
           answer:
-            'Anyone with a compatible Web3 wallet can access and trade on Tessera. Our platform operates globally without geographic restrictions or user verification requirements.',
+            'Anyone with a supported Solana wallet can access and trade Tessera tokens. There are no restrictions based on accreditation status, jurisdiction, or minimum investment size. Participation starts with as little as one dollar.',
         },
         {
-          question: 'Which wallets are supported for instant connection?',
+          question: 'Which wallets are supported for instant access?',
           answer:
-            'We support all major Solana wallets including Phantom, Solflare, Backpack, and any wallet that supports standard Solana connection protocols.',
+            'Tessera currently supports major Solana-compatible wallets, including Phantom, Solflare, MetaMask (via Solana), and Brave Wallet. Users retain full control of their assets at all times.',
         },
       ],
     },
@@ -187,19 +187,19 @@ export default function SupportPage() {
       icon: <Zap className="w-5 h-5" />,
       questions: [
         {
+          question: 'How do Tessera token auctions work?',
+          answer:
+            'New Tessera assets are launched through a fair, pro-rata auction mechanism powered by Meteora\'s Alpha Vault. Participants deposit funds during a defined auction window, and final token allocations are determined proportionally based on each user\'s share of total deposited capital. This model eliminates gas wars, reduces bot-driven front-running, and ensures all participants receive tokens at the same average entry price.',
+        },
+        {
+          question: 'How does trading and settlement work?',
+          answer:
+            'Once tokens are distributed, they can be freely traded on supported decentralized exchanges. All trades settle instantly on-chain via Solana, with no intermediaries or clearing delays. Tessera itself does not act as a broker and only provides access to secondary markets.',
+        },
+        {
           question: 'Is liquidity available 24/7?',
           answer:
-            'Yes, Tessera operates 24/7 with continuous liquidity provided through our automated market maker (AMM) pools. You can trade anytime without waiting for traditional market hours.',
-        },
-        {
-          question: 'How does instant settlement work?',
-          answer:
-            'All trades execute and settle instantly on-chain via smart contracts. Once your transaction is confirmed, ownership is transferred immediately without intermediaries or settlement delays.',
-        },
-        {
-          question: 'Can I use Tessera tokens in other DeFi protocols?',
-          answer:
-            'Yes, all Tessera tokens are standard SPL tokens that can be freely used across the broader Solana DeFi ecosystem including lending platforms, yield farms, and other decentralized applications.',
+            'Yes. Tessera tokens are tradable 24/7 on Solana-based decentralized exchanges such as Jupiter and Meteora. Unlike traditional private equity, pricing and liquidity are continuously available and determined by the open market.',
         },
       ],
     },
@@ -209,19 +209,19 @@ export default function SupportPage() {
       icon: <Shield className="w-5 h-5" />,
       questions: [
         {
-          question: 'How is the asset legally structured?',
+          question: 'How are the underlying assets legally structured?',
           answer:
-            'Each asset on Tessera is backed by a legally compliant structure that ensures real ownership rights. Our legal framework varies by asset type and jurisdiction to maintain regulatory compliance.',
+            'Each private equity exposure is held within a legally structured, segregated portfolio. Each portfolio is dedicated to a single company and is legally isolated, ensuring that risks and liabilities do not affect other assets or portfolios.',
         },
         {
-          question: 'Is the platform non-custodial?',
+          question: 'Is Tessera a custodial platform?',
           answer:
-            'Yes, Tessera is fully non-custodial. You retain complete control of your private keys and assets at all times. We never have custody or control over your funds.',
+            'No. Tessera is non-custodial. Users always maintain control of their wallets and tokens. Tessera does not custody user funds or private keys, and all interactions occur directly on-chain.',
         },
         {
-          question: 'How do you ensure regulatory compliance without KYC?',
+          question: 'How does Tessera ensure asset backing and security without KYC?',
           answer:
-            'We operate under regulatory frameworks that permit permissionless protocols. Compliance is maintained through smart contract design, transparent operations, and adherence to applicable securities and financial regulations.',
+            'Tessera uses Chainlink Proof of Reserve to provide cryptographic, on-chain verification that every token in circulation is fully backed 1:1 by the underlying assets held in segregated portfolios. Independent auditors verify asset holdings, and Chainlink publishes reserve data on-chain, allowing anyone to independently verify backing without relying on trust or intermediaries.',
         },
       ],
     },
