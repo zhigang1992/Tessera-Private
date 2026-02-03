@@ -140,7 +140,7 @@ const auctionValuation: AuctionValuation = {
 }
 
 const auctionProgress: AuctionProgress = {
-  oversubscribedRatio: 2.46,
+  oversubscribedRatio: 0,
   chartData: [],
 }
 

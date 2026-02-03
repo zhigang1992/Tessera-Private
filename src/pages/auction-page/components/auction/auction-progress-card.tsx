@@ -21,10 +21,12 @@ export function AuctionProgressCard() {
               <span className="text-xs text-[#666]">Total Raised</span>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-[#06a800] font-bold text-sm">
-            <TrendingUp className="w-6 h-6" />
-            <span>{progress?.oversubscribedRatio ?? 0}x Oversubscribed</span>
-          </div>
+          {progress && progress.oversubscribedRatio > 1 && (
+            <div className="flex items-center gap-2 text-[#06a800] font-bold text-sm">
+              <TrendingUp className="w-6 h-6" />
+              <span>{progress.oversubscribedRatio}x Oversubscribed</span>
+            </div>
+          )}
         </div>
 
         {/* Chart */}
