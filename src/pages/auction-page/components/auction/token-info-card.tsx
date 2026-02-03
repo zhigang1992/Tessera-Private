@@ -48,17 +48,8 @@ export function TokenInfoCard() {
         <p className="text-sm text-foreground leading-relaxed">{tokenInfo?.description ?? ''}</p>
 
         {/* Info Boxes - Mobile: vertical stack, Desktop: 2 cols */}
-        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4">
-          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Info className="w-4 h-4 text-zinc-400" />
-              <h4 className="text-sm font-semibold text-foreground">Vesting Terms</h4>
-            </div>
-            <p className="text-xs text-[#71717a] dark:text-[#999] leading-relaxed">
-              {tokenInfo?.vestingTerms ?? ''}
-            </p>
-          </div>
-          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4">
+        <div className="flex">
+          <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 w-full">
             <div className="flex items-center gap-2 mb-3">
               <Info className="w-4 h-4 text-zinc-400" />
               <h4 className="text-sm font-semibold text-foreground">Auction Mechanism</h4>
