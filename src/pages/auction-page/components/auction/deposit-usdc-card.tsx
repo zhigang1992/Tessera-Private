@@ -31,6 +31,67 @@ export function DepositUSDCCard() {
   const isDepositOpen = vaultInfo?.state === 'deposit_open'
   const canDeposit = depositQuota?.canDeposit && isDepositOpen && wallet.connected
 
+  // Calculate current total deposit (existing + new input amount)
+  const calculatedCurrentDeposit = useMemo(() => {
+    if (!escrowInfo && !depositAmount) return '0 USDC'
+
+    const existingDeposit = escrowInfo?.totalDeposited ? BigNumber.from(escrowInfo.totalDeposited) : BigNumber.from(0)
+
+    try {
+      if (depositAmount && parseFloat(depositAmount) > 0) {
+        const newAmount = BigNumber.from(depositAmount)
+        // Convert to raw amount with 6 decimals for USDC
+        const newAmountRaw = math`${newAmount} * ${Math.pow(10, 6)}`
+        const totalRaw = math`${existingDeposit} + ${newAmountRaw}`
+        const totalFormatted = math`${totalRaw} / ${Math.pow(10, 6)}`
+        return `${BigNumber.toNumber(totalFormatted).toLocaleString()} USDC`
+      }
+    } catch {
+      // If parsing fails, just show existing
+    }
+
+    if (escrowInfo?.totalDeposited) {
+      return `${(parseFloat(escrowInfo.totalDeposited) / 10 ** 6).toLocaleString()} USDC`
+    }
+
+    return '0 USDC'
+  }, [escrowInfo, depositAmount])
+
+  // Calculate estimated allocation based on current deposit + input
+  const calculatedEstAllocation = useMemo(() => {
+    if (!vaultInfo || !totalRaised) return '0 TESS'
+
+    const existingDeposit = escrowInfo?.totalDeposited ? BigNumber.from(escrowInfo.totalDeposited) : BigNumber.from(0)
+
+    try {
+      let totalUserDeposit = existingDeposit
+
+      if (depositAmount && parseFloat(depositAmount) > 0) {
+        const newAmount = BigNumber.from(depositAmount)
+        const newAmountRaw = math`${newAmount} * ${Math.pow(10, 6)}`
+        totalUserDeposit = math`${existingDeposit} + ${newAmountRaw}`
+      }
+
+      // Get total raised in raw format
+      const totalRaisedStr = totalRaised.replace(/,/g, '')
+      const totalRaisedBN = math`${BigNumber.from(totalRaisedStr)} * ${Math.pow(10, 6)}`
+
+      // If no deposits yet, allocation would be 100% of tokens
+      if (mathIs`${totalRaisedBN} === ${0}`) {
+        return '0 TESS'
+      }
+
+      // Calculate user's share: (user deposit / total raised) * total tokens
+      // For now, assume 1:1 USDC to TESS ratio for simplicity
+      const userShare = math`${totalUserDeposit} / ${Math.pow(10, 6)}`
+
+      return `${BigNumber.toNumber(userShare).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} TESS`
+    } catch {
+      // Fallback to existing allocation if calculation fails
+      return estimatedAllocation ? `${estimatedAllocation} TESS` : '0 TESS'
+    }
+  }, [vaultInfo, totalRaised, escrowInfo, depositAmount, estimatedAllocation])
+
   // Check if deposit amount exceeds wallet balance
   const exceedsBalance = useMemo(() => {
     if (!depositAmount || !usdcBalance) return false
@@ -175,9 +236,7 @@ export function DepositUSDCCard() {
               Current Deposit
             </span>
             <span className="font-normal leading-[18px] text-xs text-black font-mono">
-              {escrowInfo
-                ? `${(parseFloat(escrowInfo.totalDeposited) / 10 ** 6).toLocaleString()} USDC`
-                : '0 USDC'}
+              {calculatedCurrentDeposit}
             </span>
           </div>
           <div className="flex items-start justify-between h-[18px]">
@@ -185,10 +244,16 @@ export function DepositUSDCCard() {
               <span className="font-normal leading-[18px] text-xs text-[#666]">
                 Est. Allocation
               </span>
-              <Info className="w-3 h-3 text-[#666]" />
+              <div className="relative group">
+                <Info className="w-3 h-3 text-[#666] cursor-help" />
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-black text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 pointer-events-none">
+                  In pro-rata mode, your final allocation may change as more users deposit before the auction ends.
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-black"></div>
+                </div>
+              </div>
             </div>
             <span className="font-normal leading-[18px] text-xs text-[#06a800] font-mono">
-              {estimatedAllocation} TESS
+              {calculatedEstAllocation}
             </span>
           </div>
         </div>
