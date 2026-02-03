@@ -1,212 +1,129 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { getTransparencyData } from '@/services'
+import { useQuery } from '@tanstack/react-query'
 
-// Arrow outward icon component
-function ArrowOutwardIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M4.66667 11.3333L11.3333 4.66667M11.3333 4.66667H4.66667M11.3333 4.66667V11.3333"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-// Check circle icon component (outline style)
+// Check circle icon component (outline style matching Figma)
 function CheckCircleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5" />
       <path
-        d="M5.5 8L7 9.5L10.5 6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        d="M8 1.33333C4.32 1.33333 1.33333 4.32 1.33333 8C1.33333 11.68 4.32 14.6667 8 14.6667C11.68 14.6667 14.6667 11.68 14.6667 8C14.6667 4.32 11.68 1.33333 8 1.33333ZM8 13.3333C5.06 13.3333 2.66667 10.94 2.66667 8C2.66667 5.06 5.06 2.66667 8 2.66667C10.94 2.66667 13.3333 5.06 13.3333 8C13.3333 10.94 10.94 13.3333 8 13.3333ZM11.06 5.05333L6.66667 9.44667L4.94 7.72667L4 8.66667L6.66667 11.3333L12 6L11.06 5.05333Z"
+        fill="currentColor"
       />
     </svg>
   )
 }
 
-type YearFilter = 'all' | 2025 | 2024
-
 export function TransparencyPanel() {
-  const [yearFilter, setYearFilter] = useState<YearFilter>('all')
+  const [showAll, setShowAll] = useState(false)
 
   const { data: transparencyData } = useQuery({
     queryKey: ['transparencyData'],
     queryFn: getTransparencyData,
   })
 
-  const attestations = transparencyData?.attestations ?? []
   const proofOfReserves = transparencyData?.proofOfReserves
-  const thirdPartyLinks = transparencyData?.thirdPartyLinks ?? []
-
-  // Filter attestations by year
-  const filteredAttestations =
-    yearFilter === 'all' ? attestations : attestations.filter((a) => a.year === yearFilter)
-
-  // Group attestations into pairs for grid display
-  const attestationPairs: Array<(typeof attestations)[0][]> = []
-  for (let i = 0; i < filteredAttestations.length; i += 2) {
-    attestationPairs.push(filteredAttestations.slice(i, i + 2))
-  }
-
-  // Group third party links into pairs
-  const linkPairs: Array<(typeof thirdPartyLinks)[0][]> = []
-  for (let i = 0; i < thirdPartyLinks.length; i += 2) {
-    linkPairs.push(thirdPartyLinks.slice(i, i + 2))
-  }
+  const allVerifications = proofOfReserves?.verifications || []
+  const displayedVerifications = showAll ? allVerifications : allVerifications.slice(0, 3)
 
   return (
-    <div className="flex flex-col gap-4 lg:gap-6">
-      {/* Top Row - Two Panels Side by Side */}
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-        {/* Custodian Attestations Panel */}
-        <div className="flex-1 bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl p-4 lg:p-6">
-          <div className="flex flex-col gap-4 lg:gap-6">
+    <div className="flex flex-col gap-6">
+      {/* Proof of Reserves Panel - Full Width */}
+      <div className="w-full bg-white dark:bg-[#1a1a1b] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] rounded-2xl">
+        <div className="p-4 md:p-6">
+          <div className="flex flex-col gap-4 md:gap-6">
             {/* Header */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
-              <div>
-                <h3 className="text-base font-semibold text-foreground dark:text-white">Custodian Attestations</h3>
-                <p className="text-xs text-muted-foreground dark:text-[#d2d2d2]">Last Updated: {transparencyData?.lastUpdated}</p>
-              </div>
-              {/* Year Filter Tabs */}
-              <div className="flex items-center gap-1 p-1 bg-zinc-200 dark:bg-[#1e1f20] rounded-lg w-fit">
-                {(['all', 2025, 2024] as YearFilter[]).map((year) => (
-                  <button
-                    key={year}
-                    onClick={() => setYearFilter(year)}
-                    className={`px-4 lg:px-6 py-1 text-xs font-medium rounded transition-all ${
-                      yearFilter === year
-                        ? 'bg-white dark:bg-[#323334] text-foreground dark:text-white shadow-sm'
-                        : 'text-muted-foreground dark:text-[#d2d2d2]/50 hover:text-foreground'
-                    }`}
-                  >
-                    {year === 'all' ? 'All' : year}
-                  </button>
-                ))}
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                <h3 className="text-lg font-normal text-black dark:text-[#d2d2d2] leading-7">
+                  Proof of Reserves
+                </h3>
+                <p className="text-xs font-normal text-[#71717a] leading-4">
+                  Last Updated: {proofOfReserves?.lastUpdated || '01 Nov 2025 07:00'}
+                </p>
               </div>
             </div>
 
-            {/* Attestation Links Grid */}
-            <div className="flex flex-col gap-2">
-              {attestationPairs.map((pair, index) => (
-                <div key={index} className="flex gap-2">
-                  {pair.map((attestation) => (
-                    <a
-                      key={attestation.id}
-                      href={attestation.url}
-                      className="flex-1 flex items-center justify-between p-2 bg-[#f0ffda] dark:bg-[rgba(210,251,149,0.2)] rounded text-xs text-foreground dark:text-white hover:bg-[#e5f5cc] dark:hover:bg-[rgba(210,251,149,0.3)] transition-colors"
-                    >
-                      <span>
-                        {attestation.month} {attestation.year}
-                      </span>
-                      <ArrowOutwardIcon className="w-4 h-4" />
-                    </a>
-                  ))}
-                  {pair.length === 1 && <div className="flex-1" />}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Proof of Reserves Panel */}
-        <div className="flex-1 bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl p-4 lg:p-6">
-          <div className="flex flex-col gap-4 lg:gap-6">
-            {/* Header */}
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-base font-semibold text-foreground dark:text-[#d2d2d2]">Proof of Reserves</h3>
-                <p className="text-xs text-muted-foreground dark:text-[#d2d2d2]">Last Updated: {proofOfReserves?.lastUpdated}</p>
-              </div>
-              <button className="text-xs text-[#06a800] dark:text-[#d2fb95] hover:underline">Learn More</button>
-            </div>
-
-            {/* Verification Table */}
-            <div className="flex flex-col gap-1.5">
-              {/* Date Header */}
-              <div className="py-1.5">
-                <span className="text-sm font-semibold text-foreground dark:text-[#d2d2d2]">{proofOfReserves?.date}</span>
-              </div>
-              <div className="h-px bg-black/15 dark:bg-[#d2d2d2]/15" />
-
-              {/* Table Header */}
-              <div className="flex items-center gap-2.5 px-2.5 py-1 text-xs text-muted-foreground dark:text-[#d2d2d2]">
-                <div className="flex-1">Auditor</div>
-                <div className="flex-1">Overcollateralized</div>
-                <div className="flex-1">Delta-Neutral</div>
-              </div>
-              <div className="px-2.5">
-                <div className="h-px bg-black/15 dark:bg-[#d2d2d2]/15" />
-              </div>
-
-              {/* Table Rows */}
-              <div className="flex flex-col gap-1">
-                {proofOfReserves?.verifications.map((verification) => (
-                  <div
-                    key={verification.auditor}
-                    className="flex items-center gap-2.5 p-2.5 rounded bg-zinc-50 dark:bg-[#323334]"
-                  >
-                    <div className="flex-1">
-                      <span className="text-sm font-semibold text-foreground dark:text-white">
-                        {verification.auditor}
-                      </span>
-                    </div>
-                    <div className="flex-1 flex items-center gap-1.5">
-                      <CheckCircleIcon className="w-4 h-4 text-foreground dark:text-[#d2d2d2]" />
-                      <span className="text-sm text-foreground dark:text-[#d2d2d2]">
-                        {verification.overcollateralized ? 'Yes' : 'No'}
-                      </span>
-                    </div>
-                    <div className="flex-1 flex items-center gap-1.5">
-                      <CheckCircleIcon className="w-4 h-4 text-foreground dark:text-[#d2d2d2]" />
-                      <span className="text-sm text-foreground dark:text-[#d2d2d2]">
-                        {verification.deltaNeutral ? 'Yes' : 'No'}
-                      </span>
+            {/* Content */}
+            <div className="flex flex-col">
+              <div className="flex flex-col gap-2 md:gap-2">
+                {/* Table - with horizontal scroll on mobile */}
+                <div className="flex flex-col gap-2.5 overflow-x-auto">
+                  {/* Table Header */}
+                  <div className="min-w-[400px]">
+                    <div className="flex items-center gap-2.5 px-2.5 py-0">
+                      <div className="flex-1">
+                        <p className="text-xs font-normal text-[#71717a] leading-4 whitespace-nowrap">
+                          Auditor
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-normal text-[#71717a] leading-4 whitespace-nowrap">
+                          Overcollateralized
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-normal text-[#71717a] leading-4 whitespace-nowrap">
+                          Link
+                        </p>
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
 
-              {/* See All Link */}
-              <div className="flex justify-center py-1.5">
-                <button className="text-xs text-[#06a800] dark:text-[#d2fb95] hover:underline">See All</button>
+                  {/* Divider */}
+                  <div className="min-w-[400px]">
+                    <div className="h-px w-full bg-[rgba(17,17,17,0.15)] dark:bg-[rgba(210,210,210,0.1)]" />
+                  </div>
+
+                  {/* Table Rows */}
+                  <div className="flex flex-col gap-1.5 min-w-[400px]">
+                    {displayedVerifications.map((verification) => (
+                      <div
+                        key={verification.auditor}
+                        className="bg-[#EEFFD3] dark:bg-[rgba(210,251,149,0.1)]"
+                      >
+                        <div className="flex items-center gap-2.5 p-2.5">
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-[#404040] dark:text-[#d2d2d2] leading-5 whitespace-nowrap">
+                              {verification.auditor}
+                            </p>
+                          </div>
+                          <div className="flex-1 flex items-center gap-1.5">
+                            <CheckCircleIcon className="w-4 h-4 text-black dark:text-[#d2d2d2]" />
+                            <p className="text-sm font-normal text-black dark:text-[#d2d2d2] leading-5 whitespace-nowrap">
+                              Yes
+                            </p>
+                          </div>
+                          <div className="flex-1 flex items-center gap-1.5">
+                            <CheckCircleIcon className="w-4 h-4 text-black dark:text-[#d2d2d2]" />
+                            <a
+                              href="https://www.google.com"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm font-normal text-[#06a800] dark:text-[#AAD36D] leading-5 whitespace-nowrap hover:underline cursor-pointer"
+                            >
+                              Reports
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* See All / Show Less */}
+                {allVerifications.length > 3 && (
+                  <div className="flex items-center justify-center px-0 py-1.5">
+                    <button
+                      onClick={() => setShowAll(!showAll)}
+                      className="text-xs font-normal text-black dark:text-[#d2d2d2] leading-4 whitespace-nowrap hover:opacity-70 transition-opacity cursor-pointer"
+                    >
+                      {showAll ? 'Show less' : 'See all'}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Third Party Data Links Panel */}
-      <div className="bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl p-4 lg:p-6">
-        <div className="flex flex-col gap-4 lg:gap-6">
-          {/* Header */}
-          <h3 className="text-base font-semibold text-foreground dark:text-white">Independent Third Party Data Links</h3>
-
-          {/* Links Grid */}
-          <div className="flex flex-col gap-2">
-            {linkPairs.map((pair, index) => (
-              <div key={index} className="flex gap-2">
-                {pair.map((link) => (
-                  <a
-                    key={link.id}
-                    href={link.url}
-                    className="flex-1 flex items-center justify-between p-2 bg-[#f0ffda] dark:bg-[rgba(210,251,149,0.2)] rounded text-xs text-foreground dark:text-white hover:bg-[#e5f5cc] dark:hover:bg-[rgba(210,251,149,0.3)] transition-colors"
-                  >
-                    <span>{link.name}</span>
-                    <ArrowOutwardIcon className="w-4 h-4" />
-                  </a>
-                ))}
-                {pair.length === 1 && <div className="flex-1" />}
-              </div>
-            ))}
           </div>
         </div>
       </div>

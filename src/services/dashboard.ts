@@ -711,9 +711,11 @@ const transparencyData: TransparencyData = {
     date: '7 Nov 2025',
     lastUpdated: '01 Nov 2025 07:00',
     verifications: [
-      { auditor: 'Auditor A', overcollateralized: true, deltaNeutral: true },
+      { auditor: 'Chainlink', overcollateralized: true, deltaNeutral: true },
       { auditor: 'Auditor B', overcollateralized: true, deltaNeutral: true },
       { auditor: 'Auditor C', overcollateralized: true, deltaNeutral: true },
+      { auditor: 'Auditor D', overcollateralized: true, deltaNeutral: true },
+      { auditor: 'Auditor E', overcollateralized: true, deltaNeutral: true },
     ],
   },
   thirdPartyLinks: [
