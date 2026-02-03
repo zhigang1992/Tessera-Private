@@ -17,7 +17,6 @@ import {
 import { AiChat } from './components/ai-chat'
 import { getLiveIssues, type LiveIssue } from '@/services'
 import { useHeader } from '@/contexts/header-context'
-import ChatBubbleOutlineIcon from './components/_/chat-bubble-outline.svg?react'
 import SupportAgentIcon from './components/_/support-agent.svg?react'
 
 type FAQCategory = {
@@ -42,17 +41,12 @@ function LiveIssuesPanel({
 }) {
   return (
     <div className="h-full bg-white dark:bg-[#323334] rounded-[16px] p-6 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
-      <h3 className="text-[16px] font-semibold mb-4 dark:text-[#d2d2d2]">
-        Live Issues
-      </h3>
+      <h3 className="text-[16px] font-semibold mb-4 dark:text-[#d2d2d2]">Live Issues</h3>
 
       {isLoadingIssues ? (
         <div className="flex flex-col gap-[12px]">
           {[1, 2].map((i) => (
-            <div
-              key={i}
-              className="px-[16px] py-[12px] bg-[#f6f6f6] dark:bg-[#27272a] rounded-[8px] animate-pulse"
-            >
+            <div key={i} className="px-[16px] py-[12px] bg-[#f6f6f6] dark:bg-[#27272a] rounded-[8px] animate-pulse">
               <div className="h-[21px] bg-[#e4e4e7] dark:bg-[#393b3d] rounded w-3/4 mb-2" />
               <div className="flex items-center justify-between">
                 <div className="h-[18px] bg-[#e4e4e7] dark:bg-[#393b3d] rounded w-16" />
@@ -66,12 +60,8 @@ function LiveIssuesPanel({
           <div className="w-12 h-12 rounded-full bg-[#f6f6f6] dark:bg-[#27272a] flex items-center justify-center mb-3">
             <MessageSquare className="w-6 h-6 text-[#a1a1aa]" />
           </div>
-          <p className="text-[14px] text-[#71717a] mb-1">
-            No open issues
-          </p>
-          <p className="text-[12px] text-[#a1a1aa]">
-            Your support requests will appear here
-          </p>
+          <p className="text-[14px] text-[#71717a] mb-1">No open issues</p>
+          <p className="text-[12px] text-[#a1a1aa]">Your support requests will appear here</p>
         </div>
       ) : (
         <div className="flex flex-col gap-[12px]">
@@ -89,14 +79,8 @@ function LiveIssuesPanel({
                   <span
                     className="text-[10px] font-medium px-[6px] py-[2px] rounded-[4px] leading-[18px]"
                     style={{
-                      backgroundColor:
-                        issue.status === 'checking'
-                          ? '#ffe6c1'
-                          : '#bbf6be',
-                      color:
-                        issue.status === 'checking'
-                          ? '#e07d00'
-                          : '#008806',
+                      backgroundColor: issue.status === 'checking' ? '#ffe6c1' : '#bbf6be',
+                      color: issue.status === 'checking' ? '#e07d00' : '#008806',
                     }}
                   >
                     {issue.status === 'checking' ? 'Checking' : 'Complete'}
@@ -116,9 +100,7 @@ function LiveIssuesPanel({
 
 export default function SupportPage() {
   const { setBackButton } = useHeader()
-  const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(
-    new Set()
-  )
+  const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedIssue, setSelectedIssue] = useState<LiveIssue | null>(null)
   const [chatQuery, setChatQuery] = useState<string | null>(null)
@@ -248,11 +230,7 @@ export default function SupportPage() {
   // Show chat view if an issue is selected or search query submitted
   if (selectedIssue || chatQuery) {
     return (
-      <AiChat
-        issue={selectedIssue ?? undefined}
-        initialQuery={chatQuery ?? undefined}
-        onBack={handleBackFromChat}
-      />
+      <AiChat issue={selectedIssue ?? undefined} initialQuery={chatQuery ?? undefined} onBack={handleBackFromChat} />
     )
   }
 
@@ -325,11 +303,7 @@ export default function SupportPage() {
 
       {/* Live Issues - Mobile Only */}
       <div className="lg:hidden">
-        <LiveIssuesPanel
-          liveIssues={liveIssues}
-          isLoadingIssues={isLoadingIssues}
-          onIssueClick={setSelectedIssue}
-        />
+        <LiveIssuesPanel liveIssues={liveIssues} isLoadingIssues={isLoadingIssues} onIssueClick={setSelectedIssue} />
       </div>
 
       {/* Main Content Grid */}
@@ -347,9 +321,7 @@ export default function SupportPage() {
             {faqCategories.map((category, categoryIndex) => {
               return (
                 <div key={category.id}>
-                  {categoryIndex > 0 && (
-                    <div className="bg-[#e4e4e7] dark:bg-[#393b3d] h-px w-full my-6" />
-                  )}
+                  {categoryIndex > 0 && <div className="bg-[#e4e4e7] dark:bg-[#393b3d] h-px w-full my-6" />}
 
                   {/* Category Header */}
                   <div className="mb-4">
@@ -357,17 +329,14 @@ export default function SupportPage() {
                       <div className="flex items-center justify-center w-8 h-8 rounded-[8px] border border-[#e4e4e7] dark:border-[#393b3d] dark:text-white">
                         {category.icon}
                       </div>
-                      <span className="font-semibold text-[16px] dark:text-[#d2d2d2]">
-                        {category.title}
-                      </span>
+                      <span className="font-semibold text-[16px] dark:text-[#d2d2d2]">{category.title}</span>
                     </div>
 
                     {/* Questions */}
                     <div className="flex flex-col gap-3">
                       {category.questions.map((q, qIndex) => {
                         const questionKey = `${category.id}-${qIndex}`
-                        const isQuestionExpanded =
-                          expandedQuestions.has(questionKey)
+                        const isQuestionExpanded = expandedQuestions.has(questionKey)
 
                         return (
                           <div
@@ -389,9 +358,7 @@ export default function SupportPage() {
                             </button>
 
                             {isQuestionExpanded && (
-                              <p className="text-[14px] text-[#71717a] mt-3 leading-[20px] pr-6">
-                                {q.answer}
-                              </p>
+                              <p className="text-[14px] text-[#71717a] mt-3 leading-[20px] pr-6">{q.answer}</p>
                             )}
                           </div>
                         )
@@ -417,15 +384,13 @@ export default function SupportPage() {
 
           {/* Community & Support */}
           <div className="lg:flex-1 bg-white dark:bg-[#323334] rounded-[16px] p-6 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
-            <h3 className="text-[16px] font-semibold mb-2 dark:text-[#d2d2d2]">
-              Community & Support
-            </h3>
+            <h3 className="text-[16px] font-semibold mb-2 dark:text-[#d2d2d2]">Community & Support</h3>
             <p className="text-[14px] text-[#71717a] mb-4 leading-[20px]">
               Join our community or chat with us for technical assistance.
             </p>
 
             <div className="flex flex-col gap-3">
-              <a
+              {/* <a
                 href="https://discord.gg/tessera"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -435,7 +400,7 @@ export default function SupportPage() {
                 <span className="text-[14px] font-medium">
                   Discord Community
                 </span>
-              </a>
+              </a> */}
 
               <a
                 href="https://t.me/TesseraLabs"
@@ -446,9 +411,7 @@ export default function SupportPage() {
                 <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.015-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.009-1.252-.242-1.865-.442-.751-.244-1.349-.374-1.297-.789.027-.216.324-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.015 3.333-1.386 4.025-1.627 4.477-1.635.099-.002.321.023.465.141.121.099.154.232.17.325.015.094.034.31.019.478z" />
                 </svg>
-                <span className="text-[14px] font-medium">
-                  Telegram Channel
-                </span>
+                <span className="text-[14px] font-medium">Telegram Channel</span>
               </a>
 
               <button
@@ -456,9 +419,7 @@ export default function SupportPage() {
                 onClick={() => setChatQuery('I need technical support')}
               >
                 <SupportAgentIcon className="w-[18px] h-[18px] text-black dark:text-black" />
-                <span className="text-[14px] font-medium text-black dark:text-black">
-                  Technical Support
-                </span>
+                <span className="text-[14px] font-medium text-black dark:text-black">Technical Support</span>
               </button>
             </div>
           </div>
