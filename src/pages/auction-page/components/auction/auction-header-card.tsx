@@ -41,7 +41,7 @@ export function AuctionHeaderCard() {
       <div className="flex flex-col gap-6">
         {/* Title and Badge */}
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-semibold text-foreground">TESS Liquidity Auction</h2>
+          <h2 className="text-xl font-semibold text-foreground">TESS Token Auction</h2>
           <span className="bg-[#5865f2] text-white text-[10px] font-semibold px-2 py-1 rounded">
             OFFICIAL
           </span>

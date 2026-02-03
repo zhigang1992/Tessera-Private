@@ -26,9 +26,6 @@ export function TokenInfoCard() {
                 <span className="bg-[#f5f5f5] dark:bg-[rgba(255,255,255,0.03)] text-[#71717a] dark:text-[#999] text-[10px] font-semibold px-2 py-1 rounded tracking-wider">
                   {tokenInfo?.type ?? '-'}
                 </span>
-                <button className="text-zinc-400 hover:text-foreground transition-colors">
-                  <Info className="w-4 h-4" />
-                </button>
               </div>
             </div>
             {/* Website link */}

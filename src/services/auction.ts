@@ -199,7 +199,7 @@ const depositInfo: DepositInfo = {
 
 const tokenInfo: AuctionTokenInfo = {
   name: 'T-SpaceX Token',
-  type: 'PRE-IPO DERIVATIVE',
+  type: 'PRE-IPO',
   website: 'https://spacex.com',
   description:
     'TspaceX is a synthetic asset engineered to track the valuation of SpaceX equity in private secondary markets. It provides institutional-grade price exposure to the space economy before public listing.',
