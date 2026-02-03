@@ -24,10 +24,10 @@ export default function ExplorePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-[24px] font-semibold text-black dark:text-[#d2d2d2]">Explore</h1>
-        <button className="flex items-center gap-1 text-[13px] text-[#71717a] hover:text-black dark:hover:text-[#d2d2d2] transition-colors">
+        <a href="/support" className="flex items-center gap-1 text-[13px] text-[#71717a] hover:text-black dark:hover:text-[#d2d2d2] transition-colors">
           <HelpCircleIcon className="w-[18px] h-[18px]" />
           Learn More
-        </button>
+        </a>
       </div>
 
       {/* Subtitle */}
