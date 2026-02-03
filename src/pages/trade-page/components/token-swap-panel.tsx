@@ -304,7 +304,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
 
         {/* Rate Info */}
         {quote && hasValidInput && (
-          <div className="bg-[rgba(255,255,255,0.5)] rounded-lg px-6 py-4">
+          <div className="bg-[rgba(255,255,255,0.5)] rounded-lg px-6 py-4 self-stretch">
             <div className="flex flex-col gap-2.5">
               <div className="flex items-center justify-between text-xs leading-4">
                 <div className="flex flex-col justify-center text-[#52525b]">

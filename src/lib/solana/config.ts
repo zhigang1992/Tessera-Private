@@ -140,7 +140,7 @@ export const TRANSACTION_CONFIG = {
  */
 export const POOL_TRADING_CONFIG = {
   // Devnet pools
-  'T-SpaceX-USDC': false, // Set to true to enable T-SpaceX-USDC trading on devnet
+  'T-SpaceX-USDC': true, // Set to true to enable T-SpaceX-USDC trading on devnet
 } as const
 
 export type TradingPoolId = keyof typeof POOL_TRADING_CONFIG
