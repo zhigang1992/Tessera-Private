@@ -39,7 +39,6 @@ export function TradingLeaderboard() {
             <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">User</th>
             <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Trading Vol.</th>
             <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Trading Points</th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Fee Rebates</th>
           </tr>
         </thead>
         <tbody>
@@ -84,7 +83,6 @@ export function TradingLeaderboard() {
                   <td className={cn('px-6 py-4 text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>{row.user}</td>
                   <td className={cn('px-6 py-4 text-sm font-bold', isCurrentUser ? 'text-black' : 'text-[#2B664B] dark:text-[#d2fb95]')}>{formatCurrency(row.tradingVolume)}</td>
                   <td className={cn('px-6 py-4 text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>{row.tradingPoints.toLocaleString()}</td>
-                  <td className={cn('px-6 py-4 text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>${row.feeRebates}</td>
                 </tr>
               )
             })
