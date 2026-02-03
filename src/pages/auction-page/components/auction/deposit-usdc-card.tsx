@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { Info, Loader2 } from 'lucide-react'
+import { Info, Loader2, AlertCircle } from 'lucide-react'
 import { useAlphaVault } from '@/hooks/use-alpha-vault'
 import { ALPHA_VAULT_CONFIG } from '@/services/alpha-vault'
 import { toast } from 'sonner'
 import UsdcIcon from '@/pages/trade-page/components/_/token-usdc.svg?react'
-import { BigNumber, math, fromTokenAmount } from '@/lib/bignumber'
+import { BigNumber, math, fromTokenAmount, mathIs } from '@/lib/bignumber'
 
 export function DepositUSDCCard() {
   const wallet = useWallet()
@@ -28,6 +28,21 @@ export function DepositUSDCCard() {
 
   const isDepositOpen = vaultInfo?.state === 'deposit_open'
   const canDeposit = depositQuota?.canDeposit && isDepositOpen && wallet.connected
+
+  // Check if deposit amount exceeds wallet balance
+  const exceedsBalance = useMemo(() => {
+    if (!depositAmount || !usdcBalance) return false
+
+    try {
+      const balanceStr = (usdcBalance ?? '0').replace(/,/g, '')
+      const balanceBN = BigNumber.from(balanceStr)
+      const amountBN = BigNumber.from(depositAmount)
+
+      return mathIs`${amountBN} > ${balanceBN}`
+    } catch {
+      return false
+    }
+  }, [depositAmount, usdcBalance])
 
   const handleConfirmDeposit = async () => {
     if (!depositAmount || parseFloat(depositAmount) <= 0) {
@@ -140,6 +155,16 @@ export function DepositUSDCCard() {
           </div>
           <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-lg transition-colors border-[#dddbd0] dark:border-[#393b3d] group-focus-within:border-black dark:group-focus-within:border-[#d2fb95]" />
         </div>
+
+        {/* Balance Warning */}
+        {exceedsBalance && (
+          <div className="bg-[#fef2f2] dark:bg-[#7f1d1d] flex gap-2 items-start p-3 rounded-lg w-full border border-[#fca5a5] dark:border-[#dc2626]">
+            <AlertCircle className="w-4 h-4 text-[#dc2626] dark:text-[#fca5a5] shrink-0 mt-0.5" />
+            <p className="flex-1 font-normal leading-[16.5px] text-xs text-[#991b1b] dark:text-[#fca5a5]">
+              Insufficient balance. Your wallet balance is {usdcBalance} USDC.
+            </p>
+          </div>
+        )}
 
         {/* Info */}
         <div className="flex flex-col gap-2">
