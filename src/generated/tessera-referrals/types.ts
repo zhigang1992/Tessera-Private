@@ -1448,7 +1448,7 @@ export type TesseraReferrals = {
     {
       "code": 6002,
       "name": "cannotUseSelfReferralCode",
-      "msg": "Cannot use your own referral code."
+      "msg": "You can’t use your own referral code. Please use a code from another user."
     },
     {
       "code": 6003,
