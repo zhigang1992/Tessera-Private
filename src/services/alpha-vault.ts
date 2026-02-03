@@ -22,24 +22,24 @@ import merkleProofsT22 from '@/data/merkle-proofs-t22.json'
 
 /**
  * Alpha Vault Deployment Configuration
- * Updated with new Token-2022 USDC and vault deployment (Feb 2, 2026)
+ * Updated with new devnet USDC and vault deployment (Feb 4, 2026)
  */
 export const ALPHA_VAULT_CONFIG = {
   // Vault address
-  vault: '4XZgfngUDMPzCHceq6GoTdmEDpcNAVThKidRua2nvhqM',
+  vault: '87o9R4AGWpPqHJnycMRucoNkpnxBduFo8x3DPBaVBZwy',
 
   // DLMM Pool
-  dlmmPool: '6Pydbux4SGN87doBPbjAtPgprsEwTP4trEANmQFcNEKR',
+  dlmmPool: '31zJJsg4bb4XYYjxheUTrGneDxkjsRQqFNUy4KtuWsUN',
 
   // Token addresses
   tessToken: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj', // TESS (Token-2022)
-  usdcToken: '7Ns2X7yAACNujx8L8pUU27ctAvhoEtikD7R3nZcd9Mox', // USDC (Token-2022)
+  usdcToken: '6C4wSPz9mcaqGkFD5iqHhvG1FMHx7ehgE2hLCiVnF25r', // USDC (SPL Token, devnet test token)
 
-  // Merkle root config for whitelisted wallets (16 wallets: 2 with 10k cap, 14 with 1k cap)
+  // Merkle root config for whitelisted wallets
   merkleRootConfig: 'HzxG7BpAiwtu7hVWSFsdXjhctubge4bsw2JcZm49wqCR',
 
   // View on Meteora
-  meteoraUrl: 'https://devnet.app.meteora.ag/vault/4XZgfngUDMPzCHceq6GoTdmEDpcNAVThKidRua2nvhqM',
+  meteoraUrl: 'https://devnet.app.meteora.ag/vault/87o9R4AGWpPqHJnycMRucoNkpnxBduFo8x3DPBaVBZwy',
 
   // Token decimals
   tessDecimals: 6,

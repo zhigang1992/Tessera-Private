@@ -76,6 +76,17 @@ export const DEFAULT_MINT_ADDRESSES: Record<SolanaNetwork, PublicKey> = {
 }
 
 /**
+ * USDC mint addresses per environment
+ * Devnet uses a custom SPL token that mirrors USDC properties
+ */
+export const USDC_MINT_ADDRESSES: Record<SolanaNetwork, PublicKey> = {
+  localnet: PublicKey.default,
+  devnet: new PublicKey('6C4wSPz9mcaqGkFD5iqHhvG1FMHx7ehgE2hLCiVnF25r'), // Custom USDC for devnet testing
+  testnet: PublicKey.default,
+  'mainnet-beta': new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'), // USDC - Production Mint
+}
+
+/**
  * Get Tessera Token program ID
  */
 export function getTesseraTokenProgramId(): PublicKey {
@@ -115,6 +126,21 @@ export function getTesseraMintAddress(): PublicKey {
 
   // Fallback to devnet mint when network-specific mint is unavailable
   return DEFAULT_MINT_ADDRESSES.devnet
+}
+
+/**
+ * Get USDC mint address for current network
+ */
+export function getUsdcMintAddress(): PublicKey {
+  const network = getCurrentNetwork()
+  const usdcMint = USDC_MINT_ADDRESSES[network]
+
+  if (usdcMint && !usdcMint.equals(PublicKey.default)) {
+    return usdcMint
+  }
+
+  // Fallback to devnet USDC when network-specific mint is unavailable
+  return USDC_MINT_ADDRESSES.devnet
 }
 
 /**
