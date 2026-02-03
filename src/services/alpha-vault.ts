@@ -36,7 +36,7 @@ export const ALPHA_VAULT_CONFIG = {
   usdcToken: '6C4wSPz9mcaqGkFD5iqHhvG1FMHx7ehgE2hLCiVnF25r', // USDC (SPL Token, devnet test token)
 
   // Merkle root config for whitelisted wallets
-  merkleRootConfig: 'HzxG7BpAiwtu7hVWSFsdXjhctubge4bsw2JcZm49wqCR',
+  merkleRootConfig: 'D8ai1BoAoUstRW4dD61dENocRNQ34Zw5CUt69PjeQctE',
 
   // View on Meteora
   meteoraUrl: 'https://devnet.app.meteora.ag/vault/87o9R4AGWpPqHJnycMRucoNkpnxBduFo8x3DPBaVBZwy',
@@ -60,7 +60,10 @@ export const ALPHA_VAULT_CONFIG = {
  * Contains 14 whitelisted wallets (2 with 10k cap, 12 with 1k cap)
  * Merkle Root: 536db5ede0a55e23f74e2589dc0d02b4c12c5eedfe488cf1de80b821360abac9
  */
-export const LOCAL_MERKLE_PROOFS: Record<string, { proof: string[]; maxCap: string }> = merkleProofsT22
+export const LOCAL_MERKLE_PROOFS: Record<
+  string,
+  { proof: string[]; max_cap: string; merkle_root_config?: string }
+> = merkleProofsT22
 
 // ============ Types ============
 
@@ -525,8 +528,10 @@ export class AlphaVaultClient {
 
     if (localProof) {
       return {
-        merkleRootConfig: new PublicKey(ALPHA_VAULT_CONFIG.merkleRootConfig),
-        maxCap: new BN(localProof.maxCap),
+        merkleRootConfig: new PublicKey(
+          localProof.merkle_root_config ?? ALPHA_VAULT_CONFIG.merkleRootConfig
+        ),
+        maxCap: new BN(localProof.max_cap),
         proof: localProof.proof.map((p) => Array.from(Buffer.from(p, 'hex'))),
       }
     }
