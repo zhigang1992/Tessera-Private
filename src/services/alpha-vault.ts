@@ -12,7 +12,7 @@
 
 import { Connection, PublicKey, Transaction } from '@solana/web3.js'
 import AlphaVault, { VaultState as SdkVaultState, VaultMode as SdkVaultMode, type DepositWithProofParams } from '@meteora-ag/alpha-vault'
-import DLMM from '@meteora-ag/dlmm'
+import DLMM, { getPriceOfBinByBinId } from '@meteora-ag/dlmm'
 import BN from 'bn.js'
 import { getRpcEndpoint } from '@/lib/solana/config'
 import { estimateSlotDate } from './alpha-vault-helpers'
@@ -60,10 +60,10 @@ export const ALPHA_VAULT_CONFIG = {
  * Contains 14 whitelisted wallets (2 with 10k cap, 12 with 1k cap)
  * Merkle Root: 536db5ede0a55e23f74e2589dc0d02b4c12c5eedfe488cf1de80b821360abac9
  */
-export const LOCAL_MERKLE_PROOFS: Record<
+export const LOCAL_MERKLE_PROOFS = merkleProofsT22 as Record<
   string,
-  { proof: string[]; max_cap: string; merkle_root_config?: string }
-> = merkleProofsT22
+  { proof: number[][]; max_cap: number; merkle_root_config?: string }
+>
 
 // ============ Types ============
 
@@ -297,22 +297,23 @@ export class AlphaVaultClient {
         // Vault has already bought tokens - use actual allocation from claimInfo
         estimatedAllocation = claimInfo?.totalAllocated?.toString() ?? '0'
       } else if (vaultInfo.mode === 'prorata') {
-        // During deposit period, estimate based on pool liquidity
+        // During deposit period, estimate based on pool liquidity and price
         const tessAvailable = await this.getPoolTessReserve()
+        const poolPrice = await this.getPoolPrice()
         const userDepositNum = parseFloat(totalDeposited) / 10 ** ALPHA_VAULT_CONFIG.usdcDecimals
         const totalDepositsNum = parseFloat(vaultInfo.totalDeposited) / 10 ** ALPHA_VAULT_CONFIG.usdcDecimals
         const maxCapNum = parseFloat(vaultInfo.maxCap) / 10 ** ALPHA_VAULT_CONFIG.usdcDecimals
 
-        if (totalDepositsNum > 0) {
+        if (totalDepositsNum > 0 && poolPrice > 0) {
           // User's share of deposits
           const userShare = userDepositNum / totalDepositsNum
 
           // Effective USDC that will be used (capped by maxBuyingCap)
           const effectiveUsdc = Math.min(totalDepositsNum, maxCapNum)
 
-          // Estimate TESS allocation based on available pool liquidity
-          // The vault buys at pool price (currently 1:1)
-          const estimatedTessForVault = Math.min(tessAvailable, effectiveUsdc)
+          // Calculate how much TESS can be bought with effective USDC at current pool price
+          // poolPrice is in USDC per TESS, so: TESS = USDC / price
+          const estimatedTessForVault = Math.min(tessAvailable, effectiveUsdc / poolPrice)
           const userTessAllocation = userShare * estimatedTessForVault
 
           estimatedAllocation = (userTessAllocation * 10 ** ALPHA_VAULT_CONFIG.tessDecimals).toFixed(0)
@@ -365,6 +366,30 @@ export class AlphaVaultClient {
       return parseFloat(reserveXBalance.value.uiAmountString || '0')
     } catch (error) {
       console.error('Failed to get pool TESS reserve:', error)
+      return 0
+    }
+  }
+
+  /**
+   * Get current pool price (USDC per TESS)
+   * Returns the price at the active bin in the DLMM pool
+   */
+  async getPoolPrice(): Promise<number> {
+    try {
+      const poolAddress = new PublicKey(ALPHA_VAULT_CONFIG.dlmmPool)
+      const dlmmPool = await DLMM.create(this.connection, poolAddress, { cluster: 'devnet' })
+
+      // Get the active bin ID and bin step
+      const activeId = dlmmPool.lbPair.activeId
+      const binStep = dlmmPool.lbPair.binStep
+
+      // Get price at the active bin using the standalone function
+      // Returns price as Y per X (USDC per TESS)
+      const price = getPriceOfBinByBinId(activeId, binStep)
+
+      return parseFloat(price.toString())
+    } catch (error) {
+      console.error('Failed to get pool price:', error)
       return 0
     }
   }
@@ -532,7 +557,7 @@ export class AlphaVaultClient {
           localProof.merkle_root_config ?? ALPHA_VAULT_CONFIG.merkleRootConfig
         ),
         maxCap: new BN(localProof.max_cap),
-        proof: localProof.proof.map((p) => Array.from(Buffer.from(p, 'hex'))),
+        proof: localProof.proof.map((p) => Array.from(p)),
       }
     }
 
