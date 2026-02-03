@@ -87,10 +87,12 @@ export interface VaultInfo {
   totalDeposited: string
   maxCap: string
   maxIndividualDeposit: string
+  boughtToken: string // Amount of tokens purchased
   // Calculated
   isOversubscribed: boolean
   oversubscriptionRatio: number
   vestingDurationHours: number // Calculated from on-chain slots
+  purchaseFailed: boolean // True if vault ended without purchasing tokens
   // Timestamps (estimated from slots)
   depositOpenTime: Date | null
   depositCloseTime: Date | null
@@ -217,6 +219,12 @@ export class AlphaVaultClient {
     // maxDepositingCap is 0 for unlimited deposits in Pro Rata mode
     const maxCap = vaultDataAny.maxBuyingCap?.toString() ?? vaultDataAny.maxDepositingCap?.toString() ?? '0'
     const maxIndividualDeposit = vaultDataAny.individualDepositingCap?.toString() ?? '0'
+    const boughtToken = vaultDataAny.boughtToken?.toString() ?? '0'
+
+    // Check if purchase failed (vault ended but no tokens purchased)
+    const purchaseFailed = (sdkState === SdkVaultState.ENDED || sdkState === SdkVaultState.VESTING) &&
+                          parseFloat(totalDeposited) > 0 &&
+                          parseFloat(boughtToken) === 0
 
     // Calculate oversubscription
     const totalDepositedNum = parseFloat(totalDeposited) / 10 ** ALPHA_VAULT_CONFIG.usdcDecimals
@@ -245,9 +253,11 @@ export class AlphaVaultClient {
       totalDeposited,
       maxCap,
       maxIndividualDeposit,
+      boughtToken,
       isOversubscribed,
       oversubscriptionRatio,
       vestingDurationHours,
+      purchaseFailed,
       depositOpenTime: estimateTime(depositOpenSlot),
       depositCloseTime: estimateTime(depositCloseSlot),
       vestingStartTime: estimateTime(vestingStartSlot),
