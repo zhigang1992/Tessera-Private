@@ -130,7 +130,7 @@ export function AuctionHeaderCard() {
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-[#71717a] dark:text-[#999]">Deposited</span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col items-end gap-1">
                     <AppTokenAmount
                       token={quoteToken}
                       amount={userDeposited}
