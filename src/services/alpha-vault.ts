@@ -376,16 +376,23 @@ export class AlphaVaultClient {
    */
   async getPoolPrice(): Promise<number> {
     try {
+      console.log('Fetching pool price from:', ALPHA_VAULT_CONFIG.dlmmPool)
       const poolAddress = new PublicKey(ALPHA_VAULT_CONFIG.dlmmPool)
       const dlmmPool = await DLMM.create(this.connection, poolAddress, { cluster: 'devnet' })
+
+      console.log('DLMM pool loaded, lbPair:', dlmmPool.lbPair)
 
       // Get the active bin ID and bin step
       const activeId = dlmmPool.lbPair.activeId
       const binStep = dlmmPool.lbPair.binStep
 
+      console.log('Pool info:', { activeId, binStep })
+
       // Get price at the active bin using the standalone function
       // Returns price as Y per X (USDC per TESS)
       const price = getPriceOfBinByBinId(activeId, binStep)
+
+      console.log('Price from pool:', price.toString())
 
       return parseFloat(price.toString())
     } catch (error) {

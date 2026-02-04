@@ -199,12 +199,24 @@ export function useAlphaVault(): UseAlphaVaultReturn {
 
     try {
       await client.refreshState()
-      const [info, price] = await Promise.all([
+      const [info, priceResult] = await Promise.allSettled([
         client.getVaultInfo(),
         client.getPoolPrice(),
       ])
-      setVaultInfo(info)
-      setPoolPrice(price)
+
+      if (info.status === 'fulfilled') {
+        setVaultInfo(info.value)
+      } else {
+        throw info.reason
+      }
+
+      if (priceResult.status === 'fulfilled') {
+        setPoolPrice(priceResult.value)
+      } else {
+        console.error('Failed to fetch pool price:', priceResult.reason)
+        // Set a default price if fetching fails - this should not happen but prevents UI breakage
+        setPoolPrice(null)
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to refresh vault info'
       setError(message)
