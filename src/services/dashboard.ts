@@ -98,7 +98,6 @@ export interface UserDashboard {
   tokenBalance: number
   tokenSymbol: string
   tokenName: string
-  healthFactor: number // 0-100 percentage
 }
 
 export interface UserTradeHistoryItem {
@@ -263,6 +262,9 @@ interface TokenMetadata {
 const TOKEN_REGISTRY: Record<string, TokenMetadata> = {}
 
 Object.values(APP_TOKENS).forEach((token) => {
+  // Skip quote token (USDC) - not a tokenized asset
+  if (token.id === QUOTE_TOKEN_ID) return
+
   Object.values(token.mints).forEach((mint) => {
     if (!mint) return
     TOKEN_REGISTRY[mint.address] = {
@@ -300,10 +302,17 @@ function formatValuation(value: number): string {
  * Fetches real data from GraphQL and merges with token metadata
  */
 export async function getTokenizedAssets(): Promise<AssetData[]> {
-  const tokenDetails = await fetchAllTokenDetails()
+  let tokenDetails: Awaited<ReturnType<typeof fetchAllTokenDetails>> = []
 
-  if (tokenDetails.length === 0) {
-    return []
+  try {
+    tokenDetails = await fetchAllTokenDetails()
+  } catch (error) {
+    console.error('[dashboard] Failed to fetch token details, using fallback assets', error)
+    return buildFallbackAssets()
+  }
+
+  if (!tokenDetails || tokenDetails.length === 0) {
+    return buildFallbackAssets()
   }
 
   return tokenDetails.map((token) => {
@@ -339,6 +348,24 @@ export async function getTokenizedAssets(): Promise<AssetData[]> {
       valuation: formatValuation(marketCap),
     }
   })
+}
+
+function buildFallbackAssets(): AssetData[] {
+  return Object.values(APP_TOKENS)
+    .filter((token) => token.id !== QUOTE_TOKEN_ID) // Exclude quote token (USDC)
+    .map((token) => {
+      const price = token.id === BASE_TOKEN.id ? tokenInfo.price : 0
+      return {
+        id: token.slug,
+        symbol: token.symbol,
+        name: token.displayName,
+        code: token.metadata?.code ?? token.slug.toUpperCase(),
+        sector: token.metadata?.sector ?? 'Private Markets',
+        price,
+        holders: 0,
+        valuation: price > 0 ? formatValuation(price * 1_000_000) : '$—',
+      }
+    })
 }
 
 // ============ API Functions ============
@@ -608,7 +635,6 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
       tokenBalance: 0,
       tokenSymbol: BASE_TOKEN.symbol,
       tokenName: BASE_TOKEN.displayName,
-      healthFactor: 100,
     }
   }
 
@@ -659,7 +685,6 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
     tokenBalance: tessBalance,
     tokenSymbol: BASE_TOKEN.symbol,
     tokenName: BASE_TOKEN.displayName,
-    healthFactor: 100, // TODO: Calculate health factor based on actual metrics
   }
 }
 
