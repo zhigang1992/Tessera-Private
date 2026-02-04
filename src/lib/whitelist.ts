@@ -12,7 +12,7 @@ export interface WhitelistInfo {
   isWhitelisted: boolean
   maxCapRaw: string | null
   maxCapFormatted: BigNumberValue | null
-  proof: string[] | null
+  proof: string[][] | null
 }
 
 /**
@@ -35,13 +35,13 @@ export function getWhitelistInfo(walletAddress: string): WhitelistInfo {
 
   // maxCap is stored in smallest units (e.g., 10000000000 = 10,000 USDC with 6 decimals)
   // Convert to human-readable format
-  const maxCapBigNumber = math`${BigNumber.from(proofData.maxCap)} / ${math`${10} ^ ${6}`}`
+  const maxCapBigNumber = math`${BigNumber.from(proofData.max_cap)} / ${math`${10} ^ ${6}`}`
 
   return {
     isWhitelisted: true,
-    maxCapRaw: proofData.maxCap,
+    maxCapRaw: proofData.max_cap.toString(),
     maxCapFormatted: maxCapBigNumber,
-    proof: proofData.proof,
+    proof: proofData.proof.map((p) => p.map((n) => n.toString())),
   }
 }
 

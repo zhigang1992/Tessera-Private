@@ -144,49 +144,6 @@ const auctionProgress: AuctionProgress = {
   chartData: [],
 }
 
-// Chart data matching Figma design: 11/10 14:00 to 11/11 05:00
-// Y-axis: $0k to $190k, target line at $120k (blue dashed)
-// Curve starts at ~$40k, rises steeply then flattens near $180k
-const auctionChartData: AuctionChartData = [
-  // 11/10 14:00 - Start
-  { hour: 0, value: 38000 },
-  { hour: 0.5, value: 52000 },
-  { hour: 1, value: 68000 },
-  { hour: 1.5, value: 85000 },
-  { hour: 2, value: 100000 },
-  { hour: 2.5, value: 112000 },
-  // 11/10 17:00 - Crosses target line (~$120k)
-  { hour: 3, value: 122000 },
-  { hour: 3.5, value: 132000 },
-  { hour: 4, value: 140000 },
-  { hour: 4.5, value: 148000 },
-  { hour: 5, value: 154000 },
-  { hour: 5.5, value: 159000 },
-  // 11/10 20:00 - Curve starts flattening
-  { hour: 6, value: 163000 },
-  { hour: 6.5, value: 166000 },
-  { hour: 7, value: 168000 },
-  { hour: 7.5, value: 170000 },
-  { hour: 8, value: 172000 },
-  { hour: 8.5, value: 173500 },
-  // 11/10 23:00
-  { hour: 9, value: 175000 },
-  { hour: 9.5, value: 176000 },
-  { hour: 10, value: 177000 },
-  { hour: 10.5, value: 178000 },
-  { hour: 11, value: 179000 },
-  { hour: 11.5, value: 179800 },
-  // 11/11 02:00
-  { hour: 12, value: 180500 },
-  { hour: 12.5, value: 181000 },
-  { hour: 13, value: 181500 },
-  { hour: 13.5, value: 182000 },
-  { hour: 14, value: 182300 },
-  { hour: 14.5, value: 182500 },
-  // 11/11 05:00 - Current (~$183k)
-  { hour: 15, value: 183000 },
-]
-
 const depositInfo: DepositInfo = {
   status: 'open',
   maxDeposit: 5000,
