@@ -371,8 +371,8 @@ export function DepositUSDCCard() {
 
           {/* Notice */}
           {escrowInfo && (
-            <div className="bg-[rgba(255,255,255,0.5)] flex gap-2.5 items-start p-3 rounded-lg w-full">
-              <Info className="w-3 h-3 text-[#666666] shrink-0 mt-[1.75px]" />
+            <div className="bg-[rgba(255,255,255,0.5)] flex gap-2.5 items-center p-3 rounded-lg w-full">
+              <Info className="w-3 h-3 text-[#666666] shrink-0" />
               <p className="flex-1 font-normal leading-[16.5px] text-[10px] text-black tracking-[0.0645px]">
                 You have an active position in this auction. Check the top "My Position" card for real-time allocation
                 updates.
