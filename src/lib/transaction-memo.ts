@@ -44,10 +44,20 @@ export function createMemoInstruction(message: string, signer: PublicKey): Trans
  * The failed transaction showed that the memo instruction needs ~50k CUs.
  * We set a higher limit (200k CUs) to accommodate the memo plus other instructions.
  *
+ * If compute budget instructions already exist (e.g., from Meteora SDK), this function
+ * removes them and replaces with our higher limits to avoid duplicate instruction errors.
+ *
  * @param transaction - The transaction to add compute budget to
  * @returns The transaction with compute budget instructions prepended
  */
 export function ensureComputeBudget(transaction: Transaction): Transaction {
+  const COMPUTE_BUDGET_PROGRAM_ID = ComputeBudgetProgram.programId.toBase58()
+
+  // Remove any existing compute budget instructions to avoid duplicates
+  const nonComputeBudgetInstructions = transaction.instructions.filter(
+    (ix) => ix.programId.toBase58() !== COMPUTE_BUDGET_PROGRAM_ID
+  )
+
   // Set compute unit limit to 200,000 (sufficient for swap + memo)
   const computeLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
     units: 200_000,
@@ -58,9 +68,8 @@ export function ensureComputeBudget(transaction: Transaction): Transaction {
     microLamports: 1,
   })
 
-  // Prepend compute budget instructions at the beginning
-  const instructions = [computeLimitIx, computePriceIx, ...transaction.instructions]
-  transaction.instructions = instructions
+  // Prepend our compute budget instructions at the beginning
+  transaction.instructions = [computeLimitIx, computePriceIx, ...nonComputeBudgetInstructions]
 
   return transaction
 }
