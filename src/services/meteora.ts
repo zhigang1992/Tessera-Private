@@ -8,7 +8,7 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js'
 import DLMM from '@meteora-ag/dlmm'
 import BN from 'bn.js'
-import { BigNumber, math, mathIs, formatBigNumber } from '@/lib/bignumber'
+import { BigNumber, math, mathIs, formatBigNumber, type BigNumberValue } from '@/lib/bignumber'
 import { DEVNET_POOLS } from '@/config'
 export { DEVNET_POOLS }
 
@@ -62,6 +62,10 @@ export interface MeteoraSwapQuote {
   outAmountFormatted: string
   minOutAmountFormatted: string
   rate: string
+  inAmountValue: BigNumberValue
+  outAmountValue: BigNumberValue
+  minOutAmountValue: BigNumberValue
+  rateValue: BigNumberValue
 }
 
 export interface SwapParams {
@@ -186,6 +190,10 @@ export class MeteoraClient {
       outAmountFormatted,
       minOutAmountFormatted,
       rate,
+      inAmountValue: inBigNum,
+      outAmountValue: outBigNum,
+      minOutAmountValue: BigNumber.from(minOutAmountFormatted),
+      rateValue: rateBigNum,
     }
   }
 

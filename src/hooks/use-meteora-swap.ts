@@ -17,14 +17,7 @@ import {
   type MeteoraSwapQuote,
   type PoolInfo,
 } from '@/services/meteora'
-import {
-  type BigNumberValue,
-  fromTokenAmount,
-  formatBigNumber,
-  parseAmount,
-  ZERO,
-  isZero,
-} from '@/lib/bignumber'
+import { type BigNumberValue, fromTokenAmount, parseAmount, ZERO, isZero } from '@/lib/bignumber'
 import { addTermsAcceptanceMemo, MemoType } from '@/lib/transaction-memo'
 import {
   DEFAULT_BASE_TOKEN_ID,
@@ -56,10 +49,6 @@ export interface UseMeteoraSwapReturn {
   usdcBalance: BigNumberValue | null
   /** T-SpaceX balance as BigNumber for calculations */
   tSpaceXBalance: BigNumberValue | null
-  /** Formatted USDC balance for display */
-  usdcBalanceFormatted: string | null
-  /** Formatted T-SpaceX balance for display */
-  tSpaceXBalanceFormatted: string | null
 
   // Actions
   loadPool: () => Promise<void>
@@ -277,17 +266,6 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
     setError(null)
   }, [])
 
-  // Memoized formatted balance strings for display
-  const usdcBalanceFormatted = useMemo(() => {
-    if (!usdcBalance) return null
-    return formatBigNumber(usdcBalance, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  }, [usdcBalance])
-
-  const tSpaceXBalanceFormatted = useMemo(() => {
-    if (!tSpaceXBalance) return null
-    return formatBigNumber(tSpaceXBalance, { minimumFractionDigits: 4, maximumFractionDigits: 4 })
-  }, [tSpaceXBalance])
-
   return {
     isLoading,
     error,
@@ -298,8 +276,6 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
     tSpaceXMint: TSPACEX_MINT,
     usdcBalance,
     tSpaceXBalance,
-    usdcBalanceFormatted,
-    tSpaceXBalanceFormatted,
     loadPool,
     getQuote,
     executeSwap,

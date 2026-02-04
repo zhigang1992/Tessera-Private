@@ -3,14 +3,22 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useMeteoraSwap, type SwapDirection } from '@/hooks/use-meteora-swap'
 import { DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getAppToken, getExplorerUrl } from '@/config'
-import { formatBigNumber } from '@/lib/bignumber'
+import { BigNumber } from '@/lib/bignumber'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
+import { AppTokenCount } from '@/components/app-token-count'
 import SwapIcon from './_/swap-icon.svg?react'
 import { toast } from 'sonner'
 
 const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
 const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
+
+function getTokenPrecision(decimals: number) {
+  return {
+    minimumFractionDigits: decimals >= 2 ? 2 : 0,
+    maximumFractionDigits: Math.min(decimals, 6),
+  }
+}
 
 interface TokenSwapPanelProps {
   disabled?: boolean
@@ -28,8 +36,6 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
     txSignature,
     usdcBalance,
     tSpaceXBalance,
-    usdcBalanceFormatted,
-    tSpaceXBalanceFormatted,
     loadPool,
     getQuote,
     executeSwap,
@@ -48,8 +54,14 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
   const buyingTokenConfig = isBuying ? BASE_TOKEN : QUOTE_TOKEN
   // BigNumber value for max button calculation
   const sellingBalance = isBuying ? usdcBalance : tSpaceXBalance
-  // Formatted strings for display
-  const sellingBalanceFormatted = isBuying ? usdcBalanceFormatted : tSpaceXBalanceFormatted
+  const sellingPrecision = getTokenPrecision(sellingTokenConfig.decimals)
+  const buyingPrecision = getTokenPrecision(buyingTokenConfig.decimals)
+  const outputAmountValue = quote?.outAmountValue ?? null
+  const hasOutputAmount = Boolean(outputAmountValue)
+  const rateValue = quote?.rateValue ?? null
+  const outputLength = outputAmountValue ? BigNumber.toString(outputAmountValue).length : 0
+  const outputSizeClass =
+    outputLength === 0 ? 'text-[28px]' : outputLength <= 6 ? 'text-[36px]' : outputLength <= 10 ? 'text-[28px]' : 'text-[20px]'
 
   // Load pool and balances on mount (skip if disabled)
   useEffect(() => {
@@ -120,14 +132,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
 
   const handleMaxClick = () => {
     if (sellingBalance) {
-      // Format BigNumber to string for input (full precision, no thousands separators)
-      // Use maximumFractionDigits to show full precision based on token type
-      const maxDecimals = sellingTokenConfig.decimals
-      const formatted = formatBigNumber(sellingBalance, {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: maxDecimals,
-      })
-      setInputAmount(formatted)
+      setInputAmount(BigNumber.toString(sellingBalance))
     }
   }
 
@@ -142,9 +147,6 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
       setIsSwapping(false)
     }
   }, [quote, direction, executeSwap])
-
-  const outputAmount = quote?.outAmountFormatted ?? '0'
-  const rate = quote?.rate ?? '0'
 
   // Button state
   const isWalletConnected = wallet.connected
@@ -183,14 +185,21 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
                 <div className="flex items-center justify-between leading-5 text-sm w-full text-[#a1a1aa] dark:text-[#ffffff] dark:opacity-50">
                   <p className="font-bold">Pay</p>
                   <div className="flex items-center gap-2">
-                    {sellingBalanceFormatted && (
-                      <button
-                        onClick={handleMaxClick}
-                        className="text-xs text-zinc-600 dark:text-white dark:opacity-50 hover:text-black dark:hover:text-white dark:hover:opacity-100 transition-colors"
-                      >
-                        MAX: {sellingBalanceFormatted}
-                      </button>
-                    )}
+                    <button
+                      onClick={handleMaxClick}
+                      className="text-xs text-zinc-600 dark:text-white dark:opacity-50 hover:text-black dark:hover:text-white dark:hover:opacity-100 transition-colors disabled:opacity-30"
+                      disabled={!sellingBalance}
+                    >
+                      MAX:{' '}
+                      <AppTokenCount
+                        token={sellingTokenConfig}
+                        value={sellingBalance}
+                        fallback="0.00"
+                        showSymbol={false}
+                        minimumFractionDigits={sellingPrecision.minimumFractionDigits}
+                        maximumFractionDigits={sellingPrecision.maximumFractionDigits}
+                      />
+                    </button>
                     {inputAmount && (
                       <button
                         onClick={() => setInputAmount('')}
@@ -280,16 +289,14 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
                   <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-md border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)]" />
                 </div>
                 <div className="flex flex-col items-end justify-center flex-1 min-w-0">
-                  <input
-                    type="text"
-                    value={isLoading ? '...' : outputAmount}
-                    readOnly
-                    placeholder="0.0"
-                    className={`font-semibold leading-10 bg-transparent outline-none border-none text-right w-full overflow-hidden text-black dark:text-white placeholder:text-black dark:placeholder:text-white ${
-                      outputAmount && outputAmount !== '0' ? '' : 'opacity-20'
-                    } ${
-                      outputAmount.length <= 6 ? 'text-[36px]' : outputAmount.length <= 10 ? 'text-[28px]' : 'text-[20px]'
-                    }`}
+                  <AppTokenCount
+                    token={buyingTokenConfig}
+                    value={outputAmountValue}
+                    showSymbol={false}
+                    fallback={isLoading ? '...' : '0.0'}
+                    minimumFractionDigits={buyingPrecision.minimumFractionDigits}
+                    maximumFractionDigits={buyingPrecision.maximumFractionDigits}
+                    className={`block font-semibold leading-10 text-right w-full overflow-hidden text-black dark:text-white ${hasOutputAmount ? '' : 'opacity-20'} ${outputSizeClass}`}
                   />
                 </div>
               </div>
@@ -308,7 +315,15 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
                 </div>
                 <div className="flex flex-col justify-center text-black">
                   <p className="leading-4">
-                    1 <AppTokenName token={sellingTokenConfig} variant="symbol" /> = {rate}{' '}
+                    1 <AppTokenName token={sellingTokenConfig} variant="symbol" /> ={' '}
+                    <AppTokenCount
+                      token={buyingTokenConfig}
+                      value={rateValue}
+                      showSymbol={false}
+                      minimumFractionDigits={buyingPrecision.minimumFractionDigits}
+                      maximumFractionDigits={Math.max(4, buyingPrecision.maximumFractionDigits)}
+                      fallback="0.0000"
+                    />{' '}
                     <AppTokenName token={buyingTokenConfig} variant="symbol" />
                   </p>
                 </div>
