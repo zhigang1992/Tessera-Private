@@ -45,6 +45,7 @@ export interface UseAlphaVaultReturn {
 
   // Balances
   usdcBalance: string | null
+  poolPrice: number | null // USDC per TESS
 
   // Time remaining
   depositEndsIn: { hours: number; minutes: number; seconds: number } | null
@@ -85,6 +86,7 @@ export function useAlphaVault(): UseAlphaVaultReturn {
   const [depositQuota, setDepositQuota] = useState<DepositQuota | null>(null)
   const [claimInfo, setClaimInfo] = useState<AlphaVaultClaimInfo | null>(null)
   const [usdcBalance, setUsdcBalance] = useState<string | null>(null)
+  const [poolPrice, setPoolPrice] = useState<number | null>(null)
 
   // Create connection and client
   const connection = useMemo(() => {
@@ -197,8 +199,12 @@ export function useAlphaVault(): UseAlphaVaultReturn {
 
     try {
       await client.refreshState()
-      const info = await client.getVaultInfo()
+      const [info, price] = await Promise.all([
+        client.getVaultInfo(),
+        client.getPoolPrice(),
+      ])
       setVaultInfo(info)
+      setPoolPrice(price)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to refresh vault info'
       setError(message)
@@ -442,6 +448,7 @@ export function useAlphaVault(): UseAlphaVaultReturn {
     depositQuota,
     claimInfo,
     usdcBalance,
+    poolPrice,
     depositEndsIn,
     vestingEndsIn,
     totalRaised,

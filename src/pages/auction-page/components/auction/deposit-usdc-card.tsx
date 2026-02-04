@@ -22,6 +22,7 @@ export function DepositUSDCCard() {
     escrowInfo,
     depositQuota,
     usdcBalance,
+    poolPrice,
     totalRaised,
     targetRaise,
     estimatedAllocation,
@@ -61,7 +62,9 @@ export function DepositUSDCCard() {
 
   // Calculate estimated allocation based on current deposit + input
   const calculatedEstAllocation = useMemo(() => {
-    if (!vaultInfo || !totalRaised) return '0 TESS'
+    if (!vaultInfo || !totalRaised || !poolPrice || poolPrice === 0) {
+      return estimatedAllocation ? `${estimatedAllocation} TESS` : '0 TESS'
+    }
 
     const existingDeposit = escrowInfo?.totalDeposited ? BigNumber.from(escrowInfo.totalDeposited) : BigNumber.from(0)
 
@@ -78,21 +81,35 @@ export function DepositUSDCCard() {
       const totalRaisedStr = totalRaised.replace(/,/g, '')
       const totalRaisedBN = math`${BigNumber.from(totalRaisedStr)} * ${Math.pow(10, 6)}`
 
-      // If no deposits yet, allocation would be 100% of tokens
+      // If no deposits yet, can't calculate allocation
       if (mathIs`${totalRaisedBN} === ${0}`) {
         return '0 TESS'
       }
 
-      // Calculate user's share: (user deposit / total raised) * total tokens
-      // For now, assume 1:1 USDC to TESS ratio for simplicity
-      const userShare = math`${totalUserDeposit} / ${Math.pow(10, 6)}`
+      // Calculate user's share of total deposits
+      const userShare = math`${totalUserDeposit} / ${totalRaisedBN}`
 
-      return `${BigNumber.toNumber(userShare).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} TESS`
-    } catch {
+      // Get max cap (target raise) in raw format
+      const maxCapStr = targetRaise.replace(/,/g, '')
+      const maxCapBN = math`${BigNumber.from(maxCapStr)} * ${Math.pow(10, 6)}`
+
+      // Effective USDC that will be used (capped by maxBuyingCap)
+      const effectiveUsdcBN = math`min(${totalRaisedBN}, ${maxCapBN})`
+      const effectiveUsdc = math`${effectiveUsdcBN} / ${Math.pow(10, 6)}`
+
+      // Calculate TESS allocation: USDC / price
+      const tessAllocation = math`${effectiveUsdc} / ${BigNumber.from(poolPrice)}`
+
+      // User's share of the allocation
+      const userTessAllocation = math`${userShare} * ${tessAllocation}`
+
+      return `${BigNumber.toNumber(userTessAllocation).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} TESS`
+    } catch (error) {
+      console.error('Failed to calculate allocation:', error)
       // Fallback to existing allocation if calculation fails
       return estimatedAllocation ? `${estimatedAllocation} TESS` : '0 TESS'
     }
-  }, [vaultInfo, totalRaised, escrowInfo, depositAmount, estimatedAllocation])
+  }, [vaultInfo, totalRaised, targetRaise, poolPrice, escrowInfo, depositAmount, estimatedAllocation])
 
   // Check if deposit amount exceeds wallet balance
   const exceedsBalance = useMemo(() => {
