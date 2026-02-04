@@ -8,7 +8,7 @@
 import { PublicKey } from '@solana/web3.js'
 
 // Environment detection
-export type SolanaNetwork = 'localnet' | 'devnet' | 'testnet' | 'mainnet-beta'
+export type SolanaNetwork = 'devnet' | 'mainnet-beta'
 
 /**
  * Get current network from environment variables
@@ -22,9 +22,7 @@ export function getCurrentNetwork(): SolanaNetwork {
  * RPC endpoint URLs for each network
  */
 export const RPC_ENDPOINTS: Record<SolanaNetwork, string> = {
-  localnet: 'http://127.0.0.1:8899',
   devnet: 'https://api.devnet.solana.com',
-  testnet: 'https://api.testnet.solana.com',
   'mainnet-beta': 'https://api.mainnet-beta.solana.com',
 }
 
@@ -32,9 +30,7 @@ export const RPC_ENDPOINTS: Record<SolanaNetwork, string> = {
  * WebSocket endpoint URLs for each network
  */
 export const WS_ENDPOINTS: Record<SolanaNetwork, string> = {
-  localnet: 'ws://127.0.0.1:8900',
   devnet: 'wss://api.devnet.solana.com',
-  testnet: 'wss://api.testnet.solana.com',
   'mainnet-beta': 'wss://api.mainnet-beta.solana.com',
 }
 
@@ -69,9 +65,7 @@ export const PROGRAM_IDS = {
  * See addresses.md for complete details
  */
 export const DEFAULT_MINT_ADDRESSES: Record<SolanaNetwork, PublicKey> = {
-  localnet: PublicKey.default,
   devnet: new PublicKey('2Z41NAkarnW3VKA5EYk3YM58CgXDvpdyw5isEDbNW8mR'), // TTT02 - Current Test Mint
-  testnet: PublicKey.default,
   'mainnet-beta': new PublicKey('TESgesqMiVxUG38tuJmLkDSQoebKmBn2FhZkYNBr8hu'), // TESS - Production Mint
 }
 
@@ -80,9 +74,7 @@ export const DEFAULT_MINT_ADDRESSES: Record<SolanaNetwork, PublicKey> = {
  * Devnet uses a custom SPL token that mirrors USDC properties
  */
 export const USDC_MINT_ADDRESSES: Record<SolanaNetwork, PublicKey> = {
-  localnet: PublicKey.default,
   devnet: new PublicKey('6C4wSPz9mcaqGkFD5iqHhvG1FMHx7ehgE2hLCiVnF25r'), // Custom USDC for devnet testing
-  testnet: PublicKey.default,
   'mainnet-beta': new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'), // USDC - Production Mint
 }
 
@@ -118,14 +110,7 @@ export const getAuctionProgramId = getTesseraAuctionProgramId
  */
 export function getTesseraMintAddress(): PublicKey {
   const network = getCurrentNetwork()
-  const defaultMint = DEFAULT_MINT_ADDRESSES[network]
-
-  if (defaultMint && !defaultMint.equals(PublicKey.default)) {
-    return defaultMint
-  }
-
-  // Fallback to devnet mint when network-specific mint is unavailable
-  return DEFAULT_MINT_ADDRESSES.devnet
+  return DEFAULT_MINT_ADDRESSES[network]
 }
 
 /**
@@ -133,14 +118,7 @@ export function getTesseraMintAddress(): PublicKey {
  */
 export function getUsdcMintAddress(): PublicKey {
   const network = getCurrentNetwork()
-  const usdcMint = USDC_MINT_ADDRESSES[network]
-
-  if (usdcMint && !usdcMint.equals(PublicKey.default)) {
-    return usdcMint
-  }
-
-  // Fallback to devnet USDC when network-specific mint is unavailable
-  return USDC_MINT_ADDRESSES.devnet
+  return USDC_MINT_ADDRESSES[network]
 }
 
 /**
@@ -193,21 +171,12 @@ export function isMainnet(): boolean {
 }
 
 /**
- * Check if running locally
- */
-export function isLocalnet(): boolean {
-  return getCurrentNetwork() === 'localnet'
-}
-
-/**
  * Display-friendly network name
  */
 export function getNetworkName(): string {
   const network = getCurrentNetwork()
   const names: Record<SolanaNetwork, string> = {
-    localnet: 'Local',
     devnet: 'Devnet',
-    testnet: 'Testnet',
     'mainnet-beta': 'Mainnet',
   }
   return names[network]
