@@ -226,8 +226,15 @@ export async function getMarketStats(): Promise<MarketStatsData> {
   }
 
   // Use dashboard_summary data with 24h changes
-  const totalMarketCap = BigNumber.toNumber(fromHasuraToNative(summary.total_market_cap))
-  const totalTradingVolume = BigNumber.toNumber(fromHasuraToNative(summary.total_trading_volume))
+  // Handle null market cap gracefully (returns 0 if data not available)
+  let totalMarketCap = 0
+  if (summary.total_market_cap !== null && summary.total_market_cap !== undefined) {
+    totalMarketCap = BigNumber.toNumber(fromHasuraToNative(summary.total_market_cap))
+  }
+
+  const totalTradingVolume = summary.total_trading_volume
+    ? BigNumber.toNumber(fromHasuraToNative(summary.total_trading_volume))
+    : 0
   const totalMarketCap24hChangePct = summary.total_market_cap_24h_change_pct
     ? BigNumber.toNumber(fromHasuraToNative(summary.total_market_cap_24h_change_pct))
     : null

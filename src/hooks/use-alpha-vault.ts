@@ -157,9 +157,10 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
   }, [claimInfo, baseDecimals])
 
   const vestingDuration = useMemo(() => {
-    if (!vaultInfo) return '0h Linear'
+    if (!vaultInfo) return client.config.hasVestingPeriod ? '0h Linear' : 'Instant'
+    if (!client.config.hasVestingPeriod || vaultInfo.vestingDurationHours === 0) return 'Instant'
     return `${vaultInfo.vestingDurationHours}h Linear`
-  }, [vaultInfo])
+  }, [vaultInfo, client.config.hasVestingPeriod])
 
   // Fetch USDC balance
   const fetchUsdcBalance = useCallback(async () => {
