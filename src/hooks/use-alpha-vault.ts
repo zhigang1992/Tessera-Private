@@ -23,6 +23,7 @@ import { type AppTokenId, type ResolvedAlphaVaultConfig, getRpcEndpoint } from '
 import { getTimeRemaining } from '@/services/alpha-vault-helpers'
 import { getAccount, getAssociatedTokenAddress } from '@solana/spl-token'
 import { addTermsAcceptanceMemo, MemoType } from '@/lib/transaction-memo'
+import { fromTokenAmount, type BigNumberValue } from '@/lib/bignumber'
 
 const DEFAULT_RPC_URL = import.meta.env.VITE_SOLANA_RPC_URL || getRpcEndpoint()
 
@@ -46,7 +47,7 @@ export interface UseAlphaVaultReturn {
   claimInfo: AlphaVaultClaimInfo | null
 
   // Balances
-  usdcBalance: string | null
+  usdcBalance: BigNumberValue | null
   poolPrice: number | null // USDC per T-SpaceX
 
   // Time remaining
@@ -54,13 +55,13 @@ export interface UseAlphaVaultReturn {
   vestingEndsIn: { hours: number; minutes: number; seconds: number } | null
 
   // Formatted values
-  totalRaised: string
-  targetRaise: string
+  totalRaised: BigNumberValue
+  targetRaise: BigNumberValue
   oversubscribedRatio: string
-  userDeposited: string
-  estimatedAllocation: string
-  estimatedRefund: string
-  availableToClaim: string
+  userDeposited: BigNumberValue
+  estimatedAllocation: BigNumberValue
+  estimatedRefund: BigNumberValue
+  availableToClaim: BigNumberValue
   vestingDuration: string // e.g., "6h Linear"
 
   // Actions
@@ -87,7 +88,7 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
   const [escrowInfo, setEscrowInfo] = useState<EscrowInfo | null>(null)
   const [depositQuota, setDepositQuota] = useState<DepositQuota | null>(null)
   const [claimInfo, setClaimInfo] = useState<AlphaVaultClaimInfo | null>(null)
-  const [usdcBalance, setUsdcBalance] = useState<string | null>(null)
+  const [usdcBalance, setUsdcBalance] = useState<BigNumberValue | null>(null)
   const [poolPrice, setPoolPrice] = useState<number | null>(null)
 
   // Create connection and client
@@ -120,15 +121,15 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
     return getTimeRemaining(vaultInfo.vestingEndTime)
   }, [vaultInfo])
 
-  // Formatted values
+  // Formatted values (now returns BigNumberValue for proper component rendering)
   const totalRaised = useMemo(() => {
-    if (!vaultInfo) return '0'
-    return formatVaultAmount(vaultInfo.totalDeposited, quoteDecimals)
+    if (!vaultInfo) return fromTokenAmount('0', quoteDecimals)
+    return fromTokenAmount(vaultInfo.totalDeposited, quoteDecimals)
   }, [vaultInfo, quoteDecimals])
 
   const targetRaise = useMemo(() => {
-    if (!vaultInfo) return '0'
-    return formatVaultAmount(vaultInfo.maxCap, quoteDecimals)
+    if (!vaultInfo) return fromTokenAmount('0', quoteDecimals)
+    return fromTokenAmount(vaultInfo.maxCap, quoteDecimals)
   }, [vaultInfo, quoteDecimals])
 
   const oversubscribedRatio = useMemo(() => {
@@ -137,23 +138,23 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
   }, [vaultInfo])
 
   const userDeposited = useMemo(() => {
-    if (!escrowInfo) return '0'
-    return formatVaultAmount(escrowInfo.totalDeposited, quoteDecimals)
+    if (!escrowInfo) return fromTokenAmount('0', quoteDecimals)
+    return fromTokenAmount(escrowInfo.totalDeposited, quoteDecimals)
   }, [escrowInfo, quoteDecimals])
 
   const estimatedAllocation = useMemo(() => {
-    if (!escrowInfo) return '0'
-    return formatVaultAmount(escrowInfo.estimatedAllocation, baseDecimals)
+    if (!escrowInfo) return fromTokenAmount('0', baseDecimals)
+    return fromTokenAmount(escrowInfo.estimatedAllocation, baseDecimals)
   }, [escrowInfo, baseDecimals])
 
   const estimatedRefund = useMemo(() => {
-    if (!escrowInfo) return '0'
-    return formatVaultAmount(escrowInfo.estimatedRefund, quoteDecimals)
+    if (!escrowInfo) return fromTokenAmount('0', quoteDecimals)
+    return fromTokenAmount(escrowInfo.estimatedRefund, quoteDecimals)
   }, [escrowInfo, quoteDecimals])
 
   const availableToClaim = useMemo(() => {
-    if (!claimInfo) return '0'
-    return formatVaultAmount(claimInfo.availableToClaim, baseDecimals)
+    if (!claimInfo) return fromTokenAmount('0', baseDecimals)
+    return fromTokenAmount(claimInfo.availableToClaim, baseDecimals)
   }, [claimInfo, baseDecimals])
 
   const vestingDuration = useMemo(() => {
@@ -177,10 +178,10 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
       const usdcMint = new PublicKey(quoteMintAddress)
       const ata = await getAssociatedTokenAddress(usdcMint, wallet.publicKey)
       const account = await getAccount(connection, ata)
-      const formatted = formatVaultAmount(account.amount.toString(), quoteDecimals)
-      setUsdcBalance(formatted)
+      const balance = fromTokenAmount(account.amount.toString(), quoteDecimals)
+      setUsdcBalance(balance)
     } catch {
-      setUsdcBalance('0.00')
+      setUsdcBalance(fromTokenAmount('0', quoteDecimals))
     }
   }, [client, connection, quoteDecimals, wallet.publicKey])
 

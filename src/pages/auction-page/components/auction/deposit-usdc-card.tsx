@@ -71,7 +71,8 @@ export function DepositUSDCCard() {
 
   // Calculate estimated allocation based on current deposit + input
   const calculatedEstAllocation = useMemo(() => {
-    const fallback = parseFormattedAmount(estimatedAllocation)
+    // estimatedAllocation is now a BigNumberValue
+    const fallback = estimatedAllocation
 
     if (!vaultInfo || !totalRaised || !targetRaise || !poolPrice || poolPrice === 0) {
       return fallback
@@ -90,8 +91,8 @@ export function DepositUSDCCard() {
         totalUserDeposit = math`${existingDeposit} + ${newDepositRaw}`
       }
 
-      const totalRaisedStr = totalRaised.replace(/,/g, '')
-      const totalRaisedBN = math`${BigNumber.from(totalRaisedStr)} * ${Math.pow(10, decimals)}`
+      // totalRaised is now a BigNumberValue (already in human-readable form)
+      const totalRaisedBN = math`${totalRaised} * ${Math.pow(10, decimals)}`
       const hypotheticalTotalRaised = math`${totalRaisedBN} + ${newDepositRaw}`
 
       if (mathIs`${hypotheticalTotalRaised} === ${0}`) {
@@ -100,8 +101,8 @@ export function DepositUSDCCard() {
 
       const userShare = math`${totalUserDeposit} / ${hypotheticalTotalRaised}`
 
-      const maxCapStr = targetRaise.replace(/,/g, '')
-      const maxCapBN = math`${BigNumber.from(maxCapStr)} * ${Math.pow(10, decimals)}`
+      // targetRaise is now a BigNumberValue (already in human-readable form)
+      const maxCapBN = math`${targetRaise} * ${Math.pow(10, decimals)}`
       const effectiveUsdcBN = math`min(${hypotheticalTotalRaised}, ${maxCapBN})`
       const effectiveUsdc = math`${effectiveUsdcBN} / ${Math.pow(10, decimals)}`
 
@@ -129,11 +130,9 @@ export function DepositUSDCCard() {
     if (!depositAmount || !usdcBalance) return false
 
     try {
-      const balanceStr = (usdcBalance ?? '0').replace(/,/g, '')
-      const balanceBN = BigNumber.from(balanceStr)
       const amountBN = BigNumber.from(depositAmount)
-
-      return mathIs`${amountBN} > ${balanceBN}`
+      // usdcBalance is now a BigNumberValue, no need to parse
+      return mathIs`${amountBN} > ${usdcBalance}`
     } catch {
       return false
     }
@@ -169,8 +168,8 @@ export function DepositUSDCCard() {
 
   const handleMaxClick = () => {
     // Use the smaller of: user's USDC balance or remaining deposit quota
-    // Convert both to BigNumber for precise comparison
-    const balanceBN = parseFormattedAmount(usdcBalance)
+    // usdcBalance is now a BigNumberValue
+    const balanceBN = usdcBalance ?? BigNumber.from(0)
 
     // remainingQuota is a raw token amount (with USDC decimals)
     const quotaBN = fromTokenAmount(depositQuota?.remainingQuota ?? '0', config.quoteDecimals)
@@ -214,7 +213,7 @@ export function DepositUSDCCard() {
                   className="text-xs hover:text-black dark:hover:text-white dark:hover:opacity-100 transition-colors"
                   disabled={!canDeposit}
                 >
-                  MAX: {usdcBalance ?? '0.00'} <AppTokenName token={config.quoteToken} variant="symbol" />
+                  MAX: <AppTokenAmount token={config.quoteToken} amount={usdcBalance ?? BigNumber.from(0)} /> <AppTokenName token={config.quoteToken} variant="symbol" />
                 </button>
               </div>
               <div className="flex items-center justify-between w-full">
@@ -258,7 +257,8 @@ export function DepositUSDCCard() {
           <div className="bg-[#fef2f2] dark:bg-[#7f1d1d] flex gap-2 items-start p-3 rounded-lg w-full border border-[#fca5a5] dark:border-[#dc2626]">
             <AlertCircle className="w-4 h-4 text-[#dc2626] dark:text-[#fca5a5] shrink-0 mt-0.5" />
             <p className="flex-1 font-normal leading-[16.5px] text-xs text-[#991b1b] dark:text-[#fca5a5]">
-              Insufficient balance. Your wallet balance is {usdcBalance}{' '}
+              Insufficient balance. Your wallet balance is{' '}
+              <AppTokenAmount token={config.quoteToken} amount={usdcBalance ?? BigNumber.from(0)} />{' '}
               <AppTokenName token={config.quoteToken} variant="symbol" />.
             </p>
           </div>
@@ -386,11 +386,15 @@ export function DepositUSDCCard() {
             </div>
             <div className="flex items-center justify-between w-full">
               <p className="font-normal leading-[15px] text-[#666] text-[10px] tracking-[0.1172px]">Target Raise</p>
-              <p className="font-mono font-normal leading-[15px] text-[10px] text-black">${targetRaise}</p>
+              <p className="font-mono font-normal leading-[15px] text-[10px] text-black">
+                $<AppTokenAmount token={config.quoteToken} amount={targetRaise} />
+              </p>
             </div>
             <div className="flex items-center justify-between w-full">
               <p className="font-normal leading-[15px] text-[#666] text-[10px] tracking-[0.1172px]">Current Raise</p>
-              <p className="font-mono font-normal leading-[15px] text-[10px] text-black">${totalRaised}</p>
+              <p className="font-mono font-normal leading-[15px] text-[10px] text-black">
+                $<AppTokenAmount token={config.quoteToken} amount={totalRaised} />
+              </p>
             </div>
           </div>
         </div>

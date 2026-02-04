@@ -10,6 +10,7 @@ function resolveToken(token: AppToken | AppTokenId): AppToken {
 export interface AppTokenCountProps {
   token: AppToken | AppTokenId
   value?: BigNumberValue | null
+  amount?: BigNumberValue | null // Alias for value
   minimumFractionDigits?: number
   maximumFractionDigits?: number
   locale?: string
@@ -23,6 +24,7 @@ export interface AppTokenCountProps {
 export function AppTokenCount({
   token,
   value,
+  amount,
   minimumFractionDigits = 2,
   maximumFractionDigits = 4,
   locale = 'en-US',
@@ -33,8 +35,10 @@ export function AppTokenCount({
   fallback = '—',
 }: AppTokenCountProps) {
   const resolvedToken = resolveToken(token)
-  const hasValue = value !== null && value !== undefined
-  const normalizedValue = hasValue ? value! : ZERO
+  // Support both 'value' and 'amount' props (amount takes precedence for backwards compatibility)
+  const actualValue = amount !== undefined ? amount : value
+  const hasValue = actualValue !== null && actualValue !== undefined
+  const normalizedValue = hasValue ? actualValue! : ZERO
 
   const formatted = hasValue
     ? formatBigNumber(normalizedValue, {
