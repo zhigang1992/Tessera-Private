@@ -28,7 +28,7 @@ export default function AuctionPage() {
           <AuctionHeaderCard />
 
           {/* Bottom Section: Chart and Deposit - Mobile: stacked, Desktop: grid */}
-          <div className="flex flex-col lg:grid lg:grid-cols-[1.75fr_1fr] gap-4 lg:gap-6">
+          <div className="flex flex-col lg:grid lg:grid-cols-[1fr_1.75fr] gap-4 lg:gap-6">
             {/* Deposit USDC Card - Shows first on mobile */}
             <div className="order-1 lg:order-2">
               <DepositUSDCCard />

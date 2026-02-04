@@ -181,8 +181,24 @@ export function useAlphaVault(): UseAlphaVaultReturn {
 
     try {
       await client.initialize()
-      const info = await client.getVaultInfo()
-      setVaultInfo(info)
+      const [info, priceResult] = await Promise.allSettled([
+        client.getVaultInfo(),
+        client.getPoolPrice(),
+      ])
+
+      if (info.status === 'fulfilled') {
+        setVaultInfo(info.value)
+      } else {
+        throw info.reason
+      }
+
+      if (priceResult.status === 'fulfilled') {
+        setPoolPrice(priceResult.value)
+      } else {
+        console.error('Failed to fetch pool price during init:', priceResult.reason)
+        setPoolPrice(null)
+      }
+
       setIsInitialized(true)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to initialize vault'
