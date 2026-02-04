@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Card } from '@/components/ui/card'
 import { AppTokenName } from '@/components/app-token-name'
+import { AppTokenIcon } from '@/components/app-token-icon'
+import { AppTokenAmount } from '@/components/app-token-amount'
 import { WithdrawModal } from './withdraw-modal'
 import { useAuctionAlphaVault, useAuctionToken } from '../../context'
 
@@ -33,15 +35,19 @@ export function AuctionHeaderCard() {
   const progressWidth = targetRaiseNum > 0 ? Math.min((totalRaisedNum / targetRaiseNum) * 100, 100) : 0
   const percentageOfTarget = targetRaiseNum > 0 ? Math.round((totalRaisedNum / targetRaiseNum) * 100) : 0
   const hasPosition = escrowInfo && parseFloat(escrowInfo.totalDeposited) > 0
+  const quoteToken = config.quoteToken
 
   return (
     <Card className="p-6 bg-white dark:bg-[#323334]">
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-semibold text-foreground flex items-center gap-1">
-            <AppTokenName token={token} /> Auction
-          </h2>
-          <span className="bg-[#5865f2] text-white text-[10px] font-semibold px-2 py-1 rounded">OFFICIAL</span>
+          <AppTokenIcon token={token} size={40} className="w-10 h-10" />
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-semibold text-foreground flex items-center gap-1">
+              <AppTokenName token={token} /> Auction
+            </h2>
+            <span className="bg-[#5865f2] text-white text-[10px] font-semibold px-2 py-1 rounded">OFFICIAL</span>
+          </div>
         </div>
 
         <div className="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -49,7 +55,12 @@ export function AuctionHeaderCard() {
             <div className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">TOTAL RAISED</div>
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-semibold font-mono text-foreground">${totalRaised}</span>
+                <AppTokenAmount
+                  token={quoteToken}
+                  amount={totalRaised}
+                  showSymbol
+                  className="text-2xl font-semibold font-mono text-foreground"
+                />
                 <span className="bg-[rgba(210,251,149,0.5)] text-foreground text-xs font-medium px-2 py-0.5 rounded">
                   {percentageOfTarget}%
                 </span>
@@ -59,7 +70,10 @@ export function AuctionHeaderCard() {
                   <div className="bg-[#06a800] h-full rounded-full transition-all" style={{ width: `${progressWidth}%` }} />
                 </div>
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-[#71717a] dark:text-[#999]">Target: ${targetRaise}</span>
+                  <span className="text-[#71717a] dark:text-[#999]">
+                    Target:{' '}
+                    <AppTokenAmount token={quoteToken} amount={targetRaise} showSymbol className="font-mono" />
+                  </span>
                   {vaultInfo?.isOversubscribed && (
                     <span className="text-[#06a800] font-medium">{oversubscribedRatio}x Oversubscribed</span>
                   )}
@@ -117,7 +131,12 @@ export function AuctionHeaderCard() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-[#71717a] dark:text-[#999]">Deposited</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold font-mono text-foreground">${userDeposited}</span>
+                    <AppTokenAmount
+                      token={quoteToken}
+                      amount={userDeposited}
+                      showSymbol
+                      className="text-sm font-semibold font-mono text-foreground"
+                    />
                     {hasPosition && vaultInfo?.state === 'deposit_open' && (
                       <button
                         onClick={() => setWithdrawModalOpen(true)}
@@ -130,14 +149,22 @@ export function AuctionHeaderCard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-[#71717a] dark:text-[#999]">Est. Alloc</span>
-                  <span className="text-sm font-semibold font-mono text-foreground flex items-center gap-1">
-                    {estimatedAllocation} <AppTokenName token={token} variant="symbol" />
-                  </span>
+                  <AppTokenAmount
+                    token={token}
+                    amount={estimatedAllocation}
+                    showSymbol
+                    className="text-sm font-semibold font-mono text-foreground flex items-center gap-1"
+                  />
                 </div>
                 {vaultInfo?.mode === 'prorata' && vaultInfo?.isOversubscribed && (
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-[#71717a] dark:text-[#999]">Est. Refund</span>
-                    <span className="text-sm font-semibold font-mono text-foreground">${estimatedRefund}</span>
+                    <AppTokenAmount
+                      token={quoteToken}
+                      amount={estimatedRefund}
+                      showSymbol
+                      className="text-sm font-semibold font-mono text-foreground"
+                    />
                   </div>
                 )}
               </div>
@@ -161,7 +188,7 @@ export function AuctionHeaderCard() {
               <div className="flex flex-col gap-1 text-[10px]">
                 <div className="flex items-center justify-between">
                   <span className="text-[#71717a] dark:text-[#999]">Quote Token</span>
-                  <span className="font-mono text-foreground">{config.quoteToken.symbol}</span>
+                  <AppTokenName token={quoteToken} variant="symbol" className="font-mono text-foreground" />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[#71717a] dark:text-[#999]">Vesting</span>

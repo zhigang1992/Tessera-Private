@@ -1,10 +1,12 @@
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Card } from '@/components/ui/card'
 import { AppTokenName } from '@/components/app-token-name'
+import { AppTokenAmount } from '@/components/app-token-amount'
 import { formatDate } from '@/services/alpha-vault-helpers'
 import CalendarIcon from './_/calendar.svg?react'
 import CheckCircleIcon from './_/check-circle.svg?react'
 import { useAuctionAlphaVault, useAuctionToken } from '../../context'
+import { fromTokenAmount, BigNumber } from '@/lib/bignumber'
 
 export function VestingHeaderCard() {
   const wallet = useWallet()
@@ -51,18 +53,20 @@ export function VestingHeaderCard() {
   const isEligible =
     wallet.connected && claimInfo && parseFloat(claimInfo.totalAllocation) > 0
 
-  // Calculate position amounts
-  const totalAllocation = claimInfo
-    ? parseFloat(claimInfo.totalAllocation) / 10 ** config.baseDecimals
-    : 0
-  const unlockedAmount = claimInfo
-    ? (parseFloat(claimInfo.totalClaimed) + parseFloat(claimInfo.availableToClaim)) / 10 ** config.baseDecimals
-    : 0
-  const lockedAmount = claimInfo ? parseFloat(claimInfo.lockedAmount) / 10 ** config.baseDecimals : 0
+  const totalAllocationAmount = claimInfo ? fromTokenAmount(claimInfo.totalAllocation, config.baseDecimals) : null
+  const totalClaimedAmount = claimInfo ? fromTokenAmount(claimInfo.totalClaimed, config.baseDecimals) : null
+  const availableAmount = claimInfo ? fromTokenAmount(claimInfo.availableToClaim, config.baseDecimals) : null
+  const lockedAmount = claimInfo ? fromTokenAmount(claimInfo.lockedAmount, config.baseDecimals) : null
+
+  const totalAllocationNumber = totalAllocationAmount ? BigNumber.toNumber(totalAllocationAmount) : 0
+  const unlockedNumber =
+    (totalClaimedAmount ? BigNumber.toNumber(totalClaimedAmount) : 0) +
+    (availableAmount ? BigNumber.toNumber(availableAmount) : 0)
+  const lockedNumber = lockedAmount ? BigNumber.toNumber(lockedAmount) : 0
 
   const unlockedPercent =
-    totalAllocation > 0 ? Math.round((unlockedAmount / totalAllocation) * 100) : 0
-  const lockedPercent = totalAllocation > 0 ? 100 - unlockedPercent : 0
+    totalAllocationNumber > 0 ? Math.round((unlockedNumber / totalAllocationNumber) * 100) : 0
+  const lockedPercent = totalAllocationNumber > 0 ? 100 - unlockedPercent : 0
 
   return (
     <Card className="p-6 bg-white dark:bg-[#323334]">
@@ -171,9 +175,11 @@ export function VestingHeaderCard() {
                 {/* Total Allocation */}
                 <div className="bg-[rgba(88,101,242,0.08)] dark:bg-[rgba(88,101,242,0.15)] rounded-[10px] p-2 lg:pt-4 lg:px-4 lg:pb-0 flex flex-col gap-2">
                   <span className="text-xs font-medium text-[#5865f2]">Total Allocation</span>
-                  <span className="text-2xl font-semibold font-mono text-foreground">
-                    {totalAllocation.toFixed(2)}
-                  </span>
+                  <AppTokenAmount
+                    token={token}
+                    amount={totalAllocationNumber}
+                    className="text-2xl font-semibold font-mono text-foreground"
+                  />
                   <span className="text-[10px] text-[#71717a] dark:text-[#999]">
                     <AppTokenName token={token} variant="symbol" /> Tokens
                   </span>
@@ -184,9 +190,11 @@ export function VestingHeaderCard() {
                   <span className="text-xs font-medium text-[#06a800]">
                     Unlocked ({unlockedPercent}%)
                   </span>
-                  <span className="text-2xl font-semibold font-mono text-foreground">
-                    {unlockedAmount.toFixed(2)}
-                  </span>
+                  <AppTokenAmount
+                    token={token}
+                    amount={unlockedNumber}
+                    className="text-2xl font-semibold font-mono text-foreground"
+                  />
                   <span className="text-[10px] text-[#71717a] dark:text-[#999]">
                     Available to claim
                   </span>
@@ -197,9 +205,11 @@ export function VestingHeaderCard() {
                   <span className="text-xs font-medium text-[#71717a] dark:text-[#999]">
                     Locked ({lockedPercent}%)
                   </span>
-                  <span className="text-2xl font-semibold font-mono text-foreground">
-                    {lockedAmount.toFixed(2)}
-                  </span>
+                  <AppTokenAmount
+                    token={token}
+                    amount={lockedNumber}
+                    className="text-2xl font-semibold font-mono text-foreground"
+                  />
                   <span className="text-[10px] text-[#71717a] dark:text-[#999]">
                     Unlocks linearly
                   </span>
