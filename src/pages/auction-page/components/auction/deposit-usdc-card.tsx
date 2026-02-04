@@ -138,6 +138,19 @@ export function DepositUSDCCard() {
     }
   }, [depositAmount, usdcBalance])
 
+  // Check if deposit amount exceeds remaining quota
+  const exceedsRemainingQuota = useMemo(() => {
+    if (!depositAmount || !depositQuota) return false
+
+    try {
+      const amountBN = BigNumber.from(depositAmount)
+      const remainingQuotaBN = fromTokenAmount(depositQuota.remainingQuota, config.quoteDecimals)
+      return mathIs`${amountBN} > ${remainingQuotaBN}`
+    } catch {
+      return false
+    }
+  }, [depositAmount, depositQuota, config.quoteDecimals])
+
   const handleConfirmDeposit = async () => {
     if (!depositAmount || parseFloat(depositAmount) <= 0) {
       toast.error('Please enter a valid deposit amount')
@@ -208,13 +221,15 @@ export function DepositUSDCCard() {
             <div className="flex flex-col gap-1.5 items-start pb-4 pt-2 px-4 w-full">
               <div className="flex items-center justify-between leading-5 text-sm w-full text-[#a1a1aa] dark:text-[#ffffff] dark:opacity-50">
                 <p className="font-bold">You Deposit</p>
-                <button
-                  onClick={handleMaxClick}
-                  className="text-xs hover:text-black dark:hover:text-white dark:hover:opacity-100 transition-colors"
-                  disabled={!canDeposit}
-                >
-                  MAX: <AppTokenAmount token={config.quoteToken} amount={usdcBalance ?? BigNumber.from(0)} /> <AppTokenName token={config.quoteToken} variant="symbol" />
-                </button>
+                <div className="flex flex-col items-end gap-0.5">
+                  <button
+                    onClick={handleMaxClick}
+                    className="text-xs hover:text-black dark:hover:text-white dark:hover:opacity-100 transition-colors"
+                    disabled={!canDeposit}
+                  >
+                    Balance: <AppTokenAmount token={config.quoteToken} amount={usdcBalance ?? BigNumber.from(0)} /> <AppTokenName token={config.quoteToken} variant="symbol" />
+                  </button>
+                </div>
               </div>
               <div className="flex items-center justify-between w-full">
                 <div className="relative rounded-md flex-shrink-0">
@@ -259,6 +274,18 @@ export function DepositUSDCCard() {
             <p className="flex-1 font-normal leading-[16.5px] text-xs text-[#991b1b] dark:text-[#fca5a5]">
               Insufficient balance. Your wallet balance is{' '}
               <AppTokenAmount token={config.quoteToken} amount={usdcBalance ?? BigNumber.from(0)} />{' '}
+              <AppTokenName token={config.quoteToken} variant="symbol" />.
+            </p>
+          </div>
+        )}
+
+        {/* Remaining Quota Warning */}
+        {exceedsRemainingQuota && depositQuota && (
+          <div className="bg-[#fef2f2] dark:bg-[#7f1d1d] flex gap-2 items-start p-3 rounded-lg w-full border border-[#fca5a5] dark:border-[#dc2626]">
+            <AlertCircle className="w-4 h-4 text-[#dc2626] dark:text-[#fca5a5] shrink-0 mt-0.5" />
+            <p className="flex-1 font-normal leading-[16.5px] text-xs text-[#991b1b] dark:text-[#fca5a5]">
+              Amount exceeds remaining quota. Your remaining deposit quota is{' '}
+              <AppTokenAmount token={config.quoteToken} amount={fromTokenAmount(depositQuota.remainingQuota, config.quoteDecimals)} />{' '}
               <AppTokenName token={config.quoteToken} variant="symbol" />.
             </p>
           </div>
