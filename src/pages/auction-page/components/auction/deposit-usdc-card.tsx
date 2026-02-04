@@ -62,7 +62,10 @@ export function DepositUSDCCard() {
 
   // Calculate estimated allocation based on current deposit + input
   const calculatedEstAllocation = useMemo(() => {
+    console.log('Calculating allocation with:', { vaultInfo, totalRaised, poolPrice, depositAmount })
+
     if (!vaultInfo || !totalRaised || !poolPrice || poolPrice === 0) {
+      console.log('Missing data, returning fallback:', estimatedAllocation)
       return estimatedAllocation ? `${estimatedAllocation} TESS` : '0 TESS'
     }
 
@@ -84,6 +87,14 @@ export function DepositUSDCCard() {
 
       // Add the new deposit to get hypothetical total after this deposit
       const hypotheticalTotalRaised = math`${totalRaisedBN} + ${newDepositRaw}`
+
+      console.log('Calculation values:', {
+        existingDeposit: BigNumber.toString(existingDeposit),
+        newDepositRaw: BigNumber.toString(newDepositRaw),
+        totalUserDeposit: BigNumber.toString(totalUserDeposit),
+        hypotheticalTotalRaised: BigNumber.toString(hypotheticalTotalRaised),
+        poolPrice
+      })
 
       // If no deposits yet, can't calculate allocation
       if (mathIs`${hypotheticalTotalRaised} === ${0}`) {
@@ -107,6 +118,13 @@ export function DepositUSDCCard() {
 
       // User's share of the allocation
       const userTessAllocation = math`${userShare} * ${tessAllocation}`
+
+      console.log('Final calculation:', {
+        userShare: BigNumber.toString(userShare),
+        effectiveUsdc: BigNumber.toString(effectiveUsdc),
+        tessAllocation: BigNumber.toString(tessAllocation),
+        userTessAllocation: BigNumber.toString(userTessAllocation)
+      })
 
       return `${BigNumber.toNumber(userTessAllocation).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} TESS`
     } catch (error) {
