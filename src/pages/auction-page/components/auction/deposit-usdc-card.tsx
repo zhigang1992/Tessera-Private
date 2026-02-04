@@ -240,7 +240,13 @@ export function DepositUSDCCard() {
                   <input
                     type="text"
                     value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      // Only allow numbers and decimal point
+                      if (value === '' || /^\d*\.?\d{0,6}$/.test(value)) {
+                        setDepositAmount(value)
+                      }
+                    }}
                     placeholder="0.0"
                     disabled={!canDeposit}
                     className="font-semibold leading-10 bg-transparent outline-none border-none text-right w-full overflow-hidden text-black dark:text-white placeholder:text-black dark:placeholder:text-white text-[36px]"

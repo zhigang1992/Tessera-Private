@@ -124,8 +124,8 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
   }
 
   const handleInputChange = (value: string) => {
-    // Only allow numbers and decimal point
-    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+    // Only allow numbers and decimal point, limit to 6 decimals
+    if (value === '' || /^\d*\.?\d{0,6}$/.test(value)) {
       setInputAmount(value)
     }
   }

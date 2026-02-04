@@ -103,7 +103,13 @@ export function WithdrawModal({ open, onOpenChange }: WithdrawModalProps) {
               <Input
                 type="text"
                 value={withdrawAmount}
-                onChange={(e) => setWithdrawAmount(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value
+                  // Only allow numbers and decimal point, limit to 6 decimals
+                  if (value === '' || /^\d*\.?\d{0,6}$/.test(value)) {
+                    setWithdrawAmount(value)
+                  }
+                }}
                 placeholder="0.00"
                 disabled={!canWithdraw || isLoading}
                 className="pr-16 text-lg font-mono"
