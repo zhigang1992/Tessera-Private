@@ -60,6 +60,7 @@ export type VaultMode = 'fcfs' | 'prorata'
 
 export type VaultStateType =
   | 'deposit_open'
+  | 'purchasing'
   | 'deposit_closed'
   | 'vesting'
   | 'vesting_complete'
@@ -130,6 +131,7 @@ function mapSdkVaultState(sdkState: SdkVaultState): VaultStateType {
     case SdkVaultState.DEPOSITING:
       return 'deposit_open'
     case SdkVaultState.PURCHASING:
+      return 'purchasing'
     case SdkVaultState.LOCKING:
       return 'deposit_closed'
     case SdkVaultState.VESTING:
@@ -637,6 +639,8 @@ export function getVaultStateDisplay(state: VaultStateType): {
   switch (state) {
     case 'deposit_open':
       return { label: 'LIVE', color: '#06a800' }
+    case 'purchasing':
+      return { label: 'PURCHASING', color: '#f97316' }
     case 'deposit_closed':
       return { label: 'CLOSED', color: '#f59e0b' }
     case 'vesting':

@@ -347,7 +347,9 @@ export function DepositUSDCCard() {
                   ) : (
                     <p className="font-semibold text-lg leading-7 text-white">
                       {!isDepositOpen
-                        ? 'Deposits Closed'
+                        ? vaultInfo?.state === 'purchasing'
+                          ? 'Purchasing in Progress'
+                          : 'Deposits Closed'
                         : !depositQuota?.canDeposit
                           ? (depositQuota?.reason ?? 'Cannot Deposit')
                           : 'Confirm Deposit'}

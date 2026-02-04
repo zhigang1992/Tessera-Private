@@ -36,6 +36,12 @@ export function AuctionHeaderCard() {
   const percentageOfTarget = targetRaiseNum > 0 ? Math.round((totalRaisedNum / targetRaiseNum) * 100) : 0
   const hasPosition = escrowInfo && parseFloat(escrowInfo.totalDeposited) > 0
   const quoteToken = config.quoteToken
+  const depositStatusText =
+    vaultInfo?.state === 'deposit_open'
+      ? 'Deposits Close in'
+      : vaultInfo?.state === 'purchasing'
+        ? 'Purchasing in Progress'
+        : 'Deposits Closed'
 
   return (
     <Card className="p-6 bg-white dark:bg-[#323334]">
@@ -97,9 +103,7 @@ export function AuctionHeaderCard() {
             </div>
             <div className="flex flex-col gap-2">
               <div className="flex flex-col">
-                <span className="text-xs text-[#71717a] dark:text-[#999]">
-                  {vaultInfo?.state === 'deposit_open' ? 'Deposits Close in' : 'Deposits Closed'}
-                </span>
+                <span className="text-xs text-[#71717a] dark:text-[#999]">{depositStatusText}</span>
                 {depositEndsIn ? (
                   <div className="flex items-center gap-1.5 font-mono text-xl font-semibold text-foreground">
                     <span>{depositEndsIn.hours}h</span>

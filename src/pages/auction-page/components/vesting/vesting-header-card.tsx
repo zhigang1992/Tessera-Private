@@ -24,6 +24,7 @@ export function VestingHeaderCard() {
     switch (vaultInfo?.state) {
       case 'deposit_open':
       case 'deposit_closed':
+      case 'purchasing':
         return 'Not Started'
       case 'vesting':
         return 'In Progress'
@@ -43,6 +44,7 @@ export function VestingHeaderCard() {
         return '#10b981'
       case 'deposit_open':
       case 'deposit_closed':
+      case 'purchasing':
         return '#f59e0b'
       default:
         return '#6b7280'

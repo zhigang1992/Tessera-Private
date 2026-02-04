@@ -337,7 +337,7 @@ export function ClaimTokensCard() {
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Processing...
                   </>
-                ) : vaultInfo?.state === 'deposit_open' || vaultInfo?.state === 'deposit_closed' ? (
+                ) : vaultInfo?.state === 'deposit_open' || vaultInfo?.state === 'deposit_closed' || vaultInfo?.state === 'purchasing' ? (
                   'Vesting Not Started'
                 ) : !canClaim ? (
                   'No Tokens to Claim'

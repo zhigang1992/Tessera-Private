@@ -449,6 +449,37 @@ to participants.
 
 Tessera is committed to leveraging best-in-class DeFi infrastructure like Meteora's Alpha Vault to ensure our token launches are secure, fair, and accessible to our global community.
 
+## Alpha Vault State Lifecycle
+
+### State Overview
+1. PREPARING (0) – Initial state before deposits open.
+2. DEPOSITING (1) – Users can deposit funds into the vault.
+3. PURCHASING (2) – Vault capital is deployed to buy from the DLMM pool during the private window.
+4. LOCKING (3) – Purchase is complete and the vault is waiting for vesting to start; deposits remain closed.
+5. VESTING (4) – Allocated tokens follow the vesting schedule.
+6. ENDED (5) – Vesting is complete; no further claims accrue.
+
+### Configuration Points
+- 'depositingPoint' – Opens the deposit window by transitioning PREPARING → DEPOSITING.
+- 'startVestingPoint' – Marks the beginning of vesting (LOCKING → VESTING).
+- 'endVestingPoint' – Declares vesting complete (VESTING → ENDED).
+- 'activationPoint' – Comes from the DLMM pool; public trading begins here.
+- 'preActivationDuration' – Hard-coded to 1 hour on both devnet and mainnet; allows the vault to purchase before public trading. This parameter is not configurable within the Meteora SDK or Tessera configuration files.
+
+### FAQs
+1. **What triggers DEPOSITING → PURCHASING?** There is no extra config flag for this transition. The vault automatically moves into PURCHASING so it can deploy capital during the pre-activation window before the pool activates.
+2. **Does the vault wait for activationPoint before buying?** No. The vault reads both 'activationPoint' and 'preActivationDuration' directly from the pool account and starts purchasing during the one-hour pre-activation window so that allocations are finalized before public trading begins.
+3. **How are fillVault purchases executed?** Tessera's managed cranker service calls 'fillVault()' automatically once the deposit phase ends. Manual intervention is only needed as a fallback if the cranker fails.
+4. **What happens if the cranker misses 'fillVault()'?** The vault will not be stuck in DEPOSITING. Team members can manually call 'fillVault()' to complete the purchase even if the automated cranker missed the window.
+5. **Can users keep depositing while PURCHASING is in progress?** No. Deposits close when the vault leaves DEPOSITING; the purchasing window is exclusively for executing the buy, so the UI should indicate deposits are locked.
+6. **What does the full lifecycle timeline look like?**
+   - Deposits open at 'depositingPoint' and remain open until 'activationPoint - preActivationDuration'.
+   - The vault purchases from 'activationPoint - preActivationDuration' up to 'activationPoint', ahead of the pool opening.
+   - Public trading begins at 'activationPoint'.
+   - Vesting begins at 'startVestingPoint' and ends at 'endVestingPoint'.
+
+This lifecycle summary should be used for Alpha Vault support responses and to keep UI copy aligned with the actual contract behavior.
+
 # Buy/Sell
 Similar to 'Transfer', there would be a base fee rate of 0.2% per sell initiated.
 
