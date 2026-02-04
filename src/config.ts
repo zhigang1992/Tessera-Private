@@ -206,7 +206,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       id: 'T-SpaceX-USDC',
       quoteToken: 'USDC',
       addresses: {
-        devnet: '6Pydbux4SGN87doBPbjAtPgprsEwTP4trEANmQFcNEKR',
+        devnet: '31zJJsg4bb4XYYjxheUTrGneDxkjsRQqFNUy4KtuWsUN',
       },
     },
     alphaVault: {

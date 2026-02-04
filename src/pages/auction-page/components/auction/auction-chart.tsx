@@ -33,8 +33,8 @@ export function AuctionChart() {
       height: chartContainerRef.current.clientHeight || 360,
       rightPriceScale: {
         borderVisible: false,
-        scaleMargins: { top: 0.05, bottom: 0.1 },
-        autoScale: false,
+        scaleMargins: { top: 0.3, bottom: 0.1 },
+        autoScale: true,
       },
       timeScale: {
         borderVisible: false,
@@ -110,17 +110,9 @@ export function AuctionChart() {
       to: (startDate + 15 * 3600) as Time,
     })
 
-    // Set visible range to match design: $0k to $200k
+    // Enable auto-scaling to fit actual data
     chart.priceScale('right').applyOptions({
-      autoScale: false,
-    })
-    lineSeries.applyOptions({
-      autoscaleInfoProvider: () => ({
-        priceRange: {
-          minValue: 0,
-          maxValue: 200000,
-        },
-      }),
+      autoScale: true,
     })
 
     // Add a price line for the target ($80k) - blue dashed line as in design
