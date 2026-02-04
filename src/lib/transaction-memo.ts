@@ -7,7 +7,7 @@
  * Cost impact: Zero - memos are additional instructions with no extra fee.
  */
 
-import { TransactionInstruction, PublicKey, Transaction } from '@solana/web3.js'
+import { TransactionInstruction, PublicKey, Transaction, ComputeBudgetProgram } from '@solana/web3.js'
 
 /**
  * SPL Memo Program ID
@@ -39,12 +39,39 @@ export function createMemoInstruction(message: string, signer: PublicKey): Trans
 }
 
 /**
+ * Adds compute budget instructions to ensure transaction has enough compute units
+ *
+ * The failed transaction showed that the memo instruction needs ~50k CUs.
+ * We set a higher limit (200k CUs) to accommodate the memo plus other instructions.
+ *
+ * @param transaction - The transaction to add compute budget to
+ * @returns The transaction with compute budget instructions prepended
+ */
+export function ensureComputeBudget(transaction: Transaction): Transaction {
+  // Set compute unit limit to 200,000 (sufficient for swap + memo)
+  const computeLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
+    units: 200_000,
+  })
+
+  // Set compute unit price (micro-lamports per CU) for priority
+  const computePriceIx = ComputeBudgetProgram.setComputeUnitPrice({
+    microLamports: 1,
+  })
+
+  // Prepend compute budget instructions at the beginning
+  const instructions = [computeLimitIx, computePriceIx, ...transaction.instructions]
+  transaction.instructions = instructions
+
+  return transaction
+}
+
+/**
  * Adds a terms acceptance memo to a transaction
  *
  * @param transaction - The transaction to add the memo to
  * @param signer - The public key of the transaction signer
  * @param type - The type of terms being accepted
- * @returns The transaction with the memo instruction added
+ * @returns The transaction with the memo instruction added and compute budget ensured
  */
 export function addTermsAcceptanceMemo(
   transaction: Transaction,
@@ -53,5 +80,9 @@ export function addTermsAcceptanceMemo(
 ): Transaction {
   const memoIx = createMemoInstruction(type, signer)
   transaction.add(memoIx)
+
+  // Ensure adequate compute budget for memo instruction
+  ensureComputeBudget(transaction)
+
   return transaction
 }

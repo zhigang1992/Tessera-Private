@@ -224,11 +224,10 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
         swapTx.feePayer = wallet.publicKey
 
         // Sign and send to devnet
-        // skipPreflight: true to avoid simulation errors when tx was already processed
-        // (simulation can return false positives for duplicate detection)
+        // Simulation now works with proper compute budget
         const signed = await wallet.signTransaction(swapTx)
         const signature = await devnetConnection.sendRawTransaction(signed.serialize(), {
-          skipPreflight: true,
+          skipPreflight: false,
         })
 
         // Confirm transaction on devnet
