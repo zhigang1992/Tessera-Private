@@ -13,7 +13,7 @@ import AddIcon from './_/add.svg?react'
 import PersonIcon from './_/person.svg?react'
 import { CreateReferralCodeModal } from './create-referral-code-modal'
 import { ShareReferralCodeModal } from './share-referral-code-modal'
-import { useAffiliateData } from '@/features/referral/hooks/use-referral-onchain'
+import { useAffiliateGraphqlStats } from '@/features/referral/hooks/use-referral-graphql'
 
 const PAGE_SIZE = 3
 
@@ -26,24 +26,24 @@ export function CodeSection() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [shareModalCode, setShareModalCode] = useState<string | null>(null)
 
-  const { data: affiliateData, isLoading: codesLoading } = useAffiliateData(connected, walletAddress)
+  const { data: affiliateStats, isLoading: codesLoading } = useAffiliateGraphqlStats(walletAddress)
 
-  // Transform affiliate data to match the expected format
+  // Transform GraphQL stats to match the expected format
   const codes = useMemo(() => {
-    if (!affiliateData?.referralCodes) return []
-    return affiliateData.referralCodes.map((code) => ({
-      code: code.codeSlug,
-      totalVolume: code.totalVolume ?? 0,
-      tradersReferred: code.referredTraderCount,
-      totalRewards: code.totalRewards ?? 0,
+    if (!affiliateStats?.codes) return []
+    return affiliateStats.codes.map((code) => ({
+      code: code.code,
+      totalVolume: code.tradingVolume ?? 0,
+      tradersReferred: code.referralCount,
+      totalRewards: code.rewardsUsd ?? 0,
     }))
-  }, [affiliateData])
+  }, [affiliateStats])
 
   // Fetch users for selected code
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['referralUsers', walletAddress, selectedCode],
     queryFn: () => getReferralUsersByCode(selectedCode!),
-    enabled: !!selectedCode && codes.length > 0,
+    enabled: !!selectedCode,
     staleTime: 0, // Always refetch when code changes
   })
 
