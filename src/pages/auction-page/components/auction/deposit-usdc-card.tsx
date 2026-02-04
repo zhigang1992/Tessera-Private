@@ -11,18 +11,6 @@ import { BigNumber, math, fromTokenAmount, mathIs } from '@/lib/bignumber'
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { useAuctionAlphaVault, useAuctionToken } from '../../context'
 
-function parseFormattedAmount(value?: string | null) {
-  if (!value) {
-    return BigNumber.from(0)
-  }
-
-  try {
-    return BigNumber.from(value.replace(/,/g, ''))
-  } catch {
-    return BigNumber.from(0)
-  }
-}
-
 export function DepositUSDCCard() {
   const wallet = useWallet()
   const { setVisible } = useWalletModal()
