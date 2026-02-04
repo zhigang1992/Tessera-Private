@@ -70,31 +70,36 @@ export function DepositUSDCCard() {
 
     try {
       let totalUserDeposit = existingDeposit
+      let newDepositRaw = BigNumber.from(0)
 
       if (depositAmount && parseFloat(depositAmount) > 0) {
         const newAmount = BigNumber.from(depositAmount)
-        const newAmountRaw = math`${newAmount} * ${Math.pow(10, 6)}`
-        totalUserDeposit = math`${existingDeposit} + ${newAmountRaw}`
+        newDepositRaw = math`${newAmount} * ${Math.pow(10, 6)}`
+        totalUserDeposit = math`${existingDeposit} + ${newDepositRaw}`
       }
 
-      // Get total raised in raw format
+      // Get total raised in raw format (current state)
       const totalRaisedStr = totalRaised.replace(/,/g, '')
       const totalRaisedBN = math`${BigNumber.from(totalRaisedStr)} * ${Math.pow(10, 6)}`
 
+      // Add the new deposit to get hypothetical total after this deposit
+      const hypotheticalTotalRaised = math`${totalRaisedBN} + ${newDepositRaw}`
+
       // If no deposits yet, can't calculate allocation
-      if (mathIs`${totalRaisedBN} === ${0}`) {
+      if (mathIs`${hypotheticalTotalRaised} === ${0}`) {
         return '0 TESS'
       }
 
-      // Calculate user's share of total deposits
-      const userShare = math`${totalUserDeposit} / ${totalRaisedBN}`
+      // Calculate user's share of total deposits (after this deposit)
+      const userShare = math`${totalUserDeposit} / ${hypotheticalTotalRaised}`
 
       // Get max cap (target raise) in raw format
       const maxCapStr = targetRaise.replace(/,/g, '')
       const maxCapBN = math`${BigNumber.from(maxCapStr)} * ${Math.pow(10, 6)}`
 
       // Effective USDC that will be used (capped by maxBuyingCap)
-      const effectiveUsdcBN = math`min(${totalRaisedBN}, ${maxCapBN})`
+      // Use hypothetical total to see what would happen after this deposit
+      const effectiveUsdcBN = math`min(${hypotheticalTotalRaised}, ${maxCapBN})`
       const effectiveUsdc = math`${effectiveUsdcBN} / ${Math.pow(10, 6)}`
 
       // Calculate TESS allocation: USDC / price
