@@ -195,7 +195,7 @@ export function ClaimTokensCard() {
 
         {/* Description */}
         <p className="text-sm font-normal leading-[21px] mb-8 text-[#666] dark:text-[#999]">
-          Transfer your allocated <AppTokenName token={token} variant="symbol" /> tokens and any{' '}
+          Transfer your allocated <AppTokenName token={token} variant="symbol" /> tokens (a 0.2% claim fee applies) and any{' '}
           <AppTokenName token={quoteToken} variant="symbol" /> refund directly to your wallet.
         </p>
 
