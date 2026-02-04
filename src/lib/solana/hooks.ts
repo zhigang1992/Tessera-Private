@@ -25,7 +25,7 @@ import {
   findReferralCodeByString,
   shortenAddress,
 } from './on-chain-client'
-import { getTesseraTokenProgramId } from './config'
+import { getTesseraTokenProgramId } from '@/config'
 
 /**
  * Query Keys

@@ -7,49 +7,38 @@
  * - Claim token operations
  * - Escrow information
  *
- * Uses the deployed Alpha Vault on Devnet for TESS token launch.
+ * Uses the deployed Alpha Vault on Devnet for the T-SpaceX token launch.
  */
 
 import { Connection, PublicKey, Transaction } from '@solana/web3.js'
 import AlphaVault, { VaultState as SdkVaultState, VaultMode as SdkVaultMode, type DepositWithProofParams } from '@meteora-ag/alpha-vault'
 import DLMM, { getPriceOfBinByBinId } from '@meteora-ag/dlmm'
 import BN from 'bn.js'
-import { getRpcEndpoint } from '@/lib/solana/config'
+import {
+  type AppTokenId,
+  type ResolvedAlphaVaultConfig,
+  type SolanaNetwork,
+  DEFAULT_BASE_TOKEN_ID,
+  getCurrentNetwork,
+  getRpcEndpoint,
+  getTokenAlphaVaultConfig,
+} from '@/config'
 import { estimateSlotDate } from './alpha-vault-helpers'
 import merkleProofsT22 from '@/data/merkle-proofs-t22.json'
 
 // ============ Configuration ============
 
-/**
- * Alpha Vault Deployment Configuration
- * Updated with new devnet USDC and vault deployment (Feb 4, 2026)
- */
-export const ALPHA_VAULT_CONFIG = {
-  // Vault address
-  vault: '87o9R4AGWpPqHJnycMRucoNkpnxBduFo8x3DPBaVBZwy',
+export const DEFAULT_ALPHA_VAULT_TOKEN_ID: AppTokenId = DEFAULT_BASE_TOKEN_ID
 
-  // DLMM Pool
-  dlmmPool: '31zJJsg4bb4XYYjxheUTrGneDxkjsRQqFNUy4KtuWsUN',
+function resolveAlphaVaultConfig(tokenId: AppTokenId, network: SolanaNetwork = getCurrentNetwork()): ResolvedAlphaVaultConfig {
+  const config = getTokenAlphaVaultConfig(tokenId, network)
 
-  // Token addresses
-  tessToken: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj', // TESS (Token-2022)
-  usdcToken: '6C4wSPz9mcaqGkFD5iqHhvG1FMHx7ehgE2hLCiVnF25r', // USDC (SPL Token, devnet test token)
+  if (!config) {
+    throw new Error(`Alpha Vault configuration missing for token ${tokenId} on ${network}`)
+  }
 
-  // Merkle root config for whitelisted wallets
-  merkleRootConfig: 'D8ai1BoAoUstRW4dD61dENocRNQ34Zw5CUt69PjeQctE',
-
-  // View on Meteora
-  meteoraUrl: 'https://devnet.app.meteora.ag/vault/87o9R4AGWpPqHJnycMRucoNkpnxBduFo8x3DPBaVBZwy',
-
-  // Token decimals
-  tessDecimals: 6,
-  usdcDecimals: 6,
-
-  // UI Configuration
-  // Set to false for auctions with no vesting (immediate claim)
-  // Set to true for auctions with time-based vesting schedule
-  hasVestingPeriod: false,
-} as const
+  return config
+}
 
 /**
  * Local merkle proofs for whitelisted wallets
@@ -168,17 +157,29 @@ function mapSdkVaultMode(sdkMode: SdkVaultMode): VaultMode {
 // Type for the AlphaVault instance
 type AlphaVaultInstance = Awaited<ReturnType<typeof AlphaVault.create>>
 
+export interface AlphaVaultClientOptions {
+  tokenId?: AppTokenId
+  connection?: Connection
+  network?: SolanaNetwork
+  vaultAddress?: string
+}
+
 export class AlphaVaultClient {
   private connection: Connection
   private vaultInstance: AlphaVaultInstance | null = null
   private vaultAddress: PublicKey
+  readonly tokenId: AppTokenId
+  readonly network: SolanaNetwork
+  readonly config: ResolvedAlphaVaultConfig
 
-  constructor(
-    connection?: Connection,
-    vaultAddress: string = ALPHA_VAULT_CONFIG.vault
-  ) {
-    this.connection = connection || new Connection(getRpcEndpoint(), 'confirmed')
-    this.vaultAddress = new PublicKey(vaultAddress)
+  constructor(options: AlphaVaultClientOptions = {}) {
+    const { tokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID, connection, network = getCurrentNetwork(), vaultAddress } = options
+
+    this.tokenId = tokenId
+    this.network = network
+    this.config = resolveAlphaVaultConfig(tokenId, network)
+    this.connection = connection || new Connection(getRpcEndpoint(network), 'confirmed')
+    this.vaultAddress = new PublicKey(vaultAddress ?? this.config.vault)
   }
 
   /**
@@ -230,8 +231,8 @@ export class AlphaVaultClient {
                           parseFloat(boughtToken) === 0
 
     // Calculate oversubscription
-    const totalDepositedNum = parseFloat(totalDeposited) / 10 ** ALPHA_VAULT_CONFIG.usdcDecimals
-    const maxCapNum = parseFloat(maxCap) / 10 ** ALPHA_VAULT_CONFIG.usdcDecimals
+    const totalDepositedNum = parseFloat(totalDeposited) / 10 ** this.config.quoteDecimals
+    const maxCapNum = parseFloat(maxCap) / 10 ** this.config.quoteDecimals
     const isOversubscribed = maxCapNum > 0 && totalDepositedNum > maxCapNum
     const oversubscriptionRatio = maxCapNum > 0 ? totalDepositedNum / maxCapNum : 0
 
@@ -300,9 +301,9 @@ export class AlphaVaultClient {
         // During deposit period, estimate based on pool liquidity and price
         const tessAvailable = await this.getPoolTessReserve()
         const poolPrice = await this.getPoolPrice()
-        const userDepositNum = parseFloat(totalDeposited) / 10 ** ALPHA_VAULT_CONFIG.usdcDecimals
-        const totalDepositsNum = parseFloat(vaultInfo.totalDeposited) / 10 ** ALPHA_VAULT_CONFIG.usdcDecimals
-        const maxCapNum = parseFloat(vaultInfo.maxCap) / 10 ** ALPHA_VAULT_CONFIG.usdcDecimals
+        const userDepositNum = parseFloat(totalDeposited) / 10 ** this.config.quoteDecimals
+        const totalDepositsNum = parseFloat(vaultInfo.totalDeposited) / 10 ** this.config.quoteDecimals
+        const maxCapNum = parseFloat(vaultInfo.maxCap) / 10 ** this.config.quoteDecimals
 
         if (totalDepositsNum > 0 && poolPrice > 0) {
           // User's share of deposits
@@ -311,18 +312,18 @@ export class AlphaVaultClient {
           // Effective USDC that will be used (capped by maxBuyingCap)
           const effectiveUsdc = Math.min(totalDepositsNum, maxCapNum)
 
-          // Calculate how much TESS can be bought with effective USDC at current pool price
-          // poolPrice is in USDC per TESS, so: TESS = USDC / price
+          // Calculate how much T-SpaceX can be bought with effective USDC at current pool price
+          // poolPrice is in USDC per T-SpaceX, so: allocation = USDC / price
           const estimatedTessForVault = Math.min(tessAvailable, effectiveUsdc / poolPrice)
           const userTessAllocation = userShare * estimatedTessForVault
 
-          estimatedAllocation = (userTessAllocation * 10 ** ALPHA_VAULT_CONFIG.tessDecimals).toFixed(0)
+          estimatedAllocation = (userTessAllocation * 10 ** this.config.baseDecimals).toFixed(0)
 
           // Calculate refund if oversubscribed
           if (totalDepositsNum > maxCapNum) {
             const usedRatio = maxCapNum / totalDepositsNum
             const usedUsdc = userDepositNum * usedRatio
-            estimatedRefund = ((userDepositNum - usedUsdc) * 10 ** ALPHA_VAULT_CONFIG.usdcDecimals).toFixed(0)
+            estimatedRefund = ((userDepositNum - usedUsdc) * 10 ** this.config.quoteDecimals).toFixed(0)
           }
         }
       }
@@ -353,30 +354,30 @@ export class AlphaVaultClient {
   }
 
   /**
-   * Get TESS reserve from the DLMM pool
-   * This is the amount of TESS available for the vault to purchase
+   * Get base token reserve from the DLMM pool
+   * This is the amount of T-SpaceX available for the vault to purchase
    */
   async getPoolTessReserve(): Promise<number> {
     try {
-      const poolAddress = new PublicKey(ALPHA_VAULT_CONFIG.dlmmPool)
+      const poolAddress = new PublicKey(this.config.dlmmPool)
       const dlmmPool = await DLMM.create(this.connection, poolAddress, { cluster: 'devnet' })
 
-      // Get the reserve X (TESS) balance
+      // Get the reserve X (base token) balance
       const reserveXBalance = await this.connection.getTokenAccountBalance(dlmmPool.lbPair.reserveX)
       return parseFloat(reserveXBalance.value.uiAmountString || '0')
     } catch (error) {
-      console.error('Failed to get pool TESS reserve:', error)
+      console.error('Failed to get pool base token reserve:', error)
       return 0
     }
   }
 
   /**
-   * Get current pool price (USDC per TESS)
+   * Get current pool price (USDC per T-SpaceX)
    * Returns the price at the active bin in the DLMM pool
    */
   async getPoolPrice(): Promise<number> {
     try {
-      const poolAddress = new PublicKey(ALPHA_VAULT_CONFIG.dlmmPool)
+      const poolAddress = new PublicKey(this.config.dlmmPool)
       const dlmmPool = await DLMM.create(this.connection, poolAddress, { cluster: 'devnet' })
 
       // Get the active bin ID and bin step
@@ -384,7 +385,7 @@ export class AlphaVaultClient {
       const binStep = dlmmPool.lbPair.binStep
 
       // Get price at the active bin using the standalone function
-      // Returns price as Y per X (USDC per TESS)
+      // Returns price as Y per X (USDC per T-SpaceX)
       const price = getPriceOfBinByBinId(activeId, binStep)
 
       return parseFloat(price.toString())
@@ -552,10 +553,13 @@ export class AlphaVaultClient {
     const localProof = LOCAL_MERKLE_PROOFS[ownerStr]
 
     if (localProof) {
+      const merkleRoot = localProof.merkle_root_config ?? this.config.merkleRootConfig
+      if (!merkleRoot) {
+        return null
+      }
+
       return {
-        merkleRootConfig: new PublicKey(
-          localProof.merkle_root_config ?? ALPHA_VAULT_CONFIG.merkleRootConfig
-        ),
+        merkleRootConfig: new PublicKey(merkleRoot),
         maxCap: new BN(localProof.max_cap),
         proof: localProof.proof.map((p) => Array.from(p)),
       }
@@ -583,13 +587,20 @@ export class AlphaVaultClient {
 
 // ============ Singleton Instance ============
 
-let alphaVaultClient: AlphaVaultClient | null = null
+const alphaVaultClients = new Map<string, AlphaVaultClient>()
 
-export function getAlphaVaultClient(connection?: Connection): AlphaVaultClient {
-  if (!alphaVaultClient) {
-    alphaVaultClient = new AlphaVaultClient(connection)
+export function getAlphaVaultClient(
+  tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID,
+  options: Omit<AlphaVaultClientOptions, 'tokenId'> = {}
+): AlphaVaultClient {
+  const network = options.network ?? getCurrentNetwork()
+  const key = `${tokenId}:${network}`
+
+  if (!alphaVaultClients.has(key)) {
+    alphaVaultClients.set(key, new AlphaVaultClient({ tokenId, ...options, network }))
   }
-  return alphaVaultClient
+
+  return alphaVaultClients.get(key)!
 }
 
 // ============ Utility Functions ============
@@ -597,10 +608,7 @@ export function getAlphaVaultClient(connection?: Connection): AlphaVaultClient {
 /**
  * Format vault amount to human readable string
  */
-export function formatVaultAmount(
-  amount: string | BN,
-  decimals: number = ALPHA_VAULT_CONFIG.usdcDecimals
-): string {
+export function formatVaultAmount(amount: string | BN, decimals: number = 6): string {
   const amountStr = amount instanceof BN ? amount.toString() : amount
   const num = parseFloat(amountStr) / 10 ** decimals
   return num.toLocaleString(undefined, {
@@ -612,10 +620,7 @@ export function formatVaultAmount(
 /**
  * Parse human readable amount to BN
  */
-export function parseVaultAmount(
-  amount: string,
-  decimals: number = ALPHA_VAULT_CONFIG.usdcDecimals
-): BN {
+export function parseVaultAmount(amount: string, decimals: number = 6): BN {
   const [intPart, decPart = ''] = amount.split('.')
   const paddedDec = decPart.padEnd(decimals, '0').slice(0, decimals)
   const fullAmount = intPart + paddedDec

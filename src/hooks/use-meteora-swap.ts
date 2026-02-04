@@ -26,11 +26,19 @@ import {
   isZero,
 } from '@/lib/bignumber'
 import { addTermsAcceptanceMemo, MemoType } from '@/lib/transaction-memo'
+import {
+  DEFAULT_BASE_TOKEN_ID,
+  QUOTE_TOKEN_ID,
+  getAppToken,
+  getTokenDlmmPoolAddress,
+  getTokenMintAddress,
+  getTokenMintConfig,
+} from '@/config'
 
 // Get devnet RPC URL from environment or use default
 const DEVNET_RPC_URL = import.meta.env.VITE_DEVNET_RPC_URL || clusterApiUrl('devnet')
 
-// Direction: USDC -> TESS (buy TESS) or TESS -> USDC (sell TESS)
+// Direction: USDC -> T-SpaceX (buy T-SpaceX) or T-SpaceX -> USDC (sell T-SpaceX)
 export type SwapDirection = 'USDC_TO_TSPACEX' | 'TSPACEX_TO_USDC'
 
 export interface UseMeteoraSwapReturn {
@@ -46,11 +54,11 @@ export interface UseMeteoraSwapReturn {
   tSpaceXMint: string
   /** USDC balance as BigNumber for calculations */
   usdcBalance: BigNumberValue | null
-  /** TESS balance as BigNumber for calculations */
+  /** T-SpaceX balance as BigNumber for calculations */
   tSpaceXBalance: BigNumberValue | null
   /** Formatted USDC balance for display */
   usdcBalanceFormatted: string | null
-  /** Formatted TESS balance for display */
+  /** Formatted T-SpaceX balance for display */
   tSpaceXBalanceFormatted: string | null
 
   // Actions
@@ -61,12 +69,19 @@ export interface UseMeteoraSwapReturn {
   clearError: () => void
 }
 
-// Pool configuration - T-SpaceX is tokenX, USDC is tokenY
-const POOL_ADDRESS = DEVNET_POOLS['T-SpaceX-USDC'].address
-const TSPACEX_MINT = DEVNET_POOLS['T-SpaceX-USDC'].tokenX.mint
-const USDC_MINT = DEVNET_POOLS['T-SpaceX-USDC'].tokenY.mint
-const TSPACEX_DECIMALS = DEVNET_POOLS['T-SpaceX-USDC'].tokenX.decimals
-const USDC_DECIMALS = DEVNET_POOLS['T-SpaceX-USDC'].tokenY.decimals
+const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
+const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
+const DEVNET_BASE_MINT_CONFIG = getTokenMintConfig(BASE_TOKEN.id, 'devnet')
+const DEVNET_QUOTE_MINT_CONFIG = getTokenMintConfig(QUOTE_TOKEN.id, 'devnet')
+const POOL_ADDRESS =
+  getTokenDlmmPoolAddress(BASE_TOKEN.id, 'devnet') ??
+  (BASE_TOKEN.dlmmPool?.id && DEVNET_POOLS[BASE_TOKEN.dlmmPool.id]?.address) ??
+  DEVNET_POOLS['T-SpaceX-USDC']?.address ??
+  ''
+const TSPACEX_MINT = getTokenMintAddress(BASE_TOKEN.id, 'devnet')
+const USDC_MINT = getTokenMintAddress(QUOTE_TOKEN.id, 'devnet')
+const TSPACEX_DECIMALS = DEVNET_BASE_MINT_CONFIG?.decimals ?? BASE_TOKEN.decimals
+const USDC_DECIMALS = DEVNET_QUOTE_MINT_CONFIG?.decimals ?? QUOTE_TOKEN.decimals
 
 export function useMeteoraSwap(): UseMeteoraSwapReturn {
   const wallet = useWallet()
@@ -127,7 +142,7 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
         setUsdcBalance(ZERO)
       }
 
-      // Get TESS balance on devnet (Token-2022)
+      // Get T-SpaceX balance on devnet (Token-2022)
       try {
         const tSpaceXMintPubkey = new PublicKey(TSPACEX_MINT)
         const ata = await getAssociatedTokenAddress(
@@ -149,9 +164,9 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
   }, [devnetConnection, wallet.publicKey])
 
   // Get swap quote
-  // In the pool: tokenX = TESS, tokenY = USDC
-  // swapForY = true means X -> Y (TESS -> USDC, selling TESS)
-  // swapForY = false means Y -> X (USDC -> TESS, buying TESS)
+  // In the pool: tokenX = T-SpaceX, tokenY = USDC
+  // swapForY = true means X -> Y (T-SpaceX -> USDC, selling the base token)
+  // swapForY = false means Y -> X (USDC -> T-SpaceX, buying the base token)
   const getQuote = useCallback(
     async (amount: string, direction: SwapDirection): Promise<MeteoraSwapQuote | null> => {
       // Parse amount to BigNumber for validation
@@ -165,8 +180,8 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
       setError(null)
 
       try {
-        // USDC_TO_TSPACEX = buying TESS with USDC = Y -> X = swapForY = false
-        // TSPACEX_TO_USDC = selling TESS for USDC = X -> Y = swapForY = true
+        // USDC_TO_TSPACEX = buying T-SpaceX with USDC = Y -> X = swapForY = false
+        // TSPACEX_TO_USDC = selling T-SpaceX for USDC = X -> Y = swapForY = true
         const swapForY = direction === 'TSPACEX_TO_USDC'
         const decimals = direction === 'USDC_TO_TSPACEX' ? USDC_DECIMALS : TSPACEX_DECIMALS
         const amountBN = MeteoraClient.parseAmount(amount, decimals)
@@ -199,8 +214,8 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
       setTxSignature(null)
 
       try {
-        // USDC_TO_TSPACEX = buying TESS = Y -> X = swapForY = false
-        // TSPACEX_TO_USDC = selling TESS = X -> Y = swapForY = true
+        // USDC_TO_TSPACEX = buying T-SpaceX = Y -> X = swapForY = false
+        // TSPACEX_TO_USDC = selling T-SpaceX = X -> Y = swapForY = true
         const swapForY = direction === 'TSPACEX_TO_USDC'
 
         // Create swap transaction

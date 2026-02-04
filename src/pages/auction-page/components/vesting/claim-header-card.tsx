@@ -1,10 +1,14 @@
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Clock, CheckCircle } from 'lucide-react'
-import { useAlphaVault } from '@/hooks/use-alpha-vault'
+import { AppTokenName } from '@/components/app-token-name'
+import { AppTokenAmount } from '@/components/app-token-amount'
+import { BigNumber, fromTokenAmount } from '@/lib/bignumber'
+import { useAuctionAlphaVault, useAuctionToken } from '../../context'
 
 export function ClaimHeaderCard() {
   const wallet = useWallet()
-  const { claimInfo, estimatedRefund } = useAlphaVault()
+  const token = useAuctionToken()
+  const { claimInfo, estimatedRefund, config } = useAuctionAlphaVault()
 
   // Check if user is eligible (has allocation)
   const isEligible =
@@ -12,9 +16,10 @@ export function ClaimHeaderCard() {
 
   // Calculate amounts
   const totalTokens = claimInfo
-    ? parseFloat(claimInfo.totalAllocation) / 10 ** 6
-    : 0
-  const refundAmount = estimatedRefund ? parseFloat(estimatedRefund) : 0
+    ? fromTokenAmount(claimInfo.totalAllocation, config.baseDecimals)
+    : BigNumber.from(0)
+
+  const refundAmount = estimatedRefund ?? '0'
 
   if (!isEligible) {
     return (
@@ -55,10 +60,10 @@ export function ClaimHeaderCard() {
             TOTAL TOKENS
           </p>
           <p className="text-4xl font-bold leading-[48px] text-black dark:text-[#d2d2d2] font-mono">
-            {totalTokens.toFixed(2)}
+            <AppTokenAmount token={token} amount={totalTokens} minimumFractionDigits={2} maximumFractionDigits={4} />
           </p>
           <p className="text-sm font-normal leading-[21px] text-[#06a800] dark:text-[#AAD36D]">
-            TESS
+            <AppTokenName token={token} variant="symbol" />
           </p>
         </div>
 
@@ -68,10 +73,15 @@ export function ClaimHeaderCard() {
             REFUND AMOUNT
           </p>
           <p className="text-4xl font-bold leading-[48px] text-black dark:text-[#d2d2d2] font-mono">
-            {refundAmount.toFixed(2)}
+            <AppTokenAmount
+              token={config.quoteToken}
+              amount={refundAmount}
+              minimumFractionDigits={2}
+              maximumFractionDigits={4}
+            />
           </p>
           <p className="text-sm font-normal leading-[21px] text-[#666] dark:text-[#999]">
-            USDC
+            <AppTokenName token={config.quoteToken} variant="symbol" />
           </p>
         </div>
       </div>

@@ -5,6 +5,30 @@ import {
 } from '@/features/referral/lib/graphql-client'
 import { DEVNET_POOLS } from './meteora'
 import { fromHasuraToNative, formatBigNumber, type BigNumberSource } from '@/lib/bignumber'
+import {
+  DEFAULT_BASE_TOKEN_ID,
+  QUOTE_TOKEN_ID,
+  getAppToken,
+  getTokenDlmmPoolAddress,
+  getTokenIdByMint,
+} from '@/config'
+
+const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
+const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
+
+function getBasePoolAddress(): string | null {
+  const configured = getTokenDlmmPoolAddress(BASE_TOKEN.id)
+  if (configured) {
+    return configured
+  }
+
+  const poolId = BASE_TOKEN.dlmmPool?.id
+  if (poolId && DEVNET_POOLS[poolId]) {
+    return DEVNET_POOLS[poolId].address
+  }
+
+  return null
+}
 
 // ============ Types ============
 
@@ -51,17 +75,17 @@ export interface UserBalance {
 
 const tokens: Token[] = [
   {
-    symbol: 'USDC',
-    name: 'USD Coin',
-    icon: 'usdc',
+    symbol: QUOTE_TOKEN.symbol,
+    name: QUOTE_TOKEN.displayName,
+    icon: QUOTE_TOKEN.iconKey,
     price: 1.0,
     priceChange24h: 0,
     priceChangePercent24h: 0,
   },
   {
-    symbol: 'T-SpaceX',
-    name: 'Tokenized SpaceX',
-    icon: 'spacex',
+    symbol: BASE_TOKEN.symbol,
+    name: BASE_TOKEN.displayName,
+    icon: BASE_TOKEN.iconKey,
     price: 449.94,
     priceChange24h: 2.74,
     priceChangePercent24h: 0.6203,
@@ -182,10 +206,12 @@ function generatePriceHistory(
   return data
 }
 
-// Token mint to symbol mapping
-const MINT_TO_SYMBOL: Record<string, string> = {
-  [DEVNET_POOLS['T-SpaceX-USDC'].tokenX.mint]: 'TESS',
-  [DEVNET_POOLS['T-SpaceX-USDC'].tokenY.mint]: 'USDC',
+function getSymbolForMint(mint: string): string {
+  const tokenId = getTokenIdByMint(mint)
+  if (!tokenId) {
+    return 'Unknown'
+  }
+  return getAppToken(tokenId).symbol
 }
 
 // Format wallet address for display
@@ -222,9 +248,9 @@ function formatAmount(rawAmount: BigNumberSource): string {
 
 // Transform GraphQL swap event to trade history item
 function transformSwapEvent(event: MeteoraSwapEvent): TradeHistoryItem {
-  const isBuy = event.type === 'swap-y-for-x' // USDC -> TESS is a buy
-  const symbolX = MINT_TO_SYMBOL[event.mint_x] || 'Unknown'
-  const symbolY = MINT_TO_SYMBOL[event.mint_y] || 'Unknown'
+  const isBuy = event.type === 'swap-y-for-x' // Quote token -> base token is a buy
+  const symbolX = getSymbolForMint(event.mint_x)
+  const symbolY = getSymbolForMint(event.mint_y)
 
   const amountX = formatAmount(event.amount_x)
   const amountY = formatAmount(event.amount_y)
@@ -232,7 +258,7 @@ function transformSwapEvent(event: MeteoraSwapEvent): TradeHistoryItem {
   return {
     id: event.signature,
     signature: event.signature,
-    token: symbolX, // TESS is always the main token
+    token: symbolX, // Base token is always the primary asset
     amountIn: isBuy ? `${amountY} ${symbolY}` : `${amountX} ${symbolX}`,
     amountOut: isBuy ? `${amountX} ${symbolX}` : `${amountY} ${symbolY}`,
     type: isBuy ? 'Buy' : 'Sell',
@@ -243,8 +269,8 @@ function transformSwapEvent(event: MeteoraSwapEvent): TradeHistoryItem {
 
 // User balances
 const userBalances: UserBalance[] = [
-  { token: 'USDC', amount: 2399.89 },
-  { token: 'T-SpaceX', amount: 12.5 },
+  { token: QUOTE_TOKEN.symbol, amount: 2399.89 },
+  { token: BASE_TOKEN.symbol, amount: 12.5 },
   { token: 'T-Tsla', amount: 8.3 },
   { token: 'T-NVDA', amount: 25.0 },
 ]
@@ -271,13 +297,21 @@ export async function getPriceHistory(
   return generatePriceHistory(token.price, range)
 }
 
-// TESS-USDC pool address for filtering
-const TESS_USDC_POOL = DEVNET_POOLS['T-SpaceX-USDC'].address
-
 export async function getTradeHistory(page: number = 1, pageSize: number = 10): Promise<TradeHistoryResponse> {
+  const poolAddress = getBasePoolAddress()
+  if (!poolAddress) {
+    return {
+      items: [],
+      total: 0,
+      page,
+      pageSize,
+      totalPages: 0,
+    }
+  }
+
   const offset = (page - 1) * pageSize
-  // Filter to only show trades from the TESS-USDC pool
-  const { events, total } = await fetchSwapEvents(pageSize, offset, TESS_USDC_POOL)
+  // Filter to only show trades from the configured base/quote pool
+  const { events, total } = await fetchSwapEvents(pageSize, offset, poolAddress)
 
   const items = events.map(transformSwapEvent)
   const totalPages = Math.ceil(total / pageSize)
@@ -356,6 +390,10 @@ export async function executeSwap(
   _toToken: string,
   _fromAmount: number
 ): Promise<SwapResult> {
+  void _fromToken
+  void _toToken
+  void _fromAmount
+
   await sleep(1500) // Simulate transaction time
 
   // Mock 95% success rate

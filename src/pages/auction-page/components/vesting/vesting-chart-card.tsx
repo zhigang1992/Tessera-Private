@@ -1,14 +1,14 @@
 import { Card } from '@/components/ui/card'
 import { VestingChart } from './vesting-chart'
-import { useAlphaVault } from '@/hooks/use-alpha-vault'
+import { useAuctionAlphaVault } from '../../context'
 
 export function VestingChartCard() {
-  const { vaultInfo, claimInfo } = useAlphaVault()
+  const { vaultInfo, claimInfo, config } = useAuctionAlphaVault()
 
   // Calculate chart data from real vault info
   const vestingDurationHours = vaultInfo?.vestingDurationHours ?? 24
   const totalAllocation = claimInfo
-    ? parseFloat(claimInfo.totalAllocation) / 10 ** 6
+    ? parseFloat(claimInfo.totalAllocation) / 10 ** config.baseDecimals
     : 0
 
   // Calculate current progress through vesting period

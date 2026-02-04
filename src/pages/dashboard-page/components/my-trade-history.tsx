@@ -3,11 +3,14 @@ import { useQuery } from '@tanstack/react-query'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Pagination } from '@/components/ui/pagination'
 import { getUserTradeHistory } from '@/services'
-import TokenSpacexIcon from './_/token-spacex.svg?react'
+import { AppTokenIcon } from '@/components/app-token-icon'
+import { AppTokenName } from '@/components/app-token-name'
+import { DEFAULT_BASE_TOKEN_ID, getAppToken, getTokenBySymbol } from '@/config'
 
 const PAGE_SIZE = 10
 
 export function MyTradeHistory() {
+  const defaultToken = getAppToken(DEFAULT_BASE_TOKEN_ID)
   const [currentPage, setCurrentPage] = useState(1)
   const { connected, publicKey } = useWallet()
   const walletAddress = publicKey?.toBase58()
@@ -54,37 +57,42 @@ export function MyTradeHistory() {
                 <span className="text-sm text-muted-foreground dark:text-[#d2d2d2]">No trade history</span>
               </div>
             ) : (
-              items.map((item, index) => (
-                <div
-                  key={item.id}
-                  className={`flex items-center gap-2.5 p-2.5 rounded ${
-                    index % 2 === 0 ? 'bg-zinc-50 dark:bg-[#323334]' : ''
-                  }`}
-                >
-                  <div className="w-[140px] lg:w-[180px]">
-                    <div className="flex items-center gap-1.5">
-                      <TokenSpacexIcon className="w-5 h-5 lg:w-6 lg:h-6" />
-                      <span className="text-xs lg:text-sm font-semibold text-foreground dark:text-white uppercase">
-                        {item.token}
-                      </span>
+              items.map((item, index) => {
+                const rowToken = getTokenBySymbol(item.token) ?? defaultToken
+                return (
+                  <div
+                    key={item.id}
+                    className={`flex items-center gap-2.5 p-2.5 rounded ${
+                      index % 2 === 0 ? 'bg-zinc-50 dark:bg-[#323334]' : ''
+                    }`}
+                  >
+                    <div className="w-[140px] lg:w-[180px]">
+                      <div className="flex items-center gap-1.5">
+                        <AppTokenIcon token={rowToken} className="w-5 h-5 lg:w-6 lg:h-6" size={24} />
+                        <AppTokenName
+                          token={rowToken}
+                          variant="symbol"
+                          className="text-xs lg:text-sm font-semibold text-foreground dark:text-white uppercase"
+                        />
+                      </div>
+                    </div>
+                    <div className="w-[180px] lg:w-[250px] flex items-center gap-1 text-xs lg:text-sm">
+                      <span className="text-foreground dark:text-[#d2d2d2]">{item.amountIn}</span>
+                      <span className="text-[#06a800]">→</span>
+                      <span className="text-foreground dark:text-[#d2d2d2]">{item.amountOut}</span>
+                    </div>
+                    <div className="w-[60px] lg:flex-1">
+                      <span className="text-xs lg:text-sm text-foreground dark:text-[#d2d2d2]">{item.type}</span>
+                    </div>
+                    <div className="w-[100px] lg:flex-1 text-xs lg:text-sm text-foreground dark:text-[#d2d2d2]">
+                      {item.account}
+                    </div>
+                    <div className="w-[120px] lg:flex-1 text-xs lg:text-sm text-foreground dark:text-[#d2d2d2]">
+                      {item.time}
                     </div>
                   </div>
-                  <div className="w-[180px] lg:w-[250px] flex items-center gap-1 text-xs lg:text-sm">
-                    <span className="text-foreground dark:text-[#d2d2d2]">{item.amountIn}</span>
-                    <span className="text-[#06a800]">→</span>
-                    <span className="text-foreground dark:text-[#d2d2d2]">{item.amountOut}</span>
-                  </div>
-                  <div className="w-[60px] lg:flex-1">
-                    <span className="text-xs lg:text-sm text-foreground dark:text-[#d2d2d2]">{item.type}</span>
-                  </div>
-                  <div className="w-[100px] lg:flex-1 text-xs lg:text-sm text-foreground dark:text-[#d2d2d2]">
-                    {item.account}
-                  </div>
-                  <div className="w-[120px] lg:flex-1 text-xs lg:text-sm text-foreground dark:text-[#d2d2d2]">
-                    {item.time}
-                  </div>
-                </div>
-              ))
+                )
+              })
             )}
           </div>
         </div>

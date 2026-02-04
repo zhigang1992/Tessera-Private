@@ -15,7 +15,7 @@ import {
   getTesseraReferralsProgramId,
   CONNECTION_CONFIG,
   getTesseraTokenProgramId,
-} from './config'
+} from '@/config'
 
 type ReadOnlyWallet = {
   publicKey: PublicKey

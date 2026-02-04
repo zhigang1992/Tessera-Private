@@ -16,7 +16,7 @@
  */
 
 // Configuration
-export * from './config'
+export * from '@/config'
 
 // Client utilities
 export * from './on-chain-client'

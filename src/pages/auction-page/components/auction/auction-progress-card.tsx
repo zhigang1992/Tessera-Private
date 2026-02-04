@@ -3,11 +3,13 @@ import { Card } from '@/components/ui/card'
 import { TrendingUp } from 'lucide-react'
 import { getAuctionProgress } from '@/services'
 import { AuctionChart } from './auction-chart'
+import { useAuctionTokenId } from '../../context'
 
 export function AuctionProgressCard() {
+  const tokenId = useAuctionTokenId()
   const { data: progress } = useQuery({
-    queryKey: ['auctionProgress'],
-    queryFn: getAuctionProgress,
+    queryKey: ['auctionProgress', tokenId],
+    queryFn: () => getAuctionProgress(tokenId),
   })
 
   return (

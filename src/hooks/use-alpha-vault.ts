@@ -2,15 +2,15 @@
  * React Hook for Alpha Vault Operations
  *
  * Provides state management and transaction handling for the Alpha Vault.
- * Uses the TESS Alpha Vault on Devnet.
+ * Uses the T-SpaceX Alpha Vault on Devnet (default).
  */
 
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
+import { Connection, PublicKey } from '@solana/web3.js'
 import {
+  DEFAULT_ALPHA_VAULT_TOKEN_ID,
   AlphaVaultClient,
-  ALPHA_VAULT_CONFIG,
   parseVaultAmount,
   formatVaultAmount,
   getVaultStateDisplay,
@@ -19,16 +19,18 @@ import {
   type DepositQuota,
   type AlphaVaultClaimInfo,
 } from '@/services/alpha-vault'
+import { type AppTokenId, type ResolvedAlphaVaultConfig, getRpcEndpoint } from '@/config'
 import { getTimeRemaining } from '@/services/alpha-vault-helpers'
 import { getAccount, getAssociatedTokenAddress } from '@solana/spl-token'
 import { addTermsAcceptanceMemo, MemoType } from '@/lib/transaction-memo'
 
-// Get devnet RPC URL from environment or use default
-const DEVNET_RPC_URL = import.meta.env.VITE_DEVNET_RPC_URL || clusterApiUrl('devnet')
+const DEFAULT_RPC_URL = import.meta.env.VITE_SOLANA_RPC_URL || getRpcEndpoint()
 
 // ============ Types ============
 
 export interface UseAlphaVaultReturn {
+  tokenId: AppTokenId
+  config: ResolvedAlphaVaultConfig
   // State
   isLoading: boolean
   isInitialized: boolean
@@ -45,7 +47,7 @@ export interface UseAlphaVaultReturn {
 
   // Balances
   usdcBalance: string | null
-  poolPrice: number | null // USDC per TESS
+  poolPrice: number | null // USDC per T-SpaceX
 
   // Time remaining
   depositEndsIn: { hours: number; minutes: number; seconds: number } | null
@@ -74,7 +76,7 @@ export interface UseAlphaVaultReturn {
 
 // ============ Hook Implementation ============
 
-export function useAlphaVault(): UseAlphaVaultReturn {
+export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID): UseAlphaVaultReturn {
   const wallet = useWallet()
 
   // State
@@ -89,13 +91,18 @@ export function useAlphaVault(): UseAlphaVaultReturn {
   const [poolPrice, setPoolPrice] = useState<number | null>(null)
 
   // Create connection and client
+  const rpcEndpoint = DEFAULT_RPC_URL
+
   const connection = useMemo(() => {
-    return new Connection(DEVNET_RPC_URL, 'confirmed')
-  }, [])
+    return new Connection(rpcEndpoint, 'confirmed')
+  }, [rpcEndpoint])
 
   const client = useMemo(() => {
-    return new AlphaVaultClient(connection)
-  }, [connection])
+    return new AlphaVaultClient({ tokenId, connection })
+  }, [connection, tokenId])
+
+  const baseDecimals = client.config.baseDecimals
+  const quoteDecimals = client.config.quoteDecimals
 
   // Derived state
   const vaultStateDisplay = useMemo(() => {
@@ -116,13 +123,13 @@ export function useAlphaVault(): UseAlphaVaultReturn {
   // Formatted values
   const totalRaised = useMemo(() => {
     if (!vaultInfo) return '0'
-    return formatVaultAmount(vaultInfo.totalDeposited)
-  }, [vaultInfo])
+    return formatVaultAmount(vaultInfo.totalDeposited, quoteDecimals)
+  }, [vaultInfo, quoteDecimals])
 
   const targetRaise = useMemo(() => {
     if (!vaultInfo) return '0'
-    return formatVaultAmount(vaultInfo.maxCap)
-  }, [vaultInfo])
+    return formatVaultAmount(vaultInfo.maxCap, quoteDecimals)
+  }, [vaultInfo, quoteDecimals])
 
   const oversubscribedRatio = useMemo(() => {
     if (!vaultInfo) return '0'
@@ -131,23 +138,23 @@ export function useAlphaVault(): UseAlphaVaultReturn {
 
   const userDeposited = useMemo(() => {
     if (!escrowInfo) return '0'
-    return formatVaultAmount(escrowInfo.totalDeposited)
-  }, [escrowInfo])
+    return formatVaultAmount(escrowInfo.totalDeposited, quoteDecimals)
+  }, [escrowInfo, quoteDecimals])
 
   const estimatedAllocation = useMemo(() => {
     if (!escrowInfo) return '0'
-    return formatVaultAmount(escrowInfo.estimatedAllocation, ALPHA_VAULT_CONFIG.tessDecimals)
-  }, [escrowInfo])
+    return formatVaultAmount(escrowInfo.estimatedAllocation, baseDecimals)
+  }, [escrowInfo, baseDecimals])
 
   const estimatedRefund = useMemo(() => {
     if (!escrowInfo) return '0'
-    return formatVaultAmount(escrowInfo.estimatedRefund)
-  }, [escrowInfo])
+    return formatVaultAmount(escrowInfo.estimatedRefund, quoteDecimals)
+  }, [escrowInfo, quoteDecimals])
 
   const availableToClaim = useMemo(() => {
     if (!claimInfo) return '0'
-    return formatVaultAmount(claimInfo.availableToClaim, ALPHA_VAULT_CONFIG.tessDecimals)
-  }, [claimInfo])
+    return formatVaultAmount(claimInfo.availableToClaim, baseDecimals)
+  }, [claimInfo, baseDecimals])
 
   const vestingDuration = useMemo(() => {
     if (!vaultInfo) return '0h Linear'
@@ -162,15 +169,20 @@ export function useAlphaVault(): UseAlphaVaultReturn {
     }
 
     try {
-      const usdcMint = new PublicKey(ALPHA_VAULT_CONFIG.usdcToken)
+      const quoteMintAddress = client.config.quoteToken.mints[client.network]?.address
+      if (!quoteMintAddress) {
+        throw new Error('Quote mint not configured for alpha vault token')
+      }
+
+      const usdcMint = new PublicKey(quoteMintAddress)
       const ata = await getAssociatedTokenAddress(usdcMint, wallet.publicKey)
       const account = await getAccount(connection, ata)
-      const formatted = formatVaultAmount(account.amount.toString())
+      const formatted = formatVaultAmount(account.amount.toString(), quoteDecimals)
       setUsdcBalance(formatted)
     } catch {
       setUsdcBalance('0.00')
     }
-  }, [connection, wallet.publicKey])
+  }, [client, connection, quoteDecimals, wallet.publicKey])
 
   // Initialize vault
   const initialize = useCallback(async () => {
@@ -282,7 +294,7 @@ export function useAlphaVault(): UseAlphaVaultReturn {
       setError(null)
 
       try {
-        const amountBN = parseVaultAmount(amount)
+        const amountBN = parseVaultAmount(amount, quoteDecimals)
 
         // Get merkle proof if vault is permissioned
         const merkleProof = await client.getMerkleProof(wallet.publicKey)
@@ -341,7 +353,7 @@ export function useAlphaVault(): UseAlphaVaultReturn {
       setError(null)
 
       try {
-        const amountBN = parseVaultAmount(amount)
+        const amountBN = parseVaultAmount(amount, quoteDecimals)
 
         const tx = await client.createWithdrawTransaction(wallet.publicKey, amountBN)
 
@@ -467,6 +479,8 @@ export function useAlphaVault(): UseAlphaVaultReturn {
   }, [isInitialized, wallet.publicKey, refreshUserPosition])
 
   return {
+    tokenId,
+    config: client.config,
     isLoading,
     isInitialized,
     error,

@@ -2,12 +2,15 @@ import { useState, useEffect, useCallback } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useMeteoraSwap, type SwapDirection } from '@/hooks/use-meteora-swap'
-import { getExplorerUrl } from '@/lib/solana/config'
+import { DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getAppToken, getExplorerUrl } from '@/config'
 import { formatBigNumber } from '@/lib/bignumber'
-import TokenUsdcIcon from './_/token-usdc.svg?react'
-import TokenTessIcon from './_/token-tess.svg?react'
+import { AppTokenIcon } from '@/components/app-token-icon'
+import { AppTokenName } from '@/components/app-token-name'
 import SwapIcon from './_/swap-icon.svg?react'
 import { toast } from 'sonner'
+
+const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
+const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
 
 interface TokenSwapPanelProps {
   disabled?: boolean
@@ -41,8 +44,8 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
 
   // Derived state
   const isBuying = direction === 'USDC_TO_TSPACEX' // Buying T-SpaceX with USDC
-  const sellingToken = isBuying ? 'USDC' : 'T-SpaceX'
-  const buyingToken = isBuying ? 'T-SpaceX' : 'USDC'
+  const sellingTokenConfig = isBuying ? QUOTE_TOKEN : BASE_TOKEN
+  const buyingTokenConfig = isBuying ? BASE_TOKEN : QUOTE_TOKEN
   // BigNumber value for max button calculation
   const sellingBalance = isBuying ? usdcBalance : tSpaceXBalance
   // Formatted strings for display
@@ -119,7 +122,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
     if (sellingBalance) {
       // Format BigNumber to string for input (full precision, no thousands separators)
       // Use maximumFractionDigits to show full precision based on token type
-      const maxDecimals = isBuying ? 6 : 6 // Both USDC and T-SpaceX have 6 decimals
+      const maxDecimals = sellingTokenConfig.decimals
       const formatted = formatBigNumber(sellingBalance, {
         minimumFractionDigits: 0,
         maximumFractionDigits: maxDecimals,
@@ -204,18 +207,14 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
                 <div className="flex items-center justify-between w-full">
                   <div className="relative rounded-md flex-shrink-0">
                     <div className="flex gap-2.5 items-center overflow-clip px-3 py-2 rounded-[inherit]">
-                      <div className="relative flex-shrink-0 size-8">
-                        {sellingToken === 'USDC' ? (
-                          <TokenUsdcIcon className="block size-full" />
-                        ) : (
-                          <TokenTessIcon className="block size-full" />
-                        )}
-                      </div>
-                      <div className="flex gap-1 items-center flex-shrink-0">
-                        <p className="font-semibold leading-7 text-xl text-black dark:text-[#ffffff]">
-                          {sellingToken}
-                        </p>
-                      </div>
+                    <div className="relative flex-shrink-0 size-8">
+                      <AppTokenIcon token={sellingTokenConfig} className="block size-full" size={32} />
+                    </div>
+                    <div className="flex gap-1 items-center flex-shrink-0">
+                      <p className="font-semibold leading-7 text-xl text-black dark:text-[#ffffff]">
+                        <AppTokenName token={sellingTokenConfig} variant="symbol" />
+                      </p>
+                    </div>
                     </div>
                     <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-md border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)]" />
                   </div>
@@ -270,15 +269,11 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
                 <div className="relative rounded-md flex-shrink-0">
                   <div className="flex gap-2.5 items-center overflow-clip px-3 py-2 rounded-[inherit]">
                     <div className="relative flex-shrink-0 size-8">
-                      {buyingToken === 'USDC' ? (
-                        <TokenUsdcIcon className="block size-full" />
-                      ) : (
-                        <TokenTessIcon className="block size-full" />
-                      )}
+                      <AppTokenIcon token={buyingTokenConfig} className="block size-full" size={32} />
                     </div>
                     <div className="flex gap-1 items-center flex-shrink-0">
                       <p className="font-semibold leading-7 text-xl text-black dark:text-[#ffffff]">
-                        {buyingToken}
+                        <AppTokenName token={buyingTokenConfig} variant="symbol" />
                       </p>
                     </div>
                   </div>
@@ -312,7 +307,10 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
                   <p className="leading-4">Rate</p>
                 </div>
                 <div className="flex flex-col justify-center text-black">
-                  <p className="leading-4">1 {sellingToken} = {rate} {buyingToken}</p>
+                  <p className="leading-4">
+                    1 <AppTokenName token={sellingTokenConfig} variant="symbol" /> = {rate}{' '}
+                    <AppTokenName token={buyingTokenConfig} variant="symbol" />
+                  </p>
                 </div>
               </div>
               <div className="flex items-center justify-between text-xs leading-4">

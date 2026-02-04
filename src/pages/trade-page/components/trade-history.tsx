@@ -4,11 +4,15 @@ import { cn } from '@/lib/utils'
 import { Pagination } from '@/components/ui/pagination'
 import { TableContainer, tableStyles } from '@/components/ui/table-header'
 import { getTradeHistory } from '@/services'
-import TokenSpacexIcon from './_/token-spacex.svg?react'
+import { AppTokenIcon } from '@/components/app-token-icon'
+import { AppTokenName } from '@/components/app-token-name'
+import { DEFAULT_BASE_TOKEN_ID, getAppToken, getTokenBySymbol } from '@/config'
 
 const PAGE_SIZE = 10
 
 export function TradeHistory() {
+  const defaultToken = getAppToken(DEFAULT_BASE_TOKEN_ID)
+
   const [currentPage, setCurrentPage] = useState(1)
 
   const { data, isLoading } = useQuery({
@@ -49,37 +53,42 @@ export function TradeHistory() {
                 </td>
               </tr>
             ) : (
-              items.map((item) => (
-                <tr key={item.id} className={tableStyles.tr}>
-                  {/* Token */}
-                  <td className={tableStyles.td}>
-                    <div className="flex items-center gap-2">
-                      <TokenSpacexIcon className="w-5 h-5 lg:w-6 lg:h-6" />
-                      <span className="font-semibold text-[#404040] dark:text-[#d2d2d2] uppercase">
-                        {item.token}
-                      </span>
-                    </div>
-                  </td>
+              items.map((item) => {
+                const rowToken = getTokenBySymbol(item.token) ?? defaultToken
+                return (
+                  <tr key={item.id} className={tableStyles.tr}>
+                    {/* Token */}
+                    <td className={tableStyles.td}>
+                      <div className="flex items-center gap-2">
+                        <AppTokenIcon token={rowToken} className="w-5 h-5 lg:w-6 lg:h-6" size={24} />
+                        <AppTokenName
+                          token={rowToken}
+                          variant="symbol"
+                          className="font-semibold text-[#404040] dark:text-[#d2d2d2] uppercase"
+                        />
+                      </div>
+                    </td>
 
-                  {/* Amount */}
-                  <td className={tableStyles.td}>
-                    <div className="flex items-center gap-1 whitespace-nowrap">
-                      <span>{item.amountIn}</span>
-                      <span className="text-[#06a800]">→</span>
-                      <span>{item.amountOut}</span>
-                    </div>
-                  </td>
+                    {/* Amount */}
+                    <td className={tableStyles.td}>
+                      <div className="flex items-center gap-1 whitespace-nowrap">
+                        <span>{item.amountIn}</span>
+                        <span className="text-[#06a800]">→</span>
+                        <span>{item.amountOut}</span>
+                      </div>
+                    </td>
 
-                  {/* Type */}
-                  <td className={tableStyles.td}>{item.type}</td>
+                    {/* Type */}
+                    <td className={tableStyles.td}>{item.type}</td>
 
-                  {/* Account */}
-                  <td className={tableStyles.td}>{item.account}</td>
+                    {/* Account */}
+                    <td className={tableStyles.td}>{item.account}</td>
 
-                  {/* Time */}
-                  <td className={cn(tableStyles.td, 'whitespace-nowrap')}>{item.time}</td>
-                </tr>
-              ))
+                    {/* Time */}
+                    <td className={cn(tableStyles.td, 'whitespace-nowrap')}>{item.time}</td>
+                  </tr>
+                )
+              })
             )}
           </tbody>
         </table>

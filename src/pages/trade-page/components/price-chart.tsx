@@ -4,7 +4,9 @@ import { createChart, ColorType, LineSeries } from 'lightweight-charts'
 import type { IChartApi, LineData, Time } from 'lightweight-charts'
 import { getPriceHistory, getTokenPrice, type TimeRange } from '@/services/price'
 import { useMarketDepth, calculateBarHeights, formatTvl, formatBinStep } from '@/hooks/useMarketDepth'
-import TokenTessIcon from './_/token-tess.svg?react'
+import { AppTokenIcon } from '@/components/app-token-icon'
+import { AppTokenName } from '@/components/app-token-name'
+import { DEFAULT_BASE_TOKEN_ID, getAppToken, getTokenBySymbol } from '@/config'
 
 interface PriceChartProps {
   tokenSymbol?: string
@@ -13,7 +15,8 @@ interface PriceChartProps {
 
 type ChartTab = 'price' | 'market-depth'
 
-export function PriceChart({ tokenSymbol = 'TESS', disabled = false }: PriceChartProps) {
+export function PriceChart({ tokenSymbol = 'T-SpaceX', disabled = false }: PriceChartProps) {
+  const tokenConfig = getTokenBySymbol(tokenSymbol) ?? getAppToken(DEFAULT_BASE_TOKEN_ID)
   const [activeTab, setActiveTab] = useState<ChartTab>('price')
   const [timeRange, setTimeRange] = useState<TimeRange>('1D')
   const chartContainerRef = useRef<HTMLDivElement>(null)
@@ -135,9 +138,9 @@ export function PriceChart({ tokenSymbol = 'TESS', disabled = false }: PriceChar
           {/* Left: Token Info and Price */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 lg:gap-2.5">
-              <TokenTessIcon className="w-10 h-10 lg:w-12 lg:h-12" />
+              <AppTokenIcon token={tokenConfig} className="w-10 h-10 lg:w-12 lg:h-12" size={48} />
               <span className="text-sm lg:text-base font-extrabold text-black">
-                {token?.symbol ?? tokenSymbol}
+                {token?.symbol ?? <AppTokenName token={tokenConfig} variant="symbol" />}
               </span>
             </div>
             <div>

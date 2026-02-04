@@ -18,7 +18,8 @@ export function App() {
             <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/trade" element={<TradePage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/auction" element={<AuctionPage />} />
+            <Route path="/auction" element={<Navigate to="/auction/T-SpaceX" replace />} />
+            <Route path="/auction/:tokenId" element={<AuctionPage />} />
             <Route path="/support" element={<SupportPage />} />
             <Route path="/admin/migration" element={<MigrationPage />} />
             <Route path="/auctions" element={<AuctionListPage />} />

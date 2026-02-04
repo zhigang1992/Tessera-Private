@@ -12,6 +12,32 @@ import {
 } from '@/features/referral/lib/graphql-client'
 import { DEVNET_POOLS } from './meteora'
 import { fromHasuraToNative, formatBigNumber, BigNumber, type BigNumberSource } from '@/lib/bignumber'
+import {
+  DEFAULT_BASE_TOKEN_ID,
+  getAppToken,
+  getTokenDlmmPoolAddress,
+  getTokenIdByMint,
+} from '@/config'
+
+const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
+
+function getBasePoolAddress(): string | null {
+  const configured = getTokenDlmmPoolAddress(BASE_TOKEN.id)
+  if (configured) return configured
+
+  const poolId = BASE_TOKEN.dlmmPool?.id
+  if (poolId && DEVNET_POOLS[poolId]) {
+    return DEVNET_POOLS[poolId].address
+  }
+
+  return null
+}
+
+function getSymbolForMint(mint: string): string {
+  const tokenId = getTokenIdByMint(mint)
+  if (!tokenId) return 'Unknown'
+  return getAppToken(tokenId).symbol
+}
 
 // ============ Types ============
 
@@ -326,14 +352,8 @@ export function clearAffiliateStatsCache() {
 
 // ============ Traders Tab Data ============
 
-// Token mint to symbol mapping for trade history
-const MINT_TO_SYMBOL: Record<string, string> = {
-  [DEVNET_POOLS['T-SpaceX-USDC'].tokenX.mint]: 'TESS',
-  [DEVNET_POOLS['T-SpaceX-USDC'].tokenY.mint]: 'USDC',
-}
-
-// TESS-USDC pool address for filtering
-const TESS_USDC_POOL = DEVNET_POOLS['T-SpaceX-USDC'].address
+// Base pool address for filtering
+const BASE_POOL_ADDRESS = getBasePoolAddress()
 
 // Format block time to readable date with time
 function formatBlockTimeWithTime(blockTime: number): string {
@@ -400,21 +420,31 @@ export async function getTradingHistory(
   page: number = 1,
   pageSize: number = 10
 ): Promise<TradingHistoryResponse> {
+  if (!BASE_POOL_ADDRESS) {
+    return {
+      items: [],
+      total: 0,
+      page,
+      pageSize,
+      totalPages: 0,
+    }
+  }
+
   const offset = (page - 1) * pageSize
-  // Filter to only show trades from the TESS-USDC pool
-  const { events, total } = await fetchSwapEvents(pageSize, offset, TESS_USDC_POOL)
+  // Filter to only show trades from the configured base/quote pool
+  const { events, total } = await fetchSwapEvents(pageSize, offset, BASE_POOL_ADDRESS)
 
   const items: TradingHistoryItem[] = events.map((event) => {
-    const isBuy = event.type === 'swap-y-for-x' // USDC -> TESS is a buy
-    const symbolX = MINT_TO_SYMBOL[event.mint_x] || 'Unknown'
-    const symbolY = MINT_TO_SYMBOL[event.mint_y] || 'Unknown'
+    const isBuy = event.type === 'swap-y-for-x' // Quote -> base is a buy
+    const symbolX = getSymbolForMint(event.mint_x)
+    const symbolY = getSymbolForMint(event.mint_y)
 
     const amountX = formatSwapAmount(event.amount_x)
     const amountY = formatSwapAmount(event.amount_y)
 
     return {
       id: event.signature,
-      token: symbolX, // TESS is always the main token
+      token: symbolX, // Base token is always the main token
       amountIn: isBuy ? `${amountY} ${symbolY}` : `${amountX} ${symbolX}`,
       amountOut: isBuy ? `${amountX} ${symbolX}` : `${amountY} ${symbolY}`,
       type: isBuy ? 'Buy' : 'Sell',

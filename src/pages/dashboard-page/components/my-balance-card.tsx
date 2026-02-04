@@ -1,9 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { getUserDashboard } from '@/services'
-import TokenSpacexIcon from './_/token-spacex.svg?react'
+import { AppTokenIcon } from '@/components/app-token-icon'
+import { AppTokenName } from '@/components/app-token-name'
+import { DEFAULT_BASE_TOKEN_ID, getAppToken } from '@/config'
 
 export function MyBalanceCard() {
+  const token = getAppToken(DEFAULT_BASE_TOKEN_ID)
   const { connected, publicKey } = useWallet()
   const walletAddress = publicKey?.toBase58()
 
@@ -32,10 +35,10 @@ export function MyBalanceCard() {
         <div className="flex flex-col gap-2.5">
           {/* Token Header */}
           <div className="flex items-center gap-2.5">
-            <TokenSpacexIcon className="w-14 h-14 lg:w-[72px] lg:h-[72px]" />
+            <AppTokenIcon token={token} className="w-14 h-14 lg:w-[72px] lg:h-[72px]" size={72} />
             <div className="flex flex-col">
               <p className="text-sm font-bold text-black leading-5">
-                {userDashboard?.tokenName ?? 'T-SpaceX Token'}
+                {userDashboard?.tokenName ?? <AppTokenName token={token} />}
               </p>
               <p className="text-2xl lg:text-3xl font-semibold text-black leading-9">
                 {displayTokenBalance}

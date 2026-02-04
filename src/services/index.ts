@@ -6,13 +6,14 @@ export * from './support'
 export * from './auction'
 export * from './explore'
 export {
-  ALPHA_VAULT_CONFIG,
+  DEFAULT_ALPHA_VAULT_TOKEN_ID,
   AlphaVaultClient,
   getAlphaVaultClient,
   formatVaultAmount,
   parseVaultAmount,
   getVaultStateDisplay,
   getTimeUntilSlot,
+  type AlphaVaultClientOptions,
   type VaultMode,
   type VaultStateType,
   type VaultInfo,

@@ -10,7 +10,8 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useAlphaVault } from '@/hooks/use-alpha-vault'
+import { getExplorerUrl } from '@/config'
+import { useAuctionAlphaVault } from '../../context'
 import { toast } from 'sonner'
 
 interface WithdrawModalProps {
@@ -21,11 +22,9 @@ interface WithdrawModalProps {
 export function WithdrawModal({ open, onOpenChange }: WithdrawModalProps) {
   const [withdrawAmount, setWithdrawAmount] = useState('')
 
-  const { isLoading, escrowInfo, vaultInfo, withdraw, error, clearError } = useAlphaVault()
+  const { isLoading, escrowInfo, vaultInfo, withdraw, error, clearError, config } = useAuctionAlphaVault()
 
-  const userDeposited = escrowInfo
-    ? parseFloat(escrowInfo.totalDeposited) / 10 ** 6
-    : 0
+  const userDeposited = escrowInfo ? parseFloat(escrowInfo.totalDeposited) / 10 ** config.quoteDecimals : 0
 
   const isWithdrawOpen = vaultInfo?.state === 'deposit_open'
   const canWithdraw = userDeposited > 0 && isWithdrawOpen
@@ -53,10 +52,7 @@ export function WithdrawModal({ open, onOpenChange }: WithdrawModalProps) {
         action: {
           label: 'View',
           onClick: () =>
-            window.open(
-              `https://explorer.solana.com/tx/${signature}?cluster=devnet`,
-              '_blank'
-            ),
+            window.open(getExplorerUrl(signature), '_blank'),
         },
       })
       setWithdrawAmount('')
@@ -81,7 +77,9 @@ export function WithdrawModal({ open, onOpenChange }: WithdrawModalProps) {
           {/* Current deposit info */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-[#71717a] dark:text-[#999]">Your Deposit</span>
-            <span className="font-mono font-semibold">{userDeposited.toLocaleString()} USDC</span>
+            <span className="font-mono font-semibold">
+              {userDeposited.toLocaleString()} {config.quoteToken.symbol}
+            </span>
           </div>
 
           {/* Withdraw input */}
@@ -106,7 +104,7 @@ export function WithdrawModal({ open, onOpenChange }: WithdrawModalProps) {
                 className="pr-16 text-lg font-mono"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
-                USDC
+                {config.quoteToken.symbol}
               </span>
             </div>
           </div>

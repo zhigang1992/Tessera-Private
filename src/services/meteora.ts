@@ -9,26 +9,8 @@ import { Connection, PublicKey, Transaction } from '@solana/web3.js'
 import DLMM from '@meteora-ag/dlmm'
 import BN from 'bn.js'
 import { BigNumber, math, mathIs, formatBigNumber } from '@/lib/bignumber'
-
-// DevNet T-SpaceX-USDC Pool (Updated Feb 2, 2026 - Token-2022 USDC)
-// Pool: 6Pydbux4SGN87doBPbjAtPgprsEwTP4trEANmQFcNEKR
-// T-SpaceX Mint (Token-2022): 767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj
-// USDC Mint (Token-2022): 7Ns2X7yAACNujx8L8pUU27ctAvhoEtikD7R3nZcd9Mox
-export const DEVNET_POOLS = {
-  'T-SpaceX-USDC': {
-    address: '6Pydbux4SGN87doBPbjAtPgprsEwTP4trEANmQFcNEKR',
-    tokenX: {
-      mint: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj',
-      symbol: 'T-SpaceX',
-      decimals: 6,
-    },
-    tokenY: {
-      mint: '7Ns2X7yAACNujx8L8pUU27ctAvhoEtikD7R3nZcd9Mox',
-      symbol: 'USDC',
-      decimals: 6,
-    },
-  },
-} as const
+import { DEVNET_POOLS } from '@/config'
+export { DEVNET_POOLS }
 
 export type DevnetPoolId = keyof typeof DEVNET_POOLS
 export type PoolId = DevnetPoolId

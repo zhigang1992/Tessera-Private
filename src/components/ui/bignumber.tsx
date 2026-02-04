@@ -71,7 +71,7 @@ export function BigNumberCurrency({
 }
 
 /**
- * Renders a BigNumber as a token amount (e.g., "1,234.5678 TESS")
+ * Renders a BigNumber as a token amount (e.g., "1,234.5678 T-SpaceX")
  */
 export function BigNumberToken({
   value,

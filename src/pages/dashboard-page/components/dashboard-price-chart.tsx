@@ -4,10 +4,12 @@ import { createChart, ColorType, LineStyle, AreaSeries } from 'lightweight-chart
 import type { IChartApi, ISeriesApi, LineData, Time } from 'lightweight-charts'
 import { getDashboardStats } from '@/services'
 import { getTokenPrice, getPriceHistory, type TimeRange } from '@/services/price'
-import TokenTessIcon from '@/pages/trade-page/components/_/token-tess.svg?react'
+import { AppTokenIcon } from '@/components/app-token-icon'
+import { DEFAULT_BASE_TOKEN_ID, getAppToken } from '@/config'
 
-const TOKEN_SYMBOL = 'TESS'
-const TOKEN_DISPLAY_NAME = 'TESS'
+const TOKEN_CONFIG = getAppToken(DEFAULT_BASE_TOKEN_ID)
+const TOKEN_SYMBOL = TOKEN_CONFIG.symbol
+const TOKEN_DISPLAY_NAME = TOKEN_CONFIG.displayName
 
 export function DashboardPriceChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null)
@@ -31,7 +33,7 @@ export function DashboardPriceChart() {
     queryFn: getDashboardStats,
   })
 
-  // Fetch price history from backend (using TESS symbol)
+  // Fetch price history from backend (using T-SpaceX symbol)
   const { data: priceHistory } = useQuery({
     queryKey: ['priceHistory', TOKEN_SYMBOL, selectedRange],
     queryFn: () => getPriceHistory(TOKEN_SYMBOL, selectedRange),
@@ -144,7 +146,7 @@ export function DashboardPriceChart() {
         {/* Mobile - Token Info and Price */}
         <div className="flex items-center justify-between mb-2.5 lg:hidden">
           <div className="flex items-center gap-2.5">
-            <TokenTessIcon className="w-12 h-12" />
+            <AppTokenIcon token={TOKEN_CONFIG} size={48} className="w-12 h-12" />
             <p className="text-[16px] font-extrabold text-black">{tokenInfo?.symbol ?? TOKEN_DISPLAY_NAME}</p>
           </div>
           <div className="flex flex-col items-end">
@@ -184,7 +186,7 @@ export function DashboardPriceChart() {
         <div className="hidden lg:flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2.5">
-              <TokenTessIcon className="w-12 h-12" />
+              <AppTokenIcon token={TOKEN_CONFIG} size={48} className="w-12 h-12" />
               <p className="text-[16px] font-extrabold text-black">{tokenInfo?.symbol ?? TOKEN_DISPLAY_NAME}</p>
             </div>
             <div className="bg-[rgba(0,0,0,0.5)] h-10 w-px" />

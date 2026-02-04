@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useParams } from 'react-router'
 import { AuctionTabs } from './components/auction/auction-tabs'
 import { AuctionHeaderCard } from './components/auction/auction-header-card'
 import { AuctionProgressCard } from './components/auction/auction-progress-card'
@@ -8,81 +9,72 @@ import { VestingHeaderCard } from './components/vesting/vesting-header-card'
 import { VestingChartCard } from './components/vesting/vesting-chart-card'
 import { ClaimHeaderCard } from './components/vesting/claim-header-card'
 import { ClaimTokensCard } from './components/vesting/claim-tokens-card'
-import { ALPHA_VAULT_CONFIG } from '@/services/alpha-vault'
+import { AuctionProvider } from './context'
+import { DEFAULT_BASE_TOKEN_ID, getAppToken, resolveTokenIdFromParam } from '@/config'
+import { useAlphaVault } from '@/hooks/use-alpha-vault'
 
 export default function AuctionPage() {
+  const params = useParams<{ tokenId?: string }>()
+  const tokenId = useMemo(() => {
+    return resolveTokenIdFromParam(params.tokenId) ?? DEFAULT_BASE_TOKEN_ID
+  }, [params.tokenId])
+
+  const token = useMemo(() => getAppToken(tokenId), [tokenId])
+  const alphaVault = useAlphaVault(tokenId)
   const [activeTab, setActiveTab] = useState('auction')
+  const hasVestingPeriod = alphaVault.config.hasVestingPeriod
 
   return (
-    <div className="flex flex-col gap-4 lg:gap-6">
-      {/* Header */}
-      <h1 className="text-xl lg:text-2xl font-bold text-foreground dark:text-[#d2d2d2]">Auction</h1>
+    <AuctionProvider value={{ tokenId, token, alphaVault }}>
+      <div className="flex flex-col gap-4 lg:gap-6">
+        <h1 className="text-xl lg:text-2xl font-bold text-foreground dark:text-[#d2d2d2]">Auction</h1>
 
-      {/* Tabs */}
-      <AuctionTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        <AuctionTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {/* Auction Tab Content */}
-      {activeTab === 'auction' && (
-        <div className="flex flex-col gap-4 lg:gap-6">
-          {/* Auction Header Card */}
-          <AuctionHeaderCard />
+        {activeTab === 'auction' && (
+          <div className="flex flex-col gap-4 lg:gap-6">
+            <AuctionHeaderCard />
 
-          {/* Bottom Section: Chart and Deposit - Mobile: stacked, Desktop: grid */}
-          <div className="flex flex-col lg:grid lg:grid-cols-[1.75fr_1fr] gap-4 lg:gap-6">
-            {/* Auction Progress Chart - Shows second on mobile, first on desktop */}
-            <div className="order-2 lg:order-1 min-w-0">
-              <AuctionProgressCard />
+            <div className="flex flex-col lg:grid lg:grid-cols-[1.75fr_1fr] gap-4 lg:gap-6">
+              <div className="order-2 lg:order-1 min-w-0">
+                <AuctionProgressCard />
+              </div>
+              <div className="order-1 lg:order-2 min-w-0">
+                <DepositUSDCCard />
+              </div>
             </div>
 
-            {/* Deposit USDC Card - Shows first on mobile, second on desktop */}
-            <div className="order-1 lg:order-2 min-w-0">
-              <DepositUSDCCard />
-            </div>
+            <TokenInfoCard />
           </div>
+        )}
 
-          {/* Token Information */}
-          <TokenInfoCard />
-        </div>
-      )}
-
-      {/* Vesting/Claim Tab Content - Conditionally rendered based on config */}
-      {activeTab === 'vesting' && (
-        <>
-          {ALPHA_VAULT_CONFIG.hasVestingPeriod ? (
-            // Vesting layout: Header + Chart + Claim (3 cards)
-            <div className="flex flex-col gap-4 lg:gap-6">
-              {/* Vesting Header Card */}
-              <VestingHeaderCard />
-
-              {/* Charts Section - Mobile: Claim first, Desktop: Chart first */}
-              <div className="flex flex-col lg:grid lg:grid-cols-[1.75fr_1fr] gap-4 lg:gap-6">
-                {/* Claim Tokens Card - Shows first on mobile */}
-                <div className="order-1 lg:order-2">
+        {activeTab === 'vesting' && (
+          <>
+            {hasVestingPeriod ? (
+              <div className="flex flex-col gap-4 lg:gap-6">
+                <VestingHeaderCard />
+                <div className="flex flex-col lg:grid lg:grid-cols-[1.75fr_1fr] gap-4 lg:gap-6">
+                  <div className="order-1 lg:order-2">
+                    <ClaimTokensCard />
+                  </div>
+                  <div className="order-2 lg:order-1">
+                    <VestingChartCard />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col md:flex-row gap-4 lg:gap-6">
+                <div className="w-full md:basis-0 md:grow order-2 md:order-1">
+                  <ClaimHeaderCard />
+                </div>
+                <div className="w-full md:w-[400px] order-1 md:order-2">
                   <ClaimTokensCard />
                 </div>
-
-                {/* Release Schedule Chart - Shows second on mobile */}
-                <div className="order-2 lg:order-1">
-                  <VestingChartCard />
-                </div>
               </div>
-            </div>
-          ) : (
-            // Claim layout: Final Allocation + Claim Tokens (2 cards, side by side)
-            <div className="flex flex-col md:flex-row gap-4 lg:gap-6">
-              {/* Left Panel - Your Final Allocation */}
-              <div className="w-full md:basis-0 md:grow order-2 md:order-1">
-                <ClaimHeaderCard />
-              </div>
-
-              {/* Right Panel - Claim Tokens */}
-              <div className="w-full md:w-[400px] order-1 md:order-2">
-                <ClaimTokensCard />
-              </div>
-            </div>
-          )}
-        </>
-      )}
-    </div>
+            )}
+          </>
+        )}
+      </div>
+    </AuctionProvider>
   )
 }

@@ -1,7 +1,7 @@
 import { PriceChart } from './components/price-chart'
 import { TokenSwapPanel } from './components/token-swap-panel'
 import { TradeHistory } from './components/trade-history'
-import { isTradingEnabledForPool } from '@/lib/solana/config'
+import { isTradingEnabledForPool } from '@/config'
 
 export default function TradePage() {
   // Use T-SpaceX-USDC pool on devnet

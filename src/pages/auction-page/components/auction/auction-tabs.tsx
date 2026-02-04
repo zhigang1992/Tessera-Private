@@ -1,16 +1,17 @@
-import { ALPHA_VAULT_CONFIG } from '@/services/alpha-vault'
+import { useAuctionAlphaVault } from '../../context'
 
 interface AuctionTabsProps {
   activeTab: string
   onTabChange: (tab: string) => void
 }
 
-const tabs = [
-  { id: 'auction', label: 'Auction' },
-  { id: 'vesting', label: ALPHA_VAULT_CONFIG.hasVestingPeriod ? 'Vesting' : 'Claim' },
-]
-
 export function AuctionTabs({ activeTab, onTabChange }: AuctionTabsProps) {
+  const { config } = useAuctionAlphaVault()
+  const tabs = [
+    { id: 'auction', label: 'Auction' },
+    { id: 'vesting', label: config.hasVestingPeriod ? 'Vesting' : 'Claim' },
+  ]
+
   return (
     <div className="flex items-center p-1 bg-zinc-200 dark:bg-[#1e1f20] rounded-xl w-full lg:w-fit">
       {tabs.map((tab) => (

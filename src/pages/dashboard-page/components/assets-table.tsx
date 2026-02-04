@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { TrendingUp } from 'lucide-react'
-import TokenSpacexIcon from './_/token-spacex.svg?react'
 import { getTokenizedAssets } from '@/services'
+import { AppTokenIcon } from '@/components/app-token-icon'
+import { AppTokenName } from '@/components/app-token-name'
+import { DEFAULT_BASE_TOKEN_ID, getAppToken } from '@/config'
 
 export function AssetsTable() {
+  const defaultToken = getAppToken(DEFAULT_BASE_TOKEN_ID)
   const [selectedAsset, setSelectedAsset] = useState<string>('spacex')
 
   const { data: assets, isLoading } = useQuery({
@@ -59,14 +62,14 @@ export function AssetsTable() {
               onClick={() => setSelectedAsset(asset.id)}
             >
               <div className="w-[30%] min-w-[150px] flex items-center gap-3">
-                <TokenSpacexIcon className="w-8 h-8" />
+                <AppTokenIcon token={defaultToken} className="w-8 h-8" size={32} />
                 <div>
                   <p
                     className={`text-sm font-semibold ${
                       selectedAsset === asset.id ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
                     }`}
                   >
-                    {asset.name}
+                    {asset.name ?? <AppTokenName token={defaultToken} />}
                   </p>
                   <p className="text-xs font-normal text-[#71717a]">{asset.code}</p>
                 </div>

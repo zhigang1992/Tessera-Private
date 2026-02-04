@@ -2,16 +2,19 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Loader2, Lock, ArrowRight, AlertCircle } from 'lucide-react'
-import { useAlphaVault } from '@/hooks/use-alpha-vault'
+import { AppTokenName } from '@/components/app-token-name'
+import { getExplorerUrl } from '@/config'
 import { formatDuration } from '@/services/alpha-vault-helpers'
 import { toast } from 'sonner'
-import { ALPHA_VAULT_CONFIG } from '@/services/alpha-vault'
 import LockOpenIcon from './_/lock-open.svg?react'
+import { useAuctionAlphaVault, useAuctionToken } from '../../context'
 
 export function ClaimTokensCard() {
   const wallet = useWallet()
+  const token = useAuctionToken()
 
   const {
+    config,
     isLoading,
     vaultInfo,
     escrowInfo,
@@ -22,7 +25,8 @@ export function ClaimTokensCard() {
     withdrawRemaining,
     error,
     clearError,
-  } = useAlphaVault()
+  } = useAuctionAlphaVault()
+  const quoteSymbol = config.quoteToken.symbol
 
   const canClaim =
     wallet.connected &&
@@ -48,11 +52,7 @@ export function ClaimTokensCard() {
         description: `Transaction: ${signature.slice(0, 8)}...`,
         action: {
           label: 'View',
-          onClick: () =>
-            window.open(
-              `https://explorer.solana.com/tx/${signature}?cluster=devnet`,
-              '_blank'
-            ),
+          onClick: () => window.open(getExplorerUrl(signature), '_blank'),
         },
       })
     } else if (error) {
@@ -74,11 +74,7 @@ export function ClaimTokensCard() {
         description: `Transaction: ${signature.slice(0, 8)}...`,
         action: {
           label: 'View',
-          onClick: () =>
-            window.open(
-              `https://explorer.solana.com/tx/${signature}?cluster=devnet`,
-              '_blank'
-            ),
+          onClick: () => window.open(getExplorerUrl(signature), '_blank'),
         },
       })
     } else if (error) {
@@ -95,7 +91,7 @@ export function ClaimTokensCard() {
       : '-'
 
   // Render different layouts based on config
-  if (!ALPHA_VAULT_CONFIG.hasVestingPeriod) {
+  if (!config.hasVestingPeriod) {
     // Check for purchase failure case
     if (vaultInfo?.purchaseFailed) {
       return (
@@ -112,7 +108,7 @@ export function ClaimTokensCard() {
 
           {/* Description */}
           <p className="text-sm font-normal leading-[21px] mb-6 text-[#666] dark:text-[#999]">
-            The vault did not complete the token purchase during the buying window. You can withdraw your deposited USDC back to your wallet.
+            The vault did not complete the token purchase during the buying window. You can withdraw your deposited {quoteSymbol} back to your wallet.
           </p>
 
           {/* Deposit Amount Info */}
@@ -120,7 +116,7 @@ export function ClaimTokensCard() {
             <div className="w-full bg-[#f5f5f5] dark:bg-[#2a2b2c] rounded-lg p-4 mb-6">
               <p className="text-xs text-[#666] dark:text-[#999] mb-1">Your Deposited Amount</p>
               <p className="text-xl font-semibold font-mono text-black dark:text-[#d2d2d2]">
-                {(parseFloat(escrowInfo.totalDeposited) / 1e6).toFixed(2)} USDC
+                {(parseFloat(escrowInfo.totalDeposited) / 10 ** config.quoteDecimals).toFixed(2)} {config.quoteToken.symbol}
               </p>
             </div>
           )}
@@ -143,7 +139,7 @@ export function ClaimTokensCard() {
                 ) : (
                   <>
                     <span className="text-lg font-semibold leading-7 text-white">
-                      Withdraw USDC
+                      Withdraw {quoteSymbol}
                     </span>
                     <ArrowRight className="w-5 h-5 text-white" strokeWidth={2.5} />
                   </>
@@ -184,7 +180,7 @@ export function ClaimTokensCard() {
 
         {/* Description */}
         <p className="text-sm font-normal leading-[21px] mb-8 text-[#666] dark:text-[#999]">
-          Transfer your allocated TESS tokens and any USDC refund directly to your wallet.
+          Transfer your allocated <AppTokenName token={token} variant="symbol" /> tokens and any {quoteSymbol} refund directly to your wallet.
         </p>
 
         {/* Claim All Button */}
@@ -256,7 +252,7 @@ export function ClaimTokensCard() {
               <div className="bg-white/50 rounded-lg p-3 text-center">
                 <p className="text-[11px] text-[#666] mb-1">Your Deposited Amount</p>
                 <p className="text-sm font-semibold font-mono text-black">
-                  {(parseFloat(escrowInfo.totalDeposited) / 1e6).toFixed(2)} USDC
+                  {(parseFloat(escrowInfo.totalDeposited) / 10 ** config.quoteDecimals).toFixed(2)} {quoteSymbol}
                 </p>
               </div>
             )}
@@ -273,7 +269,7 @@ export function ClaimTokensCard() {
                     Processing...
                   </>
                 ) : (
-                  'Withdraw USDC'
+                  `Withdraw ${quoteSymbol}`
                 )}
               </Button>
             ) : (
@@ -288,7 +284,7 @@ export function ClaimTokensCard() {
             )}
 
             <p className="text-xs text-[#666] text-center">
-              You can withdraw your deposited USDC back to your wallet.
+              You can withdraw your deposited {quoteSymbol} back to your wallet.
             </p>
           </div>
         </div>
@@ -308,8 +304,8 @@ export function ClaimTokensCard() {
             <h3 className="text-xl font-semibold text-black mb-2">Claim Tokens</h3>
             <p className="text-sm text-[#666]">
               You have{' '}
-              <span className="font-mono font-semibold text-[#aad36d]">
-                {availableToClaim} TESS
+              <span className="font-mono font-semibold text-[#aad36d] flex items-center gap-1">
+                {availableToClaim} <AppTokenName token={token} variant="symbol" />
               </span>{' '}
               available to claim.
             </p>
@@ -380,19 +376,19 @@ export function ClaimTokensCard() {
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#666]">Total Allocation</span>
                 <span className="font-mono text-black">
-                  {(parseFloat(claimInfo.totalAllocation) / 10 ** 6).toFixed(4)} TESS
+                  {(parseFloat(claimInfo.totalAllocation) / 10 ** config.baseDecimals).toFixed(4)} <AppTokenName token={token} variant="symbol" />
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#666]">Already Claimed</span>
                 <span className="font-mono text-black">
-                  {(parseFloat(claimInfo.totalClaimed) / 10 ** 6).toFixed(4)} TESS
+                  {(parseFloat(claimInfo.totalClaimed) / 10 ** config.baseDecimals).toFixed(4)} <AppTokenName token={token} variant="symbol" />
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#666]">Locked</span>
                 <span className="font-mono text-black">
-                  {(parseFloat(claimInfo.lockedAmount) / 10 ** 6).toFixed(4)} TESS
+                  {(parseFloat(claimInfo.lockedAmount) / 10 ** config.baseDecimals).toFixed(4)} <AppTokenName token={token} variant="symbol" />
                 </span>
               </div>
             </div>

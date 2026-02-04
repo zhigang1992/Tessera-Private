@@ -4,6 +4,37 @@ import { fromHasuraToNative, formatBigNumber, BigNumber, math, mathIs, type BigN
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { DEVNET_POOLS } from './meteora'
+import {
+  APP_TOKENS,
+  DEFAULT_BASE_TOKEN_ID,
+  QUOTE_TOKEN_ID,
+  getAppToken,
+  getTokenDlmmPoolAddress,
+  getTokenMintConfig,
+} from '@/config'
+
+const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
+const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
+const BASE_MINT_CONFIG = getTokenMintConfig(BASE_TOKEN.id)
+const QUOTE_MINT_CONFIG = getTokenMintConfig(QUOTE_TOKEN.id)
+const BASE_MINT_ADDRESS = BASE_MINT_CONFIG?.address ?? null
+const QUOTE_MINT_ADDRESS = QUOTE_MINT_CONFIG?.address ?? null
+const BASE_DECIMALS = BASE_MINT_CONFIG?.decimals ?? BASE_TOKEN.decimals
+const QUOTE_DECIMALS = QUOTE_MINT_CONFIG?.decimals ?? QUOTE_TOKEN.decimals
+
+function getBasePoolAddress(): string | null {
+  const configured = getTokenDlmmPoolAddress(BASE_TOKEN.id)
+  if (configured) {
+    return configured
+  }
+
+  const poolId = BASE_TOKEN.dlmmPool?.id
+  if (poolId && DEVNET_POOLS[poolId]) {
+    return DEVNET_POOLS[poolId].address
+  }
+
+  return null
+}
 
 // ============ Types ============
 
@@ -97,8 +128,8 @@ const dashboardStats: DashboardStats = {
 }
 
 const tokenInfo: TokenInfo = {
-  symbol: 'T-SpaceX',
-  name: 'T-SpaceX',
+  symbol: BASE_TOKEN.symbol,
+  name: BASE_TOKEN.displayName,
   price: 449.94,
   priceChange24h: 2.74,
   priceChangePercent24h: 0.6203,
@@ -109,7 +140,7 @@ const tokenInfo: TokenInfo = {
   categories: ['Equities', 'Stock'],
   underlyingAssetName: 'SpaceX, Inc. Private Equity',
   underlyingAssetCompany: 'SpaceX',
-  sharesPerToken: '1 T-SPACEX = 1.00 SPACEX EQUITY',
+  sharesPerToken: `1 ${BASE_TOKEN.symbol} = 1.00 SPACEX EQUITY`,
 }
 
 // ============ Helper Functions ============
@@ -229,17 +260,21 @@ interface TokenMetadata {
   mint: string
 }
 
-const TOKEN_REGISTRY: Record<string, TokenMetadata> = {
-  // TESS token on DevNet
-  '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj': {
-    id: 'tess',
-    symbol: 'TESS',
-    name: 'TESS',
-    code: 'TESS-001',
-    sector: 'DeFi',
-    mint: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj',
-  },
-}
+const TOKEN_REGISTRY: Record<string, TokenMetadata> = {}
+
+Object.values(APP_TOKENS).forEach((token) => {
+  Object.values(token.mints).forEach((mint) => {
+    if (!mint) return
+    TOKEN_REGISTRY[mint.address] = {
+      id: token.slug,
+      symbol: token.symbol,
+      name: token.displayName,
+      code: token.metadata?.code ?? token.slug.toUpperCase(),
+      sector: token.metadata?.sector ?? 'Private Markets',
+      mint: mint.address,
+    }
+  })
+})
 
 /**
  * Format market cap to human-readable valuation string
@@ -328,13 +363,14 @@ function formatSupply(value: number): string {
  * Get dashboard stats including real token price and supply from backend
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const poolAddress = DEVNET_POOLS['T-SpaceX-USDC'].address
-  const tokenMint = DEVNET_POOLS['T-SpaceX-USDC'].tokenX.mint
+  const poolAddress = getBasePoolAddress()
+  const tokenMint = BASE_MINT_ADDRESS
 
-  const [events, tokenData] = await Promise.all([
-    fetchSwapEventsForPrice(poolAddress, 10),
-    fetchTokenMarketCap(tokenMint),
-  ])
+  if (!poolAddress || !tokenMint) {
+    return dashboardStats
+  }
+
+  const [events, tokenData] = await Promise.all([fetchSwapEventsForPrice(poolAddress, 10), fetchTokenMarketCap(tokenMint)])
 
   let tokenPrice = 0
   if (events.length > 0) {
@@ -366,8 +402,12 @@ export async function getDashboardStats(): Promise<DashboardStats> {
  * Falls back to calculating from swap events if backend data unavailable
  */
 export async function getDashboardTokenInfo(): Promise<TokenInfo> {
-  const tokenMint = DEVNET_POOLS['T-SpaceX-USDC'].tokenX.mint
-  const poolAddress = DEVNET_POOLS['T-SpaceX-USDC'].address
+  const tokenMint = BASE_MINT_ADDRESS
+  const poolAddress = getBasePoolAddress()
+
+  if (!tokenMint || !poolAddress) {
+    return tokenInfo
+  }
 
   // Fetch 24h OHLC data and swap events in parallel
   const [ohlcData, events] = await Promise.all([
@@ -438,7 +478,7 @@ export async function getDashboardTokenInfo(): Promise<TokenInfo> {
 
 /**
  * Calculate price from swap event amounts
- * For TESS-USDC pool: price = amount_y (USDC) / amount_x (TESS)
+ * For the base/quote pool: price = amount_y (quote) / amount_x (base)
  */
 function calculatePriceFromSwap(amountX: string, amountY: string): BigNumberValue {
   const x = fromHasuraToNative(amountX)
@@ -457,7 +497,14 @@ function calculatePriceFromSwap(amountX: string, amountY: string): BigNumberValu
  * Falls back to calculating from swap events if backend data unavailable
  */
 export async function getDashboardStatistics(): Promise<TokenStatistics> {
-  const tokenMint = DEVNET_POOLS['T-SpaceX-USDC'].tokenX.mint
+  const tokenMint = BASE_MINT_ADDRESS
+
+  if (!tokenMint) {
+    return {
+      tokenPrice24h: { open: 0, high: 0, low: 0 },
+      underlyingAssetPrice24h: { open: 0, high: 0, low: 0 },
+    }
+  }
 
   // Try to get 24h OHLC from backend first
   const ohlcData = await fetchTokenPrice24hOHLC(tokenMint)
@@ -487,7 +534,13 @@ export async function getDashboardStatistics(): Promise<TokenStatistics> {
   }
 
   // Fallback: Calculate from swap events if backend data unavailable
-  const poolAddress = DEVNET_POOLS['T-SpaceX-USDC'].address
+  const poolAddress = getBasePoolAddress()
+  if (!poolAddress) {
+    return {
+      tokenPrice24h: { open: 0, high: 0, low: 0 },
+      underlyingAssetPrice24h: { open: 0, high: 0, low: 0 },
+    }
+  }
   const swapEvents = await fetchSwapEventsLast24h(poolAddress)
 
   if (swapEvents.length === 0) {
@@ -553,8 +606,8 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
     return {
       balance: 0,
       tokenBalance: 0,
-      tokenSymbol: 'T-SPACEX',
-      tokenName: 'T-SPACEX Token',
+      tokenSymbol: BASE_TOKEN.symbol,
+      tokenName: BASE_TOKEN.displayName,
       healthFactor: 100,
     }
   }
@@ -567,20 +620,26 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
   // Get USDC balance (this represents user's USD balance)
   let usdcBalance = 0
   try {
-    const usdcMint = new PublicKey(DEVNET_POOLS['T-SpaceX-USDC'].tokenY.mint)
+    if (!QUOTE_MINT_ADDRESS) {
+      throw new Error('Quote mint not configured')
+    }
+    const usdcMint = new PublicKey(QUOTE_MINT_ADDRESS)
     const usdcAta = await getAssociatedTokenAddress(usdcMint, publicKey)
     const usdcAccount = await getAccount(connection, usdcAta)
-    const usdcBigNum = fromTokenAmount(usdcAccount.amount.toString(), DEVNET_POOLS['T-SpaceX-USDC'].tokenY.decimals)
+    const usdcBigNum = fromTokenAmount(usdcAccount.amount.toString(), QUOTE_DECIMALS)
     usdcBalance = BigNumber.toNumber(usdcBigNum)
   } catch {
     // Token account doesn't exist, balance is 0
     usdcBalance = 0
   }
 
-  // Get TESS token balance (Token-2022)
+  // Get base token balance (Token-2022)
   let tessBalance = 0
   try {
-    const tessMint = new PublicKey(DEVNET_POOLS['T-SpaceX-USDC'].tokenX.mint)
+    if (!BASE_MINT_ADDRESS) {
+      throw new Error('Base mint not configured')
+    }
+    const tessMint = new PublicKey(BASE_MINT_ADDRESS)
     const tessAta = await getAssociatedTokenAddress(
       tessMint,
       publicKey,
@@ -588,7 +647,7 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
       TOKEN_2022_PROGRAM_ID
     )
     const tessAccount = await getAccount(connection, tessAta, 'confirmed', TOKEN_2022_PROGRAM_ID)
-    const tessBigNum = fromTokenAmount(tessAccount.amount.toString(), DEVNET_POOLS['T-SpaceX-USDC'].tokenX.decimals)
+    const tessBigNum = fromTokenAmount(tessAccount.amount.toString(), BASE_DECIMALS)
     tessBalance = BigNumber.toNumber(tessBigNum)
   } catch {
     // Token account doesn't exist, balance is 0
@@ -598,8 +657,8 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
   return {
     balance: usdcBalance,
     tokenBalance: tessBalance,
-    tokenSymbol: 'T-SPACEX',
-    tokenName: 'T-SPACEX Token',
+    tokenSymbol: BASE_TOKEN.symbol,
+    tokenName: BASE_TOKEN.displayName,
     healthFactor: 100, // TODO: Calculate health factor based on actual metrics
   }
 }
@@ -636,9 +695,9 @@ export async function getUserTradeHistory(
 
     return {
       id: `${event.signature}-${event.block_time}`,
-      token: 'T-SPACEX', // TODO: Map mint addresses to token symbols
-      amountIn: isBuy ? `${amountY} USDC` : `${amountX} T-SPACEX`,
-      amountOut: isBuy ? `${amountX} T-SPACEX` : `${amountY} USDC`,
+      token: BASE_TOKEN.symbol,
+      amountIn: isBuy ? `${amountY} ${QUOTE_TOKEN.symbol}` : `${amountX} ${BASE_TOKEN.symbol}`,
+      amountOut: isBuy ? `${amountX} ${BASE_TOKEN.symbol}` : `${amountY} ${QUOTE_TOKEN.symbol}`,
       type: isBuy ? 'Buy' : 'Sell',
       account: formatWalletAddress(event.sender),
       time: formatBlockTimeWithTime(event.block_time),

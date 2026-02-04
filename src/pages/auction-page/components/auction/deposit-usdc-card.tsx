@@ -2,12 +2,26 @@ import { useState, useMemo } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Info, Loader2, AlertCircle } from 'lucide-react'
-import { useAlphaVault } from '@/hooks/use-alpha-vault'
-import { ALPHA_VAULT_CONFIG } from '@/services/alpha-vault'
+import { AppTokenIcon } from '@/components/app-token-icon'
+import { AppTokenName } from '@/components/app-token-name'
+import { AppTokenAmount } from '@/components/app-token-amount'
+import { getExplorerUrl } from '@/config'
 import { toast } from 'sonner'
-import UsdcIcon from '@/pages/trade-page/components/_/token-usdc.svg?react'
 import { BigNumber, math, fromTokenAmount, mathIs } from '@/lib/bignumber'
 import * as Tooltip from '@radix-ui/react-tooltip'
+import { useAuctionAlphaVault, useAuctionToken } from '../../context'
+
+function parseFormattedAmount(value?: string | null) {
+  if (!value) {
+    return BigNumber.from(0)
+  }
+
+  try {
+    return BigNumber.from(value.replace(/,/g, ''))
+  } catch {
+    return BigNumber.from(0)
+  }
+}
 
 export function DepositUSDCCard() {
   const wallet = useWallet()
@@ -16,6 +30,7 @@ export function DepositUSDCCard() {
   const [tooltipOpen, setTooltipOpen] = useState(false)
 
   const {
+    config,
     isLoading,
     vaultInfo,
     vaultStateDisplay,
@@ -29,92 +44,85 @@ export function DepositUSDCCard() {
     deposit,
     error,
     clearError,
-  } = useAlphaVault()
+  } = useAuctionAlphaVault()
+  const token = useAuctionToken()
 
   const isDepositOpen = vaultInfo?.state === 'deposit_open'
   const canDeposit = depositQuota?.canDeposit && isDepositOpen && wallet.connected
 
   // Calculate current total deposit (existing + new input amount)
   const calculatedCurrentDeposit = useMemo(() => {
-    if (!escrowInfo && !depositAmount) return '0 USDC'
-
+    const decimals = config.quoteDecimals
     const existingDeposit = escrowInfo?.totalDeposited ? BigNumber.from(escrowInfo.totalDeposited) : BigNumber.from(0)
 
+    if (!depositAmount || parseFloat(depositAmount) <= 0) {
+      return fromTokenAmount(existingDeposit, decimals)
+    }
+
     try {
-      if (depositAmount && parseFloat(depositAmount) > 0) {
-        const newAmount = BigNumber.from(depositAmount)
-        // Convert to raw amount with 6 decimals for USDC
-        const newAmountRaw = math`${newAmount} * ${Math.pow(10, 6)}`
-        const totalRaw = math`${existingDeposit} + ${newAmountRaw}`
-        const totalFormatted = math`${totalRaw} / ${Math.pow(10, 6)}`
-        return `${BigNumber.toNumber(totalFormatted).toLocaleString()} USDC`
-      }
+      const newAmount = BigNumber.from(depositAmount)
+      const newAmountRaw = math`${newAmount} * ${Math.pow(10, decimals)}`
+      const totalRaw = math`${existingDeposit} + ${newAmountRaw}`
+      return fromTokenAmount(totalRaw, decimals)
     } catch {
-      // If parsing fails, just show existing
+      return fromTokenAmount(existingDeposit, decimals)
     }
-
-    if (escrowInfo?.totalDeposited) {
-      return `${(parseFloat(escrowInfo.totalDeposited) / 10 ** 6).toLocaleString()} USDC`
-    }
-
-    return '0 USDC'
-  }, [escrowInfo, depositAmount])
+  }, [escrowInfo?.totalDeposited, depositAmount, config.quoteDecimals])
 
   // Calculate estimated allocation based on current deposit + input
   const calculatedEstAllocation = useMemo(() => {
-    if (!vaultInfo || !totalRaised || !poolPrice || poolPrice === 0) {
-      return estimatedAllocation ? `${estimatedAllocation} TESS` : '0 TESS'
+    const fallback = parseFormattedAmount(estimatedAllocation)
+
+    if (!vaultInfo || !totalRaised || !targetRaise || !poolPrice || poolPrice === 0) {
+      return fallback
     }
 
-    const existingDeposit = escrowInfo?.totalDeposited ? BigNumber.from(escrowInfo.totalDeposited) : BigNumber.from(0)
-
     try {
+      const decimals = config.quoteDecimals
+      const existingDeposit = escrowInfo?.totalDeposited ? BigNumber.from(escrowInfo.totalDeposited) : BigNumber.from(0)
+
       let totalUserDeposit = existingDeposit
       let newDepositRaw = BigNumber.from(0)
 
       if (depositAmount && parseFloat(depositAmount) > 0) {
         const newAmount = BigNumber.from(depositAmount)
-        newDepositRaw = math`${newAmount} * ${Math.pow(10, 6)}`
+        newDepositRaw = math`${newAmount} * ${Math.pow(10, decimals)}`
         totalUserDeposit = math`${existingDeposit} + ${newDepositRaw}`
       }
 
-      // Get total raised in raw format (current state)
       const totalRaisedStr = totalRaised.replace(/,/g, '')
-      const totalRaisedBN = math`${BigNumber.from(totalRaisedStr)} * ${Math.pow(10, 6)}`
-
-      // Add the new deposit to get hypothetical total after this deposit
+      const totalRaisedBN = math`${BigNumber.from(totalRaisedStr)} * ${Math.pow(10, decimals)}`
       const hypotheticalTotalRaised = math`${totalRaisedBN} + ${newDepositRaw}`
 
-      // If no deposits yet, can't calculate allocation
       if (mathIs`${hypotheticalTotalRaised} === ${0}`) {
-        return '0 TESS'
+        return fallback
       }
 
-      // Calculate user's share of total deposits (after this deposit)
       const userShare = math`${totalUserDeposit} / ${hypotheticalTotalRaised}`
 
-      // Get max cap (target raise) in raw format
       const maxCapStr = targetRaise.replace(/,/g, '')
-      const maxCapBN = math`${BigNumber.from(maxCapStr)} * ${Math.pow(10, 6)}`
-
-      // Effective USDC that will be used (capped by maxBuyingCap)
-      // Use hypothetical total to see what would happen after this deposit
+      const maxCapBN = math`${BigNumber.from(maxCapStr)} * ${Math.pow(10, decimals)}`
       const effectiveUsdcBN = math`min(${hypotheticalTotalRaised}, ${maxCapBN})`
-      const effectiveUsdc = math`${effectiveUsdcBN} / ${Math.pow(10, 6)}`
+      const effectiveUsdc = math`${effectiveUsdcBN} / ${Math.pow(10, decimals)}`
 
-      // Calculate TESS allocation: USDC / price
       const tessAllocation = math`${effectiveUsdc} / ${BigNumber.from(poolPrice)}`
-
-      // User's share of the allocation
       const userTessAllocation = math`${userShare} * ${tessAllocation}`
 
-      return `${BigNumber.toNumber(userTessAllocation).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} TESS`
+      return userTessAllocation
     } catch (error) {
       console.error('Failed to calculate allocation:', error)
-      // Fallback to existing allocation if calculation fails
-      return estimatedAllocation ? `${estimatedAllocation} TESS` : '0 TESS'
+      return fallback
     }
-  }, [vaultInfo, totalRaised, targetRaise, poolPrice, escrowInfo, depositAmount, estimatedAllocation])
+  }, [
+    vaultInfo,
+    totalRaised,
+    targetRaise,
+    poolPrice,
+    escrowInfo?.totalDeposited,
+    depositAmount,
+    estimatedAllocation,
+    config.quoteDecimals,
+  ])
 
   // Check if deposit amount exceeds wallet balance
   const exceedsBalance = useMemo(() => {
@@ -149,7 +157,7 @@ export function DepositUSDCCard() {
         description: `Transaction: ${signature.slice(0, 8)}...`,
         action: {
           label: 'View',
-          onClick: () => window.open(`https://explorer.solana.com/tx/${signature}?cluster=devnet`, '_blank'),
+          onClick: () => window.open(getExplorerUrl(signature), '_blank'),
         },
       })
       setDepositAmount('')
@@ -162,11 +170,10 @@ export function DepositUSDCCard() {
   const handleMaxClick = () => {
     // Use the smaller of: user's USDC balance or remaining deposit quota
     // Convert both to BigNumber for precise comparison
-    const balanceStr = (usdcBalance ?? '0').replace(/,/g, '') // Remove locale formatting
-    const balanceBN = BigNumber.from(balanceStr)
+    const balanceBN = parseFormattedAmount(usdcBalance)
 
     // remainingQuota is a raw token amount (with USDC decimals)
-    const quotaBN = fromTokenAmount(depositQuota?.remainingQuota ?? '0', ALPHA_VAULT_CONFIG.usdcDecimals)
+    const quotaBN = fromTokenAmount(depositQuota?.remainingQuota ?? '0', config.quoteDecimals)
 
     // Use BigNumber min function for precise comparison
     const maxAmountBN = math`min(${balanceBN}, ${quotaBN})`
@@ -183,7 +190,9 @@ export function DepositUSDCCard() {
     <div className="w-full rounded-2xl border p-6 bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <h3 className="text-base font-semibold text-black">Deposit USDC</h3>
+          <h3 className="text-base font-semibold text-black">
+            Deposit <AppTokenName token={config.quoteToken} variant="symbol" />
+          </h3>
         </div>
         <span
           className="text-white text-[10px] font-semibold px-2 py-1 rounded tracking-wider"
@@ -205,17 +214,19 @@ export function DepositUSDCCard() {
                   className="text-xs hover:text-black dark:hover:text-white dark:hover:opacity-100 transition-colors"
                   disabled={!canDeposit}
                 >
-                  MAX: {usdcBalance ?? '0.00'}
+                  MAX: {usdcBalance ?? '0.00'} <AppTokenName token={config.quoteToken} variant="symbol" />
                 </button>
               </div>
               <div className="flex items-center justify-between w-full">
                 <div className="relative rounded-md flex-shrink-0">
                   <div className="flex gap-2.5 items-center overflow-clip px-3 py-2 rounded-[inherit]">
                     <div className="relative flex-shrink-0 size-8">
-                      <UsdcIcon className="block size-full" />
+                      <AppTokenIcon token={config.quoteToken} size={32} className="block size-full" />
                     </div>
                     <div className="flex gap-1 items-center flex-shrink-0">
-                      <p className="font-semibold leading-7 text-xl text-black dark:text-[#ffffff]">USDC</p>
+                      <p className="font-semibold leading-7 text-xl text-black dark:text-[#ffffff]">
+                        <AppTokenName token={config.quoteToken} variant="symbol" />
+                      </p>
                     </div>
                   </div>
                   <div
@@ -247,7 +258,8 @@ export function DepositUSDCCard() {
           <div className="bg-[#fef2f2] dark:bg-[#7f1d1d] flex gap-2 items-start p-3 rounded-lg w-full border border-[#fca5a5] dark:border-[#dc2626]">
             <AlertCircle className="w-4 h-4 text-[#dc2626] dark:text-[#fca5a5] shrink-0 mt-0.5" />
             <p className="flex-1 font-normal leading-[16.5px] text-xs text-[#991b1b] dark:text-[#fca5a5]">
-              Insufficient balance. Your wallet balance is {usdcBalance} USDC.
+              Insufficient balance. Your wallet balance is {usdcBalance}{' '}
+              <AppTokenName token={config.quoteToken} variant="symbol" />.
             </p>
           </div>
         )}
@@ -256,7 +268,10 @@ export function DepositUSDCCard() {
         <div className="flex flex-col gap-2">
           <div className="flex items-start justify-between h-[18px]">
             <span className="font-normal leading-[18px] text-xs text-[#666]">Current Deposit</span>
-            <span className="font-normal leading-[18px] text-xs text-black font-mono">{calculatedCurrentDeposit}</span>
+            <span className="font-normal leading-[18px] text-xs text-black font-mono flex items-center gap-1">
+              <AppTokenAmount token={config.quoteToken} amount={calculatedCurrentDeposit} />
+              <AppTokenName token={config.quoteToken} variant="symbol" />
+            </span>
           </div>
           <div className="flex items-start justify-between h-[18px]">
             <div className="flex items-center gap-1">
@@ -292,8 +307,9 @@ export function DepositUSDCCard() {
                 </Tooltip.Root>
               </Tooltip.Provider>
             </div>
-            <span className="font-normal leading-[18px] text-xs text-[#06a800] font-mono">
-              {calculatedEstAllocation}
+            <span className="font-normal leading-[18px] text-xs text-[#06a800] font-mono flex items-center gap-1">
+              <AppTokenAmount token={token} amount={calculatedEstAllocation} />
+              <AppTokenName token={token} variant="symbol" />
             </span>
           </div>
         </div>
@@ -364,7 +380,7 @@ export function DepositUSDCCard() {
               <p className="font-normal leading-[15px] text-[#666] text-[10px] tracking-[0.1172px]">Address</p>
               <div className="bg-[rgba(0,0,0,0.1)] rounded flex items-center justify-center px-2 py-0.5">
                 <p className="font-mono font-normal leading-[15px] text-[10px] text-black">
-                  {shortenAddress(ALPHA_VAULT_CONFIG.vault)}
+                  {shortenAddress(config.vault)}
                 </p>
               </div>
             </div>

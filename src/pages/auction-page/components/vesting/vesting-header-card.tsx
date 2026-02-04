@@ -1,14 +1,16 @@
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Card } from '@/components/ui/card'
-import { useAlphaVault } from '@/hooks/use-alpha-vault'
+import { AppTokenName } from '@/components/app-token-name'
 import { formatDate } from '@/services/alpha-vault-helpers'
 import CalendarIcon from './_/calendar.svg?react'
 import CheckCircleIcon from './_/check-circle.svg?react'
+import { useAuctionAlphaVault, useAuctionToken } from '../../context'
 
 export function VestingHeaderCard() {
   const wallet = useWallet()
+  const token = useAuctionToken()
 
-  const { vaultInfo, claimInfo, vestingDuration } = useAlphaVault()
+  const { vaultInfo, claimInfo, vestingDuration, config } = useAuctionAlphaVault()
 
   const circumference = 2 * Math.PI * 24
 
@@ -51,12 +53,12 @@ export function VestingHeaderCard() {
 
   // Calculate position amounts
   const totalAllocation = claimInfo
-    ? parseFloat(claimInfo.totalAllocation) / 10 ** 6
+    ? parseFloat(claimInfo.totalAllocation) / 10 ** config.baseDecimals
     : 0
   const unlockedAmount = claimInfo
-    ? (parseFloat(claimInfo.totalClaimed) + parseFloat(claimInfo.availableToClaim)) / 10 ** 6
+    ? (parseFloat(claimInfo.totalClaimed) + parseFloat(claimInfo.availableToClaim)) / 10 ** config.baseDecimals
     : 0
-  const lockedAmount = claimInfo ? parseFloat(claimInfo.lockedAmount) / 10 ** 6 : 0
+  const lockedAmount = claimInfo ? parseFloat(claimInfo.lockedAmount) / 10 ** config.baseDecimals : 0
 
   const unlockedPercent =
     totalAllocation > 0 ? Math.round((unlockedAmount / totalAllocation) * 100) : 0
@@ -67,7 +69,9 @@ export function VestingHeaderCard() {
       <div className="flex flex-col gap-6">
         {/* Title and Badge */}
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-semibold text-foreground">TESS Vesting</h2>
+          <h2 className="text-xl font-semibold text-foreground">
+            <AppTokenName token={token} /> Vesting
+          </h2>
           <span className="bg-[#5865f2] text-white text-[10px] font-semibold px-2 py-1 rounded">
             OFFICIAL
           </span>
@@ -170,7 +174,9 @@ export function VestingHeaderCard() {
                   <span className="text-2xl font-semibold font-mono text-foreground">
                     {totalAllocation.toFixed(2)}
                   </span>
-                  <span className="text-[10px] text-[#71717a] dark:text-[#999]">TESS Tokens</span>
+                  <span className="text-[10px] text-[#71717a] dark:text-[#999]">
+                    <AppTokenName token={token} variant="symbol" /> Tokens
+                  </span>
                 </div>
 
                 {/* Unlocked */}

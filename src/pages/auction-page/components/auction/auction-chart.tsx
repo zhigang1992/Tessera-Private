@@ -3,14 +3,16 @@ import { useQuery } from '@tanstack/react-query'
 import { createChart, ColorType, LineSeries } from 'lightweight-charts'
 import type { IChartApi, LineData, Time } from 'lightweight-charts'
 import { getAuctionChartData } from '@/services'
+import { useAuctionTokenId } from '../../context'
 
 export function AuctionChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
+  const tokenId = useAuctionTokenId()
 
   const { data: chartData } = useQuery({
-    queryKey: ['auctionChartData'],
-    queryFn: getAuctionChartData,
+    queryKey: ['auctionChartData', tokenId],
+    queryFn: () => getAuctionChartData(tokenId),
   })
 
   useEffect(() => {

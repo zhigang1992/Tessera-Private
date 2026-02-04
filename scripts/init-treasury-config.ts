@@ -52,7 +52,7 @@ async function main() {
   console.log('   cd /Users/kylefang/Projects/alex/tessera-on-solana')
   console.log('   pnpm tsx scripts/deploy/create-new-test-mint.ts')
   console.log()
-  console.log('Then update the mint address in src/lib/solana/config.ts')
+  console.log('Then update the mint address in src/config.ts')
 }
 
 main()

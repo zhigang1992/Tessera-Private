@@ -12,6 +12,15 @@ import {
 } from '@/features/referral/lib/graphql-client'
 import { DEVNET_POOLS } from './meteora'
 import { fromHasuraToNative, BigNumber, math, mathIs } from '@/lib/bignumber'
+import {
+  DEFAULT_BASE_TOKEN_ID,
+  getAppToken,
+  getTokenBySymbol as getConfiguredTokenBySymbol,
+  getTokenDlmmPoolAddress,
+  getTokenMintAddress,
+  type AppToken,
+  type AppTokenId,
+} from '@/config'
 
 // ============ Types ============
 
@@ -29,18 +38,34 @@ export interface TokenPriceInfo {
 
 export type TimeRange = '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL'
 
-// ============ Constants ============
+// ============ Helpers ============
 
-// TESS token mint address
-const TESS_MINT = DEVNET_POOLS['T-SpaceX-USDC'].tokenX.mint
-// TESS-USDC pool address
-const TESS_USDC_POOL = DEVNET_POOLS['T-SpaceX-USDC'].address
+function resolveDlmmPoolAddress(tokenId: AppTokenId): string | null {
+  const configured = getTokenDlmmPoolAddress(tokenId)
+  if (configured) {
+    return configured
+  }
+
+  const poolId = getAppToken(tokenId).dlmmPool?.id
+  if (poolId && DEVNET_POOLS[poolId]) {
+    return DEVNET_POOLS[poolId].address
+  }
+
+  return null
+}
+
+function resolvePriceContext(symbol: string): { token: AppToken; mint: string; poolAddress: string | null } {
+  const token = getConfiguredTokenBySymbol(symbol) ?? getAppToken(DEFAULT_BASE_TOKEN_ID)
+  const mint = getTokenMintAddress(token.id)
+  const poolAddress = resolveDlmmPoolAddress(token.id)
+  return { token, mint, poolAddress }
+}
 
 // ============ Helper Functions ============
 
 /**
  * Calculate price from swap event amounts
- * Price = amount_y (USDC) / amount_x (TESS)
+ * Price = amount_y (USDC) / amount_x (T-SpaceX)
  */
 function calculatePriceFromSwap(amountX: string, amountY: string): number {
   const x = fromHasuraToNative(amountX)
@@ -92,13 +117,11 @@ function filterEventsByTimeRange(
  * Get current token price and 24h change
  */
 export async function getTokenPrice(symbol: string): Promise<TokenPriceInfo | null> {
-  // Currently only support TESS
-  if (symbol.toUpperCase() !== 'TESS') {
-    return null
-  }
+  const { token, mint, poolAddress } = resolvePriceContext(symbol)
+  if (!poolAddress) return null
 
   // Try to get 24h OHLC data first
-  const ohlc = await fetchTokenPrice24hOHLC(TESS_MINT)
+  const ohlc = await fetchTokenPrice24hOHLC(mint)
 
   if (ohlc && ohlc.close_price_24h) {
     const closePrice = BigNumber.toNumber(fromHasuraToNative(ohlc.close_price_24h))
@@ -110,7 +133,7 @@ export async function getTokenPrice(symbol: string): Promise<TokenPriceInfo | nu
       : 0
 
     return {
-      symbol: 'TESS',
+      symbol: token.symbol,
       price: closePrice,
       priceChange24h: priceChange,
       priceChangePercent24h: priceChangePct,
@@ -118,7 +141,7 @@ export async function getTokenPrice(symbol: string): Promise<TokenPriceInfo | nu
   }
 
   // Fall back to calculating from swap events
-  const events = await fetchSwapEventsForPrice(TESS_USDC_POOL, 100)
+  const events = await fetchSwapEventsForPrice(poolAddress, 100)
 
   if (events.length === 0) {
     return null
@@ -146,7 +169,7 @@ export async function getTokenPrice(symbol: string): Promise<TokenPriceInfo | nu
   const priceChangePercent24h = price24hAgo !== 0 ? (priceChange24h / price24hAgo) * 100 : 0
 
   return {
-    symbol: 'TESS',
+    symbol: token.symbol,
     price: currentPrice,
     priceChange24h,
     priceChangePercent24h,
@@ -160,16 +183,14 @@ export async function getPriceHistory(
   symbol: string,
   range: TimeRange = '1D'
 ): Promise<PriceDataPoint[]> {
-  // Currently only support TESS
-  if (symbol.toUpperCase() !== 'TESS') {
-    return []
-  }
+  const { mint, poolAddress } = resolvePriceContext(symbol)
+  if (!poolAddress) return []
 
   const days = getDaysForRange(range)
 
   // For longer time ranges, try daily prices first
   if (days >= 7) {
-    const dailyPrices = await fetchTokenPricesDaily(TESS_MINT, days)
+    const dailyPrices = await fetchTokenPricesDaily(mint, days)
 
     if (dailyPrices.length > 0) {
       return dailyPrices
@@ -182,7 +203,7 @@ export async function getPriceHistory(
   }
 
   // Fall back to swap events for more granular data
-  const events = await fetchSwapEventsForPrice(TESS_USDC_POOL, 500)
+  const events = await fetchSwapEventsForPrice(poolAddress, 500)
 
   if (events.length === 0) {
     return []
