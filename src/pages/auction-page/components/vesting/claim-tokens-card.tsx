@@ -1,4 +1,5 @@
 import { useWallet } from '@solana/wallet-adapter-react'
+import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Loader2, Lock, ArrowRight, AlertCircle } from 'lucide-react'
@@ -7,12 +8,13 @@ import { AppTokenAmount } from '@/components/app-token-amount'
 import { getExplorerUrl } from '@/config'
 import { formatDuration } from '@/services/alpha-vault-helpers'
 import { toast } from 'sonner'
-import { fromTokenAmount } from '@/lib/bignumber'
+import { fromTokenAmount, ZERO, mathIs } from '@/lib/bignumber'
 import LockOpenIcon from './_/lock-open.svg?react'
 import { useAuctionAlphaVault, useAuctionToken } from '../../context'
 
 export function ClaimTokensCard() {
   const wallet = useWallet()
+  const { setVisible } = useWalletModal()
   const token = useAuctionToken()
 
   const {
@@ -30,15 +32,22 @@ export function ClaimTokensCard() {
   const quoteToken = config.quoteToken
 
   const depositedAmount = escrowInfo ? fromTokenAmount(escrowInfo.totalDeposited, config.quoteDecimals) : null
+  const depositedAmountValue = depositedAmount ?? ZERO
   const totalAllocationAmount = claimInfo ? fromTokenAmount(claimInfo.totalAllocation, config.baseDecimals) : null
+  const totalAllocationValue = totalAllocationAmount ?? ZERO
   const totalClaimedAmount = claimInfo ? fromTokenAmount(claimInfo.totalClaimed, config.baseDecimals) : null
+  const totalClaimedValue = totalClaimedAmount ?? ZERO
   const lockedAmount = claimInfo ? fromTokenAmount(claimInfo.lockedAmount, config.baseDecimals) : null
+  const lockedAmountValue = lockedAmount ?? ZERO
   const availableAmount = claimInfo ? fromTokenAmount(claimInfo.availableToClaim, config.baseDecimals) : null
+  const availableAmountValue = availableAmount ?? ZERO
+
+  const hasDepositedFunds = escrowInfo ? mathIs`${depositedAmountValue} > ${0}` : false
 
   const canClaim =
     wallet.connected &&
     claimInfo &&
-    parseFloat(claimInfo.availableToClaim) > 0 &&
+    mathIs`${availableAmountValue} > ${0}` &&
     (vaultInfo?.state === 'vesting' || vaultInfo?.state === 'vesting_complete')
 
   const handleClaimTokens = async () => {
@@ -120,11 +129,11 @@ export function ClaimTokensCard() {
           </p>
 
           {/* Deposit Amount Info */}
-          {escrowInfo && parseFloat(escrowInfo.totalDeposited) > 0 && (
+          {hasDepositedFunds && (
             <div className="w-full bg-[#f5f5f5] dark:bg-[#2a2b2c] rounded-lg p-4 mb-6">
               <p className="text-xs text-[#666] dark:text-[#999] mb-1">Your Deposited Amount</p>
               <p className="text-xl font-semibold font-mono text-black dark:text-[#d2d2d2]">
-                <AppTokenAmount token={quoteToken} amount={depositedAmount ?? 0} showSymbol />
+                <AppTokenAmount token={quoteToken} amount={depositedAmountValue} showSymbol />
               </p>
             </div>
           )}
@@ -156,9 +165,7 @@ export function ClaimTokensCard() {
             </button>
           ) : (
             <button
-              onClick={() => {
-                /* Trigger wallet modal */
-              }}
+              onClick={() => setVisible(true)}
               className="h-14 w-full rounded-lg bg-black hover:bg-[#333] transition-colors mb-4"
             >
               <span className="text-lg font-semibold leading-7 text-white">Connect Wallet</span>
@@ -219,9 +226,7 @@ export function ClaimTokensCard() {
           </button>
         ) : (
           <button
-            onClick={() => {
-              /* Trigger wallet modal */
-            }}
+            onClick={() => setVisible(true)}
             className="h-14 w-full rounded-lg bg-black hover:bg-[#333] transition-colors mb-4"
           >
             <span className="text-lg font-semibold leading-7 text-white">Connect Wallet</span>
@@ -257,11 +262,11 @@ export function ClaimTokensCard() {
 
           {/* Withdraw Button */}
           <div className="w-full flex flex-col gap-4">
-            {escrowInfo && parseFloat(escrowInfo.totalDeposited) > 0 && (
+            {hasDepositedFunds && (
               <div className="bg-white/50 rounded-lg p-3 text-center">
                 <p className="text-[11px] text-[#666] mb-1">Your Deposited Amount</p>
                 <p className="text-sm font-semibold font-mono text-black">
-                  <AppTokenAmount token={quoteToken} amount={depositedAmount ?? 0} showSymbol />
+                  <AppTokenAmount token={quoteToken} amount={depositedAmountValue} showSymbol />
                 </p>
               </div>
             )}
@@ -285,9 +290,7 @@ export function ClaimTokensCard() {
               </Button>
             ) : (
               <Button
-                onClick={() => {
-                  /* Trigger wallet modal via wallet adapter */
-                }}
+                onClick={() => setVisible(true)}
                 className="w-full h-14 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 text-lg font-semibold"
               >
                 Connect Wallet
@@ -316,7 +319,7 @@ export function ClaimTokensCard() {
             <p className="text-sm text-[#666]">
               You have{' '}
               <span className="font-mono font-semibold text-[#aad36d] flex items-center gap-1">
-                <AppTokenAmount token={token} amount={availableAmount ?? 0} showSymbol />
+                <AppTokenAmount token={token} amount={availableAmountValue} showSymbol />
               </span>{' '}
               available to claim.
             </p>
@@ -362,9 +365,7 @@ export function ClaimTokensCard() {
             </>
           ) : (
             <Button
-              onClick={() => {
-                /* Trigger wallet modal via wallet adapter */
-              }}
+              onClick={() => setVisible(true)}
               className="w-full h-14 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 text-lg font-semibold"
             >
               Connect Wallet
@@ -386,15 +387,15 @@ export function ClaimTokensCard() {
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#666]">Total Allocation</span>
-                <AppTokenAmount token={token} amount={totalAllocationAmount ?? 0} className="font-mono text-black" showSymbol />
+                <AppTokenAmount token={token} amount={totalAllocationValue} className="font-mono text-black" showSymbol />
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#666]">Already Claimed</span>
-                <AppTokenAmount token={token} amount={totalClaimedAmount ?? 0} className="font-mono text-black" showSymbol />
+                <AppTokenAmount token={token} amount={totalClaimedValue} className="font-mono text-black" showSymbol />
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#666]">Locked</span>
-                <AppTokenAmount token={token} amount={lockedAmount ?? 0} className="font-mono text-black" showSymbol />
+                <AppTokenAmount token={token} amount={lockedAmountValue} className="font-mono text-black" showSymbol />
               </div>
             </div>
           )}

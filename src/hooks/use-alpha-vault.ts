@@ -12,7 +12,6 @@ import {
   DEFAULT_ALPHA_VAULT_TOKEN_ID,
   AlphaVaultClient,
   parseVaultAmount,
-  formatVaultAmount,
   getVaultStateDisplay,
   type VaultInfo,
   type EscrowInfo,

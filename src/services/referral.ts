@@ -35,7 +35,10 @@ function getBasePoolAddress(): string | null {
 
 function getSymbolForMint(mint: string): string {
   const tokenId = getTokenIdByMint(mint)
-  if (!tokenId) return 'Unknown'
+  if (!tokenId) {
+    if (mint.length <= 8) return mint
+    return `${mint.slice(0, 4)}...${mint.slice(-4)}`
+  }
   return getAppToken(tokenId).symbol
 }
 
@@ -259,8 +262,8 @@ function parseFeesToRewards(fees: FeeByToken[] | null): RewardItem[] {
 
   const rewards: RewardItem[] = []
   for (const { mint, fee } of fees) {
-    // Map mint to symbol (use MINT_TO_SYMBOL or fallback to shortened mint)
-    const symbol = MINT_TO_SYMBOL[mint] || mint.slice(0, 4) + '...'
+    // Map mint to a human-readable symbol
+    const symbol = getSymbolForMint(mint)
     // Convert from Hasura 18-decimal precision
     const formattedAmount = formatBigNumber(fromHasuraToNative(fee), { maximumFractionDigits: 4 })
     const numAmount = parseFloat(formattedAmount)

@@ -6,7 +6,7 @@ import { formatDate } from '@/services/alpha-vault-helpers'
 import CalendarIcon from './_/calendar.svg?react'
 import CheckCircleIcon from './_/check-circle.svg?react'
 import { useAuctionAlphaVault, useAuctionToken } from '../../context'
-import { fromTokenAmount, BigNumber } from '@/lib/bignumber'
+import { fromTokenAmount, BigNumber, ZERO, math, mathIs } from '@/lib/bignumber'
 
 export function VestingHeaderCard() {
   const wallet = useWallet()
@@ -56,19 +56,21 @@ export function VestingHeaderCard() {
     wallet.connected && claimInfo && parseFloat(claimInfo.totalAllocation) > 0
 
   const totalAllocationAmount = claimInfo ? fromTokenAmount(claimInfo.totalAllocation, config.baseDecimals) : null
+  const totalAllocationValue = totalAllocationAmount ?? ZERO
   const totalClaimedAmount = claimInfo ? fromTokenAmount(claimInfo.totalClaimed, config.baseDecimals) : null
+  const totalClaimedValue = totalClaimedAmount ?? ZERO
   const availableAmount = claimInfo ? fromTokenAmount(claimInfo.availableToClaim, config.baseDecimals) : null
+  const availableAmountValue = availableAmount ?? ZERO
   const lockedAmount = claimInfo ? fromTokenAmount(claimInfo.lockedAmount, config.baseDecimals) : null
+  const lockedAmountValue = lockedAmount ?? ZERO
 
-  const totalAllocationNumber = totalAllocationAmount ? BigNumber.toNumber(totalAllocationAmount) : 0
-  const unlockedNumber =
-    (totalClaimedAmount ? BigNumber.toNumber(totalClaimedAmount) : 0) +
-    (availableAmount ? BigNumber.toNumber(availableAmount) : 0)
-  const lockedNumber = lockedAmount ? BigNumber.toNumber(lockedAmount) : 0
-
-  const unlockedPercent =
-    totalAllocationNumber > 0 ? Math.round((unlockedNumber / totalAllocationNumber) * 100) : 0
-  const lockedPercent = totalAllocationNumber > 0 ? 100 - unlockedPercent : 0
+  const unlockedAmountValue = math`${totalClaimedValue} + ${availableAmountValue}`
+  const hasAllocation = !mathIs`${totalAllocationValue} === ${0}`
+  const unlockRatio = hasAllocation ? math`${unlockedAmountValue} / ${totalAllocationValue}` : ZERO
+  const unlockedPercent = hasAllocation
+    ? Math.round(BigNumber.toNumber(math`${unlockRatio} * ${100}`))
+    : 0
+  const lockedPercent = hasAllocation ? 100 - unlockedPercent : 0
 
   return (
     <Card className="p-6 bg-white dark:bg-[#323334]">
@@ -179,7 +181,7 @@ export function VestingHeaderCard() {
                   <span className="text-xs font-medium text-[#5865f2]">Total Allocation</span>
                   <AppTokenAmount
                     token={token}
-                    amount={totalAllocationNumber}
+                    amount={totalAllocationValue}
                     className="text-2xl font-semibold font-mono text-foreground"
                   />
                   <span className="text-[10px] text-[#71717a] dark:text-[#999]">
@@ -194,7 +196,7 @@ export function VestingHeaderCard() {
                   </span>
                   <AppTokenAmount
                     token={token}
-                    amount={unlockedNumber}
+                    amount={unlockedAmountValue}
                     className="text-2xl font-semibold font-mono text-foreground"
                   />
                   <span className="text-[10px] text-[#71717a] dark:text-[#999]">
@@ -209,7 +211,7 @@ export function VestingHeaderCard() {
                   </span>
                   <AppTokenAmount
                     token={token}
-                    amount={lockedNumber}
+                    amount={lockedAmountValue}
                     className="text-2xl font-semibold font-mono text-foreground"
                   />
                   <span className="text-[10px] text-[#71717a] dark:text-[#999]">

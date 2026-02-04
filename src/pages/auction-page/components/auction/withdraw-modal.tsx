@@ -15,7 +15,7 @@ import { AppTokenName } from '@/components/app-token-name'
 import { getExplorerUrl } from '@/config'
 import { useAuctionAlphaVault } from '../../context'
 import { toast } from 'sonner'
-import { fromTokenAmount, BigNumber } from '@/lib/bignumber'
+import { fromTokenAmount, BigNumber, ZERO } from '@/lib/bignumber'
 
 interface WithdrawModalProps {
   open: boolean
@@ -29,7 +29,8 @@ export function WithdrawModal({ open, onOpenChange }: WithdrawModalProps) {
   const quoteToken = config.quoteToken
 
   const depositedAmount = escrowInfo ? fromTokenAmount(escrowInfo.totalDeposited, config.quoteDecimals) : null
-  const userDeposited = depositedAmount ? BigNumber.toNumber(depositedAmount) : 0
+  const normalizedDeposit = depositedAmount ?? ZERO
+  const userDeposited = BigNumber.toNumber(normalizedDeposit)
 
   const isWithdrawOpen = vaultInfo?.state === 'deposit_open'
   const canWithdraw = userDeposited > 0 && isWithdrawOpen
@@ -83,12 +84,7 @@ export function WithdrawModal({ open, onOpenChange }: WithdrawModalProps) {
           {/* Current deposit info */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-[#71717a] dark:text-[#999]">Your Deposit</span>
-            <AppTokenAmount
-              token={quoteToken}
-              amount={depositedAmount ?? 0}
-              showSymbol
-              className="font-mono font-semibold"
-            />
+            <AppTokenAmount token={quoteToken} amount={normalizedDeposit} showSymbol className="font-mono font-semibold" />
           </div>
 
           {/* Withdraw input */}

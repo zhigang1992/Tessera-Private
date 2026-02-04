@@ -262,7 +262,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
                 <p className="font-bold">Receive</p>
                 <div className="flex items-center gap-2">
                   <p className="text-xs">Estimated</p>
-                  {outputAmount && outputAmount !== '0' && (
+                  {hasOutputAmount && (
                     <button
                       className="flex items-center justify-center size-4 transition-opacity hover:opacity-60"
                     >
