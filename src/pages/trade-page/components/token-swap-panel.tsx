@@ -177,7 +177,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
         <div className="flex flex-col items-start px-6 py-8 w-full">
           <div className="flex flex-col gap-4 items-center w-full">
         {/* Token Input Blocks with centered swap button */}
-        <div className="relative">
+        <div className="relative w-full">
           {/* Pay Input */}
           <div className="relative rounded-lg w-full group bg-white dark:bg-[rgba(0,0,0,0.6)]">
             <div className="rounded-[inherit] size-full">
