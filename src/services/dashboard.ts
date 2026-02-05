@@ -1,5 +1,5 @@
 import { sleep } from './utils'
-import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap, fetchAllTokenDetails, fetchDashboardSummary, fetchTokenPrice24hOHLC } from '@/features/referral/lib/graphql-client'
+import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchAllTokenDetails, fetchDashboardSummary, fetchTokenPrice24hOHLC, fetchTokenDetails } from '@/features/referral/lib/graphql-client'
 import { fromHasuraToNative, formatBigNumber, BigNumber, math, mathIs, type BigNumberSource, fromTokenAmount, type BigNumberValue } from '@/lib/bignumber'
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
@@ -134,10 +134,10 @@ const tokenInfo: TokenInfo = {
   priceChange24h: 2.74,
   priceChangePercent24h: 0.6203,
   description:
-    'Tesla, Inc. designs, develops, manufactures, leases, and sells electric vehicles, and energy generation and storage systems in the United States, China, and internationally. It operates in two segments, Automotive, and Energy Generation and Storage. The Autom...',
+    'SpaceX is a private aerospace company founded by Elon Musk that designs and manufactures rockets and spacecraft, provides commercial and government orbital launch services, and operates the Starlink global satellite internet constellation. Its business covers reusable launch systems, crewed missions, satellite broadband.',
   supportedChains: ['Solana'],
   onchainAddress: '0xf6b1...103f',
-  categories: ['Equities', 'Stock'],
+  categories: ['Equities'],
   underlyingAssetName: 'SpaceX, Inc. Private Equity',
   underlyingAssetCompany: 'SpaceX',
   sharesPerToken: `1 ${BASE_TOKEN.symbol} = 1.00 SPACEX EQUITY`,
@@ -288,26 +288,24 @@ Object.values(APP_TOKENS).forEach((token) => {
 
 /**
  * Format market cap to human-readable valuation string
+ * Uses the implied valuation formula: Token Price × 19.0023753
+ * (8000/421 = 19.0023753)
  */
-function formatValuation(value: number): string {
-  if (value >= 1_000_000_000_000) {
-    return `$${(value / 1_000_000_000_000).toFixed(1)}T`
+function formatValuation(tokenPrice: number): string {
+  // Calculate implied valuation: Token Price × 19.0023753
+  const impliedValue = tokenPrice * 19.0023753
+
+  if (impliedValue > 10000) {
+    return `$${(impliedValue / 10000).toFixed(1)}T`
+  } else {
+    return `$${(impliedValue / 10).toFixed(1)}B`
   }
-  if (value >= 1_000_000_000) {
-    return `$${(value / 1_000_000_000).toFixed(1)}B`
-  }
-  if (value >= 1_000_000) {
-    return `$${(value / 1_000_000).toFixed(1)}M`
-  }
-  if (value >= 1_000) {
-    return `$${(value / 1_000).toFixed(1)}K`
-  }
-  return `$${value.toFixed(2)}`
 }
 
 /**
  * Get list of tokenized assets for the assets table
  * Fetches real data from GraphQL and merges with token metadata
+ * Returns empty array when no real data is available
  */
 export async function getTokenizedAssets(): Promise<AssetData[]> {
   let tokenDetails: Awaited<ReturnType<typeof fetchAllTokenDetails>> = []
@@ -315,18 +313,17 @@ export async function getTokenizedAssets(): Promise<AssetData[]> {
   try {
     tokenDetails = await fetchAllTokenDetails()
   } catch (error) {
-    console.error('[dashboard] Failed to fetch token details, using fallback assets', error)
-    return buildFallbackAssets()
+    console.error('[dashboard] Failed to fetch token details', error)
+    return []
   }
 
   if (!tokenDetails || tokenDetails.length === 0) {
-    return buildFallbackAssets()
+    return []
   }
 
   return tokenDetails.map((token) => {
     const metadata = TOKEN_REGISTRY[token.token]
     const price = BigNumber.toNumber(fromHasuraToNative(token.price))
-    const marketCap = BigNumber.toNumber(fromHasuraToNative(token.market_cap))
     const holders = Number(token.holder_count) || 0
 
     // If we have metadata for this token, use it; otherwise create generic entry
@@ -339,7 +336,7 @@ export async function getTokenizedAssets(): Promise<AssetData[]> {
         sector: metadata.sector,
         price,
         holders,
-        valuation: formatValuation(marketCap),
+        valuation: formatValuation(price),
       }
     }
 
@@ -353,27 +350,9 @@ export async function getTokenizedAssets(): Promise<AssetData[]> {
       sector: 'Unknown',
       price,
       holders,
-      valuation: formatValuation(marketCap),
+      valuation: formatValuation(price),
     }
   })
-}
-
-function buildFallbackAssets(): AssetData[] {
-  return Object.values(APP_TOKENS)
-    .filter((token) => token.id !== QUOTE_TOKEN_ID) // Exclude quote token (USDC)
-    .map((token) => {
-      const price = token.id === BASE_TOKEN.id ? tokenInfo.price : 0
-      return {
-        id: token.slug,
-        symbol: token.symbol,
-        name: token.displayName,
-        code: token.metadata?.code ?? token.slug.toUpperCase(),
-        sector: token.metadata?.sector ?? 'Private Markets',
-        price,
-        holders: 0,
-        valuation: price > 0 ? formatValuation(price * 1_000_000) : '$—',
-      }
-    })
 }
 
 // ============ API Functions ============
@@ -396,34 +375,28 @@ function formatSupply(value: number): string {
 
 /**
  * Get dashboard stats including real token price and supply from backend
+ * Uses public_marts_token_details for latest price
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const poolAddress = getBasePoolAddress()
   const tokenMint = BASE_MINT_ADDRESS
 
-  if (!poolAddress || !tokenMint) {
+  if (!tokenMint) {
     return dashboardStats
   }
 
-  const [events, tokenData] = await Promise.all([fetchSwapEventsForPrice(poolAddress, 10), fetchTokenMarketCap(tokenMint)])
+  // Fetch token details (includes price and circulating supply)
+  const tokenData = await fetchTokenDetails(tokenMint)
 
-  let tokenPrice = 0
-  if (events.length > 0) {
-    // Get price from most recent swap
-    const latestEvent = events[events.length - 1]
-    const x = fromHasuraToNative(latestEvent.amount_x)
-    const y = fromHasuraToNative(latestEvent.amount_y)
-    if (mathIs`${x} > ${0}`) {
-      tokenPrice = BigNumber.toNumber(math`${y} / ${x}`)
-    }
+  if (!tokenData) {
+    return dashboardStats
   }
 
-  // Get circulating supply from token market cap data
-  let tokenSupply = dashboardStats.tokenSupply
-  if (tokenData) {
-    const supplyValue = BigNumber.toNumber(fromHasuraToNative(tokenData.circulating_supply))
-    tokenSupply = formatSupply(supplyValue)
-  }
+  // Get latest price from token_details
+  const tokenPrice = BigNumber.toNumber(fromHasuraToNative(tokenData.price))
+
+  // Get circulating supply from token_details
+  const supplyValue = BigNumber.toNumber(fromHasuraToNative(tokenData.circulating_supply))
+  const tokenSupply = formatSupply(supplyValue)
 
   return {
     ...dashboardStats,

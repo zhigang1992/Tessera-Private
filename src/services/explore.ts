@@ -1,4 +1,5 @@
 import { sleep } from './utils'
+import spacexBg from '@/assets/spacex-bg.png'
 
 // ============ Types ============
 
@@ -10,6 +11,7 @@ export interface ExploreAsset {
   ticker: string
   category: string
   headerColor: string
+  headerImage?: string
   price: number
   valuation: string
   status: AssetStatus
@@ -24,6 +26,7 @@ const exploreAssets: ExploreAsset[] = [
     ticker: 'SPX-T',
     category: 'Aerospace',
     headerColor: '#555555',
+    headerImage: spacexBg,
     price: 476.22,
     valuation: '$180B',
     status: 'trading',

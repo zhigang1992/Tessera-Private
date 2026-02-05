@@ -7,12 +7,12 @@
 
 import {
   fetchTokenPricesDaily,
+  fetchTokenPricesHourly,
   fetchTokenPrice24hOHLC,
-  fetchSwapEventsForPrice,
   fetchTokenDetails,
 } from '@/features/referral/lib/graphql-client'
 import { DEVNET_POOLS } from './meteora'
-import { fromHasuraToNative, BigNumber, math, mathIs } from '@/lib/bignumber'
+import { fromHasuraToNative, BigNumber } from '@/lib/bignumber'
 import {
   DEFAULT_BASE_TOKEN_ID,
   getAppToken,
@@ -65,20 +65,6 @@ function resolvePriceContext(symbol: string): { token: AppToken; mint: string; p
 // ============ Helper Functions ============
 
 /**
- * Calculate price from swap event amounts
- * Price = amount_y (USDC) / amount_x (T-SpaceX)
- */
-function calculatePriceFromSwap(amountX: string, amountY: string): number {
-  const x = fromHasuraToNative(amountX)
-  const y = fromHasuraToNative(amountY)
-
-  if (mathIs`${x} === ${0}`) return 0
-
-  const price = math`${y} / ${x}`
-  return BigNumber.toNumber(price)
-}
-
-/**
  * Get the number of days for each time range
  */
 function getDaysForRange(range: TimeRange): number {
@@ -98,133 +84,87 @@ function getDaysForRange(range: TimeRange): number {
   }
 }
 
-/**
- * Filter events within a time range
- */
-function filterEventsByTimeRange(
-  events: Array<{ block_time: number; amount_x: string; amount_y: string; type: string }>,
-  range: TimeRange
-): Array<{ block_time: number; amount_x: string; amount_y: string; type: string }> {
-  const days = getDaysForRange(range)
-  const now = Math.floor(Date.now() / 1000)
-  const cutoff = now - days * 24 * 60 * 60
-
-  return events.filter((event) => event.block_time >= cutoff)
-}
-
 // ============ API Functions ============
 
 /**
  * Get current token price and 24h change
+ * Uses public_marts_token_details for latest price and public_marts_token_prices_24h_ohlc for 24h change
  */
 export async function getTokenPrice(symbol: string): Promise<TokenPriceInfo | null> {
-  const { token, mint, poolAddress } = resolvePriceContext(symbol)
-  if (!poolAddress) return null
+  const { token, mint } = resolvePriceContext(symbol)
+  if (!mint) return null
 
-  // Try to get 24h OHLC data first
-  const ohlc = await fetchTokenPrice24hOHLC(mint)
+  // Fetch latest price from token_details and 24h OHLC data in parallel
+  const [tokenDetails, ohlc] = await Promise.all([
+    fetchTokenDetails(mint),
+    fetchTokenPrice24hOHLC(mint),
+  ])
 
-  if (ohlc && ohlc.close_price_24h) {
-    const closePrice = BigNumber.toNumber(fromHasuraToNative(ohlc.close_price_24h))
-    const priceChange = ohlc.price_change_24h
-      ? BigNumber.toNumber(fromHasuraToNative(ohlc.price_change_24h))
-      : 0
-    const priceChangePct = ohlc.price_change_pct_24h
-      ? BigNumber.toNumber(fromHasuraToNative(ohlc.price_change_pct_24h))
-      : 0
-
-    return {
-      symbol: token.symbol,
-      price: closePrice,
-      priceChange24h: priceChange,
-      priceChangePercent24h: priceChangePct,
-    }
-  }
-
-  // Fall back to calculating from swap events
-  const events = await fetchSwapEventsForPrice(poolAddress, 100)
-
-  if (events.length === 0) {
+  // Get latest price from token_details
+  if (!tokenDetails || !tokenDetails.price) {
     return null
   }
 
-  // Get latest price from most recent swap
-  const latestEvent = events[events.length - 1]
-  const currentPrice = calculatePriceFromSwap(latestEvent.amount_x, latestEvent.amount_y)
+  const currentPrice = BigNumber.toNumber(fromHasuraToNative(tokenDetails.price))
 
-  // Calculate 24h change by finding price 24h ago
-  const now = Math.floor(Date.now() / 1000)
-  const dayAgo = now - 24 * 60 * 60
-
-  // Find the event closest to 24h ago
-  let price24hAgo = currentPrice
-  for (const event of events) {
-    if (event.block_time <= dayAgo) {
-      price24hAgo = calculatePriceFromSwap(event.amount_x, event.amount_y)
-    } else {
-      break
-    }
-  }
-
-  const priceChange24h = currentPrice - price24hAgo
-  const priceChangePercent24h = price24hAgo !== 0 ? (priceChange24h / price24hAgo) * 100 : 0
+  // Get 24h change from OHLC data
+  const priceChange = ohlc?.price_change_24h
+    ? BigNumber.toNumber(fromHasuraToNative(ohlc.price_change_24h))
+    : 0
+  const priceChangePct = ohlc?.price_change_pct_24h
+    ? BigNumber.toNumber(fromHasuraToNative(ohlc.price_change_pct_24h))
+    : 0
 
   return {
     symbol: token.symbol,
     price: currentPrice,
-    priceChange24h,
-    priceChangePercent24h,
+    priceChange24h: priceChange,
+    priceChangePercent24h: priceChangePct,
   }
 }
 
 /**
  * Get price history for charting
+ * Uses hourly data for short ranges (1D, 1W) and daily data for longer ranges
  */
 export async function getPriceHistory(
   symbol: string,
   range: TimeRange = '1D'
 ): Promise<PriceDataPoint[]> {
-  const { mint, poolAddress } = resolvePriceContext(symbol)
-  if (!poolAddress) return []
+  const { mint } = resolvePriceContext(symbol)
+  if (!mint) return []
 
   const days = getDaysForRange(range)
 
-  // For longer time ranges, try daily prices first
-  if (days >= 7) {
-    const dailyPrices = await fetchTokenPricesDaily(mint, days)
+  // For short time ranges (< 7 days), use hourly prices
+  if (days < 7) {
+    const hours = days * 24
+    const hourlyPrices = await fetchTokenPricesHourly(mint, hours)
 
-    if (dailyPrices.length > 0) {
-      return dailyPrices
+    if (hourlyPrices.length > 0) {
+      return hourlyPrices
         .map((p) => ({
-          time: p.day_timestamp,
+          time: p.hour_timestamp,
           value: BigNumber.toNumber(fromHasuraToNative(p.price)),
         }))
         .sort((a, b) => a.time - b.time) // Ensure ascending order
     }
-  }
-
-  // Fall back to swap events for more granular data
-  const events = await fetchSwapEventsForPrice(poolAddress, 500)
-
-  if (events.length === 0) {
     return []
   }
 
-  // Filter events by time range
-  const filteredEvents = filterEventsByTimeRange(events, range)
+  // For longer time ranges, use daily prices
+  const dailyPrices = await fetchTokenPricesDaily(mint, days)
 
-  if (filteredEvents.length === 0) {
-    // If no events in range, use all available events
-    return events.map((event) => ({
-      time: event.block_time,
-      value: calculatePriceFromSwap(event.amount_x, event.amount_y),
-    }))
+  if (dailyPrices.length > 0) {
+    return dailyPrices
+      .map((p) => ({
+        time: p.day_timestamp,
+        value: BigNumber.toNumber(fromHasuraToNative(p.price)),
+      }))
+      .sort((a, b) => a.time - b.time) // Ensure ascending order
   }
 
-  return filteredEvents.map((event) => ({
-    time: event.block_time,
-    value: calculatePriceFromSwap(event.amount_x, event.amount_y),
-  }))
+  return []
 }
 
 /**

@@ -687,8 +687,18 @@ export interface TokenPrice24hOHLC {
   swap_count_24h: number | null
 }
 
+interface TokenPriceHourly {
+  hour_timestamp: number
+  price: string
+  token: string
+}
+
 interface TokenPricesQueryResult {
   public_marts_token_prices_daily: TokenPriceDaily[]
+}
+
+interface TokenPricesHourlyQueryResult {
+  public_marts_token_prices_hourly: TokenPriceHourly[]
 }
 
 interface TokenPrice24hQueryResult {
@@ -702,6 +712,35 @@ interface SwapEventsForPriceQueryResult {
     amount_y: string
     type: string
   }>
+}
+
+/**
+ * Fetch hourly price data for a token
+ */
+export async function fetchTokenPricesHourly(
+  tokenMint: string,
+  limit: number = 168
+): Promise<TokenPriceHourly[]> {
+  const query = `
+    query GetTokenPricesHourly($token: String!, $limit: Int!) {
+      public_marts_token_prices_hourly(
+        where: { token: { _eq: $token } }
+        order_by: { hour_timestamp: desc }
+        limit: $limit
+      ) {
+        hour_timestamp
+        price
+        token
+      }
+    }
+  `
+
+  const data = await graphqlRequest<TokenPricesHourlyQueryResult>(query, {
+    token: tokenMint,
+    limit,
+  })
+
+  return data.public_marts_token_prices_hourly
 }
 
 /**
@@ -920,6 +959,33 @@ export interface TokenDetailsData {
   market_cap: string // numeric from GraphQL (18 decimals)
   price: string // numeric from GraphQL (18 decimals)
   price_block: number // bigint from GraphQL
+}
+
+/**
+ * Fetch single token details including latest price
+ */
+export async function fetchTokenDetails(tokenMint: string): Promise<TokenDetailsData | null> {
+  const query = `
+    query GetTokenDetails($token: String!) {
+      public_marts_token_details(
+        where: { token: { _eq: $token } }
+        limit: 1
+      ) {
+        token
+        circulating_supply
+        holder_count
+        market_cap
+        price
+        price_block
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_token_details: TokenDetailsData[]
+  }>(query, { token: tokenMint })
+
+  return data.public_marts_token_details[0] ?? null
 }
 
 /**

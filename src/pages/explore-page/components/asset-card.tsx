@@ -20,8 +20,11 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
     <Card className="overflow-hidden rounded-2xl border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#323334] hover:shadow-[0px_4px_8px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 ease-out cursor-pointer">
       {/* Header */}
       <div
-        className="aspect-[4/3] px-5 py-5 flex justify-between items-start"
-        style={{ backgroundColor: asset.headerColor }}
+        className="aspect-[4/3] px-5 py-5 flex justify-between items-start bg-cover bg-center"
+        style={{
+          backgroundColor: asset.headerColor,
+          ...(asset.headerImage && { backgroundImage: `url(${asset.headerImage})` }),
+        }}
       >
         <div className="flex-1">
           <div className="inline-block px-2 py-1 rounded bg-white/20 text-white text-[11px] font-medium mb-3 leading-normal">

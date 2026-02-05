@@ -1,29 +1,17 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { cn } from '@/lib/utils'
-import { getReferralLeaderboard, getCurrentUserReferralRank } from '@/services'
+import { useLeaderboard } from '@/features/leaderboard/hooks/use-leaderboard'
 import { Pagination } from '@/components/ui/pagination'
 import { getMedalIcon } from './_/getMedalIcon'
 import PersonIcon from './_/person.svg?react'
-
-const PAGE_SIZE = 10
 
 export function ReferralLeaderboard() {
   const { publicKey } = useWallet()
   const walletAddress = publicKey?.toBase58()
   const [currentPage, setCurrentPage] = useState(1)
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['referralLeaderboard', currentPage],
-    queryFn: () => getReferralLeaderboard(currentPage, PAGE_SIZE),
-  })
-
-  const { data: currentUserRank } = useQuery({
-    queryKey: ['currentUserReferralRank', walletAddress],
-    queryFn: () => getCurrentUserReferralRank(walletAddress),
-    enabled: !!walletAddress,
-  })
+  const { data, isLoading } = useLeaderboard(currentPage, 'referral')
 
   const totalPages = data?.totalPages ?? 1
 
@@ -46,45 +34,48 @@ export function ReferralLeaderboard() {
                 Loading...
               </td>
             </tr>
-          ) : !data?.items.length ? (
+          ) : !data?.entries.length ? (
             <tr>
               <td colSpan={5} className="px-6 py-8 text-center text-sm text-muted-foreground">
                 Upcoming
               </td>
             </tr>
           ) : (
-            data.items.map((row) => {
-              const isCurrentUser = row.rank === currentUserRank
-              const medal = getMedalIcon(row.rank)
+            data.entries.map((entry) => {
+              const isCurrentUser = walletAddress && entry.account.toLowerCase() === walletAddress.toLowerCase()
+              const medal = getMedalIcon(entry.rank)
+              const displayAddress = entry.account.length <= 12
+                ? entry.account
+                : `${entry.account.slice(0, 4)}...${entry.account.slice(-4)}`
 
               return (
                 <tr
-                  key={row.rank}
+                  key={entry.rank}
                   className={cn(
                     'last:border-0',
                     isCurrentUser
                       ? 'bg-[#FAFFBD]'
-                      : row.rank % 2 === 1 ? 'bg-zinc-50 dark:bg-[#323334]' : 'dark:bg-[#1e1f20]'
+                      : entry.rank % 2 === 1 ? 'bg-zinc-50 dark:bg-[#323334]' : 'dark:bg-[#1e1f20]'
                   )}
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <span className={cn('text-sm font-medium', row.rank <= 3 && 'font-bold', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>{row.rank}</span>
+                      <span className={cn('text-sm font-medium', entry.rank <= 3 && 'font-bold', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>{entry.rank}</span>
                       {medal && <span>{medal}</span>}
                       {isCurrentUser && (
                         <span className="rounded bg-black px-1.5 py-0.5 text-xs font-medium text-white">You</span>
                       )}
                     </div>
                   </td>
-                  <td className={cn('px-6 py-4 text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>{row.user}</td>
+                  <td className={cn('px-6 py-4 text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>{displayAddress}</td>
                   <td className="px-6 py-4">
                     <div className={cn('flex items-center gap-1.5 text-sm font-medium', isCurrentUser ? 'text-black' : 'text-[#2B664B] dark:text-[#d2fb95]')}>
                       <PersonIcon className="h-6 w-6" />
-                      {row.traderReferral.toLocaleString()}
+                      {entry.total_referrals.toLocaleString()}
                     </div>
                   </td>
-                  <td className={cn('px-6 py-4 text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>{row.tradingPoints.toLocaleString()}</td>
-                  <td className={cn('px-6 py-4 text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>${row.feeRewards}</td>
+                  <td className={cn('px-6 py-4 text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>{entry.total_trading_points.toLocaleString()}</td>
+                  <td className={cn('px-6 py-4 text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>${entry.total_rewards_usd.toLocaleString()}</td>
                 </tr>
               )
             })
