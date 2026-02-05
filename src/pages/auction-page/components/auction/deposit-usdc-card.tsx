@@ -54,8 +54,15 @@ export function DepositUSDCCard() {
   const isDepositOpen = vaultInfo?.state === 'deposit_open'
   const canDeposit = isDepositActive && depositQuota?.canDeposit && isDepositOpen && wallet.connected
 
-  // Calculate current total deposit (existing + new input amount)
-  const calculatedCurrentDeposit = useMemo(() => {
+  // Calculate existing deposit (amount already deposited)
+  const existingDepositAmount = useMemo(() => {
+    const decimals = config.quoteDecimals
+    const existingDeposit = escrowInfo?.totalDeposited ? BigNumber.from(escrowInfo.totalDeposited) : BigNumber.from(0)
+    return fromTokenAmount(existingDeposit, decimals)
+  }, [escrowInfo?.totalDeposited, config.quoteDecimals])
+
+  // Calculate after this deposit (existing + new input amount)
+  const afterThisDepositAmount = useMemo(() => {
     const decimals = config.quoteDecimals
     const existingDeposit = escrowInfo?.totalDeposited ? BigNumber.from(escrowInfo.totalDeposited) : BigNumber.from(0)
 
@@ -319,13 +326,20 @@ export function DepositUSDCCard() {
           <div className="flex items-start justify-between h-[18px]">
             <span className="font-normal leading-[18px] text-xs text-[#666]">Current Deposit</span>
             <span className="font-normal leading-[18px] text-xs text-black font-mono flex items-center gap-1">
-              <AppTokenAmount token={config.quoteToken} amount={calculatedCurrentDeposit} />
+              <AppTokenAmount token={config.quoteToken} amount={existingDepositAmount} />
+              <AppTokenName token={config.quoteToken} variant="symbol" />
+            </span>
+          </div>
+          <div className="flex items-start justify-between h-[18px]">
+            <span className="font-normal leading-[18px] text-xs text-[#666]">After This Deposit</span>
+            <span className="font-normal leading-[18px] text-xs text-black font-mono flex items-center gap-1">
+              <AppTokenAmount token={config.quoteToken} amount={afterThisDepositAmount} />
               <AppTokenName token={config.quoteToken} variant="symbol" />
             </span>
           </div>
           <div className="flex items-start justify-between h-[18px]">
             <div className="flex items-center gap-1">
-              <span className="font-normal leading-[18px] text-xs text-[#666]">Est. Allocation</span>
+              <span className="font-normal leading-[18px] text-xs text-[#666]">Est. Allocation (Total)</span>
               <Tooltip.Provider delayDuration={0} skipDelayDuration={0}>
                 <Tooltip.Root open={tooltipOpen} onOpenChange={setTooltipOpen}>
                   <Tooltip.Trigger asChild>
