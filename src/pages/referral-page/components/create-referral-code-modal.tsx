@@ -10,9 +10,10 @@ import { useCreateReferralCode } from '@/features/referral/hooks/use-referral-on
 interface CreateReferralCodeModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onSuccess?: (code: string) => void
 }
 
-export function CreateReferralCodeModal({ open, onOpenChange }: CreateReferralCodeModalProps) {
+export function CreateReferralCodeModal({ open, onOpenChange, onSuccess }: CreateReferralCodeModalProps) {
   const [customCode, setCustomCode] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
   const createCodeMutation = useCreateReferralCode()
@@ -43,15 +44,20 @@ export function CreateReferralCodeModal({ open, onOpenChange }: CreateReferralCo
     setFormError(null)
 
     try {
-      await createCodeMutation.mutateAsync(payload)
+      const result = await createCodeMutation.mutateAsync(payload)
+      const createdCode = normalizedCustomCode || result.code
       setCustomCode('')
       onOpenChange(false)
+      // Call onSuccess with the created code
+      if (onSuccess && createdCode) {
+        onSuccess(createdCode)
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to create referral code'
       setFormError(message)
       console.error('Failed to create referral code', error)
     }
-  }, [isCreateDisabled, isCustomCodeProvided, isCustomCodeLengthValid, normalizedCustomCode, createCodeMutation, onOpenChange])
+  }, [isCreateDisabled, isCustomCodeProvided, isCustomCodeLengthValid, normalizedCustomCode, createCodeMutation, onOpenChange, onSuccess])
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

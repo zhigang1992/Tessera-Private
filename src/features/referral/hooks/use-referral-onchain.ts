@@ -24,7 +24,7 @@ import {
   getTesseraTokenProgramId,
   shortenAddress,
 } from '@/lib/solana'
-import { fetchAffiliateStats } from '../lib/graphql-client'
+import { fetchAffiliateStats, fetchReferralCodesByOwner } from '../lib/graphql-client'
 
 /**
  * Query Keys - mimics the old structure for easier migration
@@ -128,8 +128,8 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
       const program = getReferralProgram(connection, wallet)
       if (!program) return null
 
-      // Fetch both on-chain data and GraphQL stats in parallel
-      const [accountsResult, graphqlStats] = await Promise.all([
+      // Fetch on-chain data, GraphQL stats, and creation events in parallel
+      const [accountsResult, graphqlStats, creationEvents] = await Promise.all([
         // On-chain: Get referral codes owned by this wallet
         connection.getProgramAccounts(program.programId, {
           filters: [
@@ -147,6 +147,11 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
           console.warn('Failed to fetch GraphQL stats:', err)
           return null
         }),
+        // GraphQL: Get creation events for timestamps
+        fetchReferralCodesByOwner(pubkey.toBase58()).catch((err) => {
+          console.warn('Failed to fetch creation events:', err)
+          return []
+        }),
       ])
 
       // Build code stats lookup from GraphQL data
@@ -159,6 +164,12 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
             rewardsUsd: code.rewardsUsd,
           })
         }
+      }
+
+      // Build creation timestamp lookup from GraphQL events
+      const creationTimeMap = new Map<string, number>()
+      for (const event of creationEvents) {
+        creationTimeMap.set(event.code, event.block_time)
       }
 
       const referralCodes: ReferralCodeRecord[] = []
@@ -196,23 +207,32 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
           const codeStats = codeStatsMap.get(code)
           const referredTraderCount = codeStats?.referralCount ?? onChainReferrals
 
+          // Get creation timestamp from GraphQL (in seconds), convert to ISO string
+          const blockTime = creationTimeMap.get(code)
+          const createdAt = blockTime ? new Date(blockTime * 1000).toISOString() : new Date().toISOString()
+
           referralCodes.push({
             id: referralCodes.length,
             codeSlug: code,
             status: isActive ? 'active' : 'inactive',
             activeLayer: 3,
             walletAddress: pubkey.toBase58(),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            createdAt,
+            updatedAt: createdAt,
             referredTraderCount,
             // Extended stats from GraphQL
             totalVolume: codeStats?.tradingVolume ?? 0,
             totalRewards: codeStats?.rewardsUsd ?? 0,
+            // Store block_time for sorting (newest first)
+            blockTime: blockTime ?? 0,
           })
         } catch (err) {
           console.warn('Failed to decode account:', accountPubkey.toBase58(), err)
         }
       }
+
+      // Sort codes by block_time (newest first)
+      referralCodes.sort((a, b) => (b.blockTime ?? 0) - (a.blockTime ?? 0))
 
       // Calculate total rewards from GraphQL data
       const totalRewards = graphqlStats?.totalRewardsUsd ?? 0

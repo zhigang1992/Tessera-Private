@@ -38,6 +38,7 @@ export type ReferralCode = {
   // Extended stats from GraphQL (populated by useAffiliateData hook)
   totalVolume?: number
   totalRewards?: number
+  blockTime?: number // Unix timestamp for sorting (newest first)
 }
 
 export type TraderMetrics = {

@@ -70,6 +70,11 @@ export function CodeSection() {
     setShareModalCode(code)
   }, [])
 
+  const handleCodeCreated = useCallback((code: string) => {
+    // Auto-select the newly created code
+    setSelectedCode(code)
+  }, [])
+
   useEffect(() => {
     if (codes.length > 0 && !selectedCode) {
       setSelectedCode(codes[0].code)
@@ -372,6 +377,7 @@ export function CodeSection() {
       <CreateReferralCodeModal
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
+        onSuccess={handleCodeCreated}
       />
 
       {/* Share Referral Code Modal */}
