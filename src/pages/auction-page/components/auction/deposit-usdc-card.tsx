@@ -303,17 +303,14 @@ export function DepositUSDCCard() {
 
         {/* Persistent Warnings/Info */}
         {hasWhitelist() && depositQuota && (
-          <div className="bg-[rgba(255,255,255,0.5)] flex gap-2.5 items-center p-3 rounded-lg w-full">
-            <Info className="w-3 h-3 text-[#666666] shrink-0" />
-            <div className="flex-1 flex flex-col gap-0.5">
-              <p className="font-normal leading-[16.5px] text-[10px] text-black tracking-[0.0645px]">
-                Deposits are only available to whitelisted wallets. Maximum deposit per wallet: $
-                <AppTokenAmount
-                  token={config.quoteToken}
-                  amount={fromTokenAmount(depositQuota.maxDeposit, config.quoteDecimals)}
-                />
-              </p>
-            </div>
+          <div className="bg-[rgba(255,255,255,0.5)] flex items-center justify-center p-[12px] rounded-[8px] w-full">
+            <p className="font-normal leading-[16.5px] text-[10px] text-center text-black tracking-[0.0645px]">
+              Deposits are only available to whitelisted wallets. Maximum deposit per wallet: $
+              <AppTokenAmount
+                token={config.quoteToken}
+                amount={fromTokenAmount(depositQuota.maxDeposit, config.quoteDecimals)}
+              />
+            </p>
           </div>
         )}
 
