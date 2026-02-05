@@ -1,5 +1,5 @@
 import { sleep } from './utils'
-import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap, fetchAllTokenDetails, fetchDashboardSummary, fetchTokenPrice24hOHLC, fetchTokenDetails } from '@/features/referral/lib/graphql-client'
+import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchAllTokenDetails, fetchDashboardSummary, fetchTokenPrice24hOHLC, fetchTokenDetails } from '@/features/referral/lib/graphql-client'
 import { fromHasuraToNative, formatBigNumber, BigNumber, math, mathIs, type BigNumberSource, fromTokenAmount, type BigNumberValue } from '@/lib/bignumber'
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'

@@ -10,10 +10,9 @@ import {
   fetchTokenPricesHourly,
   fetchTokenPrice24hOHLC,
   fetchTokenDetails,
-  fetchSwapEventsForPrice,
 } from '@/features/referral/lib/graphql-client'
 import { DEVNET_POOLS } from './meteora'
-import { fromHasuraToNative, BigNumber, math, mathIs } from '@/lib/bignumber'
+import { fromHasuraToNative, BigNumber } from '@/lib/bignumber'
 import {
   DEFAULT_BASE_TOKEN_ID,
   getAppToken,
@@ -66,20 +65,6 @@ function resolvePriceContext(symbol: string): { token: AppToken; mint: string; p
 // ============ Helper Functions ============
 
 /**
- * Calculate price from swap event amounts
- * Price = amount_y (USDC) / amount_x (T-SpaceX)
- */
-function calculatePriceFromSwap(amountX: string, amountY: string): number {
-  const x = fromHasuraToNative(amountX)
-  const y = fromHasuraToNative(amountY)
-
-  if (mathIs`${x} === ${0}`) return 0
-
-  const price = math`${y} / ${x}`
-  return BigNumber.toNumber(price)
-}
-
-/**
  * Get the number of days for each time range
  */
 function getDaysForRange(range: TimeRange): number {
@@ -97,20 +82,6 @@ function getDaysForRange(range: TimeRange): number {
     case 'ALL':
       return 9999 // All available data
   }
-}
-
-/**
- * Filter events within a time range
- */
-function filterEventsByTimeRange(
-  events: Array<{ block_time: number; amount_x: string; amount_y: string; type: string }>,
-  range: TimeRange
-): Array<{ block_time: number; amount_x: string; amount_y: string; type: string }> {
-  const days = getDaysForRange(range)
-  const now = Math.floor(Date.now() / 1000)
-  const cutoff = now - days * 24 * 60 * 60
-
-  return events.filter((event) => event.block_time >= cutoff)
 }
 
 // ============ API Functions ============
