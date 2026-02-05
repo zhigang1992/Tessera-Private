@@ -35,7 +35,7 @@ export function AssetsTable() {
               <p className="text-xs font-normal text-[#999]">Holders</p>
             </div>
             <div className="w-[17.5%] min-w-[100px]">
-              <p className="text-xs font-normal text-[#999]">Valuation</p>
+              <p className="text-xs font-normal text-[#999]">Implied Valuation</p>
             </div>
           </div>
 

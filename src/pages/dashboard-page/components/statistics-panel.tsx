@@ -48,10 +48,10 @@ export function StatisticsPanel() {
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
         </div>
 
-        {/* Underlying Asset Price 24H */}
+        {/* Token Information */}
         <div className="flex flex-col">
           <div className="py-2.5">
-            <span className="text-sm font-semibold text-[#666] dark:text-[#d2d2d2]">Underlying Asset Price 24H</span>
+            <span className="text-sm font-semibold text-[#666] dark:text-[#d2d2d2]">Token Information</span>
           </div>
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
           <div className="flex items-center justify-between py-2.5">
