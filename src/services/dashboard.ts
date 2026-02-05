@@ -1,5 +1,5 @@
 import { sleep } from './utils'
-import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap, fetchAllTokenDetails, fetchDashboardSummary, fetchTokenPrice24hOHLC } from '@/features/referral/lib/graphql-client'
+import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap, fetchAllTokenDetails, fetchTokenDetails, fetchDashboardSummary, fetchTokenPrice24hOHLC } from '@/features/referral/lib/graphql-client'
 import { fromHasuraToNative, formatBigNumber, BigNumber, math, mathIs, type BigNumberSource, fromTokenAmount, type BigNumberValue } from '@/lib/bignumber'
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
@@ -671,21 +671,13 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
     tessBalance = 0
   }
 
-  // Get current token price to calculate USD value of holdings
+  // Get current token price from public_marts_token_details
   let tokenPriceUsd = 0
-  const poolAddress = getBasePoolAddress()
-  if (poolAddress && BASE_MINT_ADDRESS) {
+  if (BASE_MINT_ADDRESS) {
     try {
-      // Fetch recent swap events to get current price
-      const events = await fetchSwapEventsForPrice(poolAddress, 10)
-      if (events.length > 0) {
-        // Get price from most recent swap
-        const latestEvent = events[events.length - 1]
-        const x = fromHasuraToNative(latestEvent.amount_x)
-        const y = fromHasuraToNative(latestEvent.amount_y)
-        if (mathIs`${x} > ${0}`) {
-          tokenPriceUsd = BigNumber.toNumber(math`${y} / ${x}`)
-        }
+      const tokenDetails = await fetchTokenDetails(BASE_MINT_ADDRESS)
+      if (tokenDetails && tokenDetails.price) {
+        tokenPriceUsd = BigNumber.toNumber(fromHasuraToNative(tokenDetails.price))
       }
     } catch {
       // If price fetch fails, default to 0

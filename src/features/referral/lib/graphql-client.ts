@@ -946,6 +946,30 @@ export async function fetchAllTokenDetails(): Promise<TokenDetailsData[]> {
   return data.public_marts_token_details
 }
 
+/**
+ * Fetch token details for a specific token
+ */
+export async function fetchTokenDetails(tokenMint: string): Promise<TokenDetailsData | null> {
+  const query = `
+    query GetTokenDetails($token: String!) {
+      public_marts_token_details(where: { token: { _eq: $token } }, limit: 1) {
+        token
+        circulating_supply
+        holder_count
+        market_cap
+        price
+        price_block
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_token_details: TokenDetailsData[]
+  }>(query, { token: tokenMint })
+
+  return data.public_marts_token_details[0] ?? null
+}
+
 // ============ Auction Data ============
 
 export interface AuctionTotalRaisedData {
