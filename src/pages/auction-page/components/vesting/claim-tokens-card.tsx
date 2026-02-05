@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Card } from '@/components/ui/card'
@@ -5,12 +6,15 @@ import { Button } from '@/components/ui/button'
 import { Loader2, Lock, ArrowRight, AlertCircle } from 'lucide-react'
 import { AppTokenName } from '@/components/app-token-name'
 import { AppTokenAmount } from '@/components/app-token-amount'
+import { CountdownNotification } from '@/components/countdown-notification'
 import { getExplorerUrl } from '@/config'
 import { formatDuration } from '@/services/alpha-vault-helpers'
 import { toast } from 'sonner'
 import { fromTokenAmount, ZERO, mathIs } from '@/lib/bignumber'
 import LockOpenIcon from './_/lock-open.svg?react'
 import { useAuctionAlphaVault, useAuctionToken } from '../../context'
+import { useCountdown } from '@/hooks/use-countdown'
+import type { CountdownConfig } from '@/types/countdown'
 
 export function ClaimTokensCard() {
   const wallet = useWallet()
@@ -44,8 +48,21 @@ export function ClaimTokensCard() {
 
   const hasDepositedFunds = escrowInfo ? mathIs`${depositedAmountValue} > ${0}` : false
 
+  // Countdown configuration for vesting start time
+  const countdownConfig: CountdownConfig = useMemo(() => {
+    if (!vaultInfo) {
+      return { type: 'disabled' }
+    }
+    // Use slot-based countdown from vault's vestingStartSlot
+    return { type: 'slot', targetSlot: vaultInfo.vestingStartSlot }
+  }, [vaultInfo])
+
+  const { timeRemaining } = useCountdown(countdownConfig)
+  const isVestingActive = timeRemaining.isExpired
+
   const canClaim =
     wallet.connected &&
+    isVestingActive &&
     claimInfo &&
     mathIs`${availableAmountValue} > ${0}` &&
     (vaultInfo?.state === 'vesting' || vaultInfo?.state === 'vesting_complete')
@@ -205,6 +222,13 @@ export function ClaimTokensCard() {
           <AppTokenName token={quoteToken} variant="symbol" /> refund directly to your wallet.
         </p>
 
+        {/* Countdown Notification - shown when vesting hasn't started */}
+        {!isVestingActive && (
+          <div className="w-full mb-4">
+            <CountdownNotification config={countdownConfig} title={`${token.displayName} vesting period`} />
+          </div>
+        )}
+
         {/* Claim All Button */}
         {wallet.connected ? (
           <button
@@ -223,7 +247,13 @@ export function ClaimTokensCard() {
               ) : (
                 <>
                   <span className="text-lg font-semibold leading-7 text-white">
-                    {hasClaimedAll ? 'Already Claimed' : !canClaim ? 'No Tokens to Claim' : 'Claim All'}
+                    {!isVestingActive
+                      ? 'Vesting Not Started'
+                      : hasClaimedAll
+                        ? 'Already Claimed'
+                        : !canClaim
+                          ? 'No Tokens to Claim'
+                          : 'Claim All'}
                   </span>
                   {canClaim && <ArrowRight className="w-5 h-5 text-white" strokeWidth={2.5} />}
                 </>
@@ -334,6 +364,11 @@ export function ClaimTokensCard() {
 
         {/* Claim Button */}
         <div className="w-full flex flex-col gap-4">
+          {/* Countdown Notification - shown when vesting hasn't started */}
+          {!isVestingActive && (
+            <CountdownNotification config={countdownConfig} title={`${token.displayName} vesting period`} />
+          )}
+
           {wallet.connected ? (
             <>
               <Button
@@ -346,7 +381,7 @@ export function ClaimTokensCard() {
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Processing...
                   </>
-                ) : vaultInfo?.state === 'deposit_open' || vaultInfo?.state === 'deposit_closed' || vaultInfo?.state === 'purchasing' ? (
+                ) : !isVestingActive ? (
                   'Vesting Not Started'
                 ) : hasClaimedAll ? (
                   'Already Claimed'
