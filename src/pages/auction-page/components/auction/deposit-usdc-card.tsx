@@ -5,11 +5,14 @@ import { Info, Loader2, AlertCircle } from 'lucide-react'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
 import { AppTokenAmount } from '@/components/app-token-amount'
+import { CountdownNotification } from '@/components/countdown-notification'
 import { getExplorerUrl } from '@/config'
 import { toast } from 'sonner'
 import { BigNumber, math, fromTokenAmount, mathIs } from '@/lib/bignumber'
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { useAuctionAlphaVault, useAuctionToken } from '../../context'
+import { useCountdown } from '@/hooks/use-countdown'
+import type { CountdownConfig } from '@/types/countdown'
 
 export function DepositUSDCCard() {
   const wallet = useWallet()
@@ -35,8 +38,20 @@ export function DepositUSDCCard() {
   } = useAuctionAlphaVault()
   const token = useAuctionToken()
 
+  // Countdown configuration for deposit window - derived from vault data
+  const countdownConfig: CountdownConfig = useMemo(() => {
+    if (!vaultInfo) {
+      return { type: 'disabled' }
+    }
+    // Use slot-based countdown from vault's depositOpenSlot
+    return { type: 'slot', targetSlot: vaultInfo.depositOpenSlot }
+  }, [vaultInfo])
+
+  const { timeRemaining } = useCountdown(countdownConfig)
+  const isDepositActive = timeRemaining.isExpired
+
   const isDepositOpen = vaultInfo?.state === 'deposit_open'
-  const canDeposit = depositQuota?.canDeposit && isDepositOpen && wallet.connected
+  const canDeposit = isDepositActive && depositQuota?.canDeposit && isDepositOpen && wallet.connected
 
   // Calculate current total deposit (existing + new input amount)
   const calculatedCurrentDeposit = useMemo(() => {
@@ -335,6 +350,11 @@ export function DepositUSDCCard() {
           </div>
         </div>
 
+        {/* Countdown Notification - shown when deposits haven't started */}
+        {!isDepositActive && (
+          <CountdownNotification config={countdownConfig} title={`${token.displayName} deposit window`} />
+        )}
+
         {/* Action Button */}
         <div className="flex flex-col gap-2.5">
           {wallet.connected ? (
@@ -352,13 +372,15 @@ export function DepositUSDCCard() {
                     </>
                   ) : (
                     <p className="font-semibold text-lg leading-7 text-white">
-                      {!isDepositOpen
-                        ? vaultInfo?.state === 'purchasing'
-                          ? 'Purchasing in Progress'
-                          : 'Deposits Closed'
-                        : !depositQuota?.canDeposit
-                          ? (depositQuota?.reason ?? 'Cannot Deposit')
-                          : 'Confirm Deposit'}
+                      {!isDepositActive
+                        ? 'Deposits Not Active Yet'
+                        : !isDepositOpen
+                          ? vaultInfo?.state === 'purchasing'
+                            ? 'Purchasing in Progress'
+                            : 'Deposits Closed'
+                          : !depositQuota?.canDeposit
+                            ? (depositQuota?.reason ?? 'Cannot Deposit')
+                            : 'Confirm Deposit'}
                     </p>
                   )}
                 </div>

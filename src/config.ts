@@ -58,13 +58,25 @@ export const TRANSACTION_CONFIG = {
 }
 
 export const POOL_TRADING_CONFIG = {
-  'T-SpaceX-USDC': true,
+  'T-SpaceX-USDC': {
+    enabled: true,
+    // Countdown configuration - set to 'disabled' for immediate trading
+    // Currently set to 2 minutes from deployment for testing
+    countdown: { type: 'timestamp', targetTimestamp: Date.now() + 2 * 60 * 1000 } as
+      | { type: 'slot'; targetSlot: number }
+      | { type: 'timestamp'; targetTimestamp: number }
+      | { type: 'disabled' },
+  },
 } as const
 
 export type TradingPoolId = keyof typeof POOL_TRADING_CONFIG
 
 export function isTradingEnabledForPool(poolId: TradingPoolId): boolean {
-  return POOL_TRADING_CONFIG[poolId] ?? false
+  return POOL_TRADING_CONFIG[poolId]?.enabled ?? false
+}
+
+export function getPoolCountdownConfig(poolId: TradingPoolId) {
+  return POOL_TRADING_CONFIG[poolId]?.countdown ?? { type: 'disabled' }
 }
 
 export function isDevnet(network: SolanaNetwork = getCurrentNetwork()): boolean {
@@ -199,8 +211,6 @@ const TOKENS: Record<AppTokenId, AppToken> = {
         'T-SpaceX is a synthetic asset engineered to track the valuation of SpaceX equity in private secondary markets.',
       auctionMechanism:
         'Funds are deposited into a single liquidity bin. The auction runs for a set duration. If oversubscribed, participants receive a pro-rata share based on their contribution.',
-      vestingTerms:
-        'Tokens claimed from the vault are subject to a 24-hour lockup post-auction to ensure market stability.',
     },
     dlmmPool: {
       id: 'T-SpaceX-USDC',

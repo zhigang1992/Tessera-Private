@@ -2,13 +2,15 @@ import { useState, useEffect, useCallback } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useMeteoraSwap, type SwapDirection } from '@/hooks/use-meteora-swap'
-import { DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getAppToken, getExplorerUrl } from '@/config'
+import { DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getAppToken, getExplorerUrl, getPoolCountdownConfig } from '@/config'
 import { BigNumber } from '@/lib/bignumber'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
 import { AppTokenCount } from '@/components/app-token-count'
+import { CountdownNotification } from '@/components/countdown-notification'
 import SwapIcon from './_/swap-icon.svg?react'
 import { toast } from 'sonner'
+import { useCountdown } from '@/hooks/use-countdown'
 
 const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
 const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
@@ -42,6 +44,11 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
     refreshBalances,
     clearError,
   } = useMeteoraSwap()
+
+  // Countdown configuration for trading start time
+  const countdownConfig = getPoolCountdownConfig('T-SpaceX-USDC')
+  const { timeRemaining } = useCountdown(countdownConfig)
+  const isTradingActive = timeRemaining.isExpired
 
   // Default: USDC -> T-SpaceX (buying T-SpaceX)
   const [direction, setDirection] = useState<SwapDirection>('USDC_TO_TSPACEX')
@@ -152,9 +159,10 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
   const isWalletConnected = wallet.connected
   const hasValidInput = inputAmount && parseFloat(inputAmount) > 0
   const hasQuote = !!quote
-  const isDisabled = !isWalletConnected || !hasValidInput || !hasQuote || isLoading || isSwapping || disabled
+  const isDisabled = !isTradingActive || !isWalletConnected || !hasValidInput || !hasQuote || isLoading || isSwapping || disabled
 
   const getButtonText = () => {
+    if (!isTradingActive) return 'Trading Not Active Yet'
     if (disabled) return 'Trading Not Enabled Yet'
     if (!isWalletConnected) return 'Connect Wallet'
     if (isSwapping) return 'Swapping...'
@@ -304,6 +312,11 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
           </div>
           <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-lg transition-colors border-[#dddbd0] dark:border-[#393b3d] group-focus-within:border-black dark:group-focus-within:border-[#d2fb95]" />
         </div>
+
+        {/* Countdown Notification - shown when trading hasn't started */}
+        {!isTradingActive && (
+          <CountdownNotification config={countdownConfig} title="T-SpaceX trading pool" />
+        )}
 
         {/* Rate Info */}
         {quote && hasValidInput && (
