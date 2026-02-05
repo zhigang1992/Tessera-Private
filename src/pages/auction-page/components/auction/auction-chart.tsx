@@ -16,7 +16,7 @@ export function AuctionChart() {
   })
 
   useEffect(() => {
-    if (!chartContainerRef.current || !chartData || chartData.length === 0) return
+    if (!chartContainerRef.current || !chartData || chartData.data.length === 0) return
 
     const chart = createChart(chartContainerRef.current, {
       layout: {
@@ -96,19 +96,24 @@ export function AuctionChart() {
     })
 
     // Convert chart data to the format required by lightweight-charts
-    // Start: 11/10 14:00, End: 11/11 05:00 (15 hours total)
-    const startDate = new Date('2024-11-10T14:00:00').getTime() / 1000
-    const formattedData: LineData<Time>[] = chartData.map((point) => ({
-      time: (startDate + point.hour * 3600) as Time,
+    // Use the actual start time from the data
+    const startTime = chartData.startTime
+    const formattedData: LineData<Time>[] = chartData.data.map((point) => ({
+      time: (startTime + point.hour * 3600) as Time,
       value: point.value,
     }))
     lineSeries.setData(formattedData)
 
-    // Set visible time range to show all 6 time labels from design
-    chart.timeScale().setVisibleRange({
-      from: startDate as Time,
-      to: (startDate + 15 * 3600) as Time,
-    })
+    // Set visible time range to show all data points
+    if (chartData.data.length > 0) {
+      const lastPoint = chartData.data[chartData.data.length - 1]
+      const endTime = startTime + lastPoint.hour * 3600
+
+      chart.timeScale().setVisibleRange({
+        from: startTime as Time,
+        to: endTime as Time,
+      })
+    }
 
     // Enable auto-scaling to fit actual data
     chart.priceScale('right').applyOptions({
@@ -146,7 +151,7 @@ export function AuctionChart() {
   }, [chartData])
 
   // Show message when no data is available
-  if (!chartData || chartData.length === 0) {
+  if (!chartData || chartData.data.length === 0) {
     return (
       <div className="w-full h-full flex items-center justify-center text-[#666]">
         Data not available yet
