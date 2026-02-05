@@ -14,8 +14,8 @@ interface TokenMetadata {
 
 const TOKEN_METADATA: Record<AppTokenId, TokenMetadata> = {
   'T-SpaceX': {
-    description: 'T-SpaceX is a synthetic asset engineered to track the valuation of SpaceX equity in private secondary markets.',
-    categories: ['Private Markets', 'Pre-IPO'],
+    description: 'SpaceX is a private aerospace company founded by Elon Musk that designs and manufactures rockets and spacecraft, provides commercial and government orbital launch services, and operates the Starlink global satellite internet constellation. Its business covers reusable launch systems, crewed missions, satellite broadband.',
+    categories: ['Equities'],
     underlyingAssetName: 'SpaceX Equity',
     underlyingAssetCompany: 'SpaceX',
     sharesPerToken: '1:1000'

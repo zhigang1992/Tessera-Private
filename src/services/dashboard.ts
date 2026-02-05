@@ -133,10 +133,10 @@ const tokenInfo: TokenInfo = {
   priceChange24h: 2.74,
   priceChangePercent24h: 0.6203,
   description:
-    'Tesla, Inc. designs, develops, manufactures, leases, and sells electric vehicles, and energy generation and storage systems in the United States, China, and internationally. It operates in two segments, Automotive, and Energy Generation and Storage. The Autom...',
+    'SpaceX is a private aerospace company founded by Elon Musk that designs and manufactures rockets and spacecraft, provides commercial and government orbital launch services, and operates the Starlink global satellite internet constellation. Its business covers reusable launch systems, crewed missions, satellite broadband.',
   supportedChains: ['Solana'],
   onchainAddress: '0xf6b1...103f',
-  categories: ['Equities', 'Stock'],
+  categories: ['Equities'],
   underlyingAssetName: 'SpaceX, Inc. Private Equity',
   underlyingAssetCompany: 'SpaceX',
   sharesPerToken: `1 ${BASE_TOKEN.symbol} = 1.00 SPACEX EQUITY`,
@@ -287,21 +287,18 @@ Object.values(APP_TOKENS).forEach((token) => {
 
 /**
  * Format market cap to human-readable valuation string
+ * Uses the implied valuation formula: Token Price × 19.0023753
+ * (8000/421 = 19.0023753)
  */
-function formatValuation(value: number): string {
-  if (value >= 1_000_000_000_000) {
-    return `$${(value / 1_000_000_000_000).toFixed(1)}T`
+function formatValuation(tokenPrice: number): string {
+  // Calculate implied valuation: Token Price × 19.0023753
+  const impliedValue = tokenPrice * 19.0023753
+
+  if (impliedValue > 10000) {
+    return `$${(impliedValue / 10000).toFixed(1)}T`
+  } else {
+    return `$${(impliedValue / 10).toFixed(1)}B`
   }
-  if (value >= 1_000_000_000) {
-    return `$${(value / 1_000_000_000).toFixed(1)}B`
-  }
-  if (value >= 1_000_000) {
-    return `$${(value / 1_000_000).toFixed(1)}M`
-  }
-  if (value >= 1_000) {
-    return `$${(value / 1_000).toFixed(1)}K`
-  }
-  return `$${value.toFixed(2)}`
 }
 
 /**
@@ -326,7 +323,6 @@ export async function getTokenizedAssets(): Promise<AssetData[]> {
   return tokenDetails.map((token) => {
     const metadata = TOKEN_REGISTRY[token.token]
     const price = BigNumber.toNumber(fromHasuraToNative(token.price))
-    const marketCap = BigNumber.toNumber(fromHasuraToNative(token.market_cap))
     const holders = Number(token.holder_count) || 0
 
     // If we have metadata for this token, use it; otherwise create generic entry
@@ -339,7 +335,7 @@ export async function getTokenizedAssets(): Promise<AssetData[]> {
         sector: metadata.sector,
         price,
         holders,
-        valuation: formatValuation(marketCap),
+        valuation: formatValuation(price),
       }
     }
 
@@ -353,7 +349,7 @@ export async function getTokenizedAssets(): Promise<AssetData[]> {
       sector: 'Unknown',
       price,
       holders,
-      valuation: formatValuation(marketCap),
+      valuation: formatValuation(price),
     }
   })
 }
