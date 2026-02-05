@@ -1,5 +1,5 @@
 import { sleep } from './utils'
-import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap, fetchAllTokenDetails, fetchDashboardSummary, fetchTokenPrice24hOHLC } from '@/features/referral/lib/graphql-client'
+import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap, fetchAllTokenDetails, fetchDashboardSummary, fetchTokenPrice24hOHLC, fetchTokenDetails } from '@/features/referral/lib/graphql-client'
 import { fromHasuraToNative, formatBigNumber, BigNumber, math, mathIs, type BigNumberSource, fromTokenAmount, type BigNumberValue } from '@/lib/bignumber'
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
@@ -378,34 +378,28 @@ function formatSupply(value: number): string {
 
 /**
  * Get dashboard stats including real token price and supply from backend
+ * Uses public_marts_token_details for latest price
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const poolAddress = getBasePoolAddress()
   const tokenMint = BASE_MINT_ADDRESS
 
-  if (!poolAddress || !tokenMint) {
+  if (!tokenMint) {
     return dashboardStats
   }
 
-  const [events, tokenData] = await Promise.all([fetchSwapEventsForPrice(poolAddress, 10), fetchTokenMarketCap(tokenMint)])
+  // Fetch token details (includes price and circulating supply)
+  const tokenData = await fetchTokenDetails(tokenMint)
 
-  let tokenPrice = 0
-  if (events.length > 0) {
-    // Get price from most recent swap
-    const latestEvent = events[events.length - 1]
-    const x = fromHasuraToNative(latestEvent.amount_x)
-    const y = fromHasuraToNative(latestEvent.amount_y)
-    if (mathIs`${x} > ${0}`) {
-      tokenPrice = BigNumber.toNumber(math`${y} / ${x}`)
-    }
+  if (!tokenData) {
+    return dashboardStats
   }
 
-  // Get circulating supply from token market cap data
-  let tokenSupply = dashboardStats.tokenSupply
-  if (tokenData) {
-    const supplyValue = BigNumber.toNumber(fromHasuraToNative(tokenData.circulating_supply))
-    tokenSupply = formatSupply(supplyValue)
-  }
+  // Get latest price from token_details
+  const tokenPrice = BigNumber.toNumber(fromHasuraToNative(tokenData.price))
+
+  // Get circulating supply from token_details
+  const supplyValue = BigNumber.toNumber(fromHasuraToNative(tokenData.circulating_supply))
+  const tokenSupply = formatSupply(supplyValue)
 
   return {
     ...dashboardStats,
