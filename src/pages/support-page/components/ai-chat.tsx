@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Send, Bot, User, Loader2, ArrowLeft } from 'lucide-react'
+import { Send, Bot, User, Loader2, ArrowLeft, Info } from 'lucide-react'
 import Markdown from 'react-markdown'
 import { clsx } from 'clsx'
 import {
@@ -185,6 +185,29 @@ export function AiChat({ issue, initialQuery, onBack}: AiChatProps) {
       {/* Chat Messages - Scrollable */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
         <div className="max-w-[800px] mx-auto flex flex-col gap-[16px] md:gap-[24px]">
+          {/* Disclaimer Card */}
+          <div className="bg-white dark:bg-zinc-800 rounded-[16px] p-4 md:p-5 shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)] border border-[rgba(17,17,17,0.08)] dark:border-[rgba(210,210,210,0.08)]">
+            <div className="flex gap-3 md:gap-4">
+              <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#e5e5e5] dark:bg-[#3f3f46] flex items-center justify-center shrink-0">
+                <Info className="w-4 h-4 md:w-5 md:h-5 text-[#71717a] dark:text-[#a1a1aa]" />
+              </div>
+              <div className="flex-1 pt-0.5">
+                <p className="text-[13px] md:text-[15px] leading-[22px] md:leading-[26px] text-[#52525b] dark:text-[#a1a1aa]">
+                  <strong className="font-semibold text-[#18181b] dark:text-[#d2d2d2]">Disclaimer:</strong> This conversation provides general information about Tessera's platform and services for informational purposes only. It should not be relied upon as legal, financial, investment, or tax advice. T-Tokens represent loan participation rights, not securities, though regulatory treatment may vary by jurisdiction. For official terms and complete details, please refer to our{' '}
+                  <a
+                    href="https://terms.tessera.pe"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#16a34a] dark:text-[#22c55e] hover:underline font-medium"
+                  >
+                    Terms and Conditions
+                  </a>
+                  , which shall prevail in all respects in case of any discrepancy. These materials are not directed to persons in jurisdictions where such activity would be unlawful. Before using Tessera, you must read and accept the complete Terms and Conditions and consult your own legal, financial, and tax advisors.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {isLoadingHistory ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 text-[#71717a] animate-spin" />
