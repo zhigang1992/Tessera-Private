@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getDashboardTokenInfo } from '@/services'
 import { AppTokenId, DEFAULT_BASE_TOKEN_ID } from '@/config'
@@ -34,8 +33,6 @@ interface AboutPanelProps {
 }
 
 export function AboutPanel({ tokenId = DEFAULT_BASE_TOKEN_ID }: AboutPanelProps) {
-  const [showMore, setShowMore] = useState(false)
-
   const { data: tokenInfo } = useQuery({
     queryKey: ['dashboardTokenInfo', tokenId],
     queryFn: getDashboardTokenInfo,
@@ -43,7 +40,6 @@ export function AboutPanel({ tokenId = DEFAULT_BASE_TOKEN_ID }: AboutPanelProps)
 
   const metadata = TOKEN_METADATA[tokenId]
   const description = metadata.description
-  const displayDescription = showMore ? description : description
 
   return (
     <div className="bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl p-4 lg:p-6">
@@ -51,13 +47,7 @@ export function AboutPanel({ tokenId = DEFAULT_BASE_TOKEN_ID }: AboutPanelProps)
 
       {/* Description */}
       <p className="text-sm text-black dark:text-[#d2d2d2] leading-5 mb-6">
-        {displayDescription}{' '}
-        <button
-          onClick={() => setShowMore(!showMore)}
-          className="text-[#06a800] dark:text-[#d2fb95] hover:underline"
-        >
-          {showMore ? 'Show Less' : 'Show More'}
-        </button>
+        {description}
       </p>
 
       {/* Info Grid */}
