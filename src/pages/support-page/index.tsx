@@ -167,17 +167,17 @@ export default function SupportPage() {
         {
           question: 'Do I need to complete KYC or accreditation to use Tessera?',
           answer:
-            'No. Tessera is a fully permissionless platform and does not require KYC or investor accreditation. Anyone can participate by simply connecting a supported wallet, regardless of income level, net worth, or geographic location.',
+            'No. Tessera is a fully permissionless platform and does not require KYC or investor accreditation. Anyone can participate by simply connecting a supported wallet, regardless of income level or net worth.',
         },
         {
           question: 'Who can trade on Tessera?',
           answer:
-            'Anyone with a supported Solana wallet can access and trade Tessera tokens. There are no restrictions based on accreditation status, jurisdiction, or minimum investment size. Participation starts with as little as one dollar.',
+            'Anyone with a supported Solana wallet can access and trade Tessera tokens. Participation starts with as little as one dollar.',
         },
         {
           question: 'Which wallets are supported for instant access?',
           answer:
-            'Tessera currently supports major Solana-compatible wallets, including Phantom, Solflare, MetaMask (via Solana), and Brave Wallet. Users retain full control of their assets at all times.',
+            'Tessera currently supports major Solana-compatible wallets, including Phantom, Solflare and MetaMask (via Solana). Users retain full control of their assets at all times.',
         },
       ],
     },
