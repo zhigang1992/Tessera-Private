@@ -3,15 +3,24 @@ import { TrendingUp } from 'lucide-react'
 import { getTokenizedAssets } from '@/services'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
-import { DEFAULT_BASE_TOKEN_ID, getAppToken } from '@/config'
+import { AppTokenId, DEFAULT_BASE_TOKEN_ID, getAppToken, resolveTokenIdFromParam } from '@/config'
 
 interface AssetsTableProps {
-  selectedAsset: string | null
-  onSelectAsset: (assetId: string) => void
+  selectedTokenId: AppTokenId
+  onSelectToken: (tokenId: AppTokenId) => void
 }
 
-export function AssetsTable({ selectedAsset, onSelectAsset }: AssetsTableProps) {
+export function AssetsTable({ selectedTokenId, onSelectToken }: AssetsTableProps) {
   const defaultToken = getAppToken(DEFAULT_BASE_TOKEN_ID)
+
+  const handleAssetClick = (assetId: string) => {
+    const tokenId = resolveTokenIdFromParam(assetId) ?? DEFAULT_BASE_TOKEN_ID
+    onSelectToken(tokenId)
+  }
+
+  const getTokenIdForAsset = (assetId: string): AppTokenId => {
+    return resolveTokenIdFromParam(assetId) ?? DEFAULT_BASE_TOKEN_ID
+  }
 
   const { data: assets, isLoading } = useQuery({
     queryKey: ['tokenizedAssets'],
@@ -58,18 +67,18 @@ export function AssetsTable({ selectedAsset, onSelectAsset }: AssetsTableProps) 
               className={`flex items-center px-4 py-3 cursor-pointer transition-colors ${
                 index < assets.length - 1 ? 'border-b' : ''
               } ${
-                selectedAsset === asset.id
+                selectedTokenId === getTokenIdForAsset(asset.id)
                   ? 'bg-[#d2fb95] border-[#c5ed8a]'
                   : 'hover:bg-[#edffd3] dark:hover:bg-[#edffd31a] border-black/15 dark:border-[rgba(210,210,210,0.1)]'
               }`}
-              onClick={() => onSelectAsset(asset.id)}
+              onClick={() => handleAssetClick(asset.id)}
             >
               <div className="w-[30%] min-w-[150px] flex items-center gap-3">
                 <AppTokenIcon token={defaultToken} className="w-8 h-8" size={32} />
                 <div>
                   <p
                     className={`text-sm font-semibold ${
-                      selectedAsset === asset.id ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
+                      selectedTokenId === getTokenIdForAsset(asset.id) ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
                     }`}
                   >
                     {asset.name ?? <AppTokenName token={defaultToken} />}
@@ -85,7 +94,7 @@ export function AssetsTable({ selectedAsset, onSelectAsset }: AssetsTableProps) 
               <div className="w-[17.5%] min-w-[100px]">
                 <p
                   className={`text-sm font-semibold ${
-                    selectedAsset === asset.id ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
+                    selectedTokenId === getTokenIdForAsset(asset.id) ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
                   }`}
                 >
                   ${asset.price.toFixed(2)}
@@ -96,7 +105,7 @@ export function AssetsTable({ selectedAsset, onSelectAsset }: AssetsTableProps) 
                   {asset.holders > 0 && <TrendingUp className="w-3 h-3 text-[#269700]" />}
                   <p
                     className={`text-sm font-semibold ${
-                      selectedAsset === asset.id ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
+                      selectedTokenId === getTokenIdForAsset(asset.id) ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
                     }`}
                   >
                     {asset.holders > 0 ? asset.holders.toLocaleString() : '—'}
@@ -106,7 +115,7 @@ export function AssetsTable({ selectedAsset, onSelectAsset }: AssetsTableProps) 
               <div className="w-[17.5%] min-w-[100px]">
                 <p
                   className={`text-sm font-semibold ${
-                    selectedAsset === asset.id ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
+                    selectedTokenId === getTokenIdForAsset(asset.id) ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
                   }`}
                 >
                   {asset.valuation}
