@@ -413,6 +413,7 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
       })
 
       await refreshUserPosition()
+      await refreshVaultInfo()
 
       return signature
     } catch (err) {
@@ -422,7 +423,7 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
     } finally {
       setIsLoading(false)
     }
-  }, [client, connection, wallet, refreshUserPosition])
+  }, [client, connection, wallet, refreshUserPosition, refreshVaultInfo])
 
   // Withdraw remaining (refund) action
   const withdrawRemaining = useCallback(async (): Promise<string | null> => {
@@ -451,6 +452,7 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
       })
 
       await refreshUserPosition()
+      await refreshVaultInfo()
 
       return signature
     } catch (err) {
@@ -460,7 +462,7 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
     } finally {
       setIsLoading(false)
     }
-  }, [client, connection, wallet, refreshUserPosition])
+  }, [client, connection, wallet, refreshUserPosition, refreshVaultInfo])
 
   // Clear error
   const clearError = useCallback(() => {

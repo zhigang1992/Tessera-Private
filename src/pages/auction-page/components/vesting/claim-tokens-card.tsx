@@ -50,6 +50,12 @@ export function ClaimTokensCard() {
     mathIs`${availableAmountValue} > ${0}` &&
     (vaultInfo?.state === 'vesting' || vaultInfo?.state === 'vesting_complete')
 
+  const hasClaimedAll =
+    claimInfo &&
+    mathIs`${totalClaimedValue} > ${0}` &&
+    mathIs`${availableAmountValue} === ${0}` &&
+    mathIs`${totalAllocationValue} > ${0}`
+
   const handleClaimTokens = async () => {
     if (!wallet.connected) {
       toast.error('Please connect your wallet')
@@ -217,7 +223,7 @@ export function ClaimTokensCard() {
               ) : (
                 <>
                   <span className="text-lg font-semibold leading-7 text-white">
-                    {!canClaim ? 'No Tokens to Claim' : 'Claim All'}
+                    {hasClaimedAll ? 'Already Claimed' : !canClaim ? 'No Tokens to Claim' : 'Claim All'}
                   </span>
                   {canClaim && <ArrowRight className="w-5 h-5 text-white" strokeWidth={2.5} />}
                 </>
@@ -342,6 +348,8 @@ export function ClaimTokensCard() {
                   </>
                 ) : vaultInfo?.state === 'deposit_open' || vaultInfo?.state === 'deposit_closed' || vaultInfo?.state === 'purchasing' ? (
                   'Vesting Not Started'
+                ) : hasClaimedAll ? (
+                  'Already Claimed'
                 ) : !canClaim ? (
                   'No Tokens to Claim'
                 ) : (
