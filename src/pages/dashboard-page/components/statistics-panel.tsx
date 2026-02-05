@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { getDashboardStatistics } from '@/services'
+import { AppTokenId, DEFAULT_BASE_TOKEN_ID } from '@/config'
 
 /**
  * Format price for display - shows "—" when no data (value is 0)
@@ -11,9 +12,13 @@ function formatPrice(value: number | undefined): string {
   return `$${value.toFixed(2)}`
 }
 
-export function StatisticsPanel() {
+interface StatisticsPanelProps {
+  tokenId?: AppTokenId
+}
+
+export function StatisticsPanel({ tokenId = DEFAULT_BASE_TOKEN_ID }: StatisticsPanelProps) {
   const { data: statistics } = useQuery({
-    queryKey: ['dashboardStatistics'],
+    queryKey: ['dashboardStatistics', tokenId],
     queryFn: getDashboardStatistics,
   })
 
