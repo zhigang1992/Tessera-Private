@@ -12,12 +12,6 @@ export function TradingLeaderboard() {
 
   const { data, isLoading } = useLeaderboard(currentPage, 'trading')
 
-  // Find current user's rank from the entries
-  const currentUserEntry = walletAddress
-    ? data?.entries.find((entry) => entry.account === walletAddress)
-    : null
-  const currentUserRank = currentUserEntry?.rank
-
   const totalPages = data?.totalPages ?? 1
 
   const formatCurrency = (value: number) => {
@@ -50,7 +44,7 @@ export function TradingLeaderboard() {
             </tr>
           ) : (
             data.entries.map((entry) => {
-              const isCurrentUser = entry.rank === currentUserRank
+              const isCurrentUser = walletAddress && entry.account.toLowerCase() === walletAddress.toLowerCase()
               const medal = getMedalIcon(entry.rank)
               const displayAddress = entry.account.length <= 12
                 ? entry.account
