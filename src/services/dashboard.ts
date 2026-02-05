@@ -323,7 +323,6 @@ export async function getTokenizedAssets(): Promise<AssetData[]> {
   return tokenDetails.map((token) => {
     const metadata = TOKEN_REGISTRY[token.token]
     const price = BigNumber.toNumber(fromHasuraToNative(token.price))
-    const marketCap = BigNumber.toNumber(fromHasuraToNative(token.market_cap))
     const holders = Number(token.holder_count) || 0
 
     // If we have metadata for this token, use it; otherwise create generic entry
