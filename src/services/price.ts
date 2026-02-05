@@ -7,6 +7,7 @@
 
 import {
   fetchTokenPricesDaily,
+  fetchTokenPricesHourly,
   fetchTokenPrice24hOHLC,
   fetchSwapEventsForPrice,
 } from '@/features/referral/lib/graphql-client'
@@ -178,50 +179,44 @@ export async function getTokenPrice(symbol: string): Promise<TokenPriceInfo | nu
 
 /**
  * Get price history for charting
+ * Uses hourly data for short ranges (1D, 1W) and daily data for longer ranges
  */
 export async function getPriceHistory(
   symbol: string,
   range: TimeRange = '1D'
 ): Promise<PriceDataPoint[]> {
-  const { mint, poolAddress } = resolvePriceContext(symbol)
-  if (!poolAddress) return []
+  const { mint } = resolvePriceContext(symbol)
+  if (!mint) return []
 
   const days = getDaysForRange(range)
 
-  // For longer time ranges, try daily prices first
-  if (days >= 7) {
-    const dailyPrices = await fetchTokenPricesDaily(mint, days)
+  // For short time ranges (< 7 days), use hourly prices
+  if (days < 7) {
+    const hours = days * 24
+    const hourlyPrices = await fetchTokenPricesHourly(mint, hours)
 
-    if (dailyPrices.length > 0) {
-      return dailyPrices
+    if (hourlyPrices.length > 0) {
+      return hourlyPrices
         .map((p) => ({
-          time: p.day_timestamp,
+          time: p.hour_timestamp,
           value: BigNumber.toNumber(fromHasuraToNative(p.price)),
         }))
         .sort((a, b) => a.time - b.time) // Ensure ascending order
     }
-  }
-
-  // Fall back to swap events for more granular data
-  const events = await fetchSwapEventsForPrice(poolAddress, 500)
-
-  if (events.length === 0) {
     return []
   }
 
-  // Filter events by time range
-  const filteredEvents = filterEventsByTimeRange(events, range)
+  // For longer time ranges, use daily prices
+  const dailyPrices = await fetchTokenPricesDaily(mint, days)
 
-  if (filteredEvents.length === 0) {
-    // If no events in range, use all available events
-    return events.map((event) => ({
-      time: event.block_time,
-      value: calculatePriceFromSwap(event.amount_x, event.amount_y),
-    }))
+  if (dailyPrices.length > 0) {
+    return dailyPrices
+      .map((p) => ({
+        time: p.day_timestamp,
+        value: BigNumber.toNumber(fromHasuraToNative(p.price)),
+      }))
+      .sort((a, b) => a.time - b.time) // Ensure ascending order
   }
 
-  return filteredEvents.map((event) => ({
-    time: event.block_time,
-    value: calculatePriceFromSwap(event.amount_x, event.amount_y),
-  }))
+  return []
 }

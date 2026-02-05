@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { TrendingUp } from 'lucide-react'
 import { getTokenizedAssets } from '@/services'
@@ -6,9 +5,13 @@ import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
 import { DEFAULT_BASE_TOKEN_ID, getAppToken } from '@/config'
 
-export function AssetsTable() {
+interface AssetsTableProps {
+  selectedAsset: string | null
+  onSelectAsset: (assetId: string) => void
+}
+
+export function AssetsTable({ selectedAsset, onSelectAsset }: AssetsTableProps) {
   const defaultToken = getAppToken(DEFAULT_BASE_TOKEN_ID)
-  const [selectedAsset, setSelectedAsset] = useState<string>('spacex')
 
   const { data: assets, isLoading } = useQuery({
     queryKey: ['tokenizedAssets'],
@@ -59,7 +62,7 @@ export function AssetsTable() {
                   ? 'bg-[#d2fb95] border-[#c5ed8a]'
                   : 'hover:bg-[#edffd3] dark:hover:bg-[#edffd31a] border-black/15 dark:border-[rgba(210,210,210,0.1)]'
               }`}
-              onClick={() => setSelectedAsset(asset.id)}
+              onClick={() => onSelectAsset(asset.id)}
             >
               <div className="w-[30%] min-w-[150px] flex items-center gap-3">
                 <AppTokenIcon token={defaultToken} className="w-8 h-8" size={32} />
