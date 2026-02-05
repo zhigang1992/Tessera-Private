@@ -95,32 +95,51 @@ const hasClaimedAll =
 
 ---
 
-### 5. Auction页面增加常驻提示 (P0 Block)
+### 5. Auction页面增加常驻提示 (P0 Block) ✅
 **Priority:** P0 Block
 **Type:** UI
 **Reporter:** Oscar Xu
 **Report Time:** February 4, 2026 10:57 PM
+**Status:** FIXED
 
-**Current State (from screenshot):**
-The screenshot shows a deposit dialog with some warning text about deposits being available to whitelisted wallets and checking the whitelist.
+**Problem:**
+The auction deposit page needed persistent warnings/notifications to inform users about:
+1. Whitelist requirements (if applicable)
+2. Minimum deposit requirements
+3. Active position status
 
-**Questions:**
-1. **What is the exact text for the persistent warning?** The screenshot shows:
-   - "Deposits are only available to whitelisted wallets."
-   - "Minimum deposit per wallet: $500"
-   - "You have an active position in this auction. Check the 'My Position' card to view it."
-2. **Where should this warning appear?**
-   - Always visible on the auction page?
-   - Only in the deposit dialog?
-   - Both places?
-3. **Which warnings are always shown vs. conditional?**
-   - Is the whitelisting requirement always active?
-   - Is the minimum deposit always $500?
-   - When should the "active position" warning show?
-4. **Styling:**
-   - Should it be in a green info box as shown?
-   - Icon needed?
-   - Dismissible or always visible?
+**Solution:**
+Added a persistent info box in the deposit card that:
+- Shows whitelist requirement when vault has a whitelist configured
+- Displays "Deposits are only available to whitelisted wallets. Minimum deposit per wallet: $500"
+- Uses semi-transparent white background `bg-[rgba(255,255,255,0.5)]` matching the design
+- Appears above the "Current Deposit" section
+- Has Info icon for visual consistency
+
+The "active position" notice was already implemented and appears below the Confirm Deposit button.
+
+**Files Modified:**
+- `src/pages/auction-page/components/auction/deposit-usdc-card.tsx`
+
+**Changes:**
+```typescript
+// Import whitelist checker
+import { hasWhitelist } from '@/lib/whitelist'
+
+// Add persistent info box before Current Deposit section
+{(hasWhitelist() || vaultInfo?.maxIndividualDeposit) && (
+  <div className="bg-[rgba(255,255,255,0.5)] flex gap-2.5 items-start p-3 rounded-lg w-full">
+    <Info className="w-3 h-3 text-[#666666] shrink-0 mt-0.5" />
+    <div className="flex-1 flex flex-col gap-0.5">
+      {hasWhitelist() && (
+        <p className="font-normal leading-[16.5px] text-[10px] text-black tracking-[0.0645px]">
+          Deposits are only available to whitelisted wallets. Minimum deposit per wallet: $500
+        </p>
+      )}
+    </div>
+  </div>
+)}
+```
 
 **Screenshot reference:** `/Users/kylefang/Downloads/Private & Shared/Tessera Bugs/Auction页面增加常驻提示/image.png`
 
@@ -196,33 +215,54 @@ Assuming the user already has deposited money:
 
 ---
 
-### 8. Claim页面自动更新Button (P2 Important)
+### 8. Claim页面自动更新Button (P2 Important) ✅
 **Priority:** P2 Important
 **Type:** User Experience
 **Reporter:** Oscar Xu
 **Report Time:** February 4, 2026 11:33 PM
+**Status:** FIXED
 
-**Current State (from screenshot):**
-The button shows "No Tokens to Claim" but should update to "Claim All →" when tokens are available.
+**Problem:**
+The claim button needed to automatically update when tokens become claimable,
+showing countdown until vesting starts and then enabling the claim functionality.
 
-**Questions:**
-1. **Is this about automatic polling?** Should we:
-   - Poll for claim status updates periodically?
-   - Use a WebSocket connection for real-time updates?
-   - Refetch on user interaction?
-2. **When should the button auto-update?**
-   - Immediately when tokens become claimable?
-   - After a certain time period?
-   - When the auction ends?
-3. **What triggers the button state change?**
-   - Auction end time reached?
-   - Token allocation finalized?
-   - Vesting period completed?
-4. **Should we show a notification when claimable status changes?**
-5. **Performance considerations:**
-   - How often should we poll?
-   - Should we use a background service?
-   - Should we cache the status?
+**Solution:**
+Implemented vesting countdown system that:
+1. Reads vestingStartSlot from vault data (auto-synced from Meteora SDK)
+2. Shows countdown notification: "The T-SpaceX Token vesting period is not yet active..."
+3. Updates button text to "Vesting Not Started" before countdown expires
+4. Automatically enables claim button when vesting starts (isVestingActive = true)
+5. Uses adaptive refresh strategy (smart polling based on proximity)
+
+**Technical Implementation:**
+- Uses same countdown infrastructure as trading/auction deposits
+- Slot-based countdown for accuracy
+- Component re-renders automatically as countdown ticks
+- No manual polling needed - countdown hook handles refresh internally
+- Adaptive API refresh: 10 min → 1 min → 10 sec as vesting approaches
+
+**Files Modified:**
+- src/pages/auction-page/components/vesting/claim-tokens-card.tsx
+
+**Changes:**
+```typescript
+// Countdown from vault data
+const countdownConfig = useMemo(() => {
+  if (!vaultInfo) return { type: 'disabled' }
+  return { type: 'slot', targetSlot: vaultInfo.vestingStartSlot }
+}, [vaultInfo])
+
+const { timeRemaining } = useCountdown(countdownConfig)
+const isVestingActive = timeRemaining.isExpired
+
+// Show countdown notification
+{!isVestingActive && (
+  <CountdownNotification config={countdownConfig} title={`${token.displayName} vesting period`} />
+)}
+
+// Update button logic
+const canClaim = wallet.connected && isVestingActive && claimInfo && ...
+```
 
 **Screenshot reference:** `/Users/kylefang/Downloads/Private & Shared/Tessera Bugs/Claim页面自动更新Button/image.png`
 
@@ -230,13 +270,20 @@ The button shows "No Tokens to Claim" but should update to "Claim All →" when 
 
 ## Summary
 
-**Completed:** 2 bugs fixed (straightforward text/content changes)
-**Needs Clarification:** 6 bugs require additional information
+**Completed:** 6 bugs fixed
+- Support page content changes ✅
+- Vesting section removal ✅
+- Trade countdown implementation ✅
+- Claim status refresh fix ✅
+- Auction persistent warnings ✅
+- Claim vesting countdown ✅
+
+**Needs Clarification:** 2 bugs require additional information
 
 **Priority Breakdown:**
-- P0 Block: 3 bugs (Trade pre-state, Claim status update, Auction persistent warning)
+- P0 Block: 0 bugs (all completed!)
 - P1 Urgent: 1 bug (Auction failure - needs investigation)
-- P2 Important: 2 bugs (Auction input display, Claim button auto-update)
+- P2 Important: 1 bug (Auction input display changes)
 
 **Next Steps:**
-Please review the questions above and provide clarification so I can implement the remaining fixes.
+Please review the questions above and provide clarification so I can implement the remaining 2 fixes.
