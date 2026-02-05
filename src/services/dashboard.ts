@@ -1,9 +1,10 @@
 import { sleep } from './utils'
-import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap, fetchAllTokenDetails, fetchTokenDetails, fetchDashboardSummary, fetchTokenPrice24hOHLC } from '@/features/referral/lib/graphql-client'
+import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchTokenMarketCap, fetchAllTokenDetails, fetchDashboardSummary, fetchTokenPrice24hOHLC } from '@/features/referral/lib/graphql-client'
 import { fromHasuraToNative, formatBigNumber, BigNumber, math, mathIs, type BigNumberSource, fromTokenAmount, type BigNumberValue } from '@/lib/bignumber'
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { DEVNET_POOLS } from './meteora'
+import { getCurrentTokenPrice } from './price'
 import {
   APP_TOKENS,
   DEFAULT_BASE_TOKEN_ID,
@@ -671,19 +672,10 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
     tessBalance = 0
   }
 
-  // Get current token price from public_marts_token_details
-  let tokenPriceUsd = 0
-  if (BASE_MINT_ADDRESS) {
-    try {
-      const tokenDetails = await fetchTokenDetails(BASE_MINT_ADDRESS)
-      if (tokenDetails && tokenDetails.price) {
-        tokenPriceUsd = BigNumber.toNumber(fromHasuraToNative(tokenDetails.price))
-      }
-    } catch {
-      // If price fetch fails, default to 0
-      tokenPriceUsd = 0
-    }
-  }
+  // Get current token price from shared price service
+  const tokenPriceUsd = BASE_MINT_ADDRESS
+    ? (await getCurrentTokenPrice(BASE_MINT_ADDRESS)) ?? 0
+    : 0
 
   // Calculate USD value of token holdings
   const balanceUsd = tessBalance * tokenPriceUsd

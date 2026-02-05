@@ -9,6 +9,7 @@ import {
   fetchTokenPricesDaily,
   fetchTokenPrice24hOHLC,
   fetchSwapEventsForPrice,
+  fetchTokenDetails,
 } from '@/features/referral/lib/graphql-client'
 import { DEVNET_POOLS } from './meteora'
 import { fromHasuraToNative, BigNumber, math, mathIs } from '@/lib/bignumber'
@@ -224,4 +225,22 @@ export async function getPriceHistory(
     time: event.block_time,
     value: calculatePriceFromSwap(event.amount_x, event.amount_y),
   }))
+}
+
+/**
+ * Get current token price by mint address from public_marts_token_details
+ * This is the recommended way to get current prices as it's cached and performant
+ * @param tokenMint - The token mint address
+ * @returns The current price in USD, or null if not available
+ */
+export async function getCurrentTokenPrice(tokenMint: string): Promise<number | null> {
+  try {
+    const tokenDetails = await fetchTokenDetails(tokenMint)
+    if (tokenDetails && tokenDetails.price) {
+      return BigNumber.toNumber(fromHasuraToNative(tokenDetails.price))
+    }
+    return null
+  } catch {
+    return null
+  }
 }
