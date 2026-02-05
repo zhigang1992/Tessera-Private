@@ -62,7 +62,8 @@ export const POOL_TRADING_CONFIG = {
     enabled: true,
     // Countdown configuration - set to 'disabled' for immediate trading
     // Currently set to 2 minutes from deployment for testing
-    countdown: { type: 'timestamp', targetTimestamp: Date.now() + 2 * 60 * 1000 } as
+    // countdown: { type: 'timestamp', targetTimestamp: Date.now() + 2 * 60 * 1000 } as
+    countdown: { type: 'timestamp', targetTimestamp: 1770269523312 } as
       | { type: 'slot'; targetSlot: number }
       | { type: 'timestamp'; targetTimestamp: number }
       | { type: 'disabled' },
