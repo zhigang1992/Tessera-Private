@@ -22,9 +22,9 @@ export function MyBalanceCard() {
 
   return (
     <div className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] rounded-2xl p-4 flex flex-col lg:flex-row gap-2.5">
-      {/* My Balance */}
+      {/* My Tessera Balance */}
       <div className="bg-[rgba(255,255,255,0.5)] rounded-lg px-4 lg:px-6 py-4 w-full lg:w-[240px]">
-        <p className="text-sm font-medium text-black leading-5">My Balance</p>
+        <p className="text-sm font-medium text-black leading-5">My Tessera Balance</p>
         <p className="text-2xl lg:text-3xl font-semibold text-black leading-9">
           {connected ? '$' : ''}{displayBalance}
         </p>

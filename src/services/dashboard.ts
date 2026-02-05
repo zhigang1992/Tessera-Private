@@ -4,6 +4,7 @@ import { fromHasuraToNative, formatBigNumber, BigNumber, math, mathIs, type BigN
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { DEVNET_POOLS } from './meteora'
+import { getCurrentTokenPrice } from './price'
 import {
   APP_TOKENS,
   DEFAULT_BASE_TOKEN_ID,
@@ -16,11 +17,8 @@ import {
 const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
 const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
 const BASE_MINT_CONFIG = getTokenMintConfig(BASE_TOKEN.id)
-const QUOTE_MINT_CONFIG = getTokenMintConfig(QUOTE_TOKEN.id)
 const BASE_MINT_ADDRESS = BASE_MINT_CONFIG?.address ?? null
-const QUOTE_MINT_ADDRESS = QUOTE_MINT_CONFIG?.address ?? null
 const BASE_DECIMALS = BASE_MINT_CONFIG?.decimals ?? BASE_TOKEN.decimals
-const QUOTE_DECIMALS = QUOTE_MINT_CONFIG?.decimals ?? QUOTE_TOKEN.decimals
 
 function getBasePoolAddress(): string | null {
   const configured = getTokenDlmmPoolAddress(BASE_TOKEN.id)
@@ -623,22 +621,6 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
   const connection = new Connection(DEVNET_RPC_URL, 'confirmed')
   const publicKey = new PublicKey(walletAddress)
 
-  // Get USDC balance (this represents user's USD balance)
-  let usdcBalance = 0
-  try {
-    if (!QUOTE_MINT_ADDRESS) {
-      throw new Error('Quote mint not configured')
-    }
-    const usdcMint = new PublicKey(QUOTE_MINT_ADDRESS)
-    const usdcAta = await getAssociatedTokenAddress(usdcMint, publicKey)
-    const usdcAccount = await getAccount(connection, usdcAta)
-    const usdcBigNum = fromTokenAmount(usdcAccount.amount.toString(), QUOTE_DECIMALS)
-    usdcBalance = BigNumber.toNumber(usdcBigNum)
-  } catch {
-    // Token account doesn't exist, balance is 0
-    usdcBalance = 0
-  }
-
   // Get base token balance (Token-2022)
   let tessBalance = 0
   try {
@@ -660,8 +642,16 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
     tessBalance = 0
   }
 
+  // Get current token price from shared price service
+  const tokenPriceUsd = BASE_MINT_ADDRESS
+    ? (await getCurrentTokenPrice(BASE_MINT_ADDRESS)) ?? 0
+    : 0
+
+  // Calculate USD value of token holdings
+  const balanceUsd = tessBalance * tokenPriceUsd
+
   return {
-    balance: usdcBalance,
+    balance: balanceUsd,
     tokenBalance: tessBalance,
     tokenSymbol: BASE_TOKEN.symbol,
     tokenName: BASE_TOKEN.displayName,

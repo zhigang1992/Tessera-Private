@@ -166,3 +166,21 @@ export async function getPriceHistory(
 
   return []
 }
+
+/**
+ * Get current token price by mint address from public_marts_token_details
+ * This is the recommended way to get current prices as it's cached and performant
+ * @param tokenMint - The token mint address
+ * @returns The current price in USD, or null if not available
+ */
+export async function getCurrentTokenPrice(tokenMint: string): Promise<number | null> {
+  try {
+    const tokenDetails = await fetchTokenDetails(tokenMint)
+    if (tokenDetails && tokenDetails.price) {
+      return BigNumber.toNumber(fromHasuraToNative(tokenDetails.price))
+    }
+    return null
+  } catch {
+    return null
+  }
+}
