@@ -8,13 +8,12 @@ import { StatisticsPanel } from './components/statistics-panel'
 import { MyBalanceCard } from './components/my-balance-card'
 import { MyTradeHistory } from './components/my-trade-history'
 import { TransparencyPanel } from './components/transparency-panel'
-import { DEFAULT_BASE_TOKEN_ID, getAppToken } from '@/config'
+import { AppTokenId, DEFAULT_BASE_TOKEN_ID } from '@/config'
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('market-data')
-  // Default to T-SpaceX token slug ('t-spacex')
-  const defaultToken = getAppToken(DEFAULT_BASE_TOKEN_ID)
-  const [selectedAsset, setSelectedAsset] = useState<string | null>(defaultToken.slug)
+  // Default to T-SpaceX token ID
+  const [selectedTokenId, setSelectedTokenId] = useState<AppTokenId>(DEFAULT_BASE_TOKEN_ID)
 
   return (
     <div className="flex flex-col gap-6">
@@ -31,18 +30,18 @@ export default function DashboardPage() {
           <StatsCards />
 
           {/* Assets Table */}
-          <AssetsTable selectedAsset={selectedAsset} onSelectAsset={setSelectedAsset} />
-
-          {/* Selected Asset Info - Show AboutPanel for selected token */}
-          {selectedAsset && (
-            <>
-              <AboutPanel />
-              <StatisticsPanel />
-            </>
-          )}
+          <AssetsTable selectedTokenId={selectedTokenId} onSelectToken={setSelectedTokenId} />
 
           {/* Price Chart */}
           <DashboardPriceChart />
+
+          {/* Selected Asset Info - Show AboutPanel for selected token */}
+          {selectedTokenId && (
+            <>
+              <AboutPanel tokenId={selectedTokenId} />
+              <StatisticsPanel tokenId={selectedTokenId} />
+            </>
+          )}
         </div>
       )}
 

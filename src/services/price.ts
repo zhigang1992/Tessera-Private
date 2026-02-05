@@ -9,6 +9,7 @@ import {
   fetchTokenPricesDaily,
   fetchTokenPricesHourly,
   fetchTokenPrice24hOHLC,
+  fetchTokenDetails,
   fetchSwapEventsForPrice,
 } from '@/features/referral/lib/graphql-client'
 import { DEVNET_POOLS } from './meteora'
@@ -116,64 +117,38 @@ function filterEventsByTimeRange(
 
 /**
  * Get current token price and 24h change
+ * Uses public_marts_token_details for latest price and public_marts_token_prices_24h_ohlc for 24h change
  */
 export async function getTokenPrice(symbol: string): Promise<TokenPriceInfo | null> {
-  const { token, mint, poolAddress } = resolvePriceContext(symbol)
-  if (!poolAddress) return null
+  const { token, mint } = resolvePriceContext(symbol)
+  if (!mint) return null
 
-  // Try to get 24h OHLC data first
-  const ohlc = await fetchTokenPrice24hOHLC(mint)
+  // Fetch latest price from token_details and 24h OHLC data in parallel
+  const [tokenDetails, ohlc] = await Promise.all([
+    fetchTokenDetails(mint),
+    fetchTokenPrice24hOHLC(mint),
+  ])
 
-  if (ohlc && ohlc.close_price_24h) {
-    const closePrice = BigNumber.toNumber(fromHasuraToNative(ohlc.close_price_24h))
-    const priceChange = ohlc.price_change_24h
-      ? BigNumber.toNumber(fromHasuraToNative(ohlc.price_change_24h))
-      : 0
-    const priceChangePct = ohlc.price_change_pct_24h
-      ? BigNumber.toNumber(fromHasuraToNative(ohlc.price_change_pct_24h))
-      : 0
-
-    return {
-      symbol: token.symbol,
-      price: closePrice,
-      priceChange24h: priceChange,
-      priceChangePercent24h: priceChangePct,
-    }
-  }
-
-  // Fall back to calculating from swap events
-  const events = await fetchSwapEventsForPrice(poolAddress, 100)
-
-  if (events.length === 0) {
+  // Get latest price from token_details
+  if (!tokenDetails || !tokenDetails.price) {
     return null
   }
 
-  // Get latest price from most recent swap
-  const latestEvent = events[events.length - 1]
-  const currentPrice = calculatePriceFromSwap(latestEvent.amount_x, latestEvent.amount_y)
+  const currentPrice = BigNumber.toNumber(fromHasuraToNative(tokenDetails.price))
 
-  // Calculate 24h change by finding price 24h ago
-  const now = Math.floor(Date.now() / 1000)
-  const dayAgo = now - 24 * 60 * 60
-
-  // Find the event closest to 24h ago
-  let price24hAgo = currentPrice
-  for (const event of events) {
-    if (event.block_time <= dayAgo) {
-      price24hAgo = calculatePriceFromSwap(event.amount_x, event.amount_y)
-    } else {
-      break
-    }
-  }
-
-  const priceChange24h = currentPrice - price24hAgo
-  const priceChangePercent24h = price24hAgo !== 0 ? (priceChange24h / price24hAgo) * 100 : 0
+  // Get 24h change from OHLC data
+  const priceChange = ohlc?.price_change_24h
+    ? BigNumber.toNumber(fromHasuraToNative(ohlc.price_change_24h))
+    : 0
+  const priceChangePct = ohlc?.price_change_pct_24h
+    ? BigNumber.toNumber(fromHasuraToNative(ohlc.price_change_pct_24h))
+    : 0
 
   return {
     symbol: token.symbol,
     price: currentPrice,
-    priceChange24h,
-    priceChangePercent24h,
+    priceChange24h: priceChange,
+    priceChangePercent24h: priceChangePct,
   }
 }
 
