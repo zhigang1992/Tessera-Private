@@ -17,11 +17,8 @@ import {
 const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
 const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
 const BASE_MINT_CONFIG = getTokenMintConfig(BASE_TOKEN.id)
-const QUOTE_MINT_CONFIG = getTokenMintConfig(QUOTE_TOKEN.id)
 const BASE_MINT_ADDRESS = BASE_MINT_CONFIG?.address ?? null
-const QUOTE_MINT_ADDRESS = QUOTE_MINT_CONFIG?.address ?? null
 const BASE_DECIMALS = BASE_MINT_CONFIG?.decimals ?? BASE_TOKEN.decimals
-const QUOTE_DECIMALS = QUOTE_MINT_CONFIG?.decimals ?? QUOTE_TOKEN.decimals
 
 function getBasePoolAddress(): string | null {
   const configured = getTokenDlmmPoolAddress(BASE_TOKEN.id)
