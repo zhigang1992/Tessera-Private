@@ -17,6 +17,11 @@ export interface AuctionChartDataPoint {
   value: number
 }
 
+export interface AuctionChartDataWithStartTime {
+  data: AuctionChartDataPoint[]
+  startTime: number // Unix timestamp in seconds
+}
+
 export type AuctionChartData = AuctionChartDataPoint[]
 
 function requireAuctionConfig(tokenId: AppTokenId) {
@@ -56,12 +61,12 @@ export async function getAuctionProgress(tokenId: AppTokenId = DEFAULT_BASE_TOKE
   }
 }
 
-export async function getAuctionChartData(tokenId: AppTokenId = DEFAULT_BASE_TOKEN_ID): Promise<AuctionChartData> {
+export async function getAuctionChartData(tokenId: AppTokenId = DEFAULT_BASE_TOKEN_ID): Promise<AuctionChartDataWithStartTime> {
   const { poolAddress } = requireAuctionConfig(tokenId)
   const events = await fetchAuctionDepositEvents(poolAddress)
 
   if (events.length === 0) {
-    return []
+    return { data: [], startTime: 0 }
   }
 
   const sortedEvents = [...events].sort((a, b) => a.block_time - b.block_time)
@@ -82,5 +87,5 @@ export async function getAuctionChartData(tokenId: AppTokenId = DEFAULT_BASE_TOK
     })
   }
 
-  return chartPoints
+  return { data: chartPoints, startTime }
 }
