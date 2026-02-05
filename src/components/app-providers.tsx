@@ -4,6 +4,7 @@ import { SolanaProvider } from '@/components/solana/solana-provider'
 import { SlotProvider } from '@/contexts/slot-context'
 import { HeaderProvider } from '@/contexts/header-context'
 import { GeoBlockModal } from '@/components/geo-block-modal'
+import { FirstTimeUserModal } from '@/components/first-time-user-modal'
 import { Toaster } from 'sonner'
 import React from 'react'
 
@@ -17,6 +18,7 @@ export function AppProviders({ children }: Readonly<{ children: React.ReactNode 
               {children}
               <Toaster position="bottom-left" />
               <GeoBlockModal />
+              <FirstTimeUserModal />
             </HeaderProvider>
           </SlotProvider>
         </SolanaProvider>
