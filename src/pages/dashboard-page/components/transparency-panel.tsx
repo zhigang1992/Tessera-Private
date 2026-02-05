@@ -38,9 +38,6 @@ export function TransparencyPanel() {
                 <h3 className="text-lg font-normal text-black dark:text-[#d2d2d2] leading-7">
                   Proof of Reserves
                 </h3>
-                <p className="text-xs font-normal text-[#71717a] leading-4">
-                  Last Updated: {proofOfReserves?.lastUpdated || '01 Nov 2025 07:00'}
-                </p>
               </div>
             </div>
 
@@ -59,7 +56,7 @@ export function TransparencyPanel() {
                       </div>
                       <div className="flex-1">
                         <p className="text-xs font-normal text-[#71717a] leading-4 whitespace-nowrap">
-                          Overcollateralized
+                          Fully Collateralized
                         </p>
                       </div>
                       <div className="flex-1">
