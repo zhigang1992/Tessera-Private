@@ -650,22 +650,6 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
   const connection = new Connection(DEVNET_RPC_URL, 'confirmed')
   const publicKey = new PublicKey(walletAddress)
 
-  // Get USDC balance (this represents user's USD balance)
-  let usdcBalance = 0
-  try {
-    if (!QUOTE_MINT_ADDRESS) {
-      throw new Error('Quote mint not configured')
-    }
-    const usdcMint = new PublicKey(QUOTE_MINT_ADDRESS)
-    const usdcAta = await getAssociatedTokenAddress(usdcMint, publicKey)
-    const usdcAccount = await getAccount(connection, usdcAta)
-    const usdcBigNum = fromTokenAmount(usdcAccount.amount.toString(), QUOTE_DECIMALS)
-    usdcBalance = BigNumber.toNumber(usdcBigNum)
-  } catch {
-    // Token account doesn't exist, balance is 0
-    usdcBalance = 0
-  }
-
   // Get base token balance (Token-2022)
   let tessBalance = 0
   try {
@@ -687,8 +671,33 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
     tessBalance = 0
   }
 
+  // Get current token price to calculate USD value of holdings
+  let tokenPriceUsd = 0
+  const poolAddress = getBasePoolAddress()
+  if (poolAddress && BASE_MINT_ADDRESS) {
+    try {
+      // Fetch recent swap events to get current price
+      const events = await fetchSwapEventsForPrice(poolAddress, 10)
+      if (events.length > 0) {
+        // Get price from most recent swap
+        const latestEvent = events[events.length - 1]
+        const x = fromHasuraToNative(latestEvent.amount_x)
+        const y = fromHasuraToNative(latestEvent.amount_y)
+        if (mathIs`${x} > ${0}`) {
+          tokenPriceUsd = BigNumber.toNumber(math`${y} / ${x}`)
+        }
+      }
+    } catch {
+      // If price fetch fails, default to 0
+      tokenPriceUsd = 0
+    }
+  }
+
+  // Calculate USD value of token holdings
+  const balanceUsd = tessBalance * tokenPriceUsd
+
   return {
-    balance: usdcBalance,
+    balance: balanceUsd,
     tokenBalance: tessBalance,
     tokenSymbol: BASE_TOKEN.symbol,
     tokenName: BASE_TOKEN.displayName,
