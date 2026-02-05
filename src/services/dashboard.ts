@@ -307,6 +307,7 @@ function formatValuation(value: number): string {
 /**
  * Get list of tokenized assets for the assets table
  * Fetches real data from GraphQL and merges with token metadata
+ * Returns empty array when no real data is available
  */
 export async function getTokenizedAssets(): Promise<AssetData[]> {
   let tokenDetails: Awaited<ReturnType<typeof fetchAllTokenDetails>> = []
@@ -314,12 +315,12 @@ export async function getTokenizedAssets(): Promise<AssetData[]> {
   try {
     tokenDetails = await fetchAllTokenDetails()
   } catch (error) {
-    console.error('[dashboard] Failed to fetch token details, using fallback assets', error)
-    return buildFallbackAssets()
+    console.error('[dashboard] Failed to fetch token details', error)
+    return []
   }
 
   if (!tokenDetails || tokenDetails.length === 0) {
-    return buildFallbackAssets()
+    return []
   }
 
   return tokenDetails.map((token) => {
@@ -355,24 +356,6 @@ export async function getTokenizedAssets(): Promise<AssetData[]> {
       valuation: formatValuation(marketCap),
     }
   })
-}
-
-function buildFallbackAssets(): AssetData[] {
-  return Object.values(APP_TOKENS)
-    .filter((token) => token.id !== QUOTE_TOKEN_ID) // Exclude quote token (USDC)
-    .map((token) => {
-      const price = token.id === BASE_TOKEN.id ? tokenInfo.price : 0
-      return {
-        id: token.slug,
-        symbol: token.symbol,
-        name: token.displayName,
-        code: token.metadata?.code ?? token.slug.toUpperCase(),
-        sector: token.metadata?.sector ?? 'Private Markets',
-        price,
-        holders: 0,
-        valuation: price > 0 ? formatValuation(price * 1_000_000) : '$—',
-      }
-    })
 }
 
 // ============ API Functions ============
