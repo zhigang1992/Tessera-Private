@@ -39,17 +39,27 @@ export function DepositUSDCCard() {
   } = useAuctionAlphaVault()
   const token = useAuctionToken()
 
-  // Countdown configuration for deposit window - derived from vault data
-  const countdownConfig: CountdownConfig = useMemo(() => {
+  // Countdown to when deposits START (depositOpenSlot)
+  const depositStartCountdownConfig: CountdownConfig = useMemo(() => {
     if (!vaultInfo) {
       return { type: 'disabled' }
     }
-    // Use slot-based countdown from vault's depositOpenSlot
+
+    // Check activation type to determine how to handle time values
+    if (vaultInfo.activationType === 'timestamp') {
+      // depositOpenSlot is actually a Unix timestamp in seconds - convert to milliseconds
+      return {
+        type: 'timestamp',
+        targetTimestamp: vaultInfo.depositOpenSlot * 1000,
+      }
+    }
+
+    // Slot-based countdown
     return { type: 'slot', targetSlot: vaultInfo.depositOpenSlot }
   }, [vaultInfo])
 
-  const { timeRemaining } = useCountdown(countdownConfig)
-  const isDepositActive = timeRemaining.isExpired
+  const { timeRemaining: timeUntilDepositStart } = useCountdown(depositStartCountdownConfig)
+  const isDepositActive = timeUntilDepositStart.isExpired
 
   const isDepositOpen = vaultInfo?.state === 'deposit_open'
   const canDeposit = isDepositActive && depositQuota?.canDeposit && isDepositOpen && wallet.connected
@@ -380,7 +390,7 @@ export function DepositUSDCCard() {
 
         {/* Countdown Notification - shown when deposits haven't started */}
         {!isDepositActive && (
-          <CountdownNotification config={countdownConfig} title={`${token.displayName} deposit window`} />
+          <CountdownNotification config={depositStartCountdownConfig} title={`${token.displayName} deposit window`} />
         )}
 
         {/* Action Button */}
