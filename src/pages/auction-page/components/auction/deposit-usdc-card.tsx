@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Info, Loader2, AlertCircle } from 'lucide-react'
@@ -9,7 +9,6 @@ import { CountdownNotification } from '@/components/countdown-notification'
 import { getExplorerUrl } from '@/config'
 import { toast } from 'sonner'
 import { BigNumber, math, fromTokenAmount, mathIs } from '@/lib/bignumber'
-import { hasWhitelist } from '@/lib/whitelist'
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { useAuctionAlphaVault, useAuctionToken } from '../../context'
 import { useCountdown } from '@/hooks/use-countdown'
@@ -20,7 +19,6 @@ export function DepositUSDCCard() {
   const { setVisible } = useWalletModal()
   const [depositAmount, setDepositAmount] = useState('')
   const [tooltipOpen, setTooltipOpen] = useState(false)
-  const [isWhitelistEnabled, setIsWhitelistEnabled] = useState(false)
 
   const {
     config,
@@ -65,10 +63,9 @@ export function DepositUSDCCard() {
   const isDepositOpen = vaultInfo?.state === 'deposit_open'
   const canDeposit = isDepositActive && depositQuota?.canDeposit && isDepositOpen && wallet.connected
 
-  // Load whitelist status on mount
-  useEffect(() => {
-    hasWhitelist().then(setIsWhitelistEnabled).catch(() => setIsWhitelistEnabled(false))
-  }, [])
+  // Check if vault has whitelist enabled (merkle root config indicates whitelist)
+  // This is more efficient than fetching the entire whitelist
+  const isWhitelistEnabled = !!config.merkleRootConfig
 
   // Calculate existing deposit (amount already deposited)
   const existingDepositAmount = useMemo(() => {

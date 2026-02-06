@@ -6,7 +6,7 @@
  */
 
 import { BigNumber, math, type BigNumberValue } from '@/lib/bignumber'
-import { getLocalMerkleProofs } from '@/services/alpha-vault'
+import { getWhitelistedWalletsList } from '@/services/alpha-vault'
 
 export interface WhitelistInfo {
   isWhitelisted: boolean
@@ -17,15 +17,45 @@ export interface WhitelistInfo {
 
 /**
  * Check if a wallet is whitelisted and get their max cap
+ * Phase 2: Uses API endpoint to fetch only specific wallet's proof
  *
  * @param walletAddress - The wallet public key as a string
  * @returns WhitelistInfo object with whitelist status and cap information
  */
 export async function getWhitelistInfo(walletAddress: string): Promise<WhitelistInfo> {
-  const merkleProofs = await getLocalMerkleProofs()
-  const proofData = merkleProofs[walletAddress]
+  try {
+    // Fetch proof for this specific wallet via API (Phase 2)
+    const response = await fetch(`/api/merkle-proof/${walletAddress}`)
 
-  if (!proofData) {
+    if (response.status === 404) {
+      // Wallet not whitelisted
+      return {
+        isWhitelisted: false,
+        maxCapRaw: null,
+        maxCapFormatted: null,
+        proof: null,
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch whitelist info: ${response.statusText}`)
+    }
+
+    const proofData = await response.json()
+
+    // maxCap is stored in smallest units (e.g., 10000000000 = 10,000 USDC with 6 decimals)
+    // Convert to human-readable format
+    const maxCapBigNumber = math`${BigNumber.from(proofData.maxCap)} / ${math`${10} ^ ${6}`}`
+
+    return {
+      isWhitelisted: true,
+      maxCapRaw: proofData.maxCap.toString(),
+      maxCapFormatted: maxCapBigNumber,
+      proof: proofData.proof.map((p: number[]) => p.map((n: number) => n.toString())),
+    }
+  } catch (error) {
+    console.error('Error fetching whitelist info:', error)
+    // Return not whitelisted on error
     return {
       isWhitelisted: false,
       maxCapRaw: null,
@@ -33,37 +63,27 @@ export async function getWhitelistInfo(walletAddress: string): Promise<Whitelist
       proof: null,
     }
   }
-
-  // maxCap is stored in smallest units (e.g., 10000000000 = 10,000 USDC with 6 decimals)
-  // Convert to human-readable format
-  const maxCapBigNumber = math`${BigNumber.from(proofData.max_cap)} / ${math`${10} ^ ${6}`}`
-
-  return {
-    isWhitelisted: true,
-    maxCapRaw: proofData.max_cap.toString(),
-    maxCapFormatted: maxCapBigNumber,
-    proof: proofData.proof.map((p) => p.map((n) => n.toString())),
-  }
 }
 
 /**
  * Get all whitelisted wallet addresses
+ * Phase 2: Uses API endpoint to get wallet list
  *
  * @returns Array of whitelisted wallet addresses
  */
 export async function getAllWhitelistedWallets(): Promise<string[]> {
-  const merkleProofs = await getLocalMerkleProofs()
-  return Object.keys(merkleProofs)
+  return getWhitelistedWalletsList()
 }
 
 /**
  * Get count of whitelisted wallets
+ * Phase 2: Uses API endpoint to get count
  *
  * @returns Number of whitelisted wallets
  */
 export async function getWhitelistCount(): Promise<number> {
-  const merkleProofs = await getLocalMerkleProofs()
-  return Object.keys(merkleProofs).length
+  const wallets = await getWhitelistedWalletsList()
+  return wallets.length
 }
 
 /**
