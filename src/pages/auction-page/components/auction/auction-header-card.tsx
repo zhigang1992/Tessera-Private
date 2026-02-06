@@ -52,7 +52,7 @@ export function AuctionHeaderCard() {
             <h2 className="text-xl font-semibold text-foreground flex items-center gap-1">
               <AppTokenName token={token} /> Auction
             </h2>
-            <span className="bg-[#5865f2] text-white text-[10px] font-semibold px-2 py-1 rounded">OFFICIAL</span>
+            <span className="bg-[#06a800] text-white text-[10px] font-semibold px-2 py-1 rounded">OFFICIAL</span>
           </div>
         </div>
 
@@ -125,7 +125,7 @@ export function AuctionHeaderCard() {
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">MY POSITION</span>
               {hasPosition && (
-                <span className="bg-[rgba(88,101,242,0.2)] text-[#006fee] text-[10px] font-semibold px-2 py-1 rounded">
+                <span className="bg-[rgba(210,251,149,0.5)] text-[#06a800] text-[10px] font-semibold px-2 py-1 rounded">
                   Active
                 </span>
               )}
