@@ -57,7 +57,8 @@ type MerkleProofData = Record<
 let proofsCache: MerkleProofData | null = null
 
 /**
- * Load merkle proofs asynchronously from public/data directory
+ * Load merkle proofs asynchronously
+ * Phase 2: Uses API endpoint with fallback to direct JSON loading
  * Uses in-memory cache to avoid repeated fetches
  */
 async function loadMerkleProofs(): Promise<MerkleProofData> {
@@ -66,11 +67,28 @@ async function loadMerkleProofs(): Promise<MerkleProofData> {
   }
 
   try {
-    const response = await fetch('/data/merkle-proofs-t22.json')
-    if (!response.ok) {
-      throw new Error(`Failed to load merkle proofs: ${response.statusText}`)
+    // Try to fetch from API endpoint first (Phase 2)
+    const response = await fetch('/api/merkle-proof/wallets')
+
+    if (response.ok) {
+      const result = await response.json()
+      // We got the wallets list, but we still need the full proof data
+      // For backward compatibility, we'll still load the full JSON
+      // In a future optimization, we could fetch proofs individually as needed
+      const fallbackResponse = await fetch('/data/merkle-proofs-t22.json')
+      if (fallbackResponse.ok) {
+        const data: MerkleProofData = await fallbackResponse.json()
+        proofsCache = data
+        return data
+      }
     }
-    const data: MerkleProofData = await response.json()
+
+    // Fallback: Load directly from public directory (for development)
+    const fallbackResponse = await fetch('/data/merkle-proofs-t22.json')
+    if (!fallbackResponse.ok) {
+      throw new Error(`Failed to load merkle proofs: ${fallbackResponse.statusText}`)
+    }
+    const data: MerkleProofData = await fallbackResponse.json()
     proofsCache = data
     return data
   } catch (error) {
@@ -81,11 +99,65 @@ async function loadMerkleProofs(): Promise<MerkleProofData> {
 }
 
 /**
- * Get merkle proofs (for backward compatibility)
- * @deprecated Use loadMerkleProofs() instead for async access
+ * Get merkle proof for a specific wallet via API endpoint
+ * Phase 2: Fetches only the specific wallet's proof to reduce bandwidth
+ */
+async function getMerkleProofForWallet(
+  walletAddress: string
+): Promise<{ proof: number[][]; max_cap: number; merkle_root_config?: string } | null> {
+  try {
+    const response = await fetch(`/api/merkle-proof/${walletAddress}`)
+
+    if (response.status === 404) {
+      // Wallet not whitelisted
+      return null
+    }
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch merkle proof: ${response.statusText}`)
+    }
+
+    const result = await response.json()
+    return {
+      proof: result.proof,
+      max_cap: result.maxCap,
+      merkle_root_config: result.merkleRootConfig,
+    }
+  } catch (error) {
+    console.error('Error fetching merkle proof from API:', error)
+    // Fallback to loading full JSON
+    const proofs = await loadMerkleProofs()
+    return proofs[walletAddress] || null
+  }
+}
+
+/**
+ * Get all merkle proofs (for backward compatibility)
+ * @deprecated Use getMerkleProofForWallet() for individual lookups
  */
 export async function getLocalMerkleProofs(): Promise<MerkleProofData> {
   return loadMerkleProofs()
+}
+
+/**
+ * Get list of all whitelisted wallets via API
+ */
+export async function getWhitelistedWalletsList(): Promise<string[]> {
+  try {
+    const response = await fetch('/api/merkle-proof/wallets')
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch whitelisted wallets: ${response.statusText}`)
+    }
+
+    const result = await response.json()
+    return result.wallets || []
+  } catch (error) {
+    console.error('Error fetching whitelisted wallets from API:', error)
+    // Fallback to loading full JSON
+    const proofs = await loadMerkleProofs()
+    return Object.keys(proofs)
+  }
 }
 
 // ============ Types ============
@@ -603,13 +675,13 @@ export class AlphaVaultClient {
 
   /**
    * Get merkle proof for a whitelisted user
-   * Uses local proofs since this vault has a custom whitelist
+   * Phase 2: Uses API endpoint to fetch only the specific wallet's proof
    */
   async getMerkleProof(owner: PublicKey): Promise<DepositWithProofParams | null> {
-    // Load merkle proofs asynchronously
-    const merkleProofs = await loadMerkleProofs()
     const ownerStr = owner.toBase58()
-    const localProof = merkleProofs[ownerStr]
+
+    // Fetch proof for this specific wallet via API (Phase 2 optimization)
+    const localProof = await getMerkleProofForWallet(ownerStr)
 
     if (localProof) {
       const merkleRoot = localProof.merkle_root_config ?? this.config.merkleRootConfig
