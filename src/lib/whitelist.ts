@@ -3,10 +3,12 @@
  *
  * Provides helper functions for checking wallet whitelist status
  * and retrieving merkle proof information for the Alpha Vault.
+ *
+ * Phase 2: All functions use individual wallet API lookups.
+ * The complete whitelist is never exposed to clients for privacy.
  */
 
 import { BigNumber, math, type BigNumberValue } from '@/lib/bignumber'
-import { getWhitelistedWalletsList } from '@/services/alpha-vault'
 
 export interface WhitelistInfo {
   isWhitelisted: boolean
@@ -65,33 +67,3 @@ export async function getWhitelistInfo(walletAddress: string): Promise<Whitelist
   }
 }
 
-/**
- * Get all whitelisted wallet addresses
- * Phase 2: Uses API endpoint to get wallet list
- *
- * @returns Array of whitelisted wallet addresses
- */
-export async function getAllWhitelistedWallets(): Promise<string[]> {
-  return getWhitelistedWalletsList()
-}
-
-/**
- * Get count of whitelisted wallets
- * Phase 2: Uses API endpoint to get count
- *
- * @returns Number of whitelisted wallets
- */
-export async function getWhitelistCount(): Promise<number> {
-  const wallets = await getWhitelistedWalletsList()
-  return wallets.length
-}
-
-/**
- * Check if any wallets are whitelisted
- *
- * @returns true if whitelist is not empty
- */
-export async function hasWhitelist(): Promise<boolean> {
-  const count = await getWhitelistCount()
-  return count > 0
-}

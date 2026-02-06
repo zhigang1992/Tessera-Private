@@ -44,63 +44,17 @@ function resolveAlphaVaultConfig(tokenId: AppTokenId, network: SolanaNetwork = g
  * Generated using Meteora's BalanceTree from @meteora-ag/alpha-vault
  * These are used because Meteora's API doesn't have our custom whitelist proofs
  *
- * Loaded from /public/data/merkle-proofs-t22.json
- * Contains 14 whitelisted wallets (2 with 10k cap, 12 with 1k cap)
+ * Phase 2: Proofs are served via API endpoint /api/merkle-proof/{wallet}
+ * The full list is never exposed to clients for privacy and bandwidth optimization
  * Merkle Root: 536db5ede0a55e23f74e2589dc0d02b4c12c5eedfe488cf1de80b821360abac9
  */
-
-type MerkleProofData = Record<
-  string,
-  { proof: number[][]; max_cap: number; merkle_root_config?: string }
->
-
-let proofsCache: MerkleProofData | null = null
-
-/**
- * Load merkle proofs asynchronously
- * Phase 2: Uses API endpoint with fallback to direct JSON loading
- * Uses in-memory cache to avoid repeated fetches
- */
-async function loadMerkleProofs(): Promise<MerkleProofData> {
-  if (proofsCache) {
-    return proofsCache
-  }
-
-  try {
-    // Try to fetch from API endpoint first (Phase 2)
-    const response = await fetch('/api/merkle-proof/wallets')
-
-    if (response.ok) {
-      const result = await response.json()
-      // We got the wallets list, but we still need the full proof data
-      // For backward compatibility, we'll still load the full JSON
-      // In a future optimization, we could fetch proofs individually as needed
-      const fallbackResponse = await fetch('/data/merkle-proofs-t22.json')
-      if (fallbackResponse.ok) {
-        const data: MerkleProofData = await fallbackResponse.json()
-        proofsCache = data
-        return data
-      }
-    }
-
-    // Fallback: Load directly from public directory (for development)
-    const fallbackResponse = await fetch('/data/merkle-proofs-t22.json')
-    if (!fallbackResponse.ok) {
-      throw new Error(`Failed to load merkle proofs: ${fallbackResponse.statusText}`)
-    }
-    const data: MerkleProofData = await fallbackResponse.json()
-    proofsCache = data
-    return data
-  } catch (error) {
-    console.error('Error loading merkle proofs:', error)
-    // Return empty object as fallback
-    return {}
-  }
-}
 
 /**
  * Get merkle proof for a specific wallet via API endpoint
  * Phase 2: Fetches only the specific wallet's proof to reduce bandwidth
+ *
+ * @param walletAddress - The wallet public key as a string
+ * @returns Proof data if whitelisted, null otherwise
  */
 async function getMerkleProofForWallet(
   walletAddress: string
@@ -125,38 +79,7 @@ async function getMerkleProofForWallet(
     }
   } catch (error) {
     console.error('Error fetching merkle proof from API:', error)
-    // Fallback to loading full JSON
-    const proofs = await loadMerkleProofs()
-    return proofs[walletAddress] || null
-  }
-}
-
-/**
- * Get all merkle proofs (for backward compatibility)
- * @deprecated Use getMerkleProofForWallet() for individual lookups
- */
-export async function getLocalMerkleProofs(): Promise<MerkleProofData> {
-  return loadMerkleProofs()
-}
-
-/**
- * Get list of all whitelisted wallets via API
- */
-export async function getWhitelistedWalletsList(): Promise<string[]> {
-  try {
-    const response = await fetch('/api/merkle-proof/wallets')
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch whitelisted wallets: ${response.statusText}`)
-    }
-
-    const result = await response.json()
-    return result.wallets || []
-  } catch (error) {
-    console.error('Error fetching whitelisted wallets from API:', error)
-    // Fallback to loading full JSON
-    const proofs = await loadMerkleProofs()
-    return Object.keys(proofs)
+    return null
   }
 }
 
