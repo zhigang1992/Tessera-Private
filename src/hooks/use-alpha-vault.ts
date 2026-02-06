@@ -367,6 +367,9 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
 
         const tx = await client.createWithdrawTransaction(wallet.publicKey, amountBN)
 
+        // Add terms acceptance memo
+        addTermsAcceptanceMemo(tx, wallet.publicKey, MemoType.VAULT_DEPOSIT)
+
         const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash()
         tx.recentBlockhash = blockhash
         tx.feePayer = wallet.publicKey
@@ -408,6 +411,9 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
     try {
       const tx = await client.createClaimTransaction(wallet.publicKey)
 
+      // Add terms acceptance memo
+      addTermsAcceptanceMemo(tx, wallet.publicKey, MemoType.VAULT_DEPOSIT)
+
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash()
       tx.recentBlockhash = blockhash
       tx.feePayer = wallet.publicKey
@@ -446,6 +452,9 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
 
     try {
       const tx = await client.createWithdrawRemainingTransaction(wallet.publicKey)
+
+      // Add terms acceptance memo
+      addTermsAcceptanceMemo(tx, wallet.publicKey, MemoType.VAULT_DEPOSIT)
 
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash()
       tx.recentBlockhash = blockhash
