@@ -24,7 +24,6 @@ import {
   getTokenAlphaVaultConfig,
 } from '@/config'
 import { estimateSlotDate } from './alpha-vault-helpers'
-import merkleProofsT22 from '@/data/merkle-proofs-t22.json'
 
 // ============ Configuration ============
 
@@ -45,14 +44,48 @@ function resolveAlphaVaultConfig(tokenId: AppTokenId, network: SolanaNetwork = g
  * Generated using Meteora's BalanceTree from @meteora-ag/alpha-vault
  * These are used because Meteora's API doesn't have our custom whitelist proofs
  *
- * Imported from contract/.keypairs/merkle-proofs-t22.json
+ * Loaded from /public/data/merkle-proofs-t22.json
  * Contains 14 whitelisted wallets (2 with 10k cap, 12 with 1k cap)
  * Merkle Root: 536db5ede0a55e23f74e2589dc0d02b4c12c5eedfe488cf1de80b821360abac9
  */
-export const LOCAL_MERKLE_PROOFS = merkleProofsT22 as Record<
+
+type MerkleProofData = Record<
   string,
   { proof: number[][]; max_cap: number; merkle_root_config?: string }
 >
+
+let proofsCache: MerkleProofData | null = null
+
+/**
+ * Load merkle proofs asynchronously from public/data directory
+ * Uses in-memory cache to avoid repeated fetches
+ */
+async function loadMerkleProofs(): Promise<MerkleProofData> {
+  if (proofsCache) {
+    return proofsCache
+  }
+
+  try {
+    const response = await fetch('/data/merkle-proofs-t22.json')
+    if (!response.ok) {
+      throw new Error(`Failed to load merkle proofs: ${response.statusText}`)
+    }
+    proofsCache = await response.json()
+    return proofsCache
+  } catch (error) {
+    console.error('Error loading merkle proofs:', error)
+    // Return empty object as fallback
+    return {}
+  }
+}
+
+/**
+ * Get merkle proofs (for backward compatibility)
+ * @deprecated Use loadMerkleProofs() instead for async access
+ */
+export async function getLocalMerkleProofs(): Promise<MerkleProofData> {
+  return loadMerkleProofs()
+}
 
 // ============ Types ============
 
@@ -572,9 +605,10 @@ export class AlphaVaultClient {
    * Uses local proofs since this vault has a custom whitelist
    */
   async getMerkleProof(owner: PublicKey): Promise<DepositWithProofParams | null> {
-    // Use local merkle proofs (custom whitelist for this vault)
+    // Load merkle proofs asynchronously
+    const merkleProofs = await loadMerkleProofs()
     const ownerStr = owner.toBase58()
-    const localProof = LOCAL_MERKLE_PROOFS[ownerStr]
+    const localProof = merkleProofs[ownerStr]
 
     if (localProof) {
       const merkleRoot = localProof.merkle_root_config ?? this.config.merkleRootConfig
