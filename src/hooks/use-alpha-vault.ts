@@ -110,15 +110,24 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
     return getVaultStateDisplay(vaultInfo.state)
   }, [vaultInfo])
 
+  // Force time calculations to update every second for live countdown
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(interval)
+  }, [])
+
   const depositEndsIn = useMemo(() => {
     if (!vaultInfo?.depositCloseTime) return null
+    // Recalculates every second due to 'now' dependency
     return getTimeRemaining(vaultInfo.depositCloseTime)
-  }, [vaultInfo])
+  }, [vaultInfo?.depositCloseTime, now])
 
   const vestingEndsIn = useMemo(() => {
     if (!vaultInfo?.vestingEndTime) return null
+    // Recalculates every second due to 'now' dependency
     return getTimeRemaining(vaultInfo.vestingEndTime)
-  }, [vaultInfo])
+  }, [vaultInfo?.vestingEndTime, now])
 
   // Formatted values (now returns BigNumberValue for proper component rendering)
   const totalRaised = useMemo(() => {
