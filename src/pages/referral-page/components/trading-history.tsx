@@ -37,8 +37,8 @@ export function TradingHistory() {
 
   return (
     <TableContainer title="Trading History">
-      {/* Table */}
-      <div className={tableStyles.wrapper}>
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
         <table className={tableStyles.table}>
           <thead>
             <tr className={tableStyles.thead}>
@@ -107,6 +107,83 @@ export function TradingHistory() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden">
+        {!connected ? (
+          <div className="p-4">
+            <div className="flex items-center justify-center rounded-lg bg-zinc-50 dark:bg-[#27272A] py-16">
+              <span className="text-[14px] text-muted-foreground">Please connect your wallet to view trading history</span>
+            </div>
+          </div>
+        ) : isLoading ? (
+          <div className="px-4 py-10 text-center text-[14px] text-muted-foreground">
+            Loading...
+          </div>
+        ) : items.length === 0 ? (
+          <div className="p-4">
+            <div className="flex items-center justify-center rounded-lg bg-zinc-50 dark:bg-[#27272A] py-16">
+              <span className="text-[14px] text-muted-foreground">No Trading History</span>
+            </div>
+          </div>
+        ) : (
+          items.map((item, index) => {
+            const isLastItem = index === items.length - 1
+
+            return (
+              <div
+                key={item.id}
+                className="relative"
+              >
+                {!isLastItem && (
+                  <div
+                    aria-hidden="true"
+                    className="absolute border-[#e0e0e0] dark:border-[#393b3d] border-b inset-0 pointer-events-none"
+                  />
+                )}
+                <div className="flex flex-col gap-3 p-4 relative w-full">
+                  {/* Token and Type Row */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 flex items-center justify-center">
+                        {getTokenIcon(item.token)}
+                      </div>
+                      <span className="font-semibold text-[#404040] dark:text-[#d2d2d2] uppercase text-sm">
+                        {item.token}
+                      </span>
+                    </div>
+                    <div className="bg-zinc-100 dark:bg-[#27272a] px-2 py-1 rounded">
+                      <p className="text-xs text-black dark:text-[#d2d2d2]">{item.type}</p>
+                    </div>
+                  </div>
+
+                  {/* Amount */}
+                  <div>
+                    <p className="text-[10px] font-normal text-[#71717a] mb-1 uppercase">AMOUNT</p>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm text-black dark:text-[#d2d2d2]">{item.amountIn}</span>
+                      <span className="text-[#06a800]">→</span>
+                      <span className="text-sm text-black dark:text-[#d2d2d2]">{item.amountOut}</span>
+                    </div>
+                  </div>
+
+                  {/* Account and Time */}
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <p className="text-[10px] font-normal text-[#71717a] mb-1 uppercase">ACCOUNT</p>
+                      <p className="text-xs text-black dark:text-[#d2d2d2]">{item.account}</p>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[10px] font-normal text-[#71717a] mb-1 uppercase">TIME</p>
+                      <p className="text-xs text-black dark:text-[#d2d2d2] whitespace-nowrap">{item.time}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })
+        )}
       </div>
 
       {/* Pagination */}

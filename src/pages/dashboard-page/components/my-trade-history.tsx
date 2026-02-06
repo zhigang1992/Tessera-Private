@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Pagination } from '@/components/ui/pagination'
+import { TableContainer } from '@/components/ui/table-header'
 import { getUserTradeHistory } from '@/services'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
@@ -25,86 +26,171 @@ export function MyTradeHistory() {
   const items = data?.items ?? []
 
   return (
-    <div className="bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl px-3.5 py-4 lg:py-6">
-      <div className="overflow-x-auto">
-        <div className="flex flex-col gap-2.5 min-w-[600px]">
-          {/* Header */}
-          <div className="flex items-center gap-2.5 px-2.5 text-xs text-muted-foreground dark:text-[#999999]">
-            <div className="w-[140px] lg:w-[180px]">Token</div>
-            <div className="w-[180px] lg:w-[250px]">Amount</div>
-            <div className="w-[60px] lg:flex-1">Type</div>
-            <div className="w-[100px] lg:flex-1">Account</div>
-            <div className="w-[120px] lg:flex-1">Time</div>
-          </div>
-
-          {/* Divider */}
-          <div className="px-2.5">
-            <div className="h-px bg-black/15 dark:bg-[#d2d2d2]/15" />
-          </div>
-
-          {/* List */}
-          <div className="flex flex-col gap-1">
+    <TableContainer title="My Trading History">
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full min-w-[600px]">
+          <thead>
+            <tr className="border-b dark:border-[#393b3d] border-[#e0e0e0] bg-gray-50 dark:bg-[#27272a]">
+              <th className="px-4 md:px-6 py-3 text-left text-[11px] md:text-[12px] font-medium text-gray-600 dark:text-[#71717a]">Token</th>
+              <th className="px-4 md:px-6 py-3 text-left text-[11px] md:text-[12px] font-medium text-gray-600 dark:text-[#71717a] whitespace-nowrap">Amount</th>
+              <th className="px-4 md:px-6 py-3 text-left text-[11px] md:text-[12px] font-medium text-gray-600 dark:text-[#71717a]">Type</th>
+              <th className="px-4 md:px-6 py-3 text-left text-[11px] md:text-[12px] font-medium text-gray-600 dark:text-[#71717a]">Account</th>
+              <th className="px-4 md:px-6 py-3 text-left text-[11px] md:text-[12px] font-medium text-gray-600 dark:text-[#71717a]">Time</th>
+            </tr>
+          </thead>
+          <tbody>
             {!connected ? (
-              <div className="flex items-center justify-center py-8">
-                <span className="text-sm text-muted-foreground dark:text-[#d2d2d2]">Please connect your wallet to view trade history</span>
-              </div>
+              <tr>
+                <td colSpan={5} className="p-4">
+                  <div className="flex items-center justify-center rounded-lg bg-zinc-50 dark:bg-[#27272A] py-16">
+                    <span className="text-[14px] text-muted-foreground">Please connect your wallet to view trade history</span>
+                  </div>
+                </td>
+              </tr>
             ) : isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <span className="text-sm text-muted-foreground dark:text-[#d2d2d2]">Loading...</span>
-              </div>
+              <tr>
+                <td colSpan={5} className="px-4 py-10 text-center text-[14px] text-muted-foreground">
+                  Loading...
+                </td>
+              </tr>
             ) : items.length === 0 ? (
-              <div className="flex items-center justify-center py-8">
-                <span className="text-sm text-muted-foreground dark:text-[#d2d2d2]">No trade history</span>
-              </div>
+              <tr>
+                <td colSpan={5} className="p-4">
+                  <div className="flex items-center justify-center rounded-lg bg-zinc-50 dark:bg-[#27272A] py-16">
+                    <span className="text-[14px] text-muted-foreground">No trade history</span>
+                  </div>
+                </td>
+              </tr>
             ) : (
-              items.map((item, index) => {
+              items.map((item) => {
                 const rowToken = getTokenBySymbol(item.token) ?? defaultToken
                 return (
-                  <div
-                    key={item.id}
-                    className={`flex items-center gap-2.5 p-2.5 rounded ${
-                      index % 2 === 0 ? 'bg-zinc-50 dark:bg-[#323334]' : ''
-                    }`}
-                  >
-                    <div className="w-[140px] lg:w-[180px]">
-                      <div className="flex items-center gap-1.5">
+                  <tr key={item.id} className="border-b dark:border-[#393b3d] border-[#e0e0e0] hover:bg-gray-50 dark:hover:bg-[#27272a] transition-colors">
+                    {/* Token */}
+                    <td className="px-4 md:px-6 py-3 md:py-4 text-[13px] md:text-[14px] text-black dark:text-[#d2d2d2]">
+                      <div className="flex items-center gap-2">
                         <AppTokenIcon token={rowToken} className="w-5 h-5 lg:w-6 lg:h-6" size={24} />
                         <AppTokenName
                           token={rowToken}
                           variant="symbol"
-                          className="text-xs lg:text-sm font-semibold text-foreground dark:text-white uppercase"
+                          className="font-semibold text-[#404040] dark:text-[#d2d2d2] uppercase"
                         />
                       </div>
-                    </div>
-                    <div className="w-[180px] lg:w-[250px] flex items-center gap-1 text-xs lg:text-sm">
-                      <span className="text-foreground dark:text-[#d2d2d2]">{item.amountIn}</span>
-                      <span className="text-[#06a800]">→</span>
-                      <span className="text-foreground dark:text-[#d2d2d2]">{item.amountOut}</span>
-                    </div>
-                    <div className="w-[60px] lg:flex-1">
-                      <span className="text-xs lg:text-sm text-foreground dark:text-[#d2d2d2]">{item.type}</span>
-                    </div>
-                    <div className="w-[100px] lg:flex-1 text-xs lg:text-sm text-foreground dark:text-[#d2d2d2]">
-                      {item.account}
-                    </div>
-                    <div className="w-[120px] lg:flex-1 text-xs lg:text-sm text-foreground dark:text-[#d2d2d2]">
-                      {item.time}
-                    </div>
-                  </div>
+                    </td>
+
+                    {/* Amount */}
+                    <td className="px-4 md:px-6 py-3 md:py-4 text-[13px] md:text-[14px] text-black dark:text-[#d2d2d2]">
+                      <div className="flex items-center gap-1 whitespace-nowrap">
+                        <span>{item.amountIn}</span>
+                        <span className="text-[#06a800]">→</span>
+                        <span>{item.amountOut}</span>
+                      </div>
+                    </td>
+
+                    {/* Type */}
+                    <td className="px-4 md:px-6 py-3 md:py-4 text-[13px] md:text-[14px] text-black dark:text-[#d2d2d2]">{item.type}</td>
+
+                    {/* Account */}
+                    <td className="px-4 md:px-6 py-3 md:py-4 text-[13px] md:text-[14px] text-black dark:text-[#d2d2d2]">{item.account}</td>
+
+                    {/* Time */}
+                    <td className="px-4 md:px-6 py-3 md:py-4 text-[13px] md:text-[14px] text-black dark:text-[#d2d2d2] whitespace-nowrap">{item.time}</td>
+                  </tr>
                 )
               })
             )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden">
+        {!connected ? (
+          <div className="p-4">
+            <div className="flex items-center justify-center rounded-lg bg-zinc-50 dark:bg-[#27272A] py-16">
+              <span className="text-[14px] text-muted-foreground">Please connect your wallet to view trade history</span>
+            </div>
           </div>
-        </div>
+        ) : isLoading ? (
+          <div className="px-4 py-10 text-center text-[14px] text-muted-foreground">
+            Loading...
+          </div>
+        ) : items.length === 0 ? (
+          <div className="p-4">
+            <div className="flex items-center justify-center rounded-lg bg-zinc-50 dark:bg-[#27272A] py-16">
+              <span className="text-[14px] text-muted-foreground">No trade history</span>
+            </div>
+          </div>
+        ) : (
+          items.map((item, index) => {
+            const rowToken = getTokenBySymbol(item.token) ?? defaultToken
+            const isLastItem = index === items.length - 1
+
+            return (
+              <div
+                key={item.id}
+                className="relative"
+              >
+                {!isLastItem && (
+                  <div
+                    aria-hidden="true"
+                    className="absolute border-[#e0e0e0] dark:border-[#393b3d] border-b inset-0 pointer-events-none"
+                  />
+                )}
+                <div className="flex flex-col gap-3 p-4 relative w-full">
+                  {/* Token and Type Row */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <AppTokenIcon token={rowToken} className="w-8 h-8" size={32} />
+                      <AppTokenName
+                        token={rowToken}
+                        variant="symbol"
+                        className="font-semibold text-[#404040] dark:text-[#d2d2d2] uppercase text-sm"
+                      />
+                    </div>
+                    <div className="bg-zinc-100 dark:bg-[#27272a] px-2 py-1 rounded">
+                      <p className="text-xs text-black dark:text-[#d2d2d2]">{item.type}</p>
+                    </div>
+                  </div>
+
+                  {/* Amount */}
+                  <div>
+                    <p className="text-[10px] font-normal text-[#71717a] mb-1 uppercase">AMOUNT</p>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm text-black dark:text-[#d2d2d2]">{item.amountIn}</span>
+                      <span className="text-[#06a800]">→</span>
+                      <span className="text-sm text-black dark:text-[#d2d2d2]">{item.amountOut}</span>
+                    </div>
+                  </div>
+
+                  {/* Account and Time */}
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <p className="text-[10px] font-normal text-[#71717a] mb-1 uppercase">ACCOUNT</p>
+                      <p className="text-xs text-black dark:text-[#d2d2d2]">{item.account}</p>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[10px] font-normal text-[#71717a] mb-1 uppercase">TIME</p>
+                      <p className="text-xs text-black dark:text-[#d2d2d2] whitespace-nowrap">{item.time}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })
+        )}
       </div>
 
       {/* Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        className="mt-4"
-      />
-    </div>
+      <div className="flex gap-[5px] items-center justify-center py-4 md:py-5 border-t dark:border-[#393b3d] border-[#e0e0e0]">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          className="justify-center"
+        />
+      </div>
+    </TableContainer>
   )
 }
