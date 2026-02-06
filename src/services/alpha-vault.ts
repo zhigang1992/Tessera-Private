@@ -70,8 +70,9 @@ async function loadMerkleProofs(): Promise<MerkleProofData> {
     if (!response.ok) {
       throw new Error(`Failed to load merkle proofs: ${response.statusText}`)
     }
-    proofsCache = await response.json()
-    return proofsCache
+    const data: MerkleProofData = await response.json()
+    proofsCache = data
+    return data
   } catch (error) {
     console.error('Error loading merkle proofs:', error)
     // Return empty object as fallback
