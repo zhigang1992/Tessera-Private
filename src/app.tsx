@@ -12,7 +12,7 @@ export function App() {
       <BrowserRouter>
         <MainLayout>
           <Routes>
-            <Route path="/" element={<Navigate to="/referral" replace />} />
+            <Route path="/" element={<Navigate to="/explorer" replace />} />
             <Route path="/explorer" element={<ExplorePage />} />
             <Route path="/referral" element={<ReferralPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
