@@ -8,12 +8,8 @@ type MerkleProofData = {
 
 type MerkleProofsDB = Record<string, MerkleProofData>
 
-// Import the merkle proofs data from functions/data directory
-// This directory is NOT exposed to clients, only accessible by Cloudflare Functions
-import merkleProofs from '../../data/merkle-proofs-t22.json'
-
 /**
- * Validate Solana wallet address format
+ * Validate Solana wallet/vault address format
  */
 function isValidSolanaAddress(address: string): boolean {
   // Solana addresses are base58 encoded and typically 32-44 characters
@@ -27,12 +23,30 @@ function isValidSolanaAddress(address: string): boolean {
 }
 
 /**
- * API endpoint to get merkle proof for a specific wallet
+ * Load merkle proofs for a specific vault
+ */
+async function loadMerkleProofsForVault(vaultId: string): Promise<MerkleProofsDB | null> {
+  try {
+    // Import is resolved at build time, so we need to use dynamic import pattern
+    // For now, we support the devnet vault
+    const module = await import(`../../data/merkle-proofs-${vaultId}.json`)
+    return module.default as MerkleProofsDB
+  } catch (error) {
+    console.error(`Failed to load merkle proofs for vault ${vaultId}:`, error)
+    return null
+  }
+}
+
+/**
+ * API endpoint to get merkle proof for a specific wallet in a specific vault
  *
- * GET /api/merkle-proof/{wallet}
+ * GET /api/merkle-proof/{wallet}?vaultId={vaultId}
  *
- * Returns the merkle proof data for the specified wallet address,
- * or 404 if the wallet is not whitelisted.
+ * Query Parameters:
+ *   - vaultId: The vault address (required)
+ *
+ * Returns the merkle proof data for the specified wallet address in the vault,
+ * or 404 if the wallet is not whitelisted for that vault.
  */
 export const onRequest: PagesFunction = async ({ request, params }) => {
   // Only allow GET requests
@@ -47,6 +61,33 @@ export const onRequest: PagesFunction = async ({ request, params }) => {
   }
 
   const wallet = params.wallet as string
+  const url = new URL(request.url)
+  const vaultId = url.searchParams.get('vaultId')
+
+  // Validate vault ID
+  if (!vaultId) {
+    return Response.json(
+      { error: 'Missing vaultId query parameter' },
+      {
+        status: 400,
+        headers: {
+          'Cache-Control': 'public, max-age=300'
+        }
+      }
+    )
+  }
+
+  if (!isValidSolanaAddress(vaultId)) {
+    return Response.json(
+      { error: 'Invalid vaultId format' },
+      {
+        status: 400,
+        headers: {
+          'Cache-Control': 'public, max-age=300'
+        }
+      }
+    )
+  }
 
   // Validate wallet address format
   if (!wallet || !isValidSolanaAddress(wallet)) {
@@ -55,14 +96,29 @@ export const onRequest: PagesFunction = async ({ request, params }) => {
       {
         status: 400,
         headers: {
-          'Cache-Control': 'public, max-age=300' // Cache for 5 minutes
+          'Cache-Control': 'public, max-age=300'
         }
       }
     )
   }
 
-  // Load merkle proofs (cast to correct type)
-  const proofs = merkleProofs as MerkleProofsDB
+  // Load merkle proofs for the specified vault
+  const proofs = await loadMerkleProofsForVault(vaultId)
+
+  if (!proofs) {
+    return Response.json(
+      {
+        error: 'Vault not found or no whitelist configured',
+        vaultId
+      },
+      {
+        status: 404,
+        headers: {
+          'Cache-Control': 'public, max-age=300'
+        }
+      }
+    )
+  }
 
   // Check if wallet is whitelisted
   const proofData = proofs[wallet]
@@ -70,13 +126,14 @@ export const onRequest: PagesFunction = async ({ request, params }) => {
   if (!proofData) {
     return Response.json(
       {
-        error: 'Wallet not whitelisted',
-        wallet
+        error: 'Wallet not whitelisted for this vault',
+        wallet,
+        vaultId
       },
       {
         status: 404,
         headers: {
-          'Cache-Control': 'public, max-age=300' // Cache for 5 minutes
+          'Cache-Control': 'public, max-age=300'
         }
       }
     )
@@ -86,6 +143,7 @@ export const onRequest: PagesFunction = async ({ request, params }) => {
   return Response.json(
     {
       wallet,
+      vaultId,
       proof: proofData.proof,
       maxCap: proofData.max_cap,
       merkleRootConfig: proofData.merkle_root_config,

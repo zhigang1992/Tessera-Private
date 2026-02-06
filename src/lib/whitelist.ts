@@ -18,16 +18,17 @@ export interface WhitelistInfo {
 }
 
 /**
- * Check if a wallet is whitelisted and get their max cap
- * Phase 2: Uses API endpoint to fetch only specific wallet's proof
+ * Check if a wallet is whitelisted and get their max cap for a specific vault
+ * Phase 2: Uses vault-specific API endpoint to fetch only specific wallet's proof
  *
  * @param walletAddress - The wallet public key as a string
+ * @param vaultId - The vault address to check whitelist for
  * @returns WhitelistInfo object with whitelist status and cap information
  */
-export async function getWhitelistInfo(walletAddress: string): Promise<WhitelistInfo> {
+export async function getWhitelistInfo(walletAddress: string, vaultId: string): Promise<WhitelistInfo> {
   try {
-    // Fetch proof for this specific wallet via API (Phase 2)
-    const response = await fetch(`/api/merkle-proof/${walletAddress}`)
+    // Fetch proof for this specific wallet via vault-specific API (Phase 2)
+    const response = await fetch(`/api/merkle-proof/${walletAddress}?vaultId=${vaultId}`)
 
     if (response.status === 404) {
       // Wallet not whitelisted

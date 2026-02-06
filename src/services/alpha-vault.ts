@@ -44,44 +44,10 @@ function resolveAlphaVaultConfig(tokenId: AppTokenId, network: SolanaNetwork = g
  * Generated using Meteora's BalanceTree from @meteora-ag/alpha-vault
  * These are used because Meteora's API doesn't have our custom whitelist proofs
  *
- * Phase 2: Proofs are served via API endpoint /api/merkle-proof/{wallet}
+ * Phase 2: Proofs are served via API endpoint /api/merkle-proof/{wallet}?vaultId={vaultId}
  * The full list is never exposed to clients for privacy and bandwidth optimization
- * Merkle Root: 536db5ede0a55e23f74e2589dc0d02b4c12c5eedfe488cf1de80b821360abac9
+ * Each vault has its own whitelist stored in functions/data/merkle-proofs-{vaultId}.json
  */
-
-/**
- * Get merkle proof for a specific wallet via API endpoint
- * Phase 2: Fetches only the specific wallet's proof to reduce bandwidth
- *
- * @param walletAddress - The wallet public key as a string
- * @returns Proof data if whitelisted, null otherwise
- */
-async function getMerkleProofForWallet(
-  walletAddress: string
-): Promise<{ proof: number[][]; max_cap: number; merkle_root_config?: string } | null> {
-  try {
-    const response = await fetch(`/api/merkle-proof/${walletAddress}`)
-
-    if (response.status === 404) {
-      // Wallet not whitelisted
-      return null
-    }
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch merkle proof: ${response.statusText}`)
-    }
-
-    const result = await response.json()
-    return {
-      proof: result.proof,
-      max_cap: result.maxCap,
-      merkle_root_config: result.merkleRootConfig,
-    }
-  } catch (error) {
-    console.error('Error fetching merkle proof from API:', error)
-    return null
-  }
-}
 
 // ============ Types ============
 
@@ -598,28 +564,41 @@ export class AlphaVaultClient {
 
   /**
    * Get merkle proof for a whitelisted user
-   * Phase 2: Uses API endpoint to fetch only the specific wallet's proof
+   * Phase 2: Uses vault-specific API endpoint to fetch only the specific wallet's proof
    */
   async getMerkleProof(owner: PublicKey): Promise<DepositWithProofParams | null> {
     const ownerStr = owner.toBase58()
+    const vaultId = this.config.vault
 
-    // Fetch proof for this specific wallet via API (Phase 2 optimization)
-    const localProof = await getMerkleProofForWallet(ownerStr)
+    try {
+      // Fetch proof for this specific wallet from vault-specific API
+      const response = await fetch(`/api/merkle-proof/${ownerStr}?vaultId=${vaultId}`)
 
-    if (localProof) {
-      const merkleRoot = localProof.merkle_root_config ?? this.config.merkleRootConfig
+      if (response.status === 404) {
+        // Wallet not whitelisted or vault has no whitelist
+        return null
+      }
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch merkle proof: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      const merkleRoot = result.merkleRootConfig ?? this.config.merkleRootConfig
+
       if (!merkleRoot) {
         return null
       }
 
       return {
         merkleRootConfig: new PublicKey(merkleRoot),
-        maxCap: new BN(localProof.max_cap),
-        proof: localProof.proof.map((p) => Array.from(p)),
+        maxCap: new BN(result.maxCap),
+        proof: result.proof.map((p: number[]) => Array.from(p)),
       }
+    } catch (error) {
+      console.error('Error fetching merkle proof from API:', error)
+      return null
     }
-
-    return null
   }
 
   /**
