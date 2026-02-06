@@ -217,7 +217,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       id: 'T-SpaceX-USDC',
       quoteToken: 'USDC',
       addresses: {
-        devnet: '4HbirzyXoZAJCjHgRfNxDYEzhEVkgeihtHZ6h4M2i3CP',
+        devnet: '8YJfkiCCdSHjWZuXw1wWXnxSEjsUG8Y8nDQQUta733Qm',
       },
     },
     alphaVault: {
@@ -227,10 +227,10 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       quoteDecimals: 6,
       networks: {
         devnet: {
-          vault: '9vksN3mK4BeVD31UPjnZWTqm61DCg2LENdRjALSqu3dM',
-          dlmmPool: '4HbirzyXoZAJCjHgRfNxDYEzhEVkgeihtHZ6h4M2i3CP',
+          vault: '2GpAqQXVuwHGutxJBt2UcrDXAAprSVYo7ErFVXyETaNN',
+          dlmmPool: '8YJfkiCCdSHjWZuXw1wWXnxSEjsUG8Y8nDQQUta733Qm',
           merkleRootConfig: 'GtzjfPuEPUQbWBsbK6Z9JawxtGHhR26KkUtBKeDoNhmG',
-          meteoraUrl: 'https://devnet.app.meteora.ag/vault/9vksN3mK4BeVD31UPjnZWTqm61DCg2LENdRjALSqu3dM',
+          meteoraUrl: 'https://devnet.app.meteora.ag/vault/2GpAqQXVuwHGutxJBt2UcrDXAAprSVYo7ErFVXyETaNN',
         },
       },
     },
@@ -245,7 +245,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
     iconKey: 'usdc',
     mints: {
       devnet: {
-        address: '5dLFZrQZw1eZrdHtLFFS1VymRmPKaUb6cTWRqgDEJ2oA',
+        address: '7iENkTQY9RCwbWhASSrTbXCTtKBvGmn8wf6x2Su1GYVc',
         decimals: 6,
         program: 'spl-token',
       },
