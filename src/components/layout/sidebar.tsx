@@ -358,6 +358,24 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 </div>
               )}
             </div>
+
+            {/* Social Links */}
+            <div className="flex items-center justify-center gap-6 pt-4">
+              {socialLinks.map((social) =>
+                (
+                  <a
+                    key={social.name}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.ariaLabel}
+                    className="text-gray-400 transition-colors hover:text-black dark:hover:text-white"
+                  >
+                    {social.icon}
+                  </a>
+                ),
+              )}
+            </div>
           </div>
         </div>
       </aside>
