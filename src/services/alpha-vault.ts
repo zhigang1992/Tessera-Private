@@ -71,10 +71,11 @@ export interface VaultInfo {
   mode: VaultMode
   state: VaultStateType
   // Timing
-  depositOpenSlot: number
-  depositCloseSlot: number
-  vestingStartSlot: number
-  vestingEndSlot: number
+  activationType: 'slot' | 'timestamp' // How to interpret the time values below
+  depositOpenSlot: number // Slot number OR Unix timestamp in seconds (depending on activationType)
+  depositCloseSlot: number // Slot number OR Unix timestamp in seconds (depending on activationType)
+  vestingStartSlot: number // Slot number OR Unix timestamp in seconds (depending on activationType)
+  vestingEndSlot: number // Slot number OR Unix timestamp in seconds (depending on activationType)
   activationPoint: number
   // Amounts
   totalDeposited: string
@@ -213,6 +214,11 @@ export class AlphaVaultClient {
     // Extract vault configuration - use any to handle SDK type variations
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const vaultDataAny = vaultData as any
+
+    // Read activation type from SDK: 0 = SLOT, 1 = TIMESTAMP
+    const activationTypeValue = vaultDataAny.activationType ?? 0
+    const activationType: 'slot' | 'timestamp' = activationTypeValue === 0 ? 'slot' : 'timestamp'
+
     const depositOpenSlot = vaultDataAny.depositingPoint?.toNumber() ?? 0
     const depositCloseSlot = vaultDataAny.startVestingPoint?.toNumber() ?? 0
     const vestingStartSlot = vaultDataAny.startVestingPoint?.toNumber() ?? 0
@@ -238,19 +244,35 @@ export class AlphaVaultClient {
     const isOversubscribed = maxCapNum > 0 && totalDepositedNum > maxCapNum
     const oversubscriptionRatio = maxCapNum > 0 ? totalDepositedNum / maxCapNum : 0
 
-    // Calculate vesting duration from on-chain slots
-    // Approximate: 400ms per slot = 2.5 slots per second
-    const vestingDurationSlots = vestingEndSlot - vestingStartSlot
-    const vestingDurationSeconds = vestingDurationSlots / 2.5
-    const vestingDurationHours = Math.round(vestingDurationSeconds / 3600)
+    // Calculate vesting duration based on activation type
+    let vestingDurationHours: number
+    if (activationType === 'slot') {
+      // For slot-based: approximate 400ms per slot = 2.5 slots per second
+      const vestingDurationSlots = vestingEndSlot - vestingStartSlot
+      const vestingDurationSeconds = vestingDurationSlots / 2.5
+      vestingDurationHours = Math.round(vestingDurationSeconds / 3600)
+    } else {
+      // For timestamp-based: values are Unix timestamps in seconds
+      const vestingDurationSeconds = vestingEndSlot - vestingStartSlot
+      vestingDurationHours = Math.round(vestingDurationSeconds / 3600)
+    }
 
-    // Estimate times from slots
-    const estimateTime = (slot: number) => estimateSlotDate(currentSlot, slot)
+    // Estimate times based on activation type
+    const estimateTime = (point: number): Date | null => {
+      if (activationType === 'slot') {
+        // Point is a slot number - estimate timestamp from current slot
+        return estimateSlotDate(currentSlot, point)
+      } else {
+        // Point is already a Unix timestamp in seconds - convert to milliseconds
+        return new Date(point * 1000)
+      }
+    }
 
     return {
       address: this.vaultAddress.toBase58(),
       mode,
       state,
+      activationType,
       depositOpenSlot,
       depositCloseSlot,
       vestingStartSlot,

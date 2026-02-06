@@ -53,7 +53,17 @@ export function ClaimTokensCard() {
     if (!vaultInfo) {
       return { type: 'disabled' }
     }
-    // Use slot-based countdown from vault's vestingStartSlot
+
+    // Check activation type to determine how to handle time values
+    if (vaultInfo.activationType === 'timestamp') {
+      // vestingStartSlot is actually a Unix timestamp in seconds - convert to milliseconds
+      return {
+        type: 'timestamp',
+        targetTimestamp: vaultInfo.vestingStartSlot * 1000,
+      }
+    }
+
+    // Slot-based countdown
     return { type: 'slot', targetSlot: vaultInfo.vestingStartSlot }
   }, [vaultInfo])
 
