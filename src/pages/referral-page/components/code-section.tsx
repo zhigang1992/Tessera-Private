@@ -71,7 +71,8 @@ export function CodeSection() {
   }, [])
 
   const handleCodeCreated = useCallback((code: string) => {
-    // Auto-select the newly created code
+    // Reset to page 1 and auto-select the newly created code
+    setCurrentPage(1)
     setSelectedCode(code)
   }, [])
 
