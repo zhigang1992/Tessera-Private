@@ -71,7 +71,7 @@ export const onRequest: PagesFunction = async ({ request, params }) => {
       {
         status: 400,
         headers: {
-          'Cache-Control': 'public, max-age=300'
+          'Cache-Control': 'no-store' // Don't cache validation errors
         }
       }
     )
@@ -83,7 +83,7 @@ export const onRequest: PagesFunction = async ({ request, params }) => {
       {
         status: 400,
         headers: {
-          'Cache-Control': 'public, max-age=300'
+          'Cache-Control': 'no-store' // Don't cache validation errors
         }
       }
     )
@@ -96,7 +96,7 @@ export const onRequest: PagesFunction = async ({ request, params }) => {
       {
         status: 400,
         headers: {
-          'Cache-Control': 'public, max-age=300'
+          'Cache-Control': 'no-store' // Don't cache validation errors
         }
       }
     )
@@ -114,7 +114,7 @@ export const onRequest: PagesFunction = async ({ request, params }) => {
       {
         status: 404,
         headers: {
-          'Cache-Control': 'public, max-age=300'
+          'Cache-Control': 'no-store' // Don't cache vault loading errors
         }
       }
     )
@@ -133,7 +133,7 @@ export const onRequest: PagesFunction = async ({ request, params }) => {
       {
         status: 404,
         headers: {
-          'Cache-Control': 'public, max-age=300'
+          'Cache-Control': 'no-store' // Don't cache negative results - wallet may be added later
         }
       }
     )
