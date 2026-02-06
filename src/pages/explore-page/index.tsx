@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { getExploreAssets, type ExploreAsset } from '@/services'
 import { AssetCard } from './components/asset-card'
 import { AssetCardSkeleton } from './components/asset-card-skeleton'
-import { ComingSoonCard } from './components/coming-soon-card'
 import HelpCircleIcon from './components/_/help-circle.svg?react'
 
 export default function ExplorePage() {
@@ -32,7 +31,7 @@ export default function ExplorePage() {
 
       {/* Subtitle */}
       <p className="text-[13px] text-[#71717a] leading-normal">
-        Discover and track the world's most innovative private companies.
+        Discover and track innovative private companies and prediction markets.
       </p>
 
       {/* Asset Grid */}
@@ -41,17 +40,12 @@ export default function ExplorePage() {
           <>
             <AssetCardSkeleton />
             <AssetCardSkeleton />
-            <AssetCardSkeleton />
-            <AssetCardSkeleton />
-            <AssetCardSkeleton />
-            <AssetCardSkeleton />
           </>
         ) : (
           <>
             {assets?.map((asset) => (
               <AssetCard key={asset.id} asset={asset} onAction={handleAssetAction} />
             ))}
-            <ComingSoonCard />
           </>
         )}
       </div>
