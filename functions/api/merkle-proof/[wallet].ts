@@ -8,9 +8,9 @@ type MerkleProofData = {
 
 type MerkleProofsDB = Record<string, MerkleProofData>
 
-// Import the merkle proofs data
-// In production, this will be bundled with the worker
-import merkleProofs from '../../../public/data/merkle-proofs-t22.json'
+// Import the merkle proofs data from functions/data directory
+// This directory is NOT exposed to clients, only accessible by Cloudflare Functions
+import merkleProofs from '../../data/merkle-proofs-t22.json'
 
 /**
  * Validate Solana wallet address format

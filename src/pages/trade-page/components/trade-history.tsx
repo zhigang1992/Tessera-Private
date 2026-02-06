@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { cn } from '@/lib/utils'
 import { Pagination } from '@/components/ui/pagination'
 import { TableContainer } from '@/components/ui/table-header'
 import { getTradeHistory } from '@/services'
