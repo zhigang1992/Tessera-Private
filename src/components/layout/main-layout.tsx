@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { Sidebar } from './sidebar'
 import { Header } from './header'
 import { useHeader } from '@/contexts/header-context'
+import { CookieConsent } from '@/components/cookie-consent'
 
 interface MainLayoutProps {
   children: React.ReactNode
@@ -28,6 +29,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <div className="max-w-[1200px] mx-auto">{children}</div>
         </main>
       </div>
+      <CookieConsent />
     </div>
   )
 }
