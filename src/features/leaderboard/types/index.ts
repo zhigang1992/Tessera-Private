@@ -5,7 +5,7 @@ export interface LeaderboardEntry {
   rank: number
   total_referrals: number
   total_rewards_usd: number
-  total_trading_points: number
+  total_trading_points: number // contains own_trading_points for 'trading' type, referral_trading_points for 'referral' type
   total_trading_volume: number
 }
 
@@ -13,7 +13,7 @@ export interface LeaderboardSummaryData {
   account: string
   total_referrals: number // bigint from GraphQL
   total_rewards_usd: string // numeric from GraphQL (18 decimals)
-  total_trading_points: string // numeric from GraphQL (18 decimals)
+  total_trading_points: string // numeric from GraphQL (18 decimals) - contains own_trading_points for 'trading' type, referral_trading_points for 'referral' type
   total_trading_volume: string // numeric from GraphQL (18 decimals)
 }
 

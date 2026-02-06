@@ -28,7 +28,7 @@ export function TradingLeaderboard() {
               <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Rank (Top100)</th>
               <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">User</th>
               <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Trading Vol.</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Trading Points</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Tessera Points</th>
             </tr>
           </thead>
           <tbody>
@@ -156,7 +156,7 @@ export function TradingLeaderboard() {
                       </p>
                     </div>
                     <div className="flex-1">
-                      <p className="text-[10px] font-normal text-[#71717a] mb-1 uppercase">TRADING POINTS</p>
+                      <p className="text-[10px] font-normal text-[#71717a] mb-1 uppercase">TESSERA POINTS</p>
                       <p className={cn('text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>
                         {entry.total_trading_points.toLocaleString()}
                       </p>

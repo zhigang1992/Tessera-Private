@@ -80,7 +80,7 @@ export function LeaderboardTable({
           {isTradingLeaderboard ? (
             <>
               <div className="w-[100px] sm:w-[120px] text-xs text-[#71717A] text-right">Trading Vol.</div>
-              <div className="w-[100px] sm:w-[120px] text-xs text-[#71717A] text-right">Trading Points</div>
+              <div className="w-[100px] sm:w-[120px] text-xs text-[#71717A] text-right">Tessera Points</div>
             </>
           ) : (
             <div className="w-[120px] sm:w-[150px] text-xs text-[#71717A] text-right">Trader Referral</div>

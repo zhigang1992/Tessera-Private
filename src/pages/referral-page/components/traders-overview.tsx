@@ -113,7 +113,7 @@ export function TradersOverview() {
         {/* Trading Points Card */}
         <div className="flex-1 flex items-center justify-between bg-white dark:bg-[#323334] rounded-[16px] px-4 py-6 border dark:border-[rgba(210,210,210,0.1)] border-[rgba(17,17,17,0.15)]">
           <div className="flex flex-col gap-[5px]">
-            <p className="text-[12px] text-zinc-900 dark:text-[#d2d2d2]">Your trading point</p>
+            <p className="text-[12px] text-zinc-900 dark:text-[#d2d2d2]">Your Tessera point</p>
             <p className="text-[28px] font-light text-zinc-900 dark:text-[#d2d2d2] font-martian leading-none h-10 flex items-center">
               {showDash ? '—' : (data?.tradingPoints?.toLocaleString() ?? '—')}
             </p>

@@ -25,7 +25,7 @@ export function ReferralLeaderboard() {
               <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Rank (Top100)</th>
               <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">User</th>
               <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Trader Referral</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Trading Points</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Tessera Points</th>
               <th className="px-6 py-4 text-left text-sm font-medium text-muted-foreground dark:text-[#71717a]">Fee Rewards</th>
             </tr>
           </thead>
@@ -161,7 +161,7 @@ export function ReferralLeaderboard() {
                     </div>
                     {/* Trading Points */}
                     <div>
-                      <p className="text-[10px] font-normal text-[#71717a] mb-1 uppercase">TRADING POINTS</p>
+                      <p className="text-[10px] font-normal text-[#71717a] mb-1 uppercase">TESSERA POINTS</p>
                       <p className={cn('text-sm', isCurrentUser ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]')}>
                         {entry.total_trading_points.toLocaleString()}
                       </p>

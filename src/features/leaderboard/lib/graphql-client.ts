@@ -4,6 +4,7 @@ const GRAPHQL_ENDPOINT = 'https://tracker-gql-dev.tessera.fun/v1/graphql'
 
 /**
  * Fetch leaderboard data from public_marts.leaderboard_summary
+ * For points, we fetch the appropriate field from trading_points_by_account separately
  * Supports sorting by trading volume or referral count
  */
 export async function fetchLeaderboard(
@@ -16,8 +17,9 @@ export async function fetchLeaderboard(
     ? '{ total_trading_volume: desc_nulls_last }'
     : '{ total_referrals: desc_nulls_last }'
 
-  const query = `
-    query GetLeaderboard($limit: Int!, $offset: Int!) {
+  // First, fetch leaderboard summary with accounts
+  const summaryQuery = `
+    query GetLeaderboardSummary($limit: Int!, $offset: Int!) {
       public_marts_leaderboard_summary(
         limit: $limit
         offset: $offset
@@ -26,7 +28,6 @@ export async function fetchLeaderboard(
         account
         total_referrals
         total_rewards_usd
-        total_trading_points
         total_trading_volume
       }
       public_marts_leaderboard_summary_aggregate {
@@ -37,26 +38,80 @@ export async function fetchLeaderboard(
     }
   `
 
-  const response = await fetch(GRAPHQL_ENDPOINT, {
+  const summaryResponse = await fetch(GRAPHQL_ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      query,
+      query: summaryQuery,
       variables: { limit, offset },
     }),
   })
 
-  if (!response.ok) {
-    throw new Error(`GraphQL request failed: ${response.statusText}`)
+  if (!summaryResponse.ok) {
+    throw new Error(`GraphQL request failed: ${summaryResponse.statusText}`)
   }
 
-  const result = await response.json()
+  const summaryResult = await summaryResponse.json()
 
-  if (result.errors) {
-    throw new Error(result.errors[0]?.message || 'GraphQL query failed')
+  if (summaryResult.errors) {
+    throw new Error(summaryResult.errors[0]?.message || 'GraphQL query failed')
   }
 
-  return result.data
+  const summaryData = summaryResult.data
+  const accounts = summaryData.public_marts_leaderboard_summary.map((entry: any) => entry.account)
+
+  // Now fetch trading points for these accounts
+  const pointsField = type === 'trading' ? 'own_trading_points' : 'referral_trading_points'
+
+  const pointsQuery = `
+    query GetTradingPoints($accounts: [String!]!) {
+      public_marts_trading_points_by_account(
+        where: { account: { _in: $accounts } }
+      ) {
+        account
+        own_trading_points
+        referral_trading_points
+      }
+    }
+  `
+
+  const pointsResponse = await fetch(GRAPHQL_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      query: pointsQuery,
+      variables: { accounts },
+    }),
+  })
+
+  if (!pointsResponse.ok) {
+    throw new Error(`GraphQL request failed: ${pointsResponse.statusText}`)
+  }
+
+  const pointsResult = await pointsResponse.json()
+
+  if (pointsResult.errors) {
+    throw new Error(pointsResult.errors[0]?.message || 'GraphQL query failed')
+  }
+
+  // Create a map of account to points
+  const pointsMap = new Map<string, string>()
+  pointsResult.data.public_marts_trading_points_by_account.forEach((entry: any) => {
+    pointsMap.set(entry.account, entry[pointsField] || '0')
+  })
+
+  // Merge the data
+  const mergedData = summaryData.public_marts_leaderboard_summary.map((entry: any) => ({
+    ...entry,
+    total_trading_points: pointsMap.get(entry.account) || '0'
+  }))
+
+  return {
+    public_marts_leaderboard_summary: mergedData,
+    public_marts_leaderboard_summary_aggregate: summaryData.public_marts_leaderboard_summary_aggregate
+  }
 }
