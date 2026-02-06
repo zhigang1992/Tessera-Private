@@ -210,6 +210,8 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
           // Get creation timestamp from GraphQL (in seconds), convert to ISO string
           const blockTime = creationTimeMap.get(code)
           const createdAt = blockTime ? new Date(blockTime * 1000).toISOString() : new Date().toISOString()
+          // Use current time (in seconds) as fallback if not in GraphQL yet
+          const blockTimeForSorting = blockTime ?? Math.floor(Date.now() / 1000)
 
           referralCodes.push({
             id: referralCodes.length,
@@ -224,7 +226,8 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
             totalVolume: codeStats?.tradingVolume ?? 0,
             totalRewards: codeStats?.rewardsUsd ?? 0,
             // Store block_time for sorting (newest first)
-            blockTime: blockTime ?? 0,
+            // Use current timestamp if not indexed by GraphQL yet
+            blockTime: blockTimeForSorting,
           })
         } catch (err) {
           console.warn('Failed to decode account:', accountPubkey.toBase58(), err)

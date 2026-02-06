@@ -48,9 +48,10 @@ export function CreateReferralCodeModal({ open, onOpenChange, onSuccess }: Creat
       const createdCode = normalizedCustomCode || result.code
       setCustomCode('')
       onOpenChange(false)
-      // Call onSuccess with the created code
+      // Call onSuccess with the created code after a small delay
+      // to ensure React Query has updated the component state
       if (onSuccess && createdCode) {
-        onSuccess(createdCode)
+        setTimeout(() => onSuccess(createdCode), 0)
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to create referral code'

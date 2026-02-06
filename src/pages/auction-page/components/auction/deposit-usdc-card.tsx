@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Info, Loader2, AlertCircle } from 'lucide-react'
@@ -20,6 +20,7 @@ export function DepositUSDCCard() {
   const { setVisible } = useWalletModal()
   const [depositAmount, setDepositAmount] = useState('')
   const [tooltipOpen, setTooltipOpen] = useState(false)
+  const [isWhitelistEnabled, setIsWhitelistEnabled] = useState(false)
 
   const {
     config,
@@ -63,6 +64,11 @@ export function DepositUSDCCard() {
 
   const isDepositOpen = vaultInfo?.state === 'deposit_open'
   const canDeposit = isDepositActive && depositQuota?.canDeposit && isDepositOpen && wallet.connected
+
+  // Load whitelist status on mount
+  useEffect(() => {
+    hasWhitelist().then(setIsWhitelistEnabled).catch(() => setIsWhitelistEnabled(false))
+  }, [])
 
   // Calculate existing deposit (amount already deposited)
   const existingDepositAmount = useMemo(() => {
@@ -319,7 +325,7 @@ export function DepositUSDCCard() {
         )}
 
         {/* Persistent Warnings/Info */}
-        {hasWhitelist() && depositQuota && (
+        {isWhitelistEnabled && depositQuota && (
           <div className="bg-[rgba(255,255,255,0.5)] flex items-center justify-center p-[12px] rounded-[8px] w-full">
             <p className="font-normal leading-[16.5px] text-[10px] text-center text-black tracking-[0.0645px]">
               Deposits are only available to whitelisted wallets. Maximum deposit per wallet: $

@@ -6,7 +6,7 @@
  */
 
 import { BigNumber, math, type BigNumberValue } from '@/lib/bignumber'
-import { LOCAL_MERKLE_PROOFS } from '@/services/alpha-vault'
+import { getLocalMerkleProofs } from '@/services/alpha-vault'
 
 export interface WhitelistInfo {
   isWhitelisted: boolean
@@ -21,8 +21,9 @@ export interface WhitelistInfo {
  * @param walletAddress - The wallet public key as a string
  * @returns WhitelistInfo object with whitelist status and cap information
  */
-export function getWhitelistInfo(walletAddress: string): WhitelistInfo {
-  const proofData = LOCAL_MERKLE_PROOFS[walletAddress]
+export async function getWhitelistInfo(walletAddress: string): Promise<WhitelistInfo> {
+  const merkleProofs = await getLocalMerkleProofs()
+  const proofData = merkleProofs[walletAddress]
 
   if (!proofData) {
     return {
@@ -50,8 +51,9 @@ export function getWhitelistInfo(walletAddress: string): WhitelistInfo {
  *
  * @returns Array of whitelisted wallet addresses
  */
-export function getAllWhitelistedWallets(): string[] {
-  return Object.keys(LOCAL_MERKLE_PROOFS)
+export async function getAllWhitelistedWallets(): Promise<string[]> {
+  const merkleProofs = await getLocalMerkleProofs()
+  return Object.keys(merkleProofs)
 }
 
 /**
@@ -59,8 +61,9 @@ export function getAllWhitelistedWallets(): string[] {
  *
  * @returns Number of whitelisted wallets
  */
-export function getWhitelistCount(): number {
-  return Object.keys(LOCAL_MERKLE_PROOFS).length
+export async function getWhitelistCount(): Promise<number> {
+  const merkleProofs = await getLocalMerkleProofs()
+  return Object.keys(merkleProofs).length
 }
 
 /**
@@ -68,6 +71,7 @@ export function getWhitelistCount(): number {
  *
  * @returns true if whitelist is not empty
  */
-export function hasWhitelist(): boolean {
-  return getWhitelistCount() > 0
+export async function hasWhitelist(): Promise<boolean> {
+  const count = await getWhitelistCount()
+  return count > 0
 }
