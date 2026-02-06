@@ -121,7 +121,7 @@ export function CodeSection() {
             <div className="flex flex-col pb-[5px]">
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="px-6 py-2 rounded-[10px] flex items-center justify-center gap-2 text-[13px] font-medium tracking-[-0.0762px] transition-colors cursor-pointer whitespace-nowrap bg-black dark:bg-[#d2fb95] text-white dark:text-black hover:bg-gray-800 dark:hover:bg-[#c5ed88]"
+                className="px-6 py-2 rounded-[10px] flex items-center justify-center gap-2 text-[13px] font-medium tracking-[-0.0762px] transition-colors cursor-pointer whitespace-nowrap bg-white dark:bg-white text-black dark:text-black hover:bg-gray-100 dark:hover:bg-gray-100 border border-[#e0e0e0] dark:border-[#e0e0e0]"
               >
                 <AddIcon className="h-[18px] w-[18px]" />
                 <span>New code</span>
