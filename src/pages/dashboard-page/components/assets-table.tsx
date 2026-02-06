@@ -30,7 +30,8 @@ export function AssetsTable({ selectedTokenId, onSelectToken }: AssetsTableProps
 
   return (
     <div className="bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl overflow-hidden">
-      <div className="overflow-x-auto">
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
         <div className="min-w-[600px]">
           {/* Table Header */}
           <div className="flex items-center px-4 py-3 border-b border-black/15 dark:border-[rgba(210,210,210,0.1)]">
@@ -125,6 +126,91 @@ export function AssetsTable({ selectedTokenId, onSelectToken }: AssetsTableProps
             ))
           )}
         </div>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden p-4 space-y-4">
+        {isLoading ? (
+          <div className="p-4 text-center">
+            <span className="text-sm text-muted-foreground">Loading assets...</span>
+          </div>
+        ) : !assets || assets.length === 0 ? (
+          <div className="p-4 text-center">
+            <span className="text-sm text-muted-foreground">No assets available</span>
+          </div>
+        ) : (
+          assets.map((asset) => (
+            <div
+              key={asset.id}
+              className={`relative rounded-xl p-4 cursor-pointer transition-colors ${
+                selectedTokenId === getTokenIdForAsset(asset.id)
+                  ? 'bg-[#d2fb95]'
+                  : 'bg-black/[0.02] dark:bg-white/[0.02] hover:bg-black/[0.04] dark:hover:bg-white/[0.04]'
+              }`}
+              onClick={() => handleAssetClick(asset.id)}
+            >
+              {/* Top Row: Icon, Name, Sector */}
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <AppTokenIcon token={defaultToken} className="w-12 h-12" size={48} />
+                  <div>
+                    <p
+                      className={`text-sm font-semibold ${
+                        selectedTokenId === getTokenIdForAsset(asset.id) ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
+                      }`}
+                    >
+                      {asset.name ?? <AppTokenName token={defaultToken} />}
+                    </p>
+                    <p className="text-xs font-normal text-[#71717a]">{asset.code}</p>
+                  </div>
+                </div>
+                <div className="bg-[#edffd3] rounded px-1.5 py-0.5 shadow-[0px_1px_0px_0px_rgba(0,0,0,0.25)]">
+                  <p className="text-[10px] font-normal text-[#315200] uppercase">{asset.sector}</p>
+                </div>
+              </div>
+
+              {/* Price and Valuation Row */}
+              <div className="flex gap-3 mb-3">
+                <div className="flex-1">
+                  <p className="text-[10px] font-normal text-[#71717a] mb-1 uppercase">PRICE</p>
+                  <p
+                    className={`text-xl font-semibold ${
+                      selectedTokenId === getTokenIdForAsset(asset.id) ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
+                    }`}
+                  >
+                    ${asset.price.toFixed(2)}
+                  </p>
+                </div>
+                <div className="flex-1">
+                  <p className="text-[10px] font-normal text-[#71717a] mb-1 uppercase">VALUATION</p>
+                  <p
+                    className={`text-xl font-semibold ${
+                      selectedTokenId === getTokenIdForAsset(asset.id) ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
+                    }`}
+                  >
+                    {asset.valuation}
+                  </p>
+                </div>
+              </div>
+
+              {/* Holders Info */}
+              <div className="flex items-center gap-1">
+                {asset.holders > 0 && <TrendingUp className="w-3 h-3 text-[#269700]" />}
+                <p className="text-xs font-normal text-[#71717a]">
+                  Currently held by{' '}
+                  <span
+                    className={`font-semibold ${
+                      selectedTokenId === getTokenIdForAsset(asset.id) ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
+                    }`}
+                  >
+                    {asset.holders > 0 ? asset.holders.toLocaleString() : '0'}
+                  </span>{' '}
+                  users
+                </p>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   )
