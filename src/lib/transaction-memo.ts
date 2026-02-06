@@ -17,10 +17,11 @@ const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfc
 
 /**
  * Predefined memo messages for different transaction types
+ * Shortened to reduce transaction size and fit within Solana's 1232 byte limit
  */
 export enum MemoType {
-  TRADING = "I acknowledge that I have read and accept Tessera's Terms and Conditions available at https://terms.tessera.pe/",
-  VAULT_DEPOSIT = "I acknowledge that I have read and accept Tessera's Terms and Conditions available at https://terms.tessera.pe/",
+  TRADING = "T&C: https://terms.tessera.pe/",
+  VAULT_DEPOSIT = "T&C: https://terms.tessera.pe/",
 }
 
 /**
@@ -47,6 +48,9 @@ export function createMemoInstruction(message: string, signer: PublicKey): Trans
  * If compute budget instructions already exist (e.g., from Meteora SDK), this function
  * removes them and replaces with our higher limits to avoid duplicate instruction errors.
  *
+ * Note: Only adds compute unit limit instruction to save transaction space.
+ * Price instruction is optional and omitted to reduce transaction size.
+ *
  * @param transaction - The transaction to add compute budget to
  * @returns The transaction with compute budget instructions prepended
  */
@@ -63,13 +67,12 @@ export function ensureComputeBudget(transaction: Transaction): Transaction {
     units: 200_000,
   })
 
-  // Set compute unit price (micro-lamports per CU) for priority
-  const computePriceIx = ComputeBudgetProgram.setComputeUnitPrice({
-    microLamports: 1,
-  })
+  // NOTE: Omitting compute unit price instruction to save ~32 bytes of transaction space
+  // This reduces transaction size to fit within Solana's 1232 byte limit
+  // The transaction will still succeed, just without priority fee
 
-  // Prepend our compute budget instructions at the beginning
-  transaction.instructions = [computeLimitIx, computePriceIx, ...nonComputeBudgetInstructions]
+  // Prepend our compute budget instruction at the beginning
+  transaction.instructions = [computeLimitIx, ...nonComputeBudgetInstructions]
 
   return transaction
 }
