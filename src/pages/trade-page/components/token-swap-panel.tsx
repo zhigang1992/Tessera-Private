@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useMeteoraSwap, type SwapDirection } from '@/hooks/use-meteora-swap'
-import { DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getAppToken, getExplorerUrl, getPoolCountdownConfig } from '@/config'
+import { DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getAppToken, getExplorerUrl } from '@/config'
 import { BigNumber } from '@/lib/bignumber'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
@@ -11,6 +11,8 @@ import { CountdownNotification } from '@/components/countdown-notification'
 import SwapIcon from './_/swap-icon.svg?react'
 import { toast } from 'sonner'
 import { useCountdown } from '@/hooks/use-countdown'
+import { getAlphaVaultClient } from '@/services/alpha-vault'
+import type { CountdownConfig } from '@/types/countdown'
 
 const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
 const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
@@ -28,6 +30,7 @@ interface TokenSwapPanelProps {
 
 export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
   const wallet = useWallet()
+  const { connection } = useConnection()
   const { setVisible } = useWalletModal()
 
   const {
@@ -45,8 +48,57 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
     clearError,
   } = useMeteoraSwap()
 
-  // Countdown configuration for trading start time
-  const countdownConfig = getPoolCountdownConfig('T-SpaceX-USDC')
+  // State for vault-based countdown config
+  const [countdownConfig, setCountdownConfig] = useState<CountdownConfig>({ type: 'disabled' })
+
+  // Fetch countdown config from alpha vault
+  useEffect(() => {
+    let mounted = true
+
+    async function fetchCountdownConfig() {
+      try {
+        // Get alpha vault client
+        const vaultClient = getAlphaVaultClient(DEFAULT_BASE_TOKEN_ID, { connection })
+
+        // Fetch vault info to get activation point and type
+        const vaultInfo = await vaultClient.getVaultInfo()
+
+        // Create countdown config based on activation type
+        let config: CountdownConfig
+        if (vaultInfo.activationType === 'timestamp') {
+          // activationPoint is in seconds, convert to milliseconds
+          config = {
+            type: 'timestamp',
+            targetTimestamp: vaultInfo.activationPoint * 1000,
+          }
+        } else if (vaultInfo.activationType === 'slot') {
+          config = {
+            type: 'slot',
+            targetSlot: vaultInfo.activationPoint,
+          }
+        } else {
+          config = { type: 'disabled' }
+        }
+
+        if (mounted) {
+          setCountdownConfig(config)
+        }
+      } catch (error) {
+        console.error('Failed to fetch countdown config from alpha vault:', error)
+        // On error, keep disabled state
+        if (mounted) {
+          setCountdownConfig({ type: 'disabled' })
+        }
+      }
+    }
+
+    fetchCountdownConfig()
+
+    return () => {
+      mounted = false
+    }
+  }, [connection])
+
   const { timeRemaining } = useCountdown(countdownConfig)
   const isTradingActive = timeRemaining.isExpired
 
