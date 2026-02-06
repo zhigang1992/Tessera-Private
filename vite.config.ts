@@ -20,5 +20,17 @@ export default defineConfig({
   ],
   server: {
     port: 6173,
+    proxy: {
+      // Proxy API endpoints to Cloudflare Workers local dev server
+      '/api': {
+        target: 'http://localhost:8788',
+        changeOrigin: true,
+      },
+      // Proxy geo-check endpoint
+      '/geo-check.json': {
+        target: 'http://localhost:8788',
+        changeOrigin: true,
+      },
+    },
   },
 })
