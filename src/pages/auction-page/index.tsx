@@ -35,11 +35,11 @@ export default function AuctionPage() {
           <div className="flex flex-col gap-4 lg:gap-6">
             <AuctionHeaderCard />
 
-            <div className="flex flex-col lg:grid lg:grid-cols-[1.75fr_1fr] gap-4 lg:gap-6">
-              <div className="order-2 lg:order-1 min-w-0">
+            <div className="flex flex-col md:flex-row gap-4 lg:gap-6">
+              <div className="w-full md:basis-0 md:grow md:min-w-0 order-2 md:order-1">
                 <AuctionProgressCard />
               </div>
-              <div className="order-1 lg:order-2 min-w-0">
+              <div className="w-full md:w-[400px] md:flex-shrink-0 order-1 md:order-2">
                 <DepositUSDCCard />
               </div>
             </div>
