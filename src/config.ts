@@ -8,13 +8,13 @@ export function getCurrentNetwork(): SolanaNetwork {
 }
 
 export const RPC_ENDPOINTS: Record<SolanaNetwork, string> = {
-  devnet: 'https://api.devnet.solana.com',
-  'mainnet-beta': 'https://api.mainnet-beta.solana.com',
+  devnet: import.meta.env.VITE_DEVNET_RPC_URL || 'https://api.devnet.solana.com',
+  'mainnet-beta': import.meta.env.VITE_MAINNET_RPC_URL || 'https://api.mainnet-beta.solana.com',
 }
 
 export const WS_ENDPOINTS: Record<SolanaNetwork, string> = {
-  devnet: 'wss://api.devnet.solana.com',
-  'mainnet-beta': 'wss://api.mainnet-beta.solana.com',
+  devnet: import.meta.env.VITE_DEVNET_WS_URL || 'wss://api.devnet.solana.com',
+  'mainnet-beta': import.meta.env.VITE_MAINNET_WS_URL || 'wss://api.mainnet-beta.solana.com',
 }
 
 export function getRpcEndpoint(network: SolanaNetwork = getCurrentNetwork()): string {
@@ -197,8 +197,8 @@ const TOKENS: Record<AppTokenId, AppToken> = {
         program: 'token-2022',
       },
       'mainnet-beta': {
-        address: 'TESgesqMiVxUG38tuJmLkDSQoebKmBn2FhZkYNBr8hu',
-        decimals: 9,
+        address: 'DwtmRMoEcynQsw8GtdMiZdpPfZctPK2PiCBZntL2f8g9',
+        decimals: 6,
         program: 'token-2022',
       },
     },
@@ -231,6 +231,11 @@ const TOKENS: Record<AppTokenId, AppToken> = {
           dlmmPool: '8YJfkiCCdSHjWZuXw1wWXnxSEjsUG8Y8nDQQUta733Qm',
           merkleRootConfig: 'GtzjfPuEPUQbWBsbK6Z9JawxtGHhR26KkUtBKeDoNhmG',
           meteoraUrl: 'https://devnet.app.meteora.ag/vault/2GpAqQXVuwHGutxJBt2UcrDXAAprSVYo7ErFVXyETaNN',
+        },
+        'mainnet-beta': {
+          vault: 'GaAMF2kAytKbQjDJvgTSoK8CeM6ShX21Gukkdk1D6kKN',
+          dlmmPool: 'GaAMF2kAytKbQjDJvgTSoK8CeM6ShX21Gukkdk1D6kKN',
+          meteoraUrl: 'https://app.meteora.ag/vault/GaAMF2kAytKbQjDJvgTSoK8CeM6ShX21Gukkdk1D6kKN',
         },
       },
     },
