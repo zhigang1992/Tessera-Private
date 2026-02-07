@@ -12,7 +12,7 @@
 
 import { Connection, PublicKey, Transaction } from '@solana/web3.js'
 import AlphaVault, { VaultState as SdkVaultState, VaultMode as SdkVaultMode, type DepositWithProofParams } from '@meteora-ag/alpha-vault'
-import DLMM, { getPriceOfBinByBinId } from '@meteora-ag/dlmm'
+import DLMM from '@meteora-ag/dlmm'
 import BN from 'bn.js'
 import {
   type AppTokenId,
@@ -404,23 +404,8 @@ export class AlphaVaultClient {
       const poolAddress = new PublicKey(this.config.dlmmPool)
       const cluster = this.network === 'mainnet-beta' ? 'mainnet-beta' : 'devnet'
       const dlmmPool = await DLMM.create(this.connection, poolAddress, { cluster })
-
-      // Get the active bin ID and bin step
-      const activeId = dlmmPool.lbPair.activeId
-      const binStep = dlmmPool.lbPair.binStep
-
-      // Get raw price at the active bin (not adjusted for decimals)
-      const rawPrice = getPriceOfBinByBinId(activeId, binStep)
-
-      // Adjust for decimal differences between X (base = T-SpaceX) and Y (quote = USDC)
-      // Returns price in human-readable form (USDC per T-SpaceX)
-      const adjustedPrice = DLMM.getPricePerLamport(
-        this.config.baseDecimals,   // X decimals (T-SpaceX)
-        this.config.quoteDecimals,  // Y decimals (USDC)
-        parseFloat(rawPrice.toString())
-      )
-
-      return parseFloat(adjustedPrice)
+      const bin = await dlmmPool.getActiveBin()
+      return Number(bin.pricePerToken)
     } catch (error) {
       console.error('Failed to get pool price:', error)
       return 0
