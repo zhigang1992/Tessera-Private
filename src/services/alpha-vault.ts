@@ -409,11 +409,18 @@ export class AlphaVaultClient {
       const activeId = dlmmPool.lbPair.activeId
       const binStep = dlmmPool.lbPair.binStep
 
-      // Get price at the active bin using the standalone function
-      // Returns price as Y per X (USDC per T-SpaceX)
-      const price = getPriceOfBinByBinId(activeId, binStep)
+      // Get raw price at the active bin (not adjusted for decimals)
+      const rawPrice = getPriceOfBinByBinId(activeId, binStep)
 
-      return parseFloat(price.toString())
+      // Adjust for decimal differences between X (base = T-SpaceX) and Y (quote = USDC)
+      // Returns price in human-readable form (USDC per T-SpaceX)
+      const adjustedPrice = DLMM.getPricePerLamport(
+        this.config.baseDecimals,   // X decimals (T-SpaceX)
+        this.config.quoteDecimals,  // Y decimals (USDC)
+        parseFloat(rawPrice.toString())
+      )
+
+      return parseFloat(adjustedPrice)
     } catch (error) {
       console.error('Failed to get pool price:', error)
       return 0
