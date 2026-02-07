@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useMeteoraSwap, type SwapDirection } from '@/hooks/use-meteora-swap'
-import { DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getAppToken, getExplorerUrl } from '@/config'
+import { DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getAppToken, getExplorerUrl, getTokenDecimals } from '@/config'
 import { BigNumber } from '@/lib/bignumber'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
@@ -113,8 +113,10 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
   const buyingTokenConfig = isBuying ? BASE_TOKEN : QUOTE_TOKEN
   // BigNumber value for max button calculation
   const sellingBalance = isBuying ? usdcBalance : tSpaceXBalance
-  const sellingPrecision = getTokenPrecision(sellingTokenConfig.decimals)
-  const buyingPrecision = getTokenPrecision(buyingTokenConfig.decimals)
+  const sellingDecimals = getTokenDecimals(sellingTokenConfig.id)
+  const buyingDecimals = getTokenDecimals(buyingTokenConfig.id)
+  const sellingPrecision = getTokenPrecision(sellingDecimals)
+  const buyingPrecision = getTokenPrecision(buyingDecimals)
   const outputAmountValue = quote?.outAmountValue ?? null
   const hasOutputAmount = Boolean(outputAmountValue)
   const rateValue = quote?.rateValue ?? null

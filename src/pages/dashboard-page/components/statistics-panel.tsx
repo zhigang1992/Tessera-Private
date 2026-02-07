@@ -56,9 +56,8 @@ export function StatisticsPanel({ tokenId = DEFAULT_BASE_TOKEN_ID }: StatisticsP
     return `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
   }
 
-  // Get token standard from token mints configuration
-  const tokenMint = token.mints.devnet || token.mints['mainnet-beta']
-  const tokenStandard = tokenMint?.program === 'token-2022' ? 'Token-2022' : 'SPL Token'
+  // Get token standard from token program configuration
+  const tokenStandard = token.program === 'token-2022' ? 'Token-2022' : 'SPL Token'
 
   return (
     <div className="bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl p-4 lg:p-6">

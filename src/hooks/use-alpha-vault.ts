@@ -179,7 +179,7 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
     }
 
     try {
-      const quoteMintAddress = client.config.quoteToken.mints[client.network]?.address
+      const quoteMintAddress = client.config.quoteToken.mint[client.network]
       if (!quoteMintAddress) {
         throw new Error('Quote mint not configured for alpha vault token')
       }

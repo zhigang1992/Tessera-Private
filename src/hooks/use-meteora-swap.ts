@@ -64,14 +64,14 @@ const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
 const BASE_MINT_CONFIG = getTokenMintConfig(BASE_TOKEN.id, CURRENT_NETWORK)
 const QUOTE_MINT_CONFIG = getTokenMintConfig(QUOTE_TOKEN.id, CURRENT_NETWORK)
 const POOL_ADDRESS =
-  getTokenDlmmPoolAddress(BASE_TOKEN.id, CURRENT_NETWORK) ??
+  getTokenDlmmPoolAddress(BASE_TOKEN.id) ??
   (BASE_TOKEN.dlmmPool?.id && DEVNET_POOLS[BASE_TOKEN.dlmmPool.id]?.address) ??
   DEVNET_POOLS['T-SpaceX-USDC']?.address ??
   ''
 const TSPACEX_MINT = getTokenMintAddress(BASE_TOKEN.id, CURRENT_NETWORK)
 const USDC_MINT = getTokenMintAddress(QUOTE_TOKEN.id, CURRENT_NETWORK)
-const TSPACEX_DECIMALS = BASE_MINT_CONFIG?.decimals ?? BASE_TOKEN.decimals
-const USDC_DECIMALS = QUOTE_MINT_CONFIG?.decimals ?? QUOTE_TOKEN.decimals
+const TSPACEX_DECIMALS = BASE_MINT_CONFIG.decimals
+const USDC_DECIMALS = QUOTE_MINT_CONFIG.decimals
 
 export function useMeteoraSwap(): UseMeteoraSwapReturn {
   const wallet = useWallet()
