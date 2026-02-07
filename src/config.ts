@@ -207,7 +207,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
     displayName: 'T-SpaceX Token',
     slug: 't-spacex',
     routeSegment: 'T-SpaceX',
-    decimals: 6,
+    decimals: 9,
     metadataUri: 'https://cdn.tesseralab.co/tessera/t-spacex.json',
     iconKey: 't-spacex',
     iconUrl: 'https://cdn.tesseralab.co/tessera/tokenicon_T-SpaceX.svg',
@@ -219,7 +219,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       },
       'mainnet-beta': {
         address: 'DwtmRMoEcynQsw8GtdMiZdpPfZctPK2PiCBZntL2f8g9',
-        decimals: 6,
+        decimals: 9,
         program: 'token-2022',
       },
     },
@@ -244,7 +244,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
     alphaVault: {
       quoteToken: 'USDC',
       hasVestingPeriod: false,
-      baseDecimals: 6,
+      baseDecimals: 9,
       quoteDecimals: 6,
       networks: {
         devnet: {
