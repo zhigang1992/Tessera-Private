@@ -12,6 +12,7 @@ import {
   getAppToken,
   getTokenDlmmPoolAddress,
   getTokenMintConfig,
+  getTokenMintForNetwork,
 } from '@/config'
 
 const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
@@ -271,8 +272,8 @@ Object.values(APP_TOKENS).forEach((token) => {
   if (token.id === QUOTE_TOKEN_ID) return
 
   // Register both devnet and mainnet mints
-  const devnetMint = token.mint.devnet
-  const mainnetMint = token.mint['mainnet-beta']
+  const devnetMint = getTokenMintForNetwork(token.id, 'devnet')
+  const mainnetMint = getTokenMintForNetwork(token.id, 'mainnet-beta')
 
   if (devnetMint) {
     TOKEN_REGISTRY[devnetMint] = {

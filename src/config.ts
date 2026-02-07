@@ -197,15 +197,42 @@ export interface AppToken {
   displayName: string
   slug: string
   routeSegment: string
-  decimals: { devnet: number; 'mainnet-beta': number }
+  decimals: number
   metadataUri?: string
   iconKey: TokenIconKey
   iconUrl?: string
-  mint: { devnet: string; 'mainnet-beta': string }
+  mint: string
   program: TokenProgram
   metadata?: AppTokenMetadata
   dlmmPool?: DlmmPoolConfig
   alphaVault?: AlphaVaultConfig
+}
+
+// Raw network-specific configs (before network() resolution)
+const TOKEN_NETWORK_CONFIGS: Record<AppTokenId, {
+  mint: { devnet: string; 'mainnet-beta': string }
+  decimals: { devnet: number; 'mainnet-beta': number }
+}> = {
+  'T-SpaceX': {
+    mint: {
+      devnet: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj',
+      'mainnet-beta': 'DwtmRMoEcynQsw8GtdMiZdpPfZctPK2PiCBZntL2f8g9',
+    },
+    decimals: {
+      devnet: 6,
+      'mainnet-beta': 9,
+    },
+  },
+  USDC: {
+    mint: {
+      devnet: '7iENkTQY9RCwbWhASSrTbXCTtKBvGmn8wf6x2Su1GYVc',
+      'mainnet-beta': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+    },
+    decimals: {
+      devnet: 6,
+      'mainnet-beta': 6,
+    },
+  },
 }
 
 const TOKENS: Record<AppTokenId, AppToken> = {
@@ -215,17 +242,11 @@ const TOKENS: Record<AppTokenId, AppToken> = {
     displayName: 'T-SpaceX Token',
     slug: 't-spacex',
     routeSegment: 'T-SpaceX',
-    decimals: {
-      devnet: 6,
-      'mainnet-beta': 9,
-    },
+    decimals: network(TOKEN_NETWORK_CONFIGS['T-SpaceX'].decimals),
     metadataUri: 'https://cdn.tesseralab.co/tessera/t-spacex.json',
     iconKey: 't-spacex',
     iconUrl: 'https://cdn.tesseralab.co/tessera/tokenicon_T-SpaceX.svg',
-    mint: {
-      devnet: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj',
-      'mainnet-beta': 'DwtmRMoEcynQsw8GtdMiZdpPfZctPK2PiCBZntL2f8g9',
-    },
+    mint: network(TOKEN_NETWORK_CONFIGS['T-SpaceX'].mint),
     program: 'token-2022',
     metadata: {
       name: 'T-SpaceX Token',
@@ -269,15 +290,9 @@ const TOKENS: Record<AppTokenId, AppToken> = {
     displayName: 'USD Coin',
     slug: 'usdc',
     routeSegment: 'USDC',
-    decimals: {
-      devnet: 6,
-      'mainnet-beta': 6,
-    },
+    decimals: network(TOKEN_NETWORK_CONFIGS['USDC'].decimals),
     iconKey: 'usdc',
-    mint: {
-      devnet: '7iENkTQY9RCwbWhASSrTbXCTtKBvGmn8wf6x2Su1GYVc',
-      'mainnet-beta': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-    },
+    mint: network(TOKEN_NETWORK_CONFIGS['USDC'].mint),
     program: 'spl-token',
     metadata: {
       name: 'USD Coin',
@@ -304,11 +319,8 @@ Object.values(APP_TOKENS).forEach((token) => {
   TOKEN_PARAM_INDEX[token.symbol.toLowerCase()] = token.id
   TOKEN_SYMBOL_INDEX[token.symbol.toLowerCase()] = token.id
 
-  // Index both network mints
-  const devnetMint = token.mint.devnet
-  const mainnetMint = token.mint['mainnet-beta']
-  if (devnetMint) MINT_TO_TOKEN_ID[devnetMint] = token.id
-  if (mainnetMint) MINT_TO_TOKEN_ID[mainnetMint] = token.id
+  // Index the current network mint
+  MINT_TO_TOKEN_ID[token.mint] = token.id
 })
 
 export function listAppTokenIds(): AppTokenId[] {
@@ -337,21 +349,21 @@ export function getTokenBySymbol(symbol: string | null | undefined): AppToken | 
 
 export function getTokenMintConfig(
   tokenId: AppTokenId,
-  net: SolanaNetwork = getCurrentNetwork()
+  _net: SolanaNetwork = getCurrentNetwork()
 ): TokenMintConfig {
   const token = getAppToken(tokenId)
   return {
-    address: token.mint[net],
-    decimals: token.decimals[net],
+    address: token.mint,
+    decimals: token.decimals,
     program: token.program,
   }
 }
 
 export function getTokenMintAddress(
   tokenId: AppTokenId,
-  net: SolanaNetwork = getCurrentNetwork()
+  _net: SolanaNetwork = getCurrentNetwork()
 ): string {
-  return getAppToken(tokenId).mint[net]
+  return getAppToken(tokenId).mint
 }
 
 export function getTokenMintPublicKey(
@@ -363,9 +375,23 @@ export function getTokenMintPublicKey(
 
 export function getTokenDecimals(
   tokenId: AppTokenId,
-  net: SolanaNetwork = getCurrentNetwork()
+  _net: SolanaNetwork = getCurrentNetwork()
 ): number {
-  return getAppToken(tokenId).decimals[net]
+  return getAppToken(tokenId).decimals
+}
+
+/**
+ * Get token mint for a specific network (useful for cross-network operations)
+ */
+export function getTokenMintForNetwork(tokenId: AppTokenId, net: SolanaNetwork): string {
+  return TOKEN_NETWORK_CONFIGS[tokenId].mint[net]
+}
+
+/**
+ * Get token decimals for a specific network (useful for cross-network operations)
+ */
+export function getTokenDecimalsForNetwork(tokenId: AppTokenId, net: SolanaNetwork): number {
+  return TOKEN_NETWORK_CONFIGS[tokenId].decimals[net]
 }
 
 export function getTokenIdByMint(mint: string): AppTokenId | null {
@@ -460,14 +486,14 @@ function buildDevnetPools(): Record<string, LegacyPoolInfo> {
     pools[token.dlmmPool!.id] = {
       address: poolAddress,
       tokenX: {
-        mint: token.mint.devnet,
+        mint: token.mint,
         symbol: token.symbol,
-        decimals: token.decimals.devnet,
+        decimals: token.decimals,
       },
       tokenY: {
-        mint: quote.mint.devnet,
+        mint: quote.mint,
         symbol: quote.symbol,
-        decimals: quote.decimals.devnet,
+        decimals: quote.decimals,
       },
     }
   }
