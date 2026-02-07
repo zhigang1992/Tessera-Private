@@ -19,6 +19,18 @@ export function getCurrentNetwork(): SolanaNetwork {
   return 'devnet'
 }
 
+/**
+ * Network-aware helper function that returns the appropriate value based on current network
+ * @param config Object with devnet and mainnet-beta values
+ * @param currentNetwork Optional network override (defaults to getCurrentNetwork())
+ */
+export function network<T>(
+  config: { devnet: T; 'mainnet-beta': T },
+  currentNetwork: SolanaNetwork = getCurrentNetwork()
+): T {
+  return config[currentNetwork]
+}
+
 export const RPC_ENDPOINTS: Record<SolanaNetwork, string> = {
   devnet: import.meta.env.VITE_DEVNET_RPC_URL || 'https://api.devnet.solana.com',
   'mainnet-beta': import.meta.env.VITE_MAINNET_RPC_URL || 'https://frequent-intensive-bush.solana-mainnet.quiknode.pro/4bed0e8688659b74ee97ad7afba050392774f0a5/',
@@ -34,16 +46,16 @@ export const GRAPHQL_ENDPOINTS: Record<SolanaNetwork, string> = {
   'mainnet-beta': 'https://tracker-gql.tessera.fun/v1/graphql',
 }
 
-export function getRpcEndpoint(network: SolanaNetwork = getCurrentNetwork()): string {
-  return RPC_ENDPOINTS[network]
+export function getRpcEndpoint(net: SolanaNetwork = getCurrentNetwork()): string {
+  return RPC_ENDPOINTS[net]
 }
 
-export function getWsEndpoint(network: SolanaNetwork = getCurrentNetwork()): string {
-  return WS_ENDPOINTS[network]
+export function getWsEndpoint(net: SolanaNetwork = getCurrentNetwork()): string {
+  return WS_ENDPOINTS[net]
 }
 
-export function getGraphQLEndpoint(network: SolanaNetwork = getCurrentNetwork()): string {
-  return GRAPHQL_ENDPOINTS[network]
+export function getGraphQLEndpoint(net: SolanaNetwork = getCurrentNetwork()): string {
+  return GRAPHQL_ENDPOINTS[net]
 }
 
 export const PROGRAM_IDS = {
@@ -81,9 +93,6 @@ export const TRANSACTION_CONFIG = {
 export const POOL_TRADING_CONFIG = {
   'T-SpaceX-USDC': {
     enabled: true,
-    // Countdown configuration - set to 'disabled' for immediate trading
-    // Currently set to 2 minutes from deployment for testing
-    // countdown: { type: 'timestamp', targetTimestamp: Date.now() + 2 * 60 * 1000 } as
     countdown: { type: 'timestamp', targetTimestamp: 1770269523312 } as
       | { type: 'slot'; targetSlot: number }
       | { type: 'timestamp'; targetTimestamp: number }
@@ -101,28 +110,28 @@ export function getPoolCountdownConfig(poolId: TradingPoolId) {
   return POOL_TRADING_CONFIG[poolId]?.countdown ?? { type: 'disabled' }
 }
 
-export function isDevnet(network: SolanaNetwork = getCurrentNetwork()): boolean {
-  return network === 'devnet'
+export function isDevnet(net: SolanaNetwork = getCurrentNetwork()): boolean {
+  return net === 'devnet'
 }
 
-export function isMainnet(network: SolanaNetwork = getCurrentNetwork()): boolean {
-  return network === 'mainnet-beta'
+export function isMainnet(net: SolanaNetwork = getCurrentNetwork()): boolean {
+  return net === 'mainnet-beta'
 }
 
-export function getNetworkName(network: SolanaNetwork = getCurrentNetwork()): string {
+export function getNetworkName(net: SolanaNetwork = getCurrentNetwork()): string {
   const names: Record<SolanaNetwork, string> = {
     devnet: 'Devnet',
     'mainnet-beta': 'Mainnet',
   }
-  return names[network]
+  return names[net]
 }
 
 export function getExplorerUrl(
   signature: string,
   type: 'tx' | 'address' = 'tx',
-  network: SolanaNetwork = getCurrentNetwork()
+  net: SolanaNetwork = getCurrentNetwork()
 ): string {
-  const cluster = network === 'mainnet-beta' ? '' : `?cluster=${network}`
+  const cluster = net === 'mainnet-beta' ? '' : `?cluster=${net}`
 
   if (type === 'tx') {
     return `https://explorer.solana.com/tx/${signature}${cluster}`
@@ -134,17 +143,15 @@ export function getExplorerUrl(
 export function getSolscanUrl(
   signature: string,
   type: 'tx' | 'account' = 'tx',
-  network: SolanaNetwork = getCurrentNetwork()
+  net: SolanaNetwork = getCurrentNetwork()
 ): string {
-  const cluster = network === 'mainnet-beta' ? '' : `?cluster=${network}`
+  const cluster = net === 'mainnet-beta' ? '' : `?cluster=${net}`
   return `https://solscan.io/${type}/${signature}${cluster}`
 }
 
 export type TokenProgram = 'spl-token' | 'token-2022'
 export type TokenIconKey = 't-spacex' | 'usdc'
 export type AppTokenId = 'T-SpaceX' | 'USDC'
-
-export type NetworkMap<T> = Partial<Record<SolanaNetwork, T>>
 
 export interface TokenMintConfig {
   address: string
@@ -155,7 +162,7 @@ export interface TokenMintConfig {
 export interface DlmmPoolConfig {
   id: string
   quoteToken: Extract<AppTokenId, 'USDC'>
-  addresses: NetworkMap<string>
+  address: string
 }
 
 export interface AlphaVaultNetworkConfig {
@@ -163,14 +170,14 @@ export interface AlphaVaultNetworkConfig {
   dlmmPool: string
   merkleRootConfig?: string
   meteoraUrl?: string
+  targetPrice?: number
 }
 
 export interface AlphaVaultConfig {
   quoteToken: Extract<AppTokenId, 'USDC'>
   hasVestingPeriod: boolean
-  baseDecimals: number
-  quoteDecimals: number
-  networks: NetworkMap<AlphaVaultNetworkConfig>
+  devnet: AlphaVaultNetworkConfig
+  'mainnet-beta': AlphaVaultNetworkConfig
 }
 
 export interface AppTokenMetadata {
@@ -190,11 +197,12 @@ export interface AppToken {
   displayName: string
   slug: string
   routeSegment: string
-  decimals: number
+  decimals: { devnet: number; 'mainnet-beta': number }
   metadataUri?: string
   iconKey: TokenIconKey
   iconUrl?: string
-  mints: NetworkMap<TokenMintConfig>
+  mint: { devnet: string; 'mainnet-beta': string }
+  program: TokenProgram
   metadata?: AppTokenMetadata
   dlmmPool?: DlmmPoolConfig
   alphaVault?: AlphaVaultConfig
@@ -207,22 +215,18 @@ const TOKENS: Record<AppTokenId, AppToken> = {
     displayName: 'T-SpaceX Token',
     slug: 't-spacex',
     routeSegment: 'T-SpaceX',
-    decimals: 9,
+    decimals: {
+      devnet: 6,
+      'mainnet-beta': 9,
+    },
     metadataUri: 'https://cdn.tesseralab.co/tessera/t-spacex.json',
     iconKey: 't-spacex',
     iconUrl: 'https://cdn.tesseralab.co/tessera/tokenicon_T-SpaceX.svg',
-    mints: {
-      devnet: {
-        address: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj',
-        decimals: 6,
-        program: 'token-2022',
-      },
-      'mainnet-beta': {
-        address: 'DwtmRMoEcynQsw8GtdMiZdpPfZctPK2PiCBZntL2f8g9',
-        decimals: 9,
-        program: 'token-2022',
-      },
+    mint: {
+      devnet: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj',
+      'mainnet-beta': 'DwtmRMoEcynQsw8GtdMiZdpPfZctPK2PiCBZntL2f8g9',
     },
+    program: 'token-2022',
     metadata: {
       name: 'T-SpaceX Token',
       code: 'TSX-001',
@@ -237,27 +241,25 @@ const TOKENS: Record<AppTokenId, AppToken> = {
     dlmmPool: {
       id: 'T-SpaceX-USDC',
       quoteToken: 'USDC',
-      addresses: {
+      address: network({
         devnet: '8YJfkiCCdSHjWZuXw1wWXnxSEjsUG8Y8nDQQUta733Qm',
-      },
+        'mainnet-beta': 'A1BtbJyRhWzKzLectwCeuS94S6vFKpHmLurtg7X8AA6E',
+      }),
     },
     alphaVault: {
       quoteToken: 'USDC',
       hasVestingPeriod: false,
-      baseDecimals: 9,
-      quoteDecimals: 6,
-      networks: {
-        devnet: {
-          vault: '2GpAqQXVuwHGutxJBt2UcrDXAAprSVYo7ErFVXyETaNN',
-          dlmmPool: '8YJfkiCCdSHjWZuXw1wWXnxSEjsUG8Y8nDQQUta733Qm',
-          merkleRootConfig: 'GtzjfPuEPUQbWBsbK6Z9JawxtGHhR26KkUtBKeDoNhmG',
-          meteoraUrl: 'https://devnet.app.meteora.ag/vault/2GpAqQXVuwHGutxJBt2UcrDXAAprSVYo7ErFVXyETaNN',
-        },
-        'mainnet-beta': {
-          vault: 'GaAMF2kAytKbQjDJvgTSoK8CeM6ShX21Gukkdk1D6kKN',
-          dlmmPool: 'A1BtbJyRhWzKzLectwCeuS94S6vFKpHmLurtg7X8AA6E',
-          meteoraUrl: 'https://app.meteora.ag/vault/GaAMF2kAytKbQjDJvgTSoK8CeM6ShX21Gukkdk1D6kKN',
-        },
+      devnet: {
+        vault: '2GpAqQXVuwHGutxJBt2UcrDXAAprSVYo7ErFVXyETaNN',
+        dlmmPool: '8YJfkiCCdSHjWZuXw1wWXnxSEjsUG8Y8nDQQUta733Qm',
+        merkleRootConfig: 'GtzjfPuEPUQbWBsbK6Z9JawxtGHhR26KkUtBKeDoNhmG',
+        meteoraUrl: 'https://devnet.app.meteora.ag/vault/2GpAqQXVuwHGutxJBt2UcrDXAAprSVYo7ErFVXyETaNN',
+      },
+      'mainnet-beta': {
+        vault: 'GaAMF2kAytKbQjDJvgTSoK8CeM6ShX21Gukkdk1D6kKN',
+        dlmmPool: 'A1BtbJyRhWzKzLectwCeuS94S6vFKpHmLurtg7X8AA6E',
+        meteoraUrl: 'https://app.meteora.ag/vault/GaAMF2kAytKbQjDJvgTSoK8CeM6ShX21Gukkdk1D6kKN',
+        targetPrice: 412,
       },
     },
   },
@@ -267,20 +269,16 @@ const TOKENS: Record<AppTokenId, AppToken> = {
     displayName: 'USD Coin',
     slug: 'usdc',
     routeSegment: 'USDC',
-    decimals: 6,
-    iconKey: 'usdc',
-    mints: {
-      devnet: {
-        address: '7iENkTQY9RCwbWhASSrTbXCTtKBvGmn8wf6x2Su1GYVc',
-        decimals: 6,
-        program: 'spl-token',
-      },
-      'mainnet-beta': {
-        address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-        decimals: 6,
-        program: 'spl-token',
-      },
+    decimals: {
+      devnet: 6,
+      'mainnet-beta': 6,
     },
+    iconKey: 'usdc',
+    mint: {
+      devnet: '7iENkTQY9RCwbWhASSrTbXCTtKBvGmn8wf6x2Su1GYVc',
+      'mainnet-beta': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+    },
+    program: 'spl-token',
     metadata: {
       name: 'USD Coin',
       code: 'USDC',
@@ -306,11 +304,11 @@ Object.values(APP_TOKENS).forEach((token) => {
   TOKEN_PARAM_INDEX[token.symbol.toLowerCase()] = token.id
   TOKEN_SYMBOL_INDEX[token.symbol.toLowerCase()] = token.id
 
-  Object.values(token.mints).forEach((mint) => {
-    if (mint) {
-      MINT_TO_TOKEN_ID[mint.address] = token.id
-    }
-  })
+  // Index both network mints
+  const devnetMint = token.mint.devnet
+  const mainnetMint = token.mint['mainnet-beta']
+  if (devnetMint) MINT_TO_TOKEN_ID[devnetMint] = token.id
+  if (mainnetMint) MINT_TO_TOKEN_ID[mainnetMint] = token.id
 })
 
 export function listAppTokenIds(): AppTokenId[] {
@@ -339,41 +337,35 @@ export function getTokenBySymbol(symbol: string | null | undefined): AppToken | 
 
 export function getTokenMintConfig(
   tokenId: AppTokenId,
-  network: SolanaNetwork = getCurrentNetwork()
-): TokenMintConfig | null {
+  net: SolanaNetwork = getCurrentNetwork()
+): TokenMintConfig {
   const token = getAppToken(tokenId)
-  if (token.mints[network]) {
-    return token.mints[network]!
+  return {
+    address: token.mint[net],
+    decimals: token.decimals[net],
+    program: token.program,
   }
-
-  const fallback = Object.values(token.mints)[0]
-  return fallback ?? null
 }
 
 export function getTokenMintAddress(
   tokenId: AppTokenId,
-  network: SolanaNetwork = getCurrentNetwork()
+  net: SolanaNetwork = getCurrentNetwork()
 ): string {
-  const mint = getTokenMintConfig(tokenId, network)
-  if (mint) {
-    return mint.address
-  }
-
-  throw new Error(`No mint configured for token ${tokenId}`)
+  return getAppToken(tokenId).mint[net]
 }
 
 export function getTokenMintPublicKey(
   tokenId: AppTokenId,
-  network: SolanaNetwork = getCurrentNetwork()
+  net: SolanaNetwork = getCurrentNetwork()
 ): PublicKey {
-  return new PublicKey(getTokenMintAddress(tokenId, network))
+  return new PublicKey(getTokenMintAddress(tokenId, net))
 }
 
 export function getTokenDecimals(
   tokenId: AppTokenId,
-  network: SolanaNetwork = getCurrentNetwork()
+  net: SolanaNetwork = getCurrentNetwork()
 ): number {
-  return getTokenMintConfig(tokenId, network)?.decimals ?? getAppToken(tokenId).decimals
+  return getAppToken(tokenId).decimals[net]
 }
 
 export function getTokenIdByMint(mint: string): AppTokenId | null {
@@ -384,19 +376,9 @@ export function getTokenDlmmPool(tokenId: AppTokenId): DlmmPoolConfig | null {
   return getAppToken(tokenId).dlmmPool ?? null
 }
 
-export function getTokenDlmmPoolAddress(
-  tokenId: AppTokenId,
-  network: SolanaNetwork = getCurrentNetwork()
-): string | null {
+export function getTokenDlmmPoolAddress(tokenId: AppTokenId): string | null {
   const pool = getTokenDlmmPool(tokenId)
-  if (!pool) return null
-
-  if (pool.addresses?.[network]) {
-    return pool.addresses[network]!
-  }
-
-  const fallback = Object.values(pool.addresses ?? {}).find(Boolean)
-  return fallback ?? null
+  return pool?.address ?? null
 }
 
 export interface TokenDisplayMetadata {
@@ -428,25 +410,23 @@ export interface ResolvedAlphaVaultConfig extends AlphaVaultNetworkConfig {
 
 export function getTokenAlphaVaultConfig(
   tokenId: AppTokenId,
-  network: SolanaNetwork = getCurrentNetwork()
+  net: SolanaNetwork = getCurrentNetwork()
 ): ResolvedAlphaVaultConfig | null {
   const token = getAppToken(tokenId)
   if (!token.alphaVault) {
     return null
   }
 
-  const envConfig = token.alphaVault.networks[network]
-  if (!envConfig) {
-    return null
-  }
+  const envConfig = token.alphaVault[net]
+  const quoteToken = getAppToken(token.alphaVault.quoteToken)
 
   return {
     ...envConfig,
     token,
-    quoteToken: getAppToken(token.alphaVault.quoteToken),
+    quoteToken,
     hasVestingPeriod: token.alphaVault.hasVestingPeriod,
-    baseDecimals: token.alphaVault.baseDecimals,
-    quoteDecimals: token.alphaVault.quoteDecimals,
+    baseDecimals: getTokenDecimals(tokenId, net),
+    quoteDecimals: getTokenDecimals(token.alphaVault.quoteToken, net),
   }
 }
 
@@ -475,22 +455,19 @@ function buildDevnetPools(): Record<string, LegacyPoolInfo> {
   const token = APP_TOKENS['T-SpaceX']
   const quote = APP_TOKENS['USDC']
 
-  const poolAddress = token.dlmmPool?.addresses.devnet
-  const tokenMint = token.mints.devnet
-  const quoteMint = quote.mints.devnet
-
-  if (poolAddress && tokenMint && quoteMint) {
+  const poolAddress = token.dlmmPool?.address
+  if (poolAddress) {
     pools[token.dlmmPool!.id] = {
       address: poolAddress,
       tokenX: {
-        mint: tokenMint.address,
+        mint: token.mint.devnet,
         symbol: token.symbol,
-        decimals: tokenMint.decimals,
+        decimals: token.decimals.devnet,
       },
       tokenY: {
-        mint: quoteMint.address,
+        mint: quote.mint.devnet,
         symbol: quote.symbol,
-        decimals: quoteMint.decimals,
+        decimals: quote.decimals.devnet,
       },
     }
   }
