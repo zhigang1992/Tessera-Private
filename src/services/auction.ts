@@ -2,7 +2,8 @@ import {
   fetchAuctionTotalRaised,
   fetchAuctionDepositEvents,
 } from '@/features/referral/lib/graphql-client'
-import { BigNumber, fromHasuraToNative } from '@/lib/bignumber'
+import { fromHasuraToNative, fromTokenAmount } from '@/lib/bignumber'
+import { BigNumber, math } from 'math-literal'
 import { AppTokenId, DEFAULT_BASE_TOKEN_ID, getTokenAlphaVaultConfig } from '@/config'
 import { getAlphaVaultClient } from './alpha-vault'
 
@@ -45,14 +46,18 @@ export async function getAuctionProgress(tokenId: AppTokenId = DEFAULT_BASE_TOKE
     fetchAuctionTotalRaised(poolAddress),
   ])
 
-  const targetRaise = parseFloat(vaultInfo.maxCap) / 10 ** client.config.quoteDecimals
+  const targetRaiseBN = fromTokenAmount(vaultInfo.maxCap, client.config.quoteDecimals)
 
-  let totalRaised = parseFloat(vaultInfo.totalDeposited) / 10 ** client.config.quoteDecimals
+  let totalRaisedBN = fromTokenAmount(vaultInfo.totalDeposited, client.config.quoteDecimals)
   if (totalRaisedData) {
-    totalRaised = BigNumber.toNumber(fromHasuraToNative(totalRaisedData.total_raised_amount))
+    totalRaisedBN = fromHasuraToNative(totalRaisedData.total_raised_amount)
   }
 
-  const oversubscribedRatio = targetRaise > 0 ? totalRaised / targetRaise : 0
+  const targetRaise = BigNumber.toNumber(targetRaiseBN)
+  const totalRaised = BigNumber.toNumber(totalRaisedBN)
+  const oversubscribedRatio = targetRaise > 0
+    ? BigNumber.toNumber(math`${totalRaisedBN} / ${targetRaiseBN}`)
+    : 0
 
   return {
     totalRaised,
@@ -77,7 +82,7 @@ export async function getAuctionChartData(tokenId: AppTokenId = DEFAULT_BASE_TOK
 
   for (const event of sortedEvents) {
     const amount = fromHasuraToNative(event.amount)
-    cumulativeTotal = BigNumber.add(cumulativeTotal, amount)
+    cumulativeTotal = math`${cumulativeTotal} + ${amount}`
 
     const hoursSinceStart = (event.block_time - startTime) / 3600
 

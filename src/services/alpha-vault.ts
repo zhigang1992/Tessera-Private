@@ -24,6 +24,8 @@ import {
   getTokenAlphaVaultConfig,
 } from '@/config'
 import { estimateSlotDate } from './alpha-vault-helpers'
+import { fromTokenAmount, type BigNumberValue } from '@/lib/bignumber'
+import { BigNumber, math, mathIs } from 'math-literal'
 
 // ============ Configuration ============
 
@@ -92,11 +94,11 @@ export interface VaultInfo {
 export interface EscrowInfo {
   address: string
   owner: string
-  totalDeposited: string
-  claimedAmount: string
+  totalDeposited: BigNumberValue
+  claimedAmount: BigNumberValue
   // Calculated allocation (for prorata mode)
-  estimatedAllocation: string
-  estimatedRefund: string
+  estimatedAllocation: BigNumberValue
+  estimatedRefund: BigNumberValue
   // Claimable now
   availableToClaim: string
   // Vesting progress
@@ -231,15 +233,19 @@ export class AlphaVaultClient {
     const boughtToken = vaultDataAny.boughtToken?.toString() ?? '0'
 
     // Check if purchase failed (vault ended but no tokens purchased)
+    const totalDepositedBN = BigNumber.from(totalDeposited)
+    const boughtTokenBN = BigNumber.from(boughtToken)
     const purchaseFailed = (sdkState === SdkVaultState.ENDED || sdkState === SdkVaultState.VESTING) &&
-                          parseFloat(totalDeposited) > 0 &&
-                          parseFloat(boughtToken) === 0
+                          mathIs`${totalDepositedBN} > ${0}` &&
+                          mathIs`${boughtTokenBN} === ${0}`
 
     // Calculate oversubscription
-    const totalDepositedNum = parseFloat(totalDeposited) / 10 ** this.config.quoteDecimals
-    const maxCapNum = parseFloat(maxCap) / 10 ** this.config.quoteDecimals
-    const isOversubscribed = maxCapNum > 0 && totalDepositedNum > maxCapNum
-    const oversubscriptionRatio = maxCapNum > 0 ? totalDepositedNum / maxCapNum : 0
+    const totalDepositedHuman = fromTokenAmount(totalDeposited, this.config.quoteDecimals)
+    const maxCapHuman = fromTokenAmount(maxCap, this.config.quoteDecimals)
+    const isOversubscribed = mathIs`${maxCapHuman} > ${0}` && mathIs`${totalDepositedHuman} > ${maxCapHuman}`
+    const oversubscriptionRatio = mathIs`${maxCapHuman} > ${0}`
+      ? BigNumber.toNumber(math`${totalDepositedHuman} / ${maxCapHuman}`)
+      : 0
 
     // Calculate vesting duration based on activation type
     let vestingDurationHours: number
@@ -303,48 +309,46 @@ export class AlphaVaultClient {
       // Get claim info for available amounts
       const claimInfo = vault.getClaimInfo(escrow)
 
-      const totalDeposited = escrow.totalDeposit?.toString() ?? '0'
-      const claimedAmount = escrow.claimedToken?.toString() ?? '0'
+      const userDeposited = fromTokenAmount(escrow.totalDeposit?.toString() ?? '0', this.config.quoteDecimals)
+      const claimedAmount = fromTokenAmount(escrow.claimedToken?.toString() ?? '0', this.config.baseDecimals)
 
       // Calculate allocation and refund for prorata mode
       const vaultInfo = await this.getVaultInfo()
-      let estimatedAllocation = '0'
-      let estimatedRefund = '0'
+      let estimatedAllocation: BigNumberValue = BigNumber.ZERO
+      let estimatedRefund: BigNumberValue = BigNumber.ZERO
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const vaultData = vault.vault as any
-      const boughtToken = parseFloat(vaultData.boughtToken?.toString() ?? '0')
+      const vaultData = vault.vault
+      const boughtToken = BigNumber.from(vaultData.boughtToken?.toString() ?? '0')
 
-      if (boughtToken > 0) {
+      if (mathIs`${boughtToken} > ${0}`) {
         // Vault has already bought tokens - use actual allocation from claimInfo
-        estimatedAllocation = claimInfo?.totalAllocated?.toString() ?? '0'
+        estimatedAllocation = fromTokenAmount(claimInfo?.totalAllocated?.toString() ?? '0', this.config.baseDecimals)
       } else if (vaultInfo.mode === 'prorata') {
         // During deposit period, estimate based on pool liquidity and price
         const tessAvailable = await this.getPoolTessReserve()
         const poolPrice = await this.getPoolPrice()
-        const userDepositNum = parseFloat(totalDeposited) / 10 ** this.config.quoteDecimals
-        const totalDepositsNum = parseFloat(vaultInfo.totalDeposited) / 10 ** this.config.quoteDecimals
-        const maxCapNum = parseFloat(vaultInfo.maxCap) / 10 ** this.config.quoteDecimals
+        const totalDeposit = fromTokenAmount(vaultData.totalDeposit?.toString() ?? '0', this.config.quoteDecimals)
+        const maxCap = fromTokenAmount(vaultInfo.maxCap, this.config.quoteDecimals)
 
-        if (totalDepositsNum > 0 && poolPrice > 0) {
+        if (mathIs`${totalDeposit} > ${0}` && mathIs`${poolPrice} > ${0}`) {
           // User's share of deposits
-          const userShare = userDepositNum / totalDepositsNum
+          const userShare = math`${userDeposited} / ${totalDeposit}`
 
           // Effective USDC that will be used (capped by maxBuyingCap)
-          const effectiveUsdc = Math.min(totalDepositsNum, maxCapNum)
+          const effectiveUsdc = math`min(${totalDeposit}, ${maxCap})`
 
           // Calculate how much T-SpaceX can be bought with effective USDC at current pool price
           // poolPrice is in USDC per T-SpaceX, so: allocation = USDC / price
-          const estimatedTessForVault = Math.min(tessAvailable, effectiveUsdc / poolPrice)
-          const userTessAllocation = userShare * estimatedTessForVault
+          const estimatedTessForVault = math`min(${effectiveUsdc} / ${poolPrice}, ${tessAvailable})`
+          const userTessAllocation = math`${estimatedTessForVault} * ${userShare}`
 
-          estimatedAllocation = (userTessAllocation * 10 ** this.config.baseDecimals).toFixed(0)
+          estimatedAllocation = userTessAllocation
 
           // Calculate refund if oversubscribed
-          if (totalDepositsNum > maxCapNum) {
-            const usedRatio = maxCapNum / totalDepositsNum
-            const usedUsdc = userDepositNum * usedRatio
-            estimatedRefund = ((userDepositNum - usedUsdc) * 10 ** this.config.quoteDecimals).toFixed(0)
+          if (mathIs`${totalDeposit} > ${maxCap}`) {
+            const usedRatio = math`${effectiveUsdc} / ${totalDeposit}` // Ratio of deposits that will be used
+            const usedUsdc = math`${userDeposited} * ${usedRatio}`
+            estimatedRefund = math`${userDeposited} - ${usedUsdc}`
           }
         }
       }
@@ -352,17 +356,15 @@ export class AlphaVaultClient {
       const availableToClaim = claimInfo?.totalClaimable?.toString() ?? '0'
 
       // Calculate vesting progress
-      const totalAllocation = claimInfo?.totalAllocated?.toString() ?? '0'
-      const totalClaimed = parseFloat(claimedAmount)
-      const totalAllocationNum = parseFloat(totalAllocation)
-      const vestingProgress = totalAllocationNum > 0
-        ? (totalClaimed / totalAllocationNum) * 100
+      const totalAllocation = fromTokenAmount(claimInfo?.totalAllocated?.toString() ?? '0', this.config.baseDecimals)
+      const vestingProgress = mathIs`${totalAllocation} > ${0}`
+        ? BigNumber.toNumber(math`(${claimedAmount} / ${totalAllocation}) * ${100}`)
         : 0
 
       return {
         address: '',
         owner: owner.toBase58(),
-        totalDeposited,
+        totalDeposited: userDeposited,
         claimedAmount,
         estimatedAllocation,
         estimatedRefund,
@@ -644,11 +646,12 @@ export function getAlphaVaultClient(
 
 /**
  * Format vault amount to human readable string
+ * @deprecated Use formatBigNumber from @/lib/bignumber instead
  */
 export function formatVaultAmount(amount: string | BN, decimals: number = 6): string {
   const amountStr = amount instanceof BN ? amount.toString() : amount
-  const num = parseFloat(amountStr) / 10 ** decimals
-  return num.toLocaleString(undefined, {
+  const humanAmount = fromTokenAmount(amountStr, decimals)
+  return BigNumber.toNumber(humanAmount).toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 6,
   })

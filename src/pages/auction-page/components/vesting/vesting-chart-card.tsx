@@ -1,15 +1,18 @@
 import { Card } from '@/components/ui/card'
 import { VestingChart } from './vesting-chart'
 import { useAuctionAlphaVault } from '../../context'
+import { fromTokenAmount } from '@/lib/bignumber'
+import { BigNumber } from 'math-literal'
 
 export function VestingChartCard() {
   const { vaultInfo, claimInfo, config } = useAuctionAlphaVault()
 
   // Calculate chart data from real vault info
   const vestingDurationHours = vaultInfo?.vestingDurationHours ?? 24
-  const totalAllocation = claimInfo
-    ? parseFloat(claimInfo.totalAllocation) / 10 ** config.baseDecimals
-    : 0
+  const totalAllocationBN = claimInfo
+    ? fromTokenAmount(claimInfo.totalAllocation, config.baseDecimals)
+    : BigNumber.from(0)
+  const totalAllocation = BigNumber.toNumber(totalAllocationBN)
 
   // Calculate current progress through vesting period
   let currentProgressHours = 0

@@ -6,6 +6,8 @@ import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenAmount } from '@/components/app-token-amount'
 import { WithdrawModal } from './withdraw-modal'
 import { useAuctionAlphaVault, useAuctionToken } from '../../context'
+import { fromTokenAmount } from '@/lib/bignumber'
+import { BigNumber, math, mathIs } from 'math-literal'
 
 export function AuctionHeaderCard() {
   const wallet = useWallet()
@@ -26,15 +28,20 @@ export function AuctionHeaderCard() {
     vestingDuration,
   } = useAuctionAlphaVault()
 
-  const totalRaisedNum = vaultInfo
-    ? parseFloat(vaultInfo.totalDeposited) / 10 ** config.quoteDecimals
+  const totalRaisedBN = vaultInfo
+    ? fromTokenAmount(vaultInfo.totalDeposited, config.quoteDecimals)
+    : BigNumber.from(0)
+  const targetRaiseBN = vaultInfo
+    ? fromTokenAmount(vaultInfo.maxCap, config.quoteDecimals)
+    : BigNumber.from(1)
+
+  const progressWidth = mathIs`${targetRaiseBN} > ${0}`
+    ? Math.min(BigNumber.toNumber(math`(${totalRaisedBN} / ${targetRaiseBN}) * ${100}`), 100)
     : 0
-  const targetRaiseNum = vaultInfo
-    ? parseFloat(vaultInfo.maxCap) / 10 ** config.quoteDecimals
-    : 1
-  const progressWidth = targetRaiseNum > 0 ? Math.min((totalRaisedNum / targetRaiseNum) * 100, 100) : 0
-  const percentageOfTarget = targetRaiseNum > 0 ? Math.round((totalRaisedNum / targetRaiseNum) * 100) : 0
-  const hasPosition = escrowInfo && parseFloat(escrowInfo.totalDeposited) > 0
+  const percentageOfTarget = mathIs`${targetRaiseBN} > ${0}`
+    ? Math.round(BigNumber.toNumber(math`(${totalRaisedBN} / ${targetRaiseBN}) * ${100}`))
+    : 0
+  const hasPosition = escrowInfo && mathIs`${escrowInfo.totalDeposited} > ${0}`
   const quoteToken = config.quoteToken
   const depositStatusText =
     vaultInfo?.state === 'deposit_open'

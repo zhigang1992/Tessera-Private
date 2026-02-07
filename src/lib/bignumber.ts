@@ -21,18 +21,10 @@
  *   const isValid = mathIs`${a} > ${0} && ${a} < ${1000}`
  */
 
-import {
-  math as mathLiteral,
-  mathIs as mathIsLiteral,
-  BigNumber as MathLiteralBigNumber,
-} from 'math-literal'
+import { BigNumber, math, mathIs } from 'math-literal'
 
-// Re-export math-literal's core functions
-export const math = mathLiteral
-export const mathIs = mathIsLiteral
-
-// Re-export BigNumber type and utilities from math-literal
-export const BigNumber = MathLiteralBigNumber
+// Re-export math-literal's core functions directly
+export { math, mathIs, BigNumber } from 'math-literal'
 
 // Type alias for BigNumber values (backwards compatible with old BigNumber type)
 export type BigNumberValue = ReturnType<typeof BigNumber.from>
