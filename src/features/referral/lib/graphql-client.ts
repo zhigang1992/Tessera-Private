@@ -3,8 +3,9 @@
  */
 
 import { fromHasuraToNative, BigNumber, type BigNumberSource } from '@/lib/bignumber'
+import { getGraphQLEndpoint } from '@/config'
 
-const GRAPHQL_ENDPOINT = 'https://tracker-gql-dev.tessera.fun/v1/graphql'
+const GRAPHQL_ENDPOINT = getGraphQLEndpoint()
 
 /**
  * Convert Hasura 18-decimal numeric value to native number

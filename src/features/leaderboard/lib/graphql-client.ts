@@ -1,6 +1,7 @@
 import type { LeaderboardQueryResult, LeaderboardType } from '../types'
+import { getGraphQLEndpoint } from '@/config'
 
-const GRAPHQL_ENDPOINT = 'https://tracker-gql-dev.tessera.fun/v1/graphql'
+const GRAPHQL_ENDPOINT = getGraphQLEndpoint()
 
 /**
  * Fetch leaderboard data from public_marts.leaderboard_summary

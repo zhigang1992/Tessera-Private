@@ -29,12 +29,21 @@ export const WS_ENDPOINTS: Record<SolanaNetwork, string> = {
   'mainnet-beta': import.meta.env.VITE_MAINNET_WS_URL || 'wss://frequent-intensive-bush.solana-mainnet.quiknode.pro/4bed0e8688659b74ee97ad7afba050392774f0a5/',
 }
 
+export const GRAPHQL_ENDPOINTS: Record<SolanaNetwork, string> = {
+  devnet: 'https://tracker-gql-dev.tessera.fun/v1/graphql',
+  'mainnet-beta': 'https://tracker-gql.tessera.fun/v1/graphql',
+}
+
 export function getRpcEndpoint(network: SolanaNetwork = getCurrentNetwork()): string {
   return RPC_ENDPOINTS[network]
 }
 
 export function getWsEndpoint(network: SolanaNetwork = getCurrentNetwork()): string {
   return WS_ENDPOINTS[network]
+}
+
+export function getGraphQLEndpoint(network: SolanaNetwork = getCurrentNetwork()): string {
+  return GRAPHQL_ENDPOINTS[network]
 }
 
 export const PROGRAM_IDS = {
