@@ -185,8 +185,10 @@ export class AlphaVaultClient {
    */
   async initialize(): Promise<AlphaVaultInstance> {
     if (!this.vaultInstance) {
+      // Use the network from the instance configuration
+      const cluster = this.network === 'mainnet-beta' ? 'mainnet-beta' : 'devnet'
       this.vaultInstance = await AlphaVault.create(this.connection, this.vaultAddress, {
-        cluster: 'devnet',
+        cluster,
       })
     }
     return this.vaultInstance
@@ -379,7 +381,8 @@ export class AlphaVaultClient {
   async getPoolTessReserve(): Promise<number> {
     try {
       const poolAddress = new PublicKey(this.config.dlmmPool)
-      const dlmmPool = await DLMM.create(this.connection, poolAddress, { cluster: 'devnet' })
+      const cluster = this.network === 'mainnet-beta' ? 'mainnet-beta' : 'devnet'
+      const dlmmPool = await DLMM.create(this.connection, poolAddress, { cluster })
 
       // Get the reserve X (base token) balance
       const reserveXBalance = await this.connection.getTokenAccountBalance(dlmmPool.lbPair.reserveX)
@@ -397,7 +400,8 @@ export class AlphaVaultClient {
   async getPoolPrice(): Promise<number> {
     try {
       const poolAddress = new PublicKey(this.config.dlmmPool)
-      const dlmmPool = await DLMM.create(this.connection, poolAddress, { cluster: 'devnet' })
+      const cluster = this.network === 'mainnet-beta' ? 'mainnet-beta' : 'devnet'
+      const dlmmPool = await DLMM.create(this.connection, poolAddress, { cluster })
 
       // Get the active bin ID and bin step
       const activeId = dlmmPool.lbPair.activeId

@@ -1,14 +1,14 @@
 /**
  * React Hook for Meteora DLMM Swap Operations
  *
- * Uses the T-SpaceX-USDC pool on Devnet
+ * Uses the T-SpaceX-USDC pool on the configured network (mainnet-beta or devnet)
  * - USDC is the quote token (what you pay with when buying T-SpaceX)
  * - T-SpaceX is the base token (what you buy/sell)
  */
 
 import { useState, useCallback, useMemo } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
+import { Connection, PublicKey } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import {
   MeteoraClient,
@@ -26,10 +26,9 @@ import {
   getTokenDlmmPoolAddress,
   getTokenMintAddress,
   getTokenMintConfig,
+  getCurrentNetwork,
+  getRpcEndpoint,
 } from '@/config'
-
-// Get devnet RPC URL from environment or use default
-const DEVNET_RPC_URL = import.meta.env.VITE_DEVNET_RPC_URL || clusterApiUrl('devnet')
 
 // Direction: USDC -> T-SpaceX (buy T-SpaceX) or T-SpaceX -> USDC (sell T-SpaceX)
 export type SwapDirection = 'USDC_TO_TSPACEX' | 'TSPACEX_TO_USDC'
@@ -58,19 +57,21 @@ export interface UseMeteoraSwapReturn {
   clearError: () => void
 }
 
+// Get current network and configure tokens accordingly
+const CURRENT_NETWORK = getCurrentNetwork()
 const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
 const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
-const DEVNET_BASE_MINT_CONFIG = getTokenMintConfig(BASE_TOKEN.id, 'devnet')
-const DEVNET_QUOTE_MINT_CONFIG = getTokenMintConfig(QUOTE_TOKEN.id, 'devnet')
+const BASE_MINT_CONFIG = getTokenMintConfig(BASE_TOKEN.id, CURRENT_NETWORK)
+const QUOTE_MINT_CONFIG = getTokenMintConfig(QUOTE_TOKEN.id, CURRENT_NETWORK)
 const POOL_ADDRESS =
-  getTokenDlmmPoolAddress(BASE_TOKEN.id, 'devnet') ??
+  getTokenDlmmPoolAddress(BASE_TOKEN.id, CURRENT_NETWORK) ??
   (BASE_TOKEN.dlmmPool?.id && DEVNET_POOLS[BASE_TOKEN.dlmmPool.id]?.address) ??
   DEVNET_POOLS['T-SpaceX-USDC']?.address ??
   ''
-const TSPACEX_MINT = getTokenMintAddress(BASE_TOKEN.id, 'devnet')
-const USDC_MINT = getTokenMintAddress(QUOTE_TOKEN.id, 'devnet')
-const TSPACEX_DECIMALS = DEVNET_BASE_MINT_CONFIG?.decimals ?? BASE_TOKEN.decimals
-const USDC_DECIMALS = DEVNET_QUOTE_MINT_CONFIG?.decimals ?? QUOTE_TOKEN.decimals
+const TSPACEX_MINT = getTokenMintAddress(BASE_TOKEN.id, CURRENT_NETWORK)
+const USDC_MINT = getTokenMintAddress(QUOTE_TOKEN.id, CURRENT_NETWORK)
+const TSPACEX_DECIMALS = BASE_MINT_CONFIG?.decimals ?? BASE_TOKEN.decimals
+const USDC_DECIMALS = QUOTE_MINT_CONFIG?.decimals ?? QUOTE_TOKEN.decimals
 
 export function useMeteoraSwap(): UseMeteoraSwapReturn {
   const wallet = useWallet()
@@ -84,15 +85,16 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
   const [usdcBalance, setUsdcBalance] = useState<BigNumberValue | null>(null)
   const [tSpaceXBalance, setTessBalance] = useState<BigNumberValue | null>(null)
 
-  // Create a dedicated devnet connection for swap operations
-  const devnetConnection = useMemo(() => {
-    return new Connection(DEVNET_RPC_URL, 'confirmed')
+  // Create a connection for the current network
+  const connection = useMemo(() => {
+    const rpcUrl = getRpcEndpoint(CURRENT_NETWORK)
+    return new Connection(rpcUrl, 'confirmed')
   }, [])
 
-  // Create client with devnet connection
+  // Create client with current network
   const client = useMemo(() => {
-    return createMeteoraClient(devnetConnection, 'devnet')
-  }, [devnetConnection])
+    return createMeteoraClient(connection, CURRENT_NETWORK)
+  }, [connection])
 
   // Load pool info
   const loadPool = useCallback(async () => {
@@ -109,7 +111,7 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
     }
   }, [client])
 
-  // Refresh token balances from devnet
+  // Refresh token balances from current network
   const refreshBalances = useCallback(async () => {
     if (!wallet.publicKey) {
       setUsdcBalance(null)
@@ -118,20 +120,20 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
     }
 
     try {
-      // Get USDC balance on devnet (standard SPL token)
+      // Get USDC balance (standard SPL token)
       try {
         const usdcMintPubkey = new PublicKey(USDC_MINT)
         const ata = await getAssociatedTokenAddress(usdcMintPubkey, wallet.publicKey)
-        const account = await getAccount(devnetConnection, ata)
+        const account = await getAccount(connection, ata)
         // Convert raw amount to BigNumber using token decimals
         const usdcBigNum = fromTokenAmount(account.amount.toString(), USDC_DECIMALS)
         setUsdcBalance(usdcBigNum)
       } catch {
-        // Token account doesn't exist on devnet
+        // Token account doesn't exist
         setUsdcBalance(ZERO)
       }
 
-      // Get T-SpaceX balance on devnet (Token-2022)
+      // Get T-SpaceX balance (Token-2022)
       try {
         const tSpaceXMintPubkey = new PublicKey(TSPACEX_MINT)
         const ata = await getAssociatedTokenAddress(
@@ -140,7 +142,7 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
           false,
           TOKEN_2022_PROGRAM_ID
         )
-        const account = await getAccount(devnetConnection, ata, 'confirmed', TOKEN_2022_PROGRAM_ID)
+        const account = await getAccount(connection, ata, 'confirmed', TOKEN_2022_PROGRAM_ID)
         // Convert raw amount to BigNumber using token decimals
         const tessBigNum = fromTokenAmount(account.amount.toString(), TSPACEX_DECIMALS)
         setTessBalance(tessBigNum)
@@ -150,7 +152,7 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
     } catch (err) {
       console.error('Failed to fetch balances:', err)
     }
-  }, [devnetConnection, wallet.publicKey])
+  }, [connection, wallet.publicKey])
 
   // Get swap quote
   // In the pool: tokenX = T-SpaceX, tokenY = USDC
@@ -218,20 +220,20 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
         // Add terms acceptance memo
         addTermsAcceptanceMemo(swapTx, wallet.publicKey, MemoType.TRADING)
 
-        // Set recent blockhash and fee payer using devnet connection
-        const { blockhash, lastValidBlockHeight } = await devnetConnection.getLatestBlockhash()
+        // Set recent blockhash and fee payer
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash()
         swapTx.recentBlockhash = blockhash
         swapTx.feePayer = wallet.publicKey
 
-        // Sign and send to devnet
+        // Sign and send transaction
         // Simulation now works with proper compute budget
         const signed = await wallet.signTransaction(swapTx)
-        const signature = await devnetConnection.sendRawTransaction(signed.serialize(), {
+        const signature = await connection.sendRawTransaction(signed.serialize(), {
           skipPreflight: false,
         })
 
-        // Confirm transaction on devnet
-        await devnetConnection.confirmTransaction({
+        // Confirm transaction
+        await connection.confirmTransaction({
           signature,
           blockhash,
           lastValidBlockHeight,
@@ -257,7 +259,7 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
         setIsLoading(false)
       }
     },
-    [client, devnetConnection, wallet, refreshBalances]
+    [client, connection, wallet, refreshBalances]
   )
 
   // Clear error

@@ -3,15 +3,14 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { Connection, clusterApiUrl } from '@solana/web3.js'
+import { Connection } from '@solana/web3.js'
 import { createMeteoraClient, DEVNET_POOLS, type MarketDepthData } from '@/services/meteora'
+import { getCurrentNetwork, getRpcEndpoint } from '@/config'
 
-// Get RPC URL from environment or use default devnet
+// Get RPC URL based on current network configuration
 const getRpcUrl = () => {
-  if (typeof window !== 'undefined' && import.meta.env.VITE_DEVNET_RPC_URL) {
-    return import.meta.env.VITE_DEVNET_RPC_URL
-  }
-  return clusterApiUrl('devnet')
+  const network = getCurrentNetwork()
+  return getRpcEndpoint(network)
 }
 
 // Singleton connection to avoid creating multiple connections
@@ -48,7 +47,8 @@ async function fetchMarketDepth(
   binsToRight: number
 ): Promise<MarketDepthData> {
   const connection = getConnection()
-  const client = createMeteoraClient(connection, 'devnet')
+  const network = getCurrentNetwork()
+  const client = createMeteoraClient(connection, network)
   return client.getBinsAroundActiveBin(poolAddress, binsToLeft, binsToRight)
 }
 
