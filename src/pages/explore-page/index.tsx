@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router'
 import { getExploreAssets, type ExploreAsset } from '@/services'
 import { AssetCard } from './components/asset-card'
 import { AssetCardSkeleton } from './components/asset-card-skeleton'
 import HelpCircleIcon from './components/_/help-circle.svg?react'
 
 export default function ExplorePage() {
+  const navigate = useNavigate()
   const { data: assets, isLoading } = useQuery({
     queryKey: ['exploreAssets'],
     queryFn: getExploreAssets,
@@ -12,9 +14,9 @@ export default function ExplorePage() {
 
   const handleAssetAction = (asset: ExploreAsset) => {
     if (asset.status === 'trading') {
-      alert(`Navigate to trade page for ${asset.name}`)
+      navigate(`/trade`)
     } else if (asset.status === 'auction') {
-      alert(`Navigate to auction page for ${asset.name}`)
+      navigate(`/auction/${asset.ticker}`)
     }
   }
 
