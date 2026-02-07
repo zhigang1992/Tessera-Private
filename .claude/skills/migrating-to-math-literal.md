@@ -349,6 +349,44 @@ if (mathIs`${boughtToken} > ${0}`) {
 }
 ```
 
+## Common Pitfall: Double Conversion
+
+**CRITICAL:** When you update an interface to use `BigNumberValue`, make sure to check all places that consume those values!
+
+### The Problem
+
+```typescript
+// ❌ WRONG - Double conversion bug
+export interface EscrowInfo {
+  totalDeposited: BigNumberValue  // Changed from string to BigNumberValue
+}
+
+// In hook/component that uses EscrowInfo:
+const userDeposited = useMemo(() => {
+  if (!escrowInfo) return fromTokenAmount('0', quoteDecimals)
+  return fromTokenAmount(escrowInfo.totalDeposited, quoteDecimals)  // ❌ BUG!
+  // This tries to convert a BigNumberValue as if it were a string!
+}, [escrowInfo, quoteDecimals])
+```
+
+### The Fix
+
+```typescript
+// ✅ CORRECT - Use the value directly
+const userDeposited = useMemo(() => {
+  if (!escrowInfo) return fromTokenAmount('0', quoteDecimals)
+  return escrowInfo.totalDeposited  // Already a BigNumberValue, use directly!
+}, [escrowInfo, quoteDecimals])
+```
+
+### How to Catch This
+
+1. **Grep for the field name** after changing an interface
+2. **Look for `fromTokenAmount(escrowInfo.fieldName, ...)`** patterns
+3. **The value is already converted** - just use it directly!
+
+This bug is subtle because TypeScript won't catch it (both are valid types), but it will cause values to display as zero or incorrect amounts.
+
 ## Verification Checklist
 
 After migration, verify:
@@ -358,10 +396,12 @@ After migration, verify:
 - [ ] All arithmetic uses `math` template literals
 - [ ] All numbers in template literals are wrapped: `${0}` not `0`
 - [ ] Interface types updated from `string` to `BigNumberValue` where appropriate
+- [ ] **No double conversion** - Values already as BigNumberValue should not be passed to `fromTokenAmount()`
 - [ ] Constants use `BigNumber.ZERO` or `BigNumber.from(0)`
 - [ ] Imports are correct: `math-literal` for core, `@/lib/bignumber` for utilities
 - [ ] TypeScript builds without errors: `npm run build`
 - [ ] Display formatting uses `formatBigNumber()` at UI layer
+- [ ] **Test with real data** - Verify values display correctly in the UI
 
 ## Benefits of This Pattern
 

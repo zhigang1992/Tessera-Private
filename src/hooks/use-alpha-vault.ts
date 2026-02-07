@@ -147,17 +147,17 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
 
   const userDeposited = useMemo(() => {
     if (!escrowInfo) return fromTokenAmount('0', quoteDecimals)
-    return fromTokenAmount(escrowInfo.totalDeposited, quoteDecimals)
+    return escrowInfo.totalDeposited // Already converted to BigNumberValue in alpha-vault.ts
   }, [escrowInfo, quoteDecimals])
 
   const estimatedAllocation = useMemo(() => {
     if (!escrowInfo) return fromTokenAmount('0', baseDecimals)
-    return fromTokenAmount(escrowInfo.estimatedAllocation, baseDecimals)
+    return escrowInfo.estimatedAllocation // Already converted to BigNumberValue in alpha-vault.ts
   }, [escrowInfo, baseDecimals])
 
   const estimatedRefund = useMemo(() => {
     if (!escrowInfo) return fromTokenAmount('0', quoteDecimals)
-    return fromTokenAmount(escrowInfo.estimatedRefund, quoteDecimals)
+    return escrowInfo.estimatedRefund // Already converted to BigNumberValue in alpha-vault.ts
   }, [escrowInfo, quoteDecimals])
 
   const availableToClaim = useMemo(() => {
