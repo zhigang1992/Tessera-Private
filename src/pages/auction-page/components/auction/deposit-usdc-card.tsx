@@ -69,33 +69,30 @@ export function DepositUSDCCard() {
 
   // Calculate existing deposit (amount already deposited)
   const existingDepositAmount = useMemo(() => {
-    const decimals = config.quoteDecimals
-    const existingDeposit = escrowInfo?.totalDeposited ? BigNumber.from(escrowInfo.totalDeposited) : BigNumber.from(0)
-    return fromTokenAmount(existingDeposit, decimals)
-  }, [escrowInfo?.totalDeposited, config.quoteDecimals])
+    // escrowInfo.totalDeposited is already a BigNumberValue (already converted)
+    return escrowInfo?.totalDeposited ?? BigNumber.from(0)
+  }, [escrowInfo?.totalDeposited])
 
   // Calculate after this deposit (existing + new input amount)
   const afterThisDepositAmount = useMemo(() => {
-    const decimals = config.quoteDecimals
-    const existingDeposit = escrowInfo?.totalDeposited ? BigNumber.from(escrowInfo.totalDeposited) : BigNumber.from(0)
+    // escrowInfo.totalDeposited is already a BigNumberValue (human-scale)
+    const existingDeposit = escrowInfo?.totalDeposited ?? BigNumber.from(0)
 
     if (!depositAmount || parseFloat(depositAmount) <= 0) {
-      return fromTokenAmount(existingDeposit, decimals)
+      return existingDeposit
     }
 
     try {
       const newAmount = BigNumber.from(depositAmount)
-      const newAmountRaw = math`${newAmount} * ${Math.pow(10, decimals)}`
-      const totalRaw = math`${existingDeposit} + ${newAmountRaw}`
-      return fromTokenAmount(totalRaw, decimals)
+      return math`${existingDeposit} + ${newAmount}`
     } catch {
-      return fromTokenAmount(existingDeposit, decimals)
+      return existingDeposit
     }
-  }, [escrowInfo?.totalDeposited, depositAmount, config.quoteDecimals])
+  }, [escrowInfo?.totalDeposited, depositAmount])
 
   // Calculate estimated allocation based on current deposit + input
   const calculatedEstAllocation = useMemo(() => {
-    // estimatedAllocation is now a BigNumberValue
+    // estimatedAllocation is already a BigNumberValue
     const fallback = estimatedAllocation
 
     if (!vaultInfo || !totalRaised || !targetRaise || !poolPrice || poolPrice === 0) {
@@ -103,21 +100,19 @@ export function DepositUSDCCard() {
     }
 
     try {
-      const decimals = config.quoteDecimals
-      const existingDeposit = escrowInfo?.totalDeposited ? BigNumber.from(escrowInfo.totalDeposited) : BigNumber.from(0)
+      // All values are already in human scale (BigNumberValue)
+      const existingDeposit = escrowInfo?.totalDeposited ?? BigNumber.from(0)
 
       let totalUserDeposit = existingDeposit
-      let newDepositRaw = BigNumber.from(0)
+      let newDepositAmount = BigNumber.from(0)
 
       if (depositAmount && parseFloat(depositAmount) > 0) {
-        const newAmount = BigNumber.from(depositAmount)
-        newDepositRaw = math`${newAmount} * ${Math.pow(10, decimals)}`
-        totalUserDeposit = math`${existingDeposit} + ${newDepositRaw}`
+        newDepositAmount = BigNumber.from(depositAmount)
+        totalUserDeposit = math`${existingDeposit} + ${newDepositAmount}`
       }
 
-      // totalRaised is now a BigNumberValue (already in human-readable form)
-      const totalRaisedBN = math`${totalRaised} * ${Math.pow(10, decimals)}`
-      const hypotheticalTotalRaised = math`${totalRaisedBN} + ${newDepositRaw}`
+      // totalRaised is already a BigNumberValue (human-scale)
+      const hypotheticalTotalRaised = math`${totalRaised} + ${newDepositAmount}`
 
       if (mathIs`${hypotheticalTotalRaised} === ${0}`) {
         return fallback
@@ -125,10 +120,8 @@ export function DepositUSDCCard() {
 
       const userShare = math`${totalUserDeposit} / ${hypotheticalTotalRaised}`
 
-      // targetRaise is now a BigNumberValue (already in human-readable form)
-      const maxCapBN = math`${targetRaise} * ${Math.pow(10, decimals)}`
-      const effectiveUsdcBN = math`min(${hypotheticalTotalRaised}, ${maxCapBN})`
-      const effectiveUsdc = math`${effectiveUsdcBN} / ${Math.pow(10, decimals)}`
+      // targetRaise is already a BigNumberValue (human-scale)
+      const effectiveUsdc = math`min(${hypotheticalTotalRaised}, ${targetRaise})`
 
       const tessAllocation = math`${effectiveUsdc} / ${BigNumber.from(poolPrice)}`
       const userTessAllocation = math`${userShare} * ${tessAllocation}`
@@ -146,7 +139,6 @@ export function DepositUSDCCard() {
     escrowInfo?.totalDeposited,
     depositAmount,
     estimatedAllocation,
-    config.quoteDecimals,
   ])
 
   // Check if deposit amount exceeds wallet balance
