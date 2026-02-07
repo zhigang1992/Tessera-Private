@@ -3,18 +3,30 @@ import { PublicKey } from '@solana/web3.js'
 export type SolanaNetwork = 'devnet' | 'mainnet-beta'
 
 export function getCurrentNetwork(): SolanaNetwork {
-  const network = import.meta.env.VITE_SOLANA_NETWORK || 'devnet'
-  return network as SolanaNetwork
+  // Use environment variable if explicitly set
+  if (import.meta.env.VITE_SOLANA_NETWORK) {
+    return import.meta.env.VITE_SOLANA_NETWORK as SolanaNetwork
+  }
+
+  // Fall back to hostname detection
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname
+    // If hostname contains 'dev', use devnet, otherwise use mainnet
+    return hostname.includes('dev') ? 'devnet' : 'mainnet-beta'
+  }
+
+  // Default to devnet for SSR or unknown environments
+  return 'devnet'
 }
 
 export const RPC_ENDPOINTS: Record<SolanaNetwork, string> = {
   devnet: import.meta.env.VITE_DEVNET_RPC_URL || 'https://api.devnet.solana.com',
-  'mainnet-beta': import.meta.env.VITE_MAINNET_RPC_URL || 'https://api.mainnet-beta.solana.com',
+  'mainnet-beta': import.meta.env.VITE_MAINNET_RPC_URL || 'https://frequent-intensive-bush.solana-mainnet.quiknode.pro/4bed0e8688659b74ee97ad7afba050392774f0a5/',
 }
 
 export const WS_ENDPOINTS: Record<SolanaNetwork, string> = {
   devnet: import.meta.env.VITE_DEVNET_WS_URL || 'wss://api.devnet.solana.com',
-  'mainnet-beta': import.meta.env.VITE_MAINNET_WS_URL || 'wss://api.mainnet-beta.solana.com',
+  'mainnet-beta': import.meta.env.VITE_MAINNET_WS_URL || 'wss://frequent-intensive-bush.solana-mainnet.quiknode.pro/4bed0e8688659b74ee97ad7afba050392774f0a5/',
 }
 
 export function getRpcEndpoint(network: SolanaNetwork = getCurrentNetwork()): string {
