@@ -255,7 +255,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
         },
         'mainnet-beta': {
           vault: 'GaAMF2kAytKbQjDJvgTSoK8CeM6ShX21Gukkdk1D6kKN',
-          dlmmPool: 'GaAMF2kAytKbQjDJvgTSoK8CeM6ShX21Gukkdk1D6kKN',
+          dlmmPool: 'A1BtbJyRhWzKzLectwCeuS94S6vFKpHmLurtg7X8AA6E',
           meteoraUrl: 'https://app.meteora.ag/vault/GaAMF2kAytKbQjDJvgTSoK8CeM6ShX21Gukkdk1D6kKN',
         },
       },
