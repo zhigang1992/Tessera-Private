@@ -28,7 +28,7 @@ export default function ReferralCodeModal({ isOpen, onClose, referralCode }: Ref
 
   return (
     <Dialog open={isOpen && !visible} onOpenChange={onClose}>
-      <DialogContent className="w-[342px] max-w-[342px] rounded-2xl bg-secondary p-0">
+      <DialogContent className="w-[342px] max-w-[342px] rounded-2xl bg-secondary p-0" onInteractOutside={(e) => e.preventDefault()}>
         <div className="flex flex-col gap-4 p-6">
           <DialogHeader className="p-0">
             <DialogTitle className="text-base font-normal">Join Tessera</DialogTitle>
