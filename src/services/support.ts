@@ -50,22 +50,6 @@ export interface SendMessageResponse {
   replyMessage: ChatMessage
 }
 
-// ============ Mock Data ============
-
-const mockLiveIssues: LiveIssue[] = [
-  {
-    id: '2941',
-    title: 'Wallet Connection Issue',
-    status: 'checking',
-    submittedTime: '2 mins ago',
-  },
-  {
-    id: '2880',
-    title: 'Bridge Transaction',
-    status: 'complete',
-    submittedTime: '1 week ago',
-  },
-]
 
 // Mock chat history for existing issues
 const mockChatHistory: Record<string, ChatMessage[]> = {
