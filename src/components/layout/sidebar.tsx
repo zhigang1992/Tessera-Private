@@ -5,6 +5,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
+import { PRODUCTION_MODE } from '@/config'
 import TesseraLogo from './_/terrera-logo.svg?react'
 import ExploreIcon from './_/explore.svg?react'
 import AuctionIcon from './_/auction.svg?react'
@@ -98,6 +99,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     setMounted(true)
   }, [])
 
+  // Filter nav items based on production mode
+  const visibleNavItems = PRODUCTION_MODE
+    ? navItems.filter((item) => item.path !== '/auction' && item.path !== '/trade')
+    : navItems
+
   const handleDisconnect = useCallback(async () => {
     try {
       await disconnect()
@@ -171,7 +177,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1 px-3 py-4">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const isActive = location.pathname === item.path
               return (
                 <Link
@@ -239,7 +245,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           {/* Mobile Navigation */}
           <nav className="flex-1 space-y-1 px-4 pt-6">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const isActive = location.pathname === item.path
               return (
                 <Link

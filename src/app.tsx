@@ -5,6 +5,7 @@ import { ReferralPage, LeaderboardPage, TradePage, DashboardPage, DebugMeteoraPa
 import { MigrationPage } from '@/features/admin/pages/MigrationPage'
 import { AuctionListPage } from '@/features/auction/pages/AuctionListPage'
 import { AuctionDetailPage } from '@/features/auction/pages/AuctionDetailPage'
+import { PRODUCTION_MODE } from '@/config'
 
 export function App() {
   return (
@@ -16,14 +17,32 @@ export function App() {
             <Route path="/explorer" element={<ExplorePage />} />
             <Route path="/referral" element={<ReferralPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
-            <Route path="/trade" element={<TradePage />} />
+
+            {/* Redirect trade and auction routes to explorer in production mode */}
+            <Route
+              path="/trade"
+              element={PRODUCTION_MODE ? <Navigate to="/explorer" replace /> : <TradePage />}
+            />
+            <Route
+              path="/auction"
+              element={PRODUCTION_MODE ? <Navigate to="/explorer" replace /> : <Navigate to="/auction/T-SpaceX" replace />}
+            />
+            <Route
+              path="/auction/:tokenId"
+              element={PRODUCTION_MODE ? <Navigate to="/explorer" replace /> : <AuctionPage />}
+            />
+            <Route
+              path="/auctions"
+              element={PRODUCTION_MODE ? <Navigate to="/explorer" replace /> : <AuctionListPage />}
+            />
+            <Route
+              path="/auctions/:auctionId"
+              element={PRODUCTION_MODE ? <Navigate to="/explorer" replace /> : <AuctionDetailPage />}
+            />
+
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/auction" element={<Navigate to="/auction/T-SpaceX" replace />} />
-            <Route path="/auction/:tokenId" element={<AuctionPage />} />
             <Route path="/support" element={<SupportPage />} />
             <Route path="/admin/migration" element={<MigrationPage />} />
-            <Route path="/auctions" element={<AuctionListPage />} />
-            <Route path="/auctions/:auctionId" element={<AuctionDetailPage />} />
             <Route path="/debug/meteora" element={<DebugMeteoraPage />} />
           </Routes>
         </MainLayout>

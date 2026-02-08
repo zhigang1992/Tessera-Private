@@ -2,6 +2,12 @@ import { PublicKey } from '@solana/web3.js'
 
 export type SolanaNetwork = 'devnet' | 'mainnet-beta'
 
+/**
+ * Production flag to control UI visibility for production readiness
+ * When true, certain features will be hidden or show "Coming Soon" status
+ */
+export const PRODUCTION_MODE = import.meta.env.VITE_PRODUCTION_MODE === 'true'
+
 export function getCurrentNetwork(): SolanaNetwork {
   // Use environment variable if explicitly set
   if (import.meta.env.VITE_SOLANA_NETWORK) {
