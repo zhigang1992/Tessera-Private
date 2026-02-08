@@ -35,8 +35,8 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
           <p className="text-xs text-[#52525b] leading-normal">{asset.ticker}</p>
         </div>
         {!PRODUCTION_MODE && (
-          <button className="text-[#71717a] hover:text-[#18181b] transition-colors h-fit">
-            <ExternalLinkIcon className="w-[14px] h-[14px]" />
+          <button className="text-[#71717a] hover:text-[#18181b] transition-colors h-fit">     
+               <ExternalLinkIcon className="w-[14px] h-[14px]" />
           </button>
         )}
       </div>
