@@ -60,8 +60,10 @@ export function getGraphQLEndpoint(net: SolanaNetwork = getCurrentNetwork()): st
 
 export const PROGRAM_IDS = {
   TESSERA_TOKEN: new PublicKey('TESQvsR4TmYxiroPPQgZpVRoSFG8pru4fsYr67iv6kf'),
-  TESSERA_REFERRALS: new PublicKey('HiA4mhg5viZhiPHsJg2rEo2B5L2TNnNkwDi6AzCT9eD4'),
-  TESSERA_AUCTION: new PublicKey('4Edp1p2soByRisvWP7SUA6dmfeZLHqa3UCCsoPm1Ak5R'),
+  TESSERA_REFERRALS: new PublicKey(network({
+    devnet: 'HiA4mhg5viZhiPHsJg2rEo2B5L2TNnNkwDi6AzCT9eD4',
+    "mainnet-beta": "TESMgr3q4s1CK5nGz7bmkbMQBQeSt8N9wpZjTDWm2cY"
+  })),
 } as const
 
 export function getTesseraTokenProgramId(): PublicKey {
@@ -72,12 +74,8 @@ export function getTesseraReferralsProgramId(): PublicKey {
   return PROGRAM_IDS.TESSERA_REFERRALS
 }
 
-export function getTesseraAuctionProgramId(): PublicKey {
-  return PROGRAM_IDS.TESSERA_AUCTION
-}
 
 export const getReferralProgramId = getTesseraReferralsProgramId
-export const getAuctionProgramId = getTesseraAuctionProgramId
 
 export const CONNECTION_CONFIG = {
   commitment: 'confirmed' as const,
@@ -168,9 +166,6 @@ export interface DlmmPoolConfig {
 export interface AlphaVaultNetworkConfig {
   vault: string
   dlmmPool: string
-  merkleRootConfig?: string
-  meteoraUrl?: string
-  targetPrice?: number
 }
 
 export interface AlphaVaultConfig {
@@ -226,11 +221,11 @@ const TOKEN_NETWORK_CONFIGS: Record<AppTokenId, {
   USDC: {
     mint: {
       devnet: '7iENkTQY9RCwbWhASSrTbXCTtKBvGmn8wf6x2Su1GYVc',
-      'mainnet-beta': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+      'mainnet-beta': '9JNRX9amJQrXdskbkeAkMdVYJmTEGYH8nHXpcy4MzbMe',
     },
     decimals: {
       devnet: 6,
-      'mainnet-beta': 6,
+      'mainnet-beta': 9,
     },
   },
 }
@@ -264,7 +259,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       quoteToken: 'USDC',
       address: network({
         devnet: '8YJfkiCCdSHjWZuXw1wWXnxSEjsUG8Y8nDQQUta733Qm',
-        'mainnet-beta': 'A1BtbJyRhWzKzLectwCeuS94S6vFKpHmLurtg7X8AA6E',
+        'mainnet-beta': '5WhZbWnUbS7oTj8jFJ2JRR1mfXThWELVcg7Vr9NU1bW6',
       }),
     },
     alphaVault: {
@@ -273,14 +268,10 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       devnet: {
         vault: '2GpAqQXVuwHGutxJBt2UcrDXAAprSVYo7ErFVXyETaNN',
         dlmmPool: '8YJfkiCCdSHjWZuXw1wWXnxSEjsUG8Y8nDQQUta733Qm',
-        merkleRootConfig: 'GtzjfPuEPUQbWBsbK6Z9JawxtGHhR26KkUtBKeDoNhmG',
-        meteoraUrl: 'https://devnet.app.meteora.ag/vault/2GpAqQXVuwHGutxJBt2UcrDXAAprSVYo7ErFVXyETaNN',
       },
       'mainnet-beta': {
-        vault: 'GaAMF2kAytKbQjDJvgTSoK8CeM6ShX21Gukkdk1D6kKN',
-        dlmmPool: 'A1BtbJyRhWzKzLectwCeuS94S6vFKpHmLurtg7X8AA6E',
-        meteoraUrl: 'https://app.meteora.ag/vault/GaAMF2kAytKbQjDJvgTSoK8CeM6ShX21Gukkdk1D6kKN',
-        targetPrice: 412,
+        vault: '5Kv2VDegJAs8UdGGsg6d3x3wsqzVPSYXpbt8TgavbeGA',
+        dlmmPool: '5WhZbWnUbS7oTj8jFJ2JRR1mfXThWELVcg7Vr9NU1bW6',
       },
     },
   },

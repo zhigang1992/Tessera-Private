@@ -582,7 +582,7 @@ export class AlphaVaultClient {
       }
 
       const result = await response.json()
-      const merkleRoot = result.merkleRootConfig ?? this.config.merkleRootConfig
+      const merkleRoot = result.merkleRootConfig
 
       if (!merkleRoot) {
         return null
