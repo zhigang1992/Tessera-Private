@@ -9,8 +9,7 @@ import { getCurrentNetwork, getRpcEndpoint } from '@/config'
 
 // Get RPC URL based on current network configuration
 const getRpcUrl = () => {
-  const network = getCurrentNetwork()
-  return getRpcEndpoint(network)
+  return getRpcEndpoint()
 }
 
 // Singleton connection to avoid creating multiple connections

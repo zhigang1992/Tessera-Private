@@ -87,7 +87,7 @@ export function useMeteoraSwap(): UseMeteoraSwapReturn {
 
   // Create a connection for the current network
   const connection = useMemo(() => {
-    const rpcUrl = getRpcEndpoint(CURRENT_NETWORK)
+    const rpcUrl = getRpcEndpoint()
     return new Connection(rpcUrl, 'confirmed')
   }, [])
 
