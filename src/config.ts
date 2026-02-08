@@ -19,14 +19,15 @@ export const PRODUCTION_MODE = (() => {
   // Priority 2: Check hostname for production domain
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname
-    return hostname === 'app.tessera.pe' || hostname.includes('production')
+    const query = window.location.search
+    return hostname === 'app.tessera.pe' || hostname.includes('production') || query.includes('production=true')
   }
 
   // Default to false for SSR or unknown environments
   return false
 })()
 
-export function getCurrentNetwork(): SolanaNetwork {
+export const CURRENT_NETWORK: SolanaNetwork = (() => {
   // Use environment variable if explicitly set
   if (import.meta.env.VITE_SOLANA_NETWORK) {
     return import.meta.env.VITE_SOLANA_NETWORK as SolanaNetwork
@@ -35,12 +36,19 @@ export function getCurrentNetwork(): SolanaNetwork {
   // Fall back to hostname detection
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname
-    // If hostname contains 'dev', use devnet, otherwise use mainnet
+    const query = window.location.search
+    if (query.includes('network=mainnet')) {
+      return 'mainnet-beta'
+    }
     return hostname.includes('dev') ? 'devnet' : 'mainnet-beta'
   }
 
   // Default to devnet for SSR or unknown environments
   return 'devnet'
+})()
+
+export function getCurrentNetwork(): SolanaNetwork {
+  return CURRENT_NETWORK;
 }
 
 /**
