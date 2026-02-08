@@ -28,47 +28,47 @@ export default function ReferralCodeModal({ isOpen, onClose, referralCode }: Ref
 
   return (
     <Dialog open={isOpen && !visible} onOpenChange={onClose}>
-      <DialogContent className="w-[342px] max-w-[342px] rounded-2xl bg-[#F4F4F5] p-0 dark:bg-[#F4F4F5]">
+      <DialogContent className="w-[342px] max-w-[342px] rounded-2xl bg-secondary p-0">
         <div className="flex flex-col gap-4 p-6">
           <DialogHeader className="p-0">
-            <DialogTitle className="text-base font-normal text-black">Join Tessera</DialogTitle>
+            <DialogTitle className="text-base font-normal">Join Tessera</DialogTitle>
           </DialogHeader>
 
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#D2FB95]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-200 dark:bg-green-900/30">
               {connected ? (
-                <UserIcon className="h-6 w-6 text-[#979797]" />
+                <UserIcon className="h-6 w-6 text-muted-foreground" />
               ) : (
-                <div className="h-6 w-6 rounded-full bg-[#979797]" />
+                <div className="h-6 w-6 rounded-full bg-muted-foreground" />
               )}
             </div>
             <div className="flex-1">
               {connected ? (
                 <div>
-                  <div className="text-sm font-medium text-black">
+                  <div className="text-sm font-medium">
                     {accountAddress
                       ? `${accountAddress.slice(0, 10)}...${accountAddress.slice(-8)}`
                       : 'Wallet Connected'}
                   </div>
                   <button
-                    className="text-xs text-black/50 hover:text-black"
+                    className="text-xs text-muted-foreground hover:text-foreground"
                     onClick={() => disconnect().catch((error) => console.error('Failed to disconnect', error))}
                   >
                     Disconnect
                   </button>
                 </div>
               ) : (
-                <div className="text-xs font-medium text-[#2B664B]">Please Connect Wallet</div>
+                <div className="text-xs font-medium text-green-700 dark:text-green-500">Please Connect Wallet</div>
               )}
             </div>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-base font-normal text-black">Referral code (Who invited you?)</label>
-            <Card className="border border-[#D4D4D8] bg-white dark:bg-white">
+            <label className="text-base font-normal">Referral code (Who invited you?)</label>
+            <Card className="border-border bg-card">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <span className="font-inria-serif text-4xl font-bold uppercase text-[#2B664B]">{referralCode}</span>
+                  <span className="font-inria-serif text-4xl font-bold uppercase text-green-700 dark:text-green-500">{referralCode}</span>
                 </div>
               </CardContent>
             </Card>
@@ -86,11 +86,11 @@ export default function ReferralCodeModal({ isOpen, onClose, referralCode }: Ref
             <WalletDropdown
               triggerVariant="default"
               triggerSize="lg"
-              triggerClassName="w-full rounded-lg bg-black px-4 py-3 text-sm font-semibold text-white hover:bg-black/90"
+              triggerClassName="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
             />
           )}
 
-          <button onClick={handleChangeCode} className="mx-auto text-xs text-[#2B664B] hover:text-[#2B664B]/80">
+          <button onClick={handleChangeCode} className="mx-auto text-xs text-green-700 dark:text-green-500 hover:text-green-800 dark:hover:text-green-400">
             Change Referral Code
           </button>
         </div>
@@ -143,7 +143,7 @@ function ReferralCodeModalConnected({
       <Button
         onClick={handleBindReferralCode}
         disabled={isProcessing}
-        className="flex w-full items-center gap-2 rounded-lg bg-black py-3 text-sm font-medium text-white hover:bg-black/90 disabled:opacity-50"
+        className="flex w-full items-center gap-2 rounded-lg bg-primary py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
       >
         {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
         {buttonLabel}
