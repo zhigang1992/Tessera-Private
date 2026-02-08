@@ -5,8 +5,26 @@ export type SolanaNetwork = 'devnet' | 'mainnet-beta'
 /**
  * Production flag to control UI visibility for production readiness
  * When true, certain features will be hidden or show "Coming Soon" status
+ *
+ * Priority:
+ * 1. If VITE_PRODUCTION_MODE is explicitly set, use that value
+ * 2. Otherwise, check if hostname is app.tessera.pe (production domain)
  */
-export const PRODUCTION_MODE = import.meta.env.VITE_PRODUCTION_MODE === 'true'
+export const PRODUCTION_MODE = (() => {
+  // Priority 1: Check environment variable
+  if (import.meta.env.VITE_PRODUCTION_MODE !== undefined) {
+    return import.meta.env.VITE_PRODUCTION_MODE === 'true'
+  }
+
+  // Priority 2: Check hostname for production domain
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname
+    return hostname === 'app.tessera.pe'
+  }
+
+  // Default to false for SSR or unknown environments
+  return false
+})()
 
 export function getCurrentNetwork(): SolanaNetwork {
   // Use environment variable if explicitly set
