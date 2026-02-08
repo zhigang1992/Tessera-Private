@@ -23,6 +23,8 @@ import {
   getRegisterWithReferralCodeAccounts,
   getTesseraTokenProgramId,
   shortenAddress,
+  CURRENT_NETWORK,
+  getTesseraReferralsProgramId,
 } from '@/lib/solana'
 import { fetchAffiliateStats, fetchReferralCodesByOwner } from '../lib/graphql-client'
 
@@ -118,6 +120,7 @@ export function useTraderData(walletAddress?: string | null, enabled = true) {
 export function useAffiliateData(enabled = true, walletAddress?: string | null) {
   const wallet = useWallet()
   const connection = useSolanaConnection()
+  
 
   return useQuery({
     queryKey: [...referralKeys.affiliate(), walletAddress ?? 'no-wallet'],
@@ -131,7 +134,7 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
       // Fetch on-chain data, GraphQL stats, and creation events in parallel
       const [accountsResult, graphqlStats, creationEvents] = await Promise.all([
         // On-chain: Get referral codes owned by this wallet
-        connection.getProgramAccounts(program.programId, {
+        connection.getProgramAccounts(getTesseraReferralsProgramId(), {
           filters: [
             {
               // Filter by account discriminator (ReferralCode)
