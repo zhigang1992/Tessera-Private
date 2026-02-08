@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Send, Bot, User, Loader2, ArrowLeft, Info } from 'lucide-react'
+import { Send, Bot, User, Loader2, ArrowLeft, Info, X } from 'lucide-react'
 import Markdown from 'react-markdown'
 import { clsx } from 'clsx'
 import {
@@ -8,12 +8,14 @@ import {
   type ChatMessage,
   getChatMessages,
   sendMessageStream,
+  closeConversation,
 } from '@/services'
 
 interface AiChatProps {
   issue?: LiveIssue
   initialQuery?: string
   onBack: () => void
+  onClose?: (issueId: string) => void
 }
 
 function formatTimestamp(): string {
@@ -27,7 +29,7 @@ function generateMessageId(): string {
   return `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
 }
 
-export function AiChat({ issue, initialQuery, onBack}: AiChatProps) {
+export function AiChat({ issue, initialQuery, onBack, onClose}: AiChatProps) {
   const [replyText, setReplyText] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isWaitingForReply, setIsWaitingForReply] = useState(false)
@@ -76,7 +78,7 @@ export function AiChat({ issue, initialQuery, onBack}: AiChatProps) {
 
   // Handle initial query (from search)
   useEffect(() => {
-    if (initialQuery && !issue && !hasInitialQuerySentRef.current) {
+    if (initialQuery && !hasInitialQuerySentRef.current) {
       hasInitialQuerySentRef.current = true
       // Add user message immediately
       const userMessage: ChatMessage = {
@@ -90,7 +92,7 @@ export function AiChat({ issue, initialQuery, onBack}: AiChatProps) {
       doSendMessage(initialQuery)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialQuery, issue])
+  }, [initialQuery])
 
   // Scroll to bottom when messages change or when streaming
   useEffect(() => {
@@ -120,6 +122,16 @@ export function AiChat({ issue, initialQuery, onBack}: AiChatProps) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSendMessage()
+    }
+  }
+
+  const handleCloseConversation = () => {
+    if (issue?.id) {
+      closeConversation(issue.id)
+      if (onClose) {
+        onClose(issue.id)
+      }
+      onBack()
     }
   }
 
@@ -173,11 +185,22 @@ export function AiChat({ issue, initialQuery, onBack}: AiChatProps) {
                 </>
               )}
             </div>
-            {issue && (
-              <span className="text-[11px] md:text-[12px] text-[#71717a] whitespace-nowrap ml-2">
-                {issue.submittedTime}
-              </span>
-            )}
+            <div className="flex items-center gap-2 ml-2">
+              {issue && (
+                <span className="text-[11px] md:text-[12px] text-[#71717a] whitespace-nowrap">
+                  {issue.submittedTime}
+                </span>
+              )}
+              {issue && (
+                <button
+                  onClick={handleCloseConversation}
+                  className="flex items-center justify-center w-[32px] h-[32px] rounded-[8px] hover:bg-[#f5f5f5] dark:hover:bg-[rgba(255,255,255,0.05)] transition-colors shrink-0"
+                  title="Close conversation"
+                >
+                  <X className="w-5 h-5 text-[#71717a] hover:text-black dark:hover:text-white" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

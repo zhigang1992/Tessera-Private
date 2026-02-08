@@ -15,7 +15,7 @@ import {
   MessageSquare,
 } from 'lucide-react'
 import { AiChat } from './components/ai-chat'
-import { getLiveIssues, type LiveIssue } from '@/services'
+import { getLiveIssues, createNewConversation, type LiveIssue } from '@/services'
 import { useHeader } from '@/contexts/header-context'
 import SupportAgentIcon from './components/_/support-agent.svg?react'
 
@@ -105,7 +105,7 @@ export default function SupportPage() {
   const [selectedIssue, setSelectedIssue] = useState<LiveIssue | null>(null)
   const [chatQuery, setChatQuery] = useState<string | null>(null)
 
-  const { data: liveIssuesData, isLoading: isLoadingIssues } = useQuery({
+  const { data: liveIssuesData, isLoading: isLoadingIssues, refetch: refetchIssues } = useQuery({
     queryKey: ['liveIssues'],
     queryFn: getLiveIssues,
   })
@@ -114,18 +114,31 @@ export default function SupportPage() {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
+      // Create a new conversation when starting a chat
+      const newIssue = createNewConversation(searchQuery.trim())
+      setSelectedIssue(newIssue)
       setChatQuery(searchQuery.trim())
       setSearchQuery('')
+      refetchIssues()
     }
   }
 
   const handleQuickQuestion = (question: string) => {
+    // Create a new conversation when starting a chat
+    const newIssue = createNewConversation(question)
+    setSelectedIssue(newIssue)
     setChatQuery(question)
+    refetchIssues()
   }
 
   const handleBackFromChat = () => {
     setSelectedIssue(null)
     setChatQuery(null)
+    refetchIssues()
+  }
+
+  const handleCloseConversation = () => {
+    refetchIssues()
   }
 
   // Set back button in header when chat is active
@@ -230,7 +243,12 @@ export default function SupportPage() {
   // Show chat view if an issue is selected or search query submitted
   if (selectedIssue || chatQuery) {
     return (
-      <AiChat issue={selectedIssue ?? undefined} initialQuery={chatQuery ?? undefined} onBack={handleBackFromChat} />
+      <AiChat
+        issue={selectedIssue ?? undefined}
+        initialQuery={chatQuery ?? undefined}
+        onBack={handleBackFromChat}
+        onClose={handleCloseConversation}
+      />
     )
   }
 
@@ -416,7 +434,7 @@ export default function SupportPage() {
 
               <button
                 className="bg-white dark:bg-white hover:bg-gray-50 dark:hover:bg-gray-100 transition-colors border border-[#a1a1aa] dark:border-[rgba(17,17,17,0.15)] rounded-[8px] px-4 py-3 flex items-center justify-center gap-2"
-                onClick={() => setChatQuery('I need technical support')}
+                onClick={() => handleQuickQuestion('I need technical support')}
               >
                 <SupportAgentIcon className="w-[18px] h-[18px] text-black dark:text-black" />
                 <span className="text-[14px] font-medium text-black dark:text-black">Technical Support</span>

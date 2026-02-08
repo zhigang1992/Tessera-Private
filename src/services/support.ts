@@ -141,13 +141,91 @@ function getSessionId(issueId?: string): string {
   return issueId || 'default-session'
 }
 
+function generateIssueId(): string {
+  return `issue-${Date.now()}`
+}
+
+// ============ LocalStorage Functions ============
+
+const STORAGE_KEY = 'tessera_live_issues'
+const MESSAGES_STORAGE_PREFIX = 'tessera_messages_'
+
+function getLiveIssuesFromStorage(): LiveIssue[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (!stored) return []
+    return JSON.parse(stored)
+  } catch (error) {
+    console.error('Error reading live issues from localStorage:', error)
+    return []
+  }
+}
+
+function saveLiveIssuesToStorage(issues: LiveIssue[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(issues))
+  } catch (error) {
+    console.error('Error saving live issues to localStorage:', error)
+  }
+}
+
+function getMessagesFromStorage(issueId: string): ChatMessage[] {
+  try {
+    const stored = localStorage.getItem(`${MESSAGES_STORAGE_PREFIX}${issueId}`)
+    if (!stored) return []
+    return JSON.parse(stored)
+  } catch (error) {
+    console.error('Error reading messages from localStorage:', error)
+    return []
+  }
+}
+
+function saveMessagesToStorage(issueId: string, messages: ChatMessage[]): void {
+  try {
+    localStorage.setItem(`${MESSAGES_STORAGE_PREFIX}${issueId}`, JSON.stringify(messages))
+  } catch (error) {
+    console.error('Error saving messages to localStorage:', error)
+  }
+}
+
+function deleteMessagesFromStorage(issueId: string): void {
+  try {
+    localStorage.removeItem(`${MESSAGES_STORAGE_PREFIX}${issueId}`)
+  } catch (error) {
+    console.error('Error deleting messages from localStorage:', error)
+  }
+}
+
+export function createNewConversation(title: string): LiveIssue {
+  const newIssue: LiveIssue = {
+    id: generateIssueId(),
+    title,
+    status: 'checking',
+    submittedTime: 'just now',
+  }
+
+  const issues = getLiveIssuesFromStorage()
+  issues.unshift(newIssue) // Add to beginning
+  saveLiveIssuesToStorage(issues)
+
+  return newIssue
+}
+
+export function closeConversation(issueId: string): void {
+  const issues = getLiveIssuesFromStorage()
+  const filteredIssues = issues.filter((issue) => issue.id !== issueId)
+  saveLiveIssuesToStorage(filteredIssues)
+  deleteMessagesFromStorage(issueId)
+}
+
 // ============ API Functions ============
 
 export async function getLiveIssues(): Promise<LiveIssuesResponse> {
   await sleep(500)
+  const items = getLiveIssuesFromStorage()
   return {
-    items: mockLiveIssues,
-    total: mockLiveIssues.length,
+    items,
+    total: items.length,
   }
 }
 
@@ -156,10 +234,22 @@ export async function getChatMessages(
 ): Promise<ChatMessagesResponse> {
   await sleep(300)
 
-  if (issueId && mockChatHistory[issueId]) {
-    return {
-      messages: mockChatHistory[issueId],
-      issueId,
+  if (issueId) {
+    // First check localStorage for saved messages
+    const savedMessages = getMessagesFromStorage(issueId)
+    if (savedMessages.length > 0) {
+      return {
+        messages: savedMessages,
+        issueId,
+      }
+    }
+
+    // Fall back to mock data if available
+    if (mockChatHistory[issueId]) {
+      return {
+        messages: mockChatHistory[issueId],
+        issueId,
+      }
     }
   }
 
@@ -220,6 +310,13 @@ export async function sendMessage(
     content: responseContent,
     timestamp: formatTimestamp(),
     sender: 'Tessera AI',
+  }
+
+  // Save messages to localStorage if we have an issueId
+  if (issueId) {
+    const existingMessages = getMessagesFromStorage(issueId)
+    const updatedMessages = [...existingMessages, userMessage, replyMessage]
+    saveMessagesToStorage(issueId, updatedMessages)
   }
 
   return {
@@ -285,6 +382,13 @@ export async function sendMessageStream(
     content: responseContent,
     timestamp: formatTimestamp(),
     sender: 'Tessera AI',
+  }
+
+  // Save messages to localStorage if we have an issueId
+  if (issueId) {
+    const existingMessages = getMessagesFromStorage(issueId)
+    const updatedMessages = [...existingMessages, userMessage, replyMessage]
+    saveMessagesToStorage(issueId, updatedMessages)
   }
 
   return {
