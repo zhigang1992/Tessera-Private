@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { getCrossDomainStorage, setCrossDomainStorage } from '@/lib/cross-domain-storage'
 
 const STORAGE_KEY = 'tessera_cookie_consent'
 
@@ -15,8 +16,8 @@ export function CookieConsent() {
   const [isAnimating, setIsAnimating] = useState(false)
 
   useEffect(() => {
-    // Check if user has already made a choice
-    const storedConsent = localStorage.getItem(STORAGE_KEY)
+    // Check if user has already made a choice (checks both cookie and localStorage)
+    const storedConsent = getCrossDomainStorage(STORAGE_KEY)
     if (!storedConsent) {
       // Show dialog after a small delay for smooth animation
       setTimeout(() => {
@@ -28,19 +29,31 @@ export function CookieConsent() {
 
   const handleAccept = () => {
     const consent: CookieConsentState = { accepted: true }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(consent))
+    setCrossDomainStorage({
+      key: STORAGE_KEY,
+      value: JSON.stringify(consent),
+      expiryDays: 365,
+    })
     closeDialog()
   }
 
   const handleReject = () => {
     const consent: CookieConsentState = { accepted: false }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(consent))
+    setCrossDomainStorage({
+      key: STORAGE_KEY,
+      value: JSON.stringify(consent),
+      expiryDays: 365,
+    })
     closeDialog()
   }
 
   const handleDismiss = () => {
     const consent: CookieConsentState = { dismissed: true }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(consent))
+    setCrossDomainStorage({
+      key: STORAGE_KEY,
+      value: JSON.stringify(consent),
+      expiryDays: 365,
+    })
     closeDialog()
   }
 

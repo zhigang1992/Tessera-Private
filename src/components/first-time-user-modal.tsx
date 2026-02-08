@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { getCrossDomainStorage, setCrossDomainStorage } from '@/lib/cross-domain-storage'
 
 const STORAGE_KEY = 'tessera_terms_accepted'
 
@@ -14,8 +15,8 @@ export function FirstTimeUserModal() {
   const [accepted, setAccepted] = useState(false)
 
   useEffect(() => {
-    // Check if user has already accepted terms
-    const hasAccepted = localStorage.getItem(STORAGE_KEY)
+    // Check if user has already accepted terms (checks both cookie and localStorage)
+    const hasAccepted = getCrossDomainStorage(STORAGE_KEY)
     if (!hasAccepted) {
       setOpen(true)
     }
@@ -27,7 +28,11 @@ export function FirstTimeUserModal() {
 
   const handleContinue = () => {
     if (accepted) {
-      localStorage.setItem(STORAGE_KEY, 'true')
+      setCrossDomainStorage({
+        key: STORAGE_KEY,
+        value: 'true',
+        expiryDays: 365,
+      })
       setOpen(false)
     }
   }
