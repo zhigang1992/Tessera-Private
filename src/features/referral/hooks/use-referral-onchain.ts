@@ -133,7 +133,7 @@ export function useAffiliateData(enabled = true, walletAddress?: string | null) 
       // Fetch on-chain data, GraphQL stats, and creation events in parallel
       const [accountsResult, graphqlStats, creationEvents] = await Promise.all([
         // On-chain: Get referral codes owned by this wallet
-        connection.getProgramAccounts(getTesseraReferralsProgramId(), {
+        connection.getProgramAccounts(program.programId, {
           filters: [
             {
               // Filter by account discriminator (ReferralCode)

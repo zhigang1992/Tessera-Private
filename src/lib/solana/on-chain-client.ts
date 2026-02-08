@@ -50,8 +50,10 @@ export function getTesseraReferralsProgram(
       },
     )
 
-    const program = new Program<TesseraReferrals>(TesseraReferralsIDL as TesseraReferrals, provider)
-
+    const program = new Program<TesseraReferrals>({
+      ...TesseraReferralsIDL,
+      address: getTesseraReferralsProgramId().toBase58(),
+    } as TesseraReferrals, provider)
     return program
   } catch (error) {
     console.error('Failed to initialize tessera referrals program:', error)
