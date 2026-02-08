@@ -1,5 +1,5 @@
 import { CURRENT_NETWORK } from '@/config'
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, ReactNode, useContext, useMemo } from 'react'
 
 export type SolanaClusterId = 'solana:devnet' | 'solana:localnet' | 'solana:mainnet'
 

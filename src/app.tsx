@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import { AppProviders } from '@/components/app-providers.tsx'
 import { MainLayout } from '@/components/layout'
 import { ReferralPage, LeaderboardPage, TradePage, DashboardPage, SupportPage, AuctionPage, ExplorePage } from '@/pages'
-import { MigrationPage } from '@/features/admin/pages/MigrationPage'
 import { AuctionListPage } from '@/features/auction/pages/AuctionListPage'
 import { AuctionDetailPage } from '@/features/auction/pages/AuctionDetailPage'
 import { PRODUCTION_MODE } from '@/config'
@@ -42,7 +41,6 @@ export function App() {
 
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/support" element={<SupportPage />} />
-            <Route path="/admin/migration" element={<MigrationPage />} />
           </Routes>
         </MainLayout>
       </BrowserRouter>
