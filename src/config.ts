@@ -8,7 +8,7 @@ export type SolanaNetwork = 'devnet' | 'mainnet-beta'
  *
  * Priority:
  * 1. If VITE_PRODUCTION_MODE is explicitly set, use that value
- * 2. Otherwise, check if hostname is app.tessera.pe (production domain)
+ * 2. Otherwise, check if hostname contains "production" or is app.tessera.pe
  */
 export const PRODUCTION_MODE = (() => {
   // Priority 1: Check environment variable
@@ -19,7 +19,7 @@ export const PRODUCTION_MODE = (() => {
   // Priority 2: Check hostname for production domain
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname
-    return hostname === 'app.tessera.pe'
+    return hostname === 'app.tessera.pe' || hostname.includes('production')
   }
 
   // Default to false for SSR or unknown environments
