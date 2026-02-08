@@ -70,16 +70,16 @@ export const GRAPHQL_ENDPOINTS: Record<SolanaNetwork, string> = {
   'mainnet-beta': 'https://tracker-gql.tessera.fun/v1/graphql',
 }
 
-export function getRpcEndpoint(net: SolanaNetwork = getCurrentNetwork()): string {
-  return RPC_ENDPOINTS[net]
+export function getRpcEndpoint(): string {
+  return RPC_ENDPOINTS[getCurrentNetwork()]
 }
 
-export function getWsEndpoint(net: SolanaNetwork = getCurrentNetwork()): string {
-  return WS_ENDPOINTS[net]
+export function getWsEndpoint(): string {
+  return WS_ENDPOINTS[getCurrentNetwork()]
 }
 
-export function getGraphQLEndpoint(net: SolanaNetwork = getCurrentNetwork()): string {
-  return GRAPHQL_ENDPOINTS[net]
+export function getGraphQLEndpoint(): string {
+  return GRAPHQL_ENDPOINTS[getCurrentNetwork()]
 }
 
 export const PROGRAM_IDS = {

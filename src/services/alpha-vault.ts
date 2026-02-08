@@ -178,7 +178,7 @@ export class AlphaVaultClient {
     this.tokenId = tokenId
     this.network = network
     this.config = resolveAlphaVaultConfig(tokenId, network)
-    this.connection = connection || new Connection(getRpcEndpoint(network), 'confirmed')
+    this.connection = connection || new Connection(getRpcEndpoint(), 'confirmed')
     this.vaultAddress = new PublicKey(vaultAddress ?? this.config.vault)
   }
 
