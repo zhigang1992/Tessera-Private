@@ -11,6 +11,7 @@ import { TradersOverview } from './components/traders-overview'
 import { TradingHistory } from './components/trading-history'
 import { TradersRulesFaq } from './components/traders-rules-faq'
 import { setCurrentWalletAddress, clearAffiliateStatsCache } from '@/services'
+import { PRODUCTION_MODE } from '@/config'
 
 export default function ReferralPage() {
   const { publicKey } = useWallet()
@@ -70,7 +71,7 @@ export default function ReferralPage() {
           <CodeSection />
 
           {/* Rules & FAQ */}
-          {/* <RulesFaq /> */}
+          {!PRODUCTION_MODE && <RulesFaq />}
         </>
       ) : (
         <>

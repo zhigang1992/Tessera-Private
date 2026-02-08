@@ -1,4 +1,3 @@
-import { sleep } from './utils'
 import spacexBg from '@/assets/spacex-bg.jpeg'
 import kalshiBg from '@/assets/kalshi-bg.jpeg'
 import { PRODUCTION_MODE } from '@/config'
