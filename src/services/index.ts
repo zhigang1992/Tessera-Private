@@ -5,6 +5,7 @@ export * from './dashboard'
 export * from './support'
 export * from './auction'
 export * from './explore'
+export * from './ledgerlens'
 export {
   DEFAULT_ALPHA_VAULT_TOKEN_ID,
   AlphaVaultClient,

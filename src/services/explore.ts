@@ -1,6 +1,7 @@
 import { sleep } from './utils'
-import spacexBg from '@/assets/spacex-bg.png'
+import spacexBg from '@/assets/spacex-bg.jpeg'
 import kalshiBg from '@/assets/kalshi-bg.jpeg'
+import { PRODUCTION_MODE } from '@/config'
 
 // ============ Types ============
 
@@ -49,6 +50,17 @@ const exploreAssets: ExploreAsset[] = [
 
 export async function getExploreAssets(): Promise<ExploreAsset[]> {
   await sleep(400)
+
+  // In production mode, change SpaceX and Kalshi to "coming_soon" status
+  if (PRODUCTION_MODE) {
+    return exploreAssets.map((asset) => {
+      if (asset.id === 'spacex' || asset.id === 'kalshi') {
+        return { ...asset, status: 'coming_soon' }
+      }
+      return asset
+    })
+  }
+
   return exploreAssets
 }
 

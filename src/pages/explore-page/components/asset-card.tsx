@@ -27,13 +27,13 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
         }}
       >
         <div className="flex-1">
-          <div className="inline-block px-2 py-1 rounded bg-white/20 text-white text-[11px] font-medium mb-3 leading-normal">
+          <div className="inline-block px-2 py-1 rounded bg-[#18181b]/10 text-[#18181b] text-[11px] font-medium mb-3 leading-normal">
             {asset.category}
           </div>
-          <h3 className="text-xl font-semibold text-white mb-1 leading-normal">{asset.name}</h3>
-          <p className="text-xs text-white/70 leading-normal">{asset.ticker}</p>
+          <h3 className="text-xl font-semibold text-[#18181b] mb-1 leading-normal">{asset.name}</h3>
+          <p className="text-xs text-[#52525b] leading-normal">{asset.ticker}</p>
         </div>
-        <button className="text-white/70 hover:text-white transition-colors h-fit">
+        <button className="text-[#71717a] hover:text-[#18181b] transition-colors h-fit">
           <ExternalLinkIcon className="w-[14px] h-[14px]" />
         </button>
       </div>
