@@ -70,7 +70,7 @@ export default function ReferralPage() {
           <CodeSection />
 
           {/* Rules & FAQ */}
-          <RulesFaq />
+          {/* <RulesFaq /> */}
         </>
       ) : (
         <>

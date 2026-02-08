@@ -29,8 +29,8 @@ const exploreAssets: ExploreAsset[] = [
     category: 'Aerospace',
     headerColor: '#555555',
     headerImage: spacexBg,
-    price: 476.22,
-    valuation: '$180B',
+    price: 421,
+    valuation: '$800bn',
     status: PRODUCTION_MODE ? "coming_soon" : 'auction',
   },
   {
@@ -51,6 +51,5 @@ export async function getExploreAssets(): Promise<ExploreAsset[]> {
 }
 
 export async function getExploreAssetById(id: string): Promise<ExploreAsset | undefined> {
-  await sleep(300)
   return exploreAssets.find((asset) => asset.id === id)
 }

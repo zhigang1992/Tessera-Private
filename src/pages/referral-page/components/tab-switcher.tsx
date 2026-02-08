@@ -1,3 +1,4 @@
+import { PRODUCTION_MODE } from '@/config'
 import { cn } from '@/lib/utils'
 
 interface TabSwitcherProps {
@@ -19,6 +20,7 @@ export function TabSwitcher({ activeTab, onTabChange }: TabSwitcherProps) {
       >
         Affiliates
       </button>
+      {!PRODUCTION_MODE && (
       <button
         onClick={() => onTabChange('traders')}
         className={cn(
@@ -30,6 +32,7 @@ export function TabSwitcher({ activeTab, onTabChange }: TabSwitcherProps) {
       >
         Traders
       </button>
+      )}
     </div>
   )
 }
