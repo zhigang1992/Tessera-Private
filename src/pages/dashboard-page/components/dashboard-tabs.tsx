@@ -1,3 +1,5 @@
+import { PRODUCTION_MODE } from '@/config'
+
 interface DashboardTabsProps {
   activeTab: string
   onTabChange: (tab: string) => void
@@ -10,9 +12,14 @@ const tabs = [
 ]
 
 export function DashboardTabs({ activeTab, onTabChange }: DashboardTabsProps) {
+  // Filter tabs based on production mode
+  const visibleTabs = PRODUCTION_MODE
+    ? tabs.filter((tab) => tab.id === 'transparency')
+    : tabs
+
   return (
     <div className="flex items-center gap-1 md:gap-2 p-1 bg-zinc-200 dark:bg-[#27272a] rounded-xl w-full md:w-fit">
-      {tabs.map((tab) => (
+      {visibleTabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}

@@ -5,6 +5,7 @@ import ExternalLinkIcon from './_/external-link.svg?react'
 import SwapIcon from './_/swap.svg?react'
 import GavelIcon from './_/gavel.svg?react'
 import HourglassIcon from './_/hourglass.svg?react'
+import { PRODUCTION_MODE } from '@/config'
 
 interface AssetCardProps {
   asset: ExploreAsset
@@ -33,9 +34,11 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
           <h3 className="text-xl font-semibold text-[#18181b] mb-1 leading-normal">{asset.name}</h3>
           <p className="text-xs text-[#52525b] leading-normal">{asset.ticker}</p>
         </div>
-        <button className="text-[#71717a] hover:text-[#18181b] transition-colors h-fit">
-          <ExternalLinkIcon className="w-[14px] h-[14px]" />
-        </button>
+        {!PRODUCTION_MODE && (
+          <button className="text-[#71717a] hover:text-[#18181b] transition-colors h-fit">     
+               <ExternalLinkIcon className="w-[14px] h-[14px]" />
+          </button>
+        )}
       </div>
 
       {/* Body */}
@@ -43,12 +46,12 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs text-[#71717a] leading-normal">Price</span>
           <span className="text-base font-semibold text-[#18181b] dark:text-[#d2d2d2] leading-normal">
-            ${asset.price.toFixed(2)}
+            {asset.price != null ? '$' + asset.price.toFixed(2) : "TBA"}
           </span>
         </div>
         <div className="flex items-center justify-between mb-5">
           <span className="text-xs text-[#71717a] leading-normal">Valuation at Price</span>
-          <span className="text-base font-semibold text-[#18181b] dark:text-[#d2d2d2] leading-normal">{asset.valuation}</span>
+          <span className="text-base font-semibold text-[#18181b] dark:text-[#d2d2d2] leading-normal">{asset.valuation ?? "TBA"}</span>
         </div>
 
         {/* Action Button */}

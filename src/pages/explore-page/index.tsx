@@ -31,11 +31,6 @@ export default function ExplorePage() {
         </a>
       </div>
 
-      {/* Subtitle */}
-      <p className="text-[13px] text-[#71717a] leading-normal">
-        Discover and track innovative private companies and prediction markets.
-      </p>
-
       {/* Asset Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
         {isLoading ? (

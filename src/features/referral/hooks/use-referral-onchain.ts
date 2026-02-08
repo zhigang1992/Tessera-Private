@@ -23,7 +23,6 @@ import {
   getRegisterWithReferralCodeAccounts,
   getTesseraTokenProgramId,
   shortenAddress,
-  getTesseraReferralsProgramId,
 } from '@/lib/solana'
 import { fetchAffiliateStats, fetchReferralCodesByOwner } from '../lib/graphql-client'
 
