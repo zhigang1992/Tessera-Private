@@ -23,6 +23,7 @@ export function CodeSection() {
   const [activeTab, setActiveTab] = useState<'code' | 'reward'>('code')
   const [selectedCode, setSelectedCode] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [usersCurrentPage, setUsersCurrentPage] = useState(1)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [shareModalCode, setShareModalCode] = useState<string | null>(null)
 
@@ -47,12 +48,20 @@ export function CodeSection() {
     staleTime: 0, // Always refetch when code changes
   })
 
-  // Pagination logic
+  // Pagination logic for codes
   const totalPages = Math.ceil(codes.length / PAGE_SIZE)
   const paginatedCodes = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE
     return codes.slice(start, start + PAGE_SIZE)
   }, [codes, currentPage])
+
+  // Pagination logic for users (10 per page)
+  const USERS_PER_PAGE = 10
+  const usersTotalPages = Math.ceil(users.length / USERS_PER_PAGE)
+  const paginatedUsers = useMemo(() => {
+    const start = (usersCurrentPage - 1) * USERS_PER_PAGE
+    return users.slice(start, start + USERS_PER_PAGE)
+  }, [users, usersCurrentPage])
 
   const handleCopyCode = useCallback((e: React.MouseEvent, code: string) => {
     e.stopPropagation()
@@ -86,6 +95,16 @@ export function CodeSection() {
   useEffect(() => {
     setCurrentPage(1)
   }, [codes.length])
+
+  // Reset users page when selected code changes
+  useEffect(() => {
+    setUsersCurrentPage(1)
+  }, [selectedCode])
+
+  // Reset users page when users list changes
+  useEffect(() => {
+    setUsersCurrentPage(1)
+  }, [users.length])
 
   return (
     <div className="space-y-4">
@@ -307,7 +326,7 @@ export function CodeSection() {
                     </td>
                   </tr>
                 ) : (
-                  users.map((user) => (
+                  paginatedUsers.map((user) => (
                     <tr
                       key={user.id}
                       className={cn(
@@ -340,37 +359,67 @@ export function CodeSection() {
             </table>
           </div>
 
-          {/* Pagination */}
-          <div className="flex gap-[5px] items-center justify-center py-4 md:py-5 border-t dark:border-[#393b3d] border-[#e0e0e0]">
-            {Array.from({ length: Math.min(Math.ceil(users.length / 10), 5) }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                className={cn(
-                  'flex items-center justify-center w-10 h-10 rounded-lg text-xs font-normal transition-colors cursor-pointer',
-                  page === 1
-                    ? 'dark:bg-[#d2fb95] dark:text-black bg-black text-white'
-                    : 'dark:bg-[rgba(212,212,216,0.4)] dark:text-[#d2d2d2] dark:hover:bg-[#3f3f46] bg-[rgba(212,212,216,0.4)] text-black hover:bg-gray-100'
+          {/* Pagination - Only show if more than 10 users */}
+          {users.length > USERS_PER_PAGE && (
+            <div className="flex flex-col gap-3 items-center justify-center py-4 md:py-5 border-t dark:border-[#393b3d] border-[#e0e0e0]">
+              {/* Page info */}
+              <div className="text-xs text-muted-foreground">
+                Showing {((usersCurrentPage - 1) * USERS_PER_PAGE) + 1}-{Math.min(usersCurrentPage * USERS_PER_PAGE, users.length)} of {users.length} referrals
+              </div>
+
+              {/* Pagination buttons */}
+              <div className="flex gap-[5px] items-center">
+                {/* Page numbers */}
+                {Array.from({ length: Math.min(usersTotalPages, 5) }, (_, i) => {
+                  const pageNum = i + 1
+                  const isCurrentPage = pageNum === usersCurrentPage
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setUsersCurrentPage(pageNum)}
+                      className={cn(
+                        'flex items-center justify-center w-10 h-10 rounded-lg text-xs font-normal transition-colors cursor-pointer',
+                        isCurrentPage
+                          ? 'dark:bg-[#d2fb95] dark:text-black bg-black text-white'
+                          : 'dark:bg-[rgba(212,212,216,0.4)] dark:text-[#d2d2d2] dark:hover:bg-[#3f3f46] bg-[rgba(212,212,216,0.4)] text-black hover:bg-gray-100'
+                      )}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                })}
+
+                {/* Ellipsis and last page if there are more than 5 pages */}
+                {usersTotalPages > 5 && (
+                  <>
+                    <button
+                      disabled
+                      className="flex items-center justify-center w-10 h-10 rounded-lg text-xs font-normal dark:bg-[rgba(212,212,216,0.4)] dark:text-[#d2d2d2] bg-[rgba(212,212,216,0.4)] text-black cursor-default"
+                    >
+                      ...
+                    </button>
+                    <button
+                      onClick={() => setUsersCurrentPage(usersTotalPages)}
+                      className={cn(
+                        'flex items-center justify-center w-10 h-10 rounded-lg text-xs font-normal transition-colors cursor-pointer',
+                        usersCurrentPage === usersTotalPages
+                          ? 'dark:bg-[#d2fb95] dark:text-black bg-black text-white'
+                          : 'dark:bg-[rgba(212,212,216,0.4)] dark:text-[#d2d2d2] dark:hover:bg-[#3f3f46] bg-[rgba(212,212,216,0.4)] text-black hover:bg-gray-100'
+                      )}
+                    >
+                      {usersTotalPages}
+                    </button>
+                  </>
                 )}
-              >
-                {page}
-              </button>
-            ))}
-            {Math.ceil(users.length / 10) > 5 && (
-              <>
-                <button
-                  disabled
-                  className="flex items-center justify-center w-10 h-10 rounded-lg text-xs font-normal dark:bg-[rgba(212,212,216,0.4)] dark:text-[#d2d2d2] bg-[rgba(212,212,216,0.4)] text-black"
-                >
-                  ...
-                </button>
-                <button
-                  className="flex items-center justify-center w-10 h-10 rounded-lg text-xs font-normal transition-colors cursor-pointer dark:bg-[rgba(212,212,216,0.4)] dark:text-[#d2d2d2] dark:hover:bg-[#3f3f46] bg-[rgba(212,212,216,0.4)] text-black hover:bg-gray-100"
-                >
-                  {Math.ceil(users.length / 10)}
-                </button>
-              </>
-            )}
-          </div>
+              </div>
+
+              {/* Page info */}
+              <div className="text-xs text-muted-foreground">
+                Page {usersCurrentPage} of {usersTotalPages}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
