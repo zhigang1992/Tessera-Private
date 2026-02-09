@@ -335,7 +335,7 @@ export async function fetchUserRegistration(userAddress: string): Promise<UserRe
 }
 
 /**
- * Fetch traders registered under a specific referral code
+ * Fetch traders registered under a specific referral code (Tier 1 only)
  */
 export async function fetchTradersForCode(referralCode: string): Promise<UserRegisteredEvent[]> {
   const query = `
@@ -358,6 +358,62 @@ export async function fetchTradersForCode(referralCode: string): Promise<UserReg
   `
 
   const data = await graphqlRequest<UserRegistrationQueryResult>(query, { code: referralCode })
+  return data.facts_referral_system_user_registered_events
+}
+
+/**
+ * Fetch tier-2 referrals for a given wallet address
+ * These are users whose tier2_referrer matches the wallet
+ */
+export async function fetchTier2ReferralsForWallet(walletAddress: string): Promise<UserRegisteredEvent[]> {
+  const query = `
+    query GetTier2Referrals($wallet: String!) {
+      facts_referral_system_user_registered_events(
+        where: { tier2_referrer: { _eq: $wallet } }
+        order_by: { block_time: desc }
+      ) {
+        signature
+        user
+        referral_code
+        referral_code_key
+        tier1_referrer
+        tier2_referrer
+        tier3_referrer
+        is_new_registration
+        block_time
+      }
+    }
+  `
+
+  const data = await graphqlRequest<UserRegistrationQueryResult>(query, { wallet: walletAddress })
+  return data.facts_referral_system_user_registered_events
+}
+
+/**
+ * Fetch tier-3 referrals for a given wallet address
+ * These are users whose tier3_referrer matches the wallet
+ */
+export async function fetchTier3ReferralsForWallet(walletAddress: string): Promise<UserRegisteredEvent[]> {
+  const query = `
+    query GetTier3Referrals($wallet: String!) {
+      facts_referral_system_user_registered_events(
+        where: { tier3_referrer: { _eq: $wallet } }
+        order_by: { block_time: desc }
+      ) {
+        signature
+        user
+        referral_code
+        referral_code_key
+        tier1_referrer
+        tier2_referrer
+        tier3_referrer
+        is_new_registration
+        block_time
+      }
+    }
+  `
+
+  const data = await graphqlRequest<UserRegistrationQueryResult>(query, { wallet: walletAddress })
   return data.facts_referral_system_user_registered_events
 }
 
