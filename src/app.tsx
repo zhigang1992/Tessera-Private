@@ -1,10 +1,17 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router'
 import { AppProviders } from '@/components/app-providers.tsx'
 import { MainLayout } from '@/components/layout'
 import { ReferralPage, LeaderboardPage, TradePage, DashboardPage, SupportPage, AuctionPage, ExplorePage } from '@/pages'
 import { AuctionListPage } from '@/features/auction/pages/AuctionListPage'
 import { AuctionDetailPage } from '@/features/auction/pages/AuctionDetailPage'
 import { PRODUCTION_MODE } from '@/config'
+
+// Component to handle /s redirect with query params
+function ShareRedirect() {
+  const [searchParams] = useSearchParams()
+  const queryString = searchParams.toString()
+  return <Navigate to={`/referral${queryString ? `?${queryString}` : ''}`} replace />
+}
 
 export function App() {
   return (
@@ -14,6 +21,7 @@ export function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/explorer" replace />} />
             <Route path="/explorer" element={<ExplorePage />} />
+            <Route path="/s" element={<ShareRedirect />} />
             <Route path="/referral" element={<ReferralPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
 
