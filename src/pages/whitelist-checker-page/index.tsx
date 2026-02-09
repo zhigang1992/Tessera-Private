@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { checkWhitelistStatus } from '@/lib/whitelist'
@@ -15,9 +13,7 @@ import TSpaceXLogo from './assets/t-spacex-logo.png'
 type CheckStatus = 'idle' | 'checking' | 'whitelisted' | 'not_whitelisted' | 'error'
 
 export default function WhitelistCheckerPage() {
-  const { auctionId } = useParams<{ auctionId: string }>()
   const { publicKey, connected } = useWallet()
-  const { setVisible } = useWalletModal()
   const [walletAddress, setWalletAddress] = useState('')
   const [status, setStatus] = useState<CheckStatus>('idle')
   const [errorMessage, setErrorMessage] = useState<string>('')
@@ -29,10 +25,6 @@ export default function WhitelistCheckerPage() {
       setWalletAddress(publicKey.toBase58())
     }
   }, [connected, publicKey])
-
-  const handleConnectWallet = () => {
-    setVisible(true)
-  }
 
   const handleCheckWhitelist = async () => {
     if (!walletAddress) return
