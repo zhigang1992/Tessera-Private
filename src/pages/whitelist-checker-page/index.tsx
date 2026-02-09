@@ -1,11 +1,10 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { getWhitelistInfo } from '@/lib/whitelist'
-import { resolveTokenIdFromParam, getAppToken, network } from '@/config'
+import { checkWhitelistStatus } from '@/lib/whitelist'
 import TesseraLogo from '@/assets/Terrera Logo.svg?react'
 import CheckCircleIcon from './components/check-circle.svg?react'
 import CancelIcon from './components/cancel.svg?react'
@@ -24,23 +23,6 @@ export default function WhitelistCheckerPage() {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
 
-  // Resolve token and vault ID from URL param
-  const vaultId = useMemo(() => {
-    if (!auctionId) return null
-
-    const tokenId = resolveTokenIdFromParam(auctionId)
-    if (!tokenId) return null
-
-    const token = getAppToken(tokenId)
-    if (!token.alphaVault) return null
-
-    // Get vault address based on current network
-    return network({
-      devnet: token.alphaVault.devnet.vault,
-      'mainnet-beta': token.alphaVault['mainnet-beta'].vault,
-    })
-  }, [auctionId])
-
   // Update input when wallet connects
   useEffect(() => {
     if (connected && publicKey) {
@@ -53,16 +35,16 @@ export default function WhitelistCheckerPage() {
   }
 
   const handleCheckWhitelist = async () => {
-    if (!walletAddress || !vaultId) return
+    if (!walletAddress) return
 
     setIsLoading(true)
     setStatus('checking')
     setErrorMessage('')
 
     try {
-      const whitelistInfo = await getWhitelistInfo(walletAddress, vaultId)
+      const isWhitelisted = await checkWhitelistStatus(walletAddress)
 
-      if (whitelistInfo.isWhitelisted) {
+      if (isWhitelisted) {
         setStatus('whitelisted')
       } else {
         setStatus('not_whitelisted')
@@ -132,9 +114,9 @@ export default function WhitelistCheckerPage() {
             {/* Check Button */}
             <Button
               onClick={handleCheckWhitelist}
-              disabled={!walletAddress || !vaultId || isLoading}
+              disabled={!walletAddress || isLoading}
               className={`w-full h-[45px] rounded-lg text-sm font-medium tracking-[-0.15px] flex items-center justify-center gap-1.5 ${
-                !walletAddress || !vaultId || isLoading
+                !walletAddress || isLoading
                   ? 'bg-[#b1b1b1] text-white/50 cursor-not-allowed hover:bg-[#b1b1b1]'
                   : 'bg-black text-white hover:bg-black/90'
               }`}
