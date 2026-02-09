@@ -9,6 +9,9 @@
  */
 
 import { BigNumber, math, type BigNumberValue } from '@/lib/bignumber'
+import { getGraphQLEndpoint } from '@/config'
+
+const GRAPHQL_ENDPOINT = getGraphQLEndpoint()
 
 export interface WhitelistInfo {
   isWhitelisted: boolean
@@ -17,54 +20,135 @@ export interface WhitelistInfo {
   proof: string[][] | null
 }
 
+interface UserRegisteredEvent {
+  signature: string
+  user: string
+  referral_code: string
+}
+
+interface ReferralCodeCreatedEvent {
+  code: string
+}
+
+interface UserInteractionQueryResult {
+  facts_referral_system_user_registered_events: UserRegisteredEvent[]
+  facts_referral_system_referral_code_created_events: ReferralCodeCreatedEvent[]
+}
+
+async function graphqlRequest<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      query,
+      variables,
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`GraphQL request failed: ${response.statusText}`)
+  }
+
+  const result = await response.json()
+
+  if (result.errors) {
+    throw new Error(result.errors[0]?.message || 'GraphQL query failed')
+  }
+
+  return result.data
+}
+
 /**
  * Check if a wallet is whitelisted and get their max cap for a specific vault
  * Phase 2: Uses vault-specific API endpoint to fetch only specific wallet's proof
+ *
+ * NOTE: This function is used by the auction page for actual deposits and requires merkle proof data.
+ * For whitelist checking only, use checkWhitelistStatus() instead.
  *
  * @param walletAddress - The wallet public key as a string
  * @param vaultId - The vault address to check whitelist for
  * @returns WhitelistInfo object with whitelist status and cap information
  */
 export async function getWhitelistInfo(walletAddress: string, vaultId: string): Promise<WhitelistInfo> {
-  try {
-    // Fetch proof for this specific wallet via vault-specific API (Phase 2)
-    const response = await fetch(`/api/merkle-proof/${walletAddress}?vaultId=${vaultId}`)
+  // Fetch proof for this specific wallet via vault-specific API (Phase 2)
+  const response = await fetch(`/api/merkle-proof/${walletAddress}?vaultId=${vaultId}`)
 
-    if (response.status === 404) {
-      // Wallet not whitelisted
-      return {
-        isWhitelisted: false,
-        maxCapRaw: null,
-        maxCapFormatted: null,
-        proof: null,
-      }
-    }
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch whitelist info: ${response.statusText}`)
-    }
-
-    const proofData = await response.json()
-
-    // maxCap is stored in smallest units (e.g., 10000000000 = 10,000 USDC with 6 decimals)
-    // Convert to human-readable format
-    const maxCapBigNumber = math`${BigNumber.from(proofData.maxCap)} / ${math`${10} ^ ${6}`}`
-
-    return {
-      isWhitelisted: true,
-      maxCapRaw: proofData.maxCap.toString(),
-      maxCapFormatted: maxCapBigNumber,
-      proof: proofData.proof.map((p: number[]) => p.map((n: number) => n.toString())),
-    }
-  } catch (error) {
-    console.error('Error fetching whitelist info:', error)
-    // Return not whitelisted on error
+  if (response.status === 404) {
+    // Wallet not whitelisted
     return {
       isWhitelisted: false,
       maxCapRaw: null,
       maxCapFormatted: null,
       proof: null,
     }
+  }
+
+  if (!response.ok) {
+    // Try to parse error message from response
+    let errorMessage = `HTTP ${response.status}: ${response.statusText}`
+    try {
+      const errorData = await response.json()
+      if (errorData.error) {
+        errorMessage = errorData.error
+      } else if (errorData.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // If parsing JSON fails, use the default error message
+    }
+    throw new Error(errorMessage)
+  }
+
+  const proofData = await response.json()
+
+  // maxCap is stored in smallest units (e.g., 10000000000 = 10,000 USDC with 6 decimals)
+  // Convert to human-readable format
+  const maxCapBigNumber = math`${BigNumber.from(proofData.maxCap)} / ${math`${10} ^ ${6}`}`
+
+  return {
+    isWhitelisted: true,
+    maxCapRaw: proofData.maxCap.toString(),
+    maxCapFormatted: maxCapBigNumber,
+    proof: proofData.proof.map((p: number[]) => p.map((n: number) => n.toString())),
+  }
+}
+
+/**
+ * Check if a user has interacted with the website (for whitelist checker page only)
+ * A user is considered whitelisted if they have either:
+ * - Registered with a referral code (facts_referral_system_user_registered_events)
+ * - Created a referral code (facts_referral_system_referral_code_created_events)
+ *
+ * @param walletAddress - The wallet public key as a string
+ * @returns boolean indicating if the user has interacted with the website
+ */
+export async function checkWhitelistStatus(walletAddress: string): Promise<boolean> {
+  const query = `
+    query GetUserInteraction($user: String!) {
+      facts_referral_system_user_registered_events(where: { user: { _eq: $user } }) {
+        signature
+        user
+        referral_code
+      }
+      facts_referral_system_referral_code_created_events(where: { owner: { _eq: $user } }) {
+        code
+      }
+    }
+  `
+
+  try {
+    const data = await graphqlRequest<UserInteractionQueryResult>(query, { user: walletAddress })
+
+    // User is whitelisted if they have either registered OR created a referral code
+    const hasRegistered = data.facts_referral_system_user_registered_events.length > 0
+    const hasCreatedCode = data.facts_referral_system_referral_code_created_events.length > 0
+
+    return hasRegistered || hasCreatedCode
+  } catch (error) {
+    console.error('Error checking whitelist status via GraphQL:', error)
+    throw new Error('Failed to check whitelist status. Please try again later.')
   }
 }
 

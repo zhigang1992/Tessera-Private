@@ -1,0 +1,163 @@
+import { useState, useEffect } from 'react'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { checkWhitelistStatus } from '@/lib/whitelist'
+import TesseraLogo from '@/assets/Terrera Logo.svg?react'
+import CheckCircleIcon from './components/check-circle.svg?react'
+import CancelIcon from './components/cancel.svg?react'
+import ElectricBoltIcon from './components/electric-bolt.svg?react'
+import BackgroundImage from './assets/check_whitelist_bg.png'
+import TSpaceXLogo from './assets/t-spacex-logo.png'
+
+type CheckStatus = 'idle' | 'checking' | 'whitelisted' | 'not_whitelisted' | 'error'
+
+export default function WhitelistCheckerPage() {
+  const { publicKey, connected } = useWallet()
+  const [walletAddress, setWalletAddress] = useState('')
+  const [status, setStatus] = useState<CheckStatus>('idle')
+  const [errorMessage, setErrorMessage] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Update input when wallet connects
+  useEffect(() => {
+    if (connected && publicKey) {
+      setWalletAddress(publicKey.toBase58())
+    }
+  }, [connected, publicKey])
+
+  const handleCheckWhitelist = async () => {
+    if (!walletAddress) return
+
+    setIsLoading(true)
+    setStatus('checking')
+    setErrorMessage('')
+
+    try {
+      const isWhitelisted = await checkWhitelistStatus(walletAddress)
+
+      if (isWhitelisted) {
+        setStatus('whitelisted')
+      } else {
+        setStatus('not_whitelisted')
+      }
+    } catch (error) {
+      console.error('Error checking whitelist:', error)
+      setStatus('error')
+
+      // Extract meaningful error message
+      if (error instanceof Error) {
+        setErrorMessage(error.message)
+      } else if (typeof error === 'string') {
+        setErrorMessage(error)
+      } else {
+        setErrorMessage('Failed to check whitelist. Please try again later.')
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 overflow-auto">
+      {/* Background with gradient */}
+      <div
+        className="fixed inset-0 bg-[#d2fb95]"
+        style={{
+          backgroundImage: `url(${BackgroundImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-16 w-full">
+          {/* Main Card */}
+          <div className="bg-white border border-[rgba(17,17,17,0.15)] rounded-2xl px-8 py-10 w-full max-w-[360px] flex flex-col gap-6 order-2 lg:order-1">
+            {/* Logo */}
+            <div className="flex flex-col gap-4 items-center">
+              <TesseraLogo className="h-8 w-auto" />
+
+              {/* Divider */}
+              <div className="h-px bg-[#e4e4e7] w-full" />
+
+              {/* Header */}
+              <div className="text-center w-full">
+                <h1 className="text-lg font-semibold leading-9 tracking-[0.07px] text-center">
+                  <span className="text-[#06a800]">Whitelist</span>
+                  <span className="text-black"> Checker</span>
+                </h1>
+                <p className="text-xs text-black leading-[1.5] tracking-[0.12px] mt-0">
+                  Enter your Solana address to check eligibility for Tessera.
+                </p>
+              </div>
+
+              {/* Wallet Address Input */}
+              <Input
+                type="text"
+                placeholder="Enter your Solana address..."
+                value={walletAddress}
+                onChange={(e) => setWalletAddress(e.target.value)}
+                className="h-14 px-4 text-base border-[#dddbd0] rounded-xl w-full tracking-[-0.625px] text-black placeholder:text-[#999]"
+              />
+            </div>
+
+            {/* Check Button */}
+            <Button
+              onClick={handleCheckWhitelist}
+              disabled={!walletAddress || isLoading}
+              className={`w-full h-[45px] rounded-lg text-sm font-medium tracking-[-0.15px] flex items-center justify-center gap-1.5 ${
+                !walletAddress || isLoading
+                  ? 'bg-[#b1b1b1] text-white/50 cursor-not-allowed hover:bg-[#b1b1b1]'
+                  : 'bg-black text-white hover:bg-black/90'
+              }`}
+            >
+              <ElectricBoltIcon className="w-4 h-4" />
+              {isLoading ? 'Checking...' : 'Check Whitelist'}
+            </Button>
+
+            {/* Status Display */}
+            {(status === 'not_whitelisted' || status === 'error') && (
+              <div className="bg-[#eee] rounded-lg px-4 py-3 flex items-center gap-2.5">
+                <CancelIcon className="w-6 h-6 text-red-600 shrink-0" />
+                <p className="text-xs text-black leading-[1.2] flex-1">
+                  {status === 'error'
+                    ? (errorMessage || 'An error occurred. Please try again.')
+                    : 'Sorry! Your address is not on the whitelist.'}
+                </p>
+              </div>
+            )}
+
+            {status === 'whitelisted' && (
+              <div className="bg-[#eee] rounded-lg px-4 py-3 flex items-center gap-2.5">
+                <CheckCircleIcon className="w-6 h-6 text-green-600 shrink-0" />
+                <p className="text-xs text-black leading-[1.2] flex-1">
+                  Congratulations! Your address is on the whitelist.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* T-SpaceX Logo - Desktop only */}
+          <div className="hidden lg:flex items-center justify-center order-1 lg:order-2">
+            <img
+              src={TSpaceXLogo}
+              alt="T-SpaceX"
+              className="w-[175px] h-[480px] object-contain"
+            />
+          </div>
+
+          {/* T-SpaceX Logo - Mobile */}
+          <div className="lg:hidden flex items-center justify-center order-1">
+            <img
+              src={TSpaceXLogo}
+              alt="T-SpaceX"
+              className="w-[73px] h-[200px] object-contain"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

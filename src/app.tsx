@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router'
 import { AppProviders } from '@/components/app-providers.tsx'
 import { MainLayout } from '@/components/layout'
-import { ReferralPage, LeaderboardPage, TradePage, DashboardPage, SupportPage, AuctionPage, ExplorePage } from '@/pages'
+import { ReferralPage, LeaderboardPage, TradePage, DashboardPage, SupportPage, AuctionPage, ExplorePage, WhitelistCheckerPage } from '@/pages'
 import { AuctionListPage } from '@/features/auction/pages/AuctionListPage'
 import { AuctionDetailPage } from '@/features/auction/pages/AuctionDetailPage'
 import { PRODUCTION_MODE } from '@/config'
@@ -37,6 +37,10 @@ export function App() {
             <Route
               path="/auction/:tokenId"
               element={PRODUCTION_MODE ? <Navigate to="/explorer" replace /> : <AuctionPage />}
+            />
+            <Route
+              path="/auction/:auctionId/whitelist"
+              element={<WhitelistCheckerPage />}
             />
             <Route
               path="/auctions"

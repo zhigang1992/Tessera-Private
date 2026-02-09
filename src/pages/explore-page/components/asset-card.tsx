@@ -73,6 +73,14 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
             Join Auction
           </Button>
         )}
+        {asset.status === 'whitelisting' && (
+          <Button
+            onClick={handleAction}
+            className="w-full rounded-lg py-2.5 px-4 bg-[#d2fb95] text-[#18181b] hover:bg-[#c5ed88] text-[13px] font-medium leading-normal flex items-center justify-center gap-1.5"
+          >
+            Check Whitelist
+          </Button>
+        )}
         {asset.status === 'coming_soon' && (
           <Button
             disabled
