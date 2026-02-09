@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useWallet } from '@/hooks/use-wallet-with-impersonation'
 import { useQuery } from '@tanstack/react-query'
 import { Share2 } from 'lucide-react'
 import { cn } from '@/lib/utils'

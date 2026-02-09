@@ -3,6 +3,7 @@ import { Sidebar } from './sidebar'
 import { Header } from './header'
 import { useHeader } from '@/contexts/header-context'
 import { CookieConsent } from '@/components/cookie-consent'
+import { ImpersonationBanner } from '@/components/impersonation-banner'
 
 interface MainLayoutProps {
   children: React.ReactNode
@@ -22,6 +23,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <div className="min-h-screen bg-[#f5f5f5] dark:bg-[#131314]">
+      <ImpersonationBanner />
       <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
       <div className="lg:pl-64">
         <Header onMenuClick={handleMenuClick} backButton={backButton} />

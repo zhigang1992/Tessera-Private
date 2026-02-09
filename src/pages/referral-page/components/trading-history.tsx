@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useWallet } from '@/hooks/use-wallet-with-impersonation'
 import { cn } from '@/lib/utils'
 import { getUserTradeHistory } from '@/services'
 import { Pagination } from '@/components/ui/pagination'
