@@ -17,6 +17,8 @@ export default function ExplorePage() {
       navigate(`/trade`)
     } else if (asset.status === 'auction') {
       navigate(`/auction/${asset.ticker}`)
+    } else if (asset.status === 'whitelisting') {
+      navigate(`/auction/${asset.ticker}/whitelist`)
     }
   }
 

@@ -26,45 +26,46 @@ export interface WhitelistInfo {
  * @returns WhitelistInfo object with whitelist status and cap information
  */
 export async function getWhitelistInfo(walletAddress: string, vaultId: string): Promise<WhitelistInfo> {
-  try {
-    // Fetch proof for this specific wallet via vault-specific API (Phase 2)
-    const response = await fetch(`/api/merkle-proof/${walletAddress}?vaultId=${vaultId}`)
+  // Fetch proof for this specific wallet via vault-specific API (Phase 2)
+  const response = await fetch(`/api/merkle-proof/${walletAddress}?vaultId=${vaultId}`)
 
-    if (response.status === 404) {
-      // Wallet not whitelisted
-      return {
-        isWhitelisted: false,
-        maxCapRaw: null,
-        maxCapFormatted: null,
-        proof: null,
-      }
-    }
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch whitelist info: ${response.statusText}`)
-    }
-
-    const proofData = await response.json()
-
-    // maxCap is stored in smallest units (e.g., 10000000000 = 10,000 USDC with 6 decimals)
-    // Convert to human-readable format
-    const maxCapBigNumber = math`${BigNumber.from(proofData.maxCap)} / ${math`${10} ^ ${6}`}`
-
-    return {
-      isWhitelisted: true,
-      maxCapRaw: proofData.maxCap.toString(),
-      maxCapFormatted: maxCapBigNumber,
-      proof: proofData.proof.map((p: number[]) => p.map((n: number) => n.toString())),
-    }
-  } catch (error) {
-    console.error('Error fetching whitelist info:', error)
-    // Return not whitelisted on error
+  if (response.status === 404) {
+    // Wallet not whitelisted
     return {
       isWhitelisted: false,
       maxCapRaw: null,
       maxCapFormatted: null,
       proof: null,
     }
+  }
+
+  if (!response.ok) {
+    // Try to parse error message from response
+    let errorMessage = `HTTP ${response.status}: ${response.statusText}`
+    try {
+      const errorData = await response.json()
+      if (errorData.error) {
+        errorMessage = errorData.error
+      } else if (errorData.message) {
+        errorMessage = errorData.message
+      }
+    } catch {
+      // If parsing JSON fails, use the default error message
+    }
+    throw new Error(errorMessage)
+  }
+
+  const proofData = await response.json()
+
+  // maxCap is stored in smallest units (e.g., 10000000000 = 10,000 USDC with 6 decimals)
+  // Convert to human-readable format
+  const maxCapBigNumber = math`${BigNumber.from(proofData.maxCap)} / ${math`${10} ^ ${6}`}`
+
+  return {
+    isWhitelisted: true,
+    maxCapRaw: proofData.maxCap.toString(),
+    maxCapFormatted: maxCapBigNumber,
+    proof: proofData.proof.map((p: number[]) => p.map((n: number) => n.toString())),
   }
 }
 

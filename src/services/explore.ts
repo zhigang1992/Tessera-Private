@@ -4,7 +4,7 @@ import { PRODUCTION_MODE } from '@/config'
 
 // ============ Types ============
 
-export type AssetStatus = 'trading' | 'auction' | 'coming_soon'
+export type AssetStatus = 'trading' | 'auction' | 'whitelisting' | 'coming_soon'
 
 export interface ExploreAsset {
   id: string
@@ -30,7 +30,7 @@ const exploreAssets: ExploreAsset[] = [
     headerImage: spacexBg,
     price: 421,
     valuation: '$800bn',
-    status: PRODUCTION_MODE ? "coming_soon" : 'auction',
+    status: PRODUCTION_MODE ? "coming_soon" : 'whitelisting',
   },
   {
     id: 'kalshi',
