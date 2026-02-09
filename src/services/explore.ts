@@ -30,7 +30,7 @@ const exploreAssets: ExploreAsset[] = [
     headerImage: spacexBg,
     price: 421,
     valuation: '$800bn',
-    status: PRODUCTION_MODE ? "coming_soon" : 'whitelisting',
+    status: 'whitelisting',
   },
   {
     id: 'kalshi',
