@@ -178,7 +178,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Navigation */}
           <nav className="flex-1 space-y-1 px-3 py-4">
             {visibleNavItems.map((item) => {
-              const isActive = location.pathname === item.path
+              const isActive = location.pathname.startsWith(item.path)
               return (
                 <Link
                   key={item.path}
@@ -246,7 +246,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Mobile Navigation */}
           <nav className="flex-1 space-y-1 px-4 pt-6">
             {visibleNavItems.map((item) => {
-              const isActive = location.pathname === item.path
+              const isActive = location.pathname.startsWith(item.path)
               return (
                 <Link
                   key={item.path}
