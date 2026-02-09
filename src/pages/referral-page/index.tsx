@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useWallet } from '@/hooks/use-wallet-with-impersonation'
 import { ReferralHeader } from './components/referral-header'
 import ReferralCodeModal from '@/features/referral/ui/referral-code-modal'
 import { TabSwitcher } from './components/tab-switcher'

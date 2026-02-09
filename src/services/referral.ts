@@ -5,6 +5,8 @@ import {
   fetchUserTradingVolume,
   fetchRewardDetailsByCode,
   fetchTradersForCode,
+  fetchTier2ReferralsForWallet,
+  fetchTier3ReferralsForWallet,
   fetchTradingPointsByAccount,
   type AggregatedAffiliateStats,
   type FeeByToken,
@@ -291,26 +293,25 @@ function formatBlockTime(blockTime: number): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-/**
- * Determine user tier based on their relationship to the referrer
- * - L1: Direct referral (user's tier1_referrer is the code owner)
- * - L2: Second level (user's tier2_referrer is the code owner)
- * - L3: Third level (user's tier3_referrer is the code owner)
- */
-function determineUserTier(
-  user: { tier1_referrer: string; tier2_referrer: string; tier3_referrer: string },
-  codeOwner: string
-): 'L1' | 'L2' | 'L3' {
-  if (user.tier1_referrer === codeOwner) return 'L1'
-  if (user.tier2_referrer === codeOwner) return 'L2'
-  return 'L3'
-}
-
 export async function getReferralUsersByCode(code: string): Promise<ReferralUser[]> {
-  // Fetch both registered users and reward details in parallel
-  const [registeredUsers, rewardDetails] = await Promise.all([
+  // Fetch tier-1 users (direct referrals using this code)
+  const [tier1Users, rewardDetails] = await Promise.all([
     fetchTradersForCode(code),
     fetchRewardDetailsByCode(code),
+  ])
+
+  // Get the code owner (wallet address) from tier-1 users
+  const codeOwner = tier1Users[0]?.tier1_referrer ?? ''
+
+  if (!codeOwner) {
+    // No users found for this code
+    return []
+  }
+
+  // Fetch tier-2 and tier-3 referrals for the code owner
+  const [tier2Users, tier3Users] = await Promise.all([
+    fetchTier2ReferralsForWallet(codeOwner),
+    fetchTier3ReferralsForWallet(codeOwner),
   ])
 
   // Create a map of rewards by wallet address for quick lookup
@@ -321,18 +322,22 @@ export async function getReferralUsersByCode(code: string): Promise<ReferralUser
     tierMap.set(detail.referral, detail.tier)
   }
 
-  // Get code owner from the first registered user's tier1_referrer (they all have the same code owner)
-  const codeOwner = registeredUsers[0]?.tier1_referrer ?? ''
+  // Combine all users with their tier information
+  const allUsers = [
+    ...tier1Users.map(user => ({ ...user, explicitTier: 1 as const })),
+    ...tier2Users.map(user => ({ ...user, explicitTier: 2 as const })),
+    ...tier3Users.map(user => ({ ...user, explicitTier: 3 as const })),
+  ]
 
-  // Map all registered users, merging in reward data if available
-  return registeredUsers.map((user, index) => {
+  // Sort by block_time descending (newest first)
+  allUsers.sort((a, b) => b.block_time - a.block_time)
+
+  // Map all users with their tier labels
+  return allUsers.map((user, index) => {
     const walletAddress = user.user
     const rewards = rewardsMap.get(walletAddress) ?? []
-    // Use tier from rewards table if available (more accurate for rewards), otherwise derive from registration
-    const tierFromRewards = tierMap.get(walletAddress)
-    const layer = tierFromRewards
-      ? tierToLayer(tierFromRewards)
-      : determineUserTier(user, codeOwner)
+    // Use explicit tier (from which query fetched it)
+    const layer = tierToLayer(user.explicitTier)
 
     return {
       id: `${code}-${walletAddress}-${index}`,

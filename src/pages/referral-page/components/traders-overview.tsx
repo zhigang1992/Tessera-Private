@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useWallet } from '@/hooks/use-wallet-with-impersonation'
 import TableViewIcon from './_/table-view.svg?react'
 import { getTradersOverview, formatCurrency } from '@/services'
 import { useTraderData, useBindReferralCode } from '@/features/referral/hooks/use-referral-onchain'
