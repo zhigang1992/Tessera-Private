@@ -35,7 +35,7 @@ const exploreAssets: ExploreAsset[] = [
   {
     id: 'kalshi',
     name: 'Kalshi',
-    ticker: 'KLSH',
+    ticker: 'T-Kalshi',
     category: 'Prediction Markets',
     headerColor: '#1a3a2e',
     headerImage: kalshiBg,
