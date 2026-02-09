@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'react-router'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { getWhitelistInfo } from '@/lib/whitelist'
+import { resolveTokenIdFromParam, getAppToken, network } from '@/config'
 import TesseraLogo from '@/assets/Terrera Logo.svg?react'
 import CheckCircleIcon from './components/check-circle.svg?react'
 import CancelIcon from './components/cancel.svg?react'
@@ -23,6 +24,23 @@ export default function WhitelistCheckerPage() {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
 
+  // Resolve token and vault ID from URL param
+  const vaultId = useMemo(() => {
+    if (!auctionId) return null
+
+    const tokenId = resolveTokenIdFromParam(auctionId)
+    if (!tokenId) return null
+
+    const token = getAppToken(tokenId)
+    if (!token.alphaVault) return null
+
+    // Get vault address based on current network
+    return network({
+      devnet: token.alphaVault.devnet.vault,
+      'mainnet-beta': token.alphaVault['mainnet-beta'].vault,
+    })
+  }, [auctionId])
+
   // Update input when wallet connects
   useEffect(() => {
     if (connected && publicKey) {
@@ -35,17 +53,13 @@ export default function WhitelistCheckerPage() {
   }
 
   const handleCheckWhitelist = async () => {
-    if (!walletAddress || !auctionId) return
+    if (!walletAddress || !vaultId) return
 
     setIsLoading(true)
     setStatus('checking')
     setErrorMessage('')
 
     try {
-      // Mock vault ID for T-SpaceX auction
-      // In production, this would come from auction configuration
-      const vaultId = 'AlphaSpaceXVault'
-
       const whitelistInfo = await getWhitelistInfo(walletAddress, vaultId)
 
       if (whitelistInfo.isWhitelisted) {
@@ -71,10 +85,10 @@ export default function WhitelistCheckerPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="fixed inset-0 overflow-auto">
       {/* Background with gradient */}
       <div
-        className="absolute inset-0 bg-[#d2fb95]"
+        className="fixed inset-0 bg-[#d2fb95]"
         style={{
           backgroundImage: `url(${BackgroundImage})`,
           backgroundSize: 'cover',
@@ -84,7 +98,7 @@ export default function WhitelistCheckerPage() {
 
       {/* Content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-        <div className="flex flex-col lg:flex-row items-center gap-16 max-w-7xl w-full">
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-16 w-full">
           {/* Main Card */}
           <div className="bg-white border border-[rgba(17,17,17,0.15)] rounded-2xl px-8 py-10 w-full max-w-[360px] flex flex-col gap-6 order-2 lg:order-1">
             {/* Logo */}
@@ -118,9 +132,9 @@ export default function WhitelistCheckerPage() {
             {/* Check Button */}
             <Button
               onClick={handleCheckWhitelist}
-              disabled={!walletAddress || isLoading}
+              disabled={!walletAddress || !vaultId || isLoading}
               className={`w-full h-[45px] rounded-lg text-sm font-medium tracking-[-0.15px] flex items-center justify-center gap-1.5 ${
-                !walletAddress || isLoading
+                !walletAddress || !vaultId || isLoading
                   ? 'bg-[#b1b1b1] text-white/50 cursor-not-allowed hover:bg-[#b1b1b1]'
                   : 'bg-black text-white hover:bg-black/90'
               }`}
