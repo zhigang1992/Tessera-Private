@@ -13,9 +13,10 @@ interface ReferralCodeModalProps {
   isOpen: boolean
   onClose: () => void
   referralCode: string
+  existingBoundCode?: string | null
 }
 
-export default function ReferralCodeModal({ isOpen, onClose, referralCode }: ReferralCodeModalProps) {
+export default function ReferralCodeModal({ isOpen, onClose, referralCode, existingBoundCode }: ReferralCodeModalProps) {
   const { connected, publicKey, disconnect } = useWallet()
   const accountAddress = publicKey?.toBase58()
   const bindMutation = useBindReferralCode()
@@ -81,6 +82,7 @@ export default function ReferralCodeModal({ isOpen, onClose, referralCode }: Ref
               bindPending={bindMutation.isPending}
               accountAddress={accountAddress!}
               onClose={onClose}
+              existingBoundCode={existingBoundCode}
             />
           ) : (
             <WalletDropdown
@@ -105,6 +107,7 @@ interface ReferralCodeModalConnectedProps {
   bindPending: boolean
   accountAddress: string
   onClose: () => void
+  existingBoundCode?: string | null
 }
 
 function ReferralCodeModalConnected({
@@ -113,6 +116,7 @@ function ReferralCodeModalConnected({
   bindPending,
   accountAddress,
   onClose,
+  existingBoundCode,
 }: ReferralCodeModalConnectedProps) {
   const handleBindReferralCode = useCallback(async () => {
     if (!accountAddress) {
@@ -135,14 +139,20 @@ function ReferralCodeModalConnected({
     }
   }, [accountAddress, bindReferralCode, onClose, referralCode])
 
+  const hasExistingCode = !!existingBoundCode
   const isProcessing = bindPending
-  const buttonLabel = bindPending ? 'Binding...' : 'Bind Referral Code'
+  const buttonLabel = hasExistingCode ? 'Already binded' : (bindPending ? 'Binding...' : 'Bind Referral Code')
 
   return (
     <>
+      {hasExistingCode && (
+        <div className="text-xs text-center text-muted-foreground">
+          You have already bound code: <span className="font-semibold text-foreground">{existingBoundCode}</span>
+        </div>
+      )}
       <Button
         onClick={handleBindReferralCode}
-        disabled={isProcessing}
+        disabled={isProcessing || hasExistingCode}
         className="flex w-full items-center gap-2 rounded-lg bg-primary py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
       >
         {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}

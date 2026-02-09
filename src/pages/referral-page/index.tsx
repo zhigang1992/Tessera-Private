@@ -12,12 +12,17 @@ import { TradingHistory } from './components/trading-history'
 import { TradersRulesFaq } from './components/traders-rules-faq'
 import { setCurrentWalletAddress, clearAffiliateStatsCache } from '@/services'
 import { PRODUCTION_MODE } from '@/config'
+import { useTraderData } from '@/features/referral/hooks/use-referral-onchain'
 
 export default function ReferralPage() {
   const { publicKey } = useWallet()
+  const walletAddress = publicKey?.toBase58()
   const [activeTab, setActiveTab] = useState<'affiliates' | 'traders'>('affiliates')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [referralCode, setReferralCode] = useState<string | null>(null)
+
+  // Fetch trader data to check if user already has a bound referral code
+  const { data: traderData } = useTraderData(walletAddress, !!walletAddress)
 
   // Set wallet address for service layer
   useEffect(() => {
@@ -88,7 +93,12 @@ export default function ReferralPage() {
 
       {/* Referral Code Bind Modal - triggered by ?code=xxx URL parameter */}
       {referralCode && (
-        <ReferralCodeModal isOpen={isModalOpen} onClose={handleCloseModal} referralCode={referralCode} />
+        <ReferralCodeModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          referralCode={referralCode}
+          existingBoundCode={traderData?.referral?.referrerCode ?? null}
+        />
       )}
     </div>
   )
