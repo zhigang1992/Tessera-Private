@@ -23,7 +23,7 @@ export default function HowToJoinWhitelist() {
           <div className="flex gap-2.5 items-center justify-center w-full">
             <div className="bg-black dark:bg-white flex items-center justify-center px-2 py-1 rounded-full shrink-0 w-[80px]">
               <p className="text-xs font-normal leading-[1.5] tracking-[0.12px] text-white dark:text-black">
-                Method 1
+                Step 1
               </p>
             </div>
             <p className="flex-1 text-xs font-normal leading-[1.5] tracking-[0.12px] text-black dark:text-[#d2d2d2]">
@@ -38,7 +38,7 @@ export default function HowToJoinWhitelist() {
           <div className="flex gap-2.5 items-center justify-center w-full">
             <div className="bg-black dark:bg-white flex items-center justify-center px-2 py-1 rounded-full shrink-0 w-[80px]">
               <p className="text-xs font-normal leading-[1.5] tracking-[0.12px] text-white dark:text-black">
-                Method 2
+                Step 2
               </p>
             </div>
             <p className="flex-1 text-xs font-normal leading-[1.5] tracking-[0.12px] text-black dark:text-[#d2d2d2]">
