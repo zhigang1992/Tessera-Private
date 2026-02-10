@@ -399,7 +399,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
                   <p className="leading-4">Route</p>
                 </div>
                 <div className="flex flex-col justify-center text-[#1d8f00]">
-                  <p className="leading-4">Jupiter Aggregator</p>
+                  <p className="leading-4">{quote.routeLabel}</p>
                 </div>
               </div>
               <div className="flex items-center justify-between text-xs leading-4">
@@ -407,7 +407,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
                   <p className="leading-4">Price Impact</p>
                 </div>
                 <div className="flex flex-col justify-center text-[#1d8f00]">
-                  <p className="leading-4">{(parseFloat(quote.priceImpactPct || '0') * 100).toFixed(2)}%</p>
+                  <p className="leading-4">{(-parseFloat(quote.priceImpactPct || '0') * 100).toFixed(2)}%</p>
                 </div>
               </div>
             </div>

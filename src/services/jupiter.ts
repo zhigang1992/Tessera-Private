@@ -6,7 +6,7 @@
  */
 
 import { Connection, PublicKey, VersionedTransaction } from '@solana/web3.js'
-import { createJupiterApiClient, type QuoteResponse, type SwapResponse } from '@jup-ag/api'
+import { createJupiterApiClient, type QuoteResponse, type SwapResponse, type RoutePlanStep } from '@jup-ag/api'
 import { BigNumber, math, mathIs, formatBigNumber, type BigNumberValue } from '@/lib/bignumber'
 
 export interface JupiterSwapQuote {
@@ -28,6 +28,10 @@ export interface JupiterSwapQuote {
   minOutAmountValue: BigNumberValue
   rateValue: BigNumberValue
 
+  // Route information
+  routePlan: RoutePlanStep[]
+  routeLabel: string // Human-readable route string (e.g., "Raydium → Orca")
+
   // Original quote response for transaction building
   _rawQuote: QuoteResponse
 }
@@ -40,6 +44,38 @@ export class JupiterClient {
 
   constructor(_connection: Connection, apiKey?: string) {
     this.jupiterApi = createJupiterApiClient(apiKey ? { apiKey } : undefined)
+  }
+
+  /**
+   * Format route plan into a human-readable string
+   * @param routePlan - Array of route plan steps from Jupiter
+   * @returns Formatted route string (e.g., "Raydium → Orca" or "Raydium (50%) + Orca (50%)")
+   */
+  private formatRoutePlan(routePlan: RoutePlanStep[]): string {
+    if (routePlan.length === 0) {
+      return 'Jupiter Aggregator'
+    }
+
+    // Check if this is a split route (multiple swaps at same level with percentages)
+    const hasSplitRoute = routePlan.some(step => step.percent !== null && step.percent !== undefined)
+
+    if (hasSplitRoute) {
+      // Format as split route: "Raydium (50%) + Orca (50%)"
+      const splits = routePlan
+        .map(step => {
+          const label = step.swapInfo.label || 'Unknown DEX'
+          const percent = step.percent ? `${step.percent}%` : '100%'
+          return `${label} (${percent})`
+        })
+        .join(' + ')
+      return splits
+    } else {
+      // Format as sequential route: "Raydium → Orca → Meteora"
+      const labels = routePlan
+        .map(step => step.swapInfo.label || 'Unknown DEX')
+        .filter((label, index, arr) => arr.indexOf(label) === index) // Remove duplicates
+      return labels.join(' → ')
+    }
   }
 
   /**
@@ -82,6 +118,10 @@ export class JupiterClient {
     const rateBigNum = mathIs`${inBigNum} > ${0}` ? math`${outBigNum} / ${inBigNum}` : BigNumber.from(0)
     const rate = formatBigNumber(rateBigNum, { minimumFractionDigits: 6, maximumFractionDigits: 6 })
 
+    // Format route information
+    const routePlan = quote.routePlan || []
+    const routeLabel = this.formatRoutePlan(routePlan)
+
     return {
       inAmount: quote.inAmount,
       outAmount: quote.outAmount,
@@ -95,6 +135,8 @@ export class JupiterClient {
       outAmountValue: outBigNum,
       minOutAmountValue: BigNumber.from(minOutAmountFormatted),
       rateValue: rateBigNum,
+      routePlan,
+      routeLabel,
       _rawQuote: quote,
     }
   }
