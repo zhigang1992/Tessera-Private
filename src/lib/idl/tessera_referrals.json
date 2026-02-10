@@ -1,5 +1,5 @@
 {
-  "address": "HiA4mhg5viZhiPHsJg2rEo2B5L2TNnNkwDi6AzCT9eD4",
+  "address": "TESMgr3q4s1CK5nGz7bmkbMQBQeSt8N9wpZjTDWm2cY",
   "metadata": {
     "name": "tessera_referrals",
     "version": "0.1.0",
@@ -135,6 +135,40 @@
           }
         },
         {
+          "name": "code_registry",
+          "docs": [
+            "Close the global registry entry to free the code string for reuse."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  100,
+                  101,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "referral_code.code",
+                "account": "ReferralCode"
+              }
+            ]
+          }
+        },
+        {
           "name": "admin_list",
           "pda": {
             "seeds": [
@@ -212,6 +246,40 @@
           }
         },
         {
+          "name": "code_registry",
+          "docs": [
+            "Global registry ensuring unique code strings across all owners.",
+            "Will fail if another owner already created a code with the same string."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  100,
+                  101,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "code"
+              }
+            ]
+          }
+        },
+        {
           "name": "admin_list",
           "pda": {
             "seeds": [
@@ -257,6 +325,133 @@
           "type": "pubkey"
         }
       ]
+    },
+    {
+      "name": "admin_migrate_code_registry",
+      "docs": [
+        "Migration: backfill CodeRegistry entries for existing referral codes.",
+        "Call once per existing code to establish global uniqueness."
+      ],
+      "discriminator": [
+        45,
+        245,
+        224,
+        252,
+        15,
+        219,
+        41,
+        15
+      ],
+      "accounts": [
+        {
+          "name": "referral_code",
+          "docs": [
+            "The existing referral code account (must already exist on-chain)."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  100,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "referral_code.code",
+                "account": "ReferralCode"
+              },
+              {
+                "kind": "account",
+                "path": "referral_code.owner",
+                "account": "ReferralCode"
+              }
+            ]
+          }
+        },
+        {
+          "name": "code_registry",
+          "docs": [
+            "The code registry entry to create (will fail if it already exists)."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  100,
+                  101,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "referral_code.code",
+                "account": "ReferralCode"
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin_list",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  100,
+                  109,
+                  105,
+                  110,
+                  95,
+                  108,
+                  105,
+                  115,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
     },
     {
       "name": "admin_register_with_referral_code",
@@ -636,6 +831,40 @@
               {
                 "kind": "account",
                 "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "code_registry",
+          "docs": [
+            "Global registry ensuring unique code strings across all owners.",
+            "Will fail if another owner already created a code with the same string."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  100,
+                  101,
+                  95,
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "code"
               }
             ]
           }
@@ -1386,6 +1615,19 @@
       ]
     },
     {
+      "name": "CodeRegistry",
+      "discriminator": [
+        71,
+        176,
+        34,
+        116,
+        213,
+        108,
+        172,
+        83
+      ]
+    },
+    {
       "name": "ReferralCode",
       "discriminator": [
         227,
@@ -1571,7 +1813,7 @@
     {
       "code": 6002,
       "name": "CannotUseSelfReferralCode",
-      "msg": "You can't use your own referral code. Please use a code from another user."
+      "msg": "Cannot use your own referral code."
     },
     {
       "code": 6003,
@@ -1667,6 +1909,11 @@
       "code": 6021,
       "name": "InvalidTierOrdering",
       "msg": "Invalid tier percentages. Must follow: Tier1 >= Tier2 >= Tier3."
+    },
+    {
+      "code": 6022,
+      "name": "ReferralCodeAlreadyTaken",
+      "msg": "Referral code string is already taken by another owner."
     }
   ],
   "types": [
@@ -1739,6 +1986,24 @@
           {
             "name": "timestamp",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CodeRegistry",
+      "docs": [
+        "Global registry to enforce unique referral code strings across all owners.",
+        "Seeds: [b\"code_registry\", code.as_bytes()]",
+        "This PDA ensures no two owners can create the same code string.",
+        "The mere existence of this account indicates the code is taken."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }

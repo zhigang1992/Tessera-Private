@@ -108,6 +108,15 @@ export function getUserRegistrationPDA(userPubkey: PublicKey, programId?: Public
   return PublicKey.findProgramAddressSync([Buffer.from('user_registration'), userPubkey.toBuffer()], id)
 }
 
+/**
+ * Derive the code registry PDA for global uniqueness
+ * Seeds: ["code_registry", code.as_bytes()]
+ */
+export function getCodeRegistryPDA(code: string, programId?: PublicKey): [PublicKey, number] {
+  const id = resolveProgramId(programId)
+  return PublicKey.findProgramAddressSync([Buffer.from('code_registry'), Buffer.from(code)], id)
+}
+
 export function getTokenAuthorityPDA(referralConfig?: PublicKey, programId?: PublicKey): [PublicKey, number] {
   const id = resolveProgramId(programId)
   const [defaultReferralConfig] = getReferralConfigPDA(id)
@@ -528,9 +537,11 @@ export async function checkReferralCodeAvailability(
  */
 export function getCreateReferralCodeAccounts(code: string, ownerPubkey: PublicKey, programId?: PublicKey) {
   const [referralCodePDA] = getReferralCodePDA(code, ownerPubkey, programId)
+  const [codeRegistryPDA] = getCodeRegistryPDA(code, programId)
 
   return {
     referralCode: referralCodePDA,
+    codeRegistry: codeRegistryPDA,
     owner: ownerPubkey,
     systemProgram: SystemProgram.programId,
   }

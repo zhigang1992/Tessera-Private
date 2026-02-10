@@ -35,12 +35,12 @@ export const CURRENT_NETWORK: SolanaNetwork = (() => {
 
   // Fall back to hostname detection
   if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname
     const query = window.location.search
     if (query.includes('network=mainnet')) {
       return 'mainnet-beta'
     }
-    return hostname.includes('dev') ? 'devnet' : 'mainnet-beta'
+    const hostname = window.location.hostname
+    return hostname.includes('dev') || hostname.includes('localhost') ? 'devnet' : 'mainnet-beta'
   }
 
   // Default to devnet for SSR or unknown environments
