@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
-import { useMeteoraSwap, type SwapDirection } from '@/hooks/use-meteora-swap'
+import { useJupiterSwap, type SwapDirection } from '@/hooks/use-jupiter-swap'
 import { DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getAppToken, getExplorerUrl, getTokenDecimals } from '@/config'
 import { BigNumber } from '@/lib/bignumber'
 import { AppTokenIcon } from '@/components/app-token-icon'
@@ -36,7 +36,6 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
   const {
     isLoading,
     error,
-    poolInfo,
     quote,
     txSignature,
     usdcBalance,
@@ -46,7 +45,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
     executeSwap,
     refreshBalances,
     clearError,
-  } = useMeteoraSwap()
+  } = useJupiterSwap()
 
   // State for vault-based countdown config
   const [countdownConfig, setCountdownConfig] = useState<CountdownConfig>({ type: 'disabled' })
@@ -397,10 +396,10 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
               </div>
               <div className="flex items-center justify-between text-xs leading-4">
                 <div className="flex flex-col justify-center text-[#52525b]">
-                  <p className="leading-4">Dynamic Fee</p>
+                  <p className="leading-4">Route</p>
                 </div>
                 <div className="flex flex-col justify-center text-[#1d8f00]">
-                  <p className="leading-4">{poolInfo?.dynamicFeePercentage ? (parseFloat(poolInfo.dynamicFeePercentage) * 100).toFixed(2) : '...'}%</p>
+                  <p className="leading-4">Jupiter Aggregator</p>
                 </div>
               </div>
               <div className="flex items-center justify-between text-xs leading-4">
@@ -408,7 +407,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
                   <p className="leading-4">Price Impact</p>
                 </div>
                 <div className="flex flex-col justify-center text-[#1d8f00]">
-                  <p className="leading-4">{(parseFloat(quote.priceImpact) * 100).toFixed(2)}%</p>
+                  <p className="leading-4">{parseFloat(quote.priceImpactPct || '0').toFixed(2)}%</p>
                 </div>
               </div>
             </div>

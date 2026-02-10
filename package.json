@@ -32,6 +32,7 @@
   "type": "module",
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
+    "@jup-ag/api": "^6.0.48",
     "@meteora-ag/alpha-vault": "^1.1.15",
     "@meteora-ag/dlmm": "^1.9.0",
     "@noble/curves": "^1.4.2",
