@@ -100,11 +100,15 @@ export interface AffiliateStatsQueryResult {
   public_marts_referral_count_by_tier_account: ReferralTierStats[]
 }
 
+// Legacy query result types - kept for backward compatibility but no longer used
+// All functions now use inline types with view_latest_* tables
 export interface ReferralCodesQueryResult {
+  /** @deprecated Use inline type with view_latest_referral_system_referral_code_created_events */
   facts_referral_system_referral_code_created_events: ReferralCodeCreatedEvent[]
 }
 
 export interface UserRegistrationQueryResult {
+  /** @deprecated Use inline type with view_latest_user_registered_events */
   facts_referral_system_user_registered_events: UserRegisteredEvent[]
 }
 
@@ -612,6 +616,7 @@ export interface DashboardStatsResult {
 
 /**
  * Fetch dashboard statistics: total trading volume and active traders
+ * Updated to use deduplicated view for trader count
  */
 export async function fetchDashboardStats(): Promise<DashboardStatsResult> {
   const query = `
@@ -623,7 +628,7 @@ export async function fetchDashboardStats(): Promise<DashboardStatsResult> {
           }
         }
       }
-      facts_referral_system_user_registered_events_aggregate {
+      view_latest_user_registered_events_aggregate {
         aggregate {
           count
         }
@@ -639,7 +644,7 @@ export async function fetchDashboardStats(): Promise<DashboardStatsResult> {
         }
       }
     }
-    facts_referral_system_user_registered_events_aggregate: {
+    view_latest_user_registered_events_aggregate: {
       aggregate: {
         count: number
       }
@@ -650,7 +655,7 @@ export async function fetchDashboardStats(): Promise<DashboardStatsResult> {
 
   return {
     totalTradingVolume: totalVolume ? hasuraToNumber(totalVolume) : 0,
-    totalTraders: data.facts_referral_system_user_registered_events_aggregate.aggregate.count,
+    totalTraders: data.view_latest_user_registered_events_aggregate.aggregate.count,
   }
 }
 
