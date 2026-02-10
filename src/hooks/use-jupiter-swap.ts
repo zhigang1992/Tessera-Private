@@ -16,6 +16,7 @@ import {
   type JupiterSwapQuote,
 } from '@/services/jupiter'
 import { type BigNumberValue, fromTokenAmount, parseAmount, ZERO, isZero } from '@/lib/bignumber'
+import { addTermsAcceptanceMemoToVersionedTx, MemoType } from '@/lib/transaction-memo'
 import {
   DEFAULT_BASE_TOKEN_ID,
   QUOTE_TOKEN_ID,
@@ -217,13 +218,15 @@ export function useJupiterSwap(): UseJupiterSwapReturn {
         // Create swap transaction from Jupiter
         const swapTx = await client.createSwapTransaction(swapQuote, wallet.publicKey)
 
-        // Jupiter returns a VersionedTransaction, which doesn't support adding instructions the same way
-        // For terms acceptance memo, we'll need to handle it differently or skip it for now
-        // Note: VersionedTransaction doesn't have the same addInstruction API as legacy Transaction
-        // We may need to rebuild the transaction or handle memos differently
+        // Add terms acceptance memo to the versioned transaction
+        const swapTxWithMemo = addTermsAcceptanceMemoToVersionedTx(
+          swapTx,
+          wallet.publicKey,
+          MemoType.TRADING
+        )
 
         // Sign the transaction
-        const signed = await wallet.signTransaction(swapTx)
+        const signed = await wallet.signTransaction(swapTxWithMemo)
 
         // Simulate transaction before sending
         const { value: simulatedTransactionResponse } = await connection.simulateTransaction(signed, {

@@ -7,7 +7,14 @@
  * Cost impact: Zero - memos are additional instructions with no extra fee.
  */
 
-import { TransactionInstruction, PublicKey, Transaction, ComputeBudgetProgram } from '@solana/web3.js'
+import {
+  TransactionInstruction,
+  PublicKey,
+  Transaction,
+  VersionedTransaction,
+  TransactionMessage,
+  ComputeBudgetProgram,
+} from '@solana/web3.js'
 
 /**
  * SPL Memo Program ID
@@ -97,4 +104,48 @@ export function addTermsAcceptanceMemo(
   ensureComputeBudget(transaction)
 
   return transaction
+}
+
+/**
+ * Adds a terms acceptance memo to a VersionedTransaction
+ *
+ * @param transaction - The VersionedTransaction to add the memo to
+ * @param signer - The public key of the transaction signer
+ * @param type - The type of terms being accepted
+ * @returns A new VersionedTransaction with the memo instruction added and compute budget ensured
+ */
+export function addTermsAcceptanceMemoToVersionedTx(
+  transaction: VersionedTransaction,
+  signer: PublicKey,
+  type: MemoType
+): VersionedTransaction {
+  // Decompose the versioned transaction
+  const message = TransactionMessage.decompile(transaction.message)
+
+  // Create memo instruction
+  const memoIx = createMemoInstruction(type, signer)
+
+  // Set compute unit limit to 200,000 (sufficient for swap + memo)
+  const computeLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
+    units: 200_000,
+  })
+
+  // Remove any existing compute budget instructions
+  const COMPUTE_BUDGET_PROGRAM_ID = ComputeBudgetProgram.programId.toBase58()
+  const nonComputeBudgetInstructions = message.instructions.filter(
+    (ix) => ix.programId.toBase58() !== COMPUTE_BUDGET_PROGRAM_ID
+  )
+
+  // Rebuild with compute budget at the start, followed by other instructions, and memo at the end
+  const newInstructions = [computeLimitIx, ...nonComputeBudgetInstructions, memoIx]
+
+  // Create new transaction message with updated instructions
+  const newMessage = new TransactionMessage({
+    payerKey: message.payerKey,
+    recentBlockhash: message.recentBlockhash,
+    instructions: newInstructions,
+  }).compileToV0Message()
+
+  // Create and return new VersionedTransaction
+  return new VersionedTransaction(newMessage)
 }
