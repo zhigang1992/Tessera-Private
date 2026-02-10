@@ -1,10 +1,12 @@
+import { useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import ArrowForwardIcon from './arrow-forward.svg?react'
 
 export default function HowToJoinWhitelist() {
+  const navigate = useNavigate()
+
   const handleGoToReferral = () => {
-    // Navigate to referral page
-    window.location.href = '/referral'
+    navigate('/referral')
   }
 
   return (
