@@ -282,7 +282,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       type: 'PRE-IPO',
       website: 'https://spacex.com',
       description:
-        'T-SpaceX is a synthetic asset engineered to track the valuation of SpaceX equity in private secondary markets.',
+        'T-SpaceX represents a loan position where token holders lend stablecoins to Tessera Issuer Inc or its subsidiaries. Tokens provide economic exposure to SpaceX and are redeemable following divestment of the underlying exposure. This is a loan product, not a security - token holders have no ownership, voting, or dividend rights in SpaceX. By owning and using this token, you accept and agree to be bound by the Terms and Conditions available at https://terms.tessera.pe',
       auctionMechanism:
         'Funds are deposited into a single liquidity bin. The auction runs for a set duration. If oversubscribed, participants receive a pro-rata share based on their contribution.',
     },

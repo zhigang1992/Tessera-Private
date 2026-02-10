@@ -43,7 +43,24 @@ export function TokenInfoCard() {
         </div>
 
         {metadata.description && (
-          <p className="text-sm text-foreground leading-relaxed">{metadata.description}</p>
+          <p className="text-sm text-foreground leading-relaxed">
+            {metadata.description.split(/(https?:\/\/[^\s]+)/g).map((part, index) => {
+              if (part.match(/^https?:\/\//)) {
+                return (
+                  <a
+                    key={index}
+                    href={part}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#06a800] hover:underline"
+                  >
+                    {part}
+                  </a>
+                )
+              }
+              return part
+            })}
+          </p>
         )}
 
         {(metadata.auctionMechanism || metadata.vestingTerms) && (
