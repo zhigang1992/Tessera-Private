@@ -7,8 +7,9 @@ import { useTraderData, useBindReferralCode } from '@/features/referral/hooks/us
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Info } from 'lucide-react'
 import { toast } from 'sonner'
+import * as Tooltip from '@radix-ui/react-tooltip'
 
 export function TradersOverview() {
   const { connected, publicKey } = useWallet()
@@ -81,10 +82,34 @@ export function TradersOverview() {
           <TableViewIcon className="size-14 text-zinc-700 shrink-0" />
         </div>
 
-        {/* Active Referral Code Card */}
+        {/* Referred By Card */}
         <div className="flex-1 flex items-center justify-between bg-white dark:bg-[#323334] rounded-[16px] px-4 py-6 border dark:border-[rgba(210,210,210,0.1)] border-[rgba(17,17,17,0.15)]">
           <div className="flex flex-col gap-[5px] w-full">
-            <p className="text-[12px] text-zinc-900 dark:text-[#d2d2d2]">Active referral code</p>
+            <div className="flex items-center gap-1">
+              <p className="text-[12px] text-zinc-900 dark:text-[#d2d2d2]">Referred By</p>
+              <Tooltip.Provider delayDuration={0}>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center touch-manipulation p-0.5"
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      <Info className="w-3 h-3 text-[#71717a] cursor-help" />
+                    </button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content
+                      className="max-w-[280px] px-3 py-2 bg-black text-white text-xs leading-[1.4] rounded-lg z-50 shadow-lg"
+                      sideOffset={4}
+                      side="bottom"
+                    >
+                      Referral code used by this account
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
+            </div>
             <div className="flex items-center w-full">
               {showCodeDash ? (
                 <div className="bg-[#d2fb95] w-full rounded-[4px] px-6 h-10 flex items-center justify-center">
