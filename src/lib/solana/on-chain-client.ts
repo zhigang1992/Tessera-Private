@@ -403,8 +403,7 @@ export async function findReferralCodeByString(
 } | null> {
   const program = getReferralProgram(connection, null)
   if (!program) {
-    console.error('findReferralCodeByString: Failed to get program')
-    return null
+    throw new Error('findReferralCodeByString: Failed to get program')
   }
 
   try {
@@ -497,8 +496,7 @@ export async function findReferralCodeByString(
 
     return null
   } catch (error) {
-    console.error('findReferralCodeByString: Error searching for code:', error)
-    return null
+    throw error
   }
 }
 
