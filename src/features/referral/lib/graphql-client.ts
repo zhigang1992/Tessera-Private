@@ -283,13 +283,14 @@ export async function fetchAffiliateStats(walletAddress: string): Promise<Aggreg
 
 /**
  * Fetch referral codes created by a wallet
+ * Updated to use deduplicated view instead of event table
  */
 export async function fetchReferralCodesByOwner(
   ownerAddress: string
 ): Promise<ReferralCodeCreatedEvent[]> {
   const query = `
     query GetReferralCodes($owner: String!) {
-      facts_referral_system_referral_code_created_events(
+      view_latest_referral_system_referral_code_created_events(
         where: { owner: { _eq: $owner } }
         order_by: { block_time: desc }
       ) {
@@ -302,19 +303,21 @@ export async function fetchReferralCodesByOwner(
     }
   `
 
-  const data = await graphqlRequest<ReferralCodesQueryResult>(query, { owner: ownerAddress })
-  return data.facts_referral_system_referral_code_created_events
+  const data = await graphqlRequest<{
+    view_latest_referral_system_referral_code_created_events: ReferralCodeCreatedEvent[]
+  }>(query, { owner: ownerAddress })
+  return data.view_latest_referral_system_referral_code_created_events
 }
 
 /**
  * Fetch user registration info (what referral code they're bound to)
+ * Updated to use deduplicated view instead of event table
  */
 export async function fetchUserRegistration(userAddress: string): Promise<UserRegisteredEvent | null> {
   const query = `
     query GetUserRegistration($user: String!) {
-      facts_referral_system_user_registered_events(
+      view_latest_user_registered_events(
         where: { user: { _eq: $user } }
-        order_by: { block_time: desc }
         limit: 1
       ) {
         signature
@@ -330,17 +333,20 @@ export async function fetchUserRegistration(userAddress: string): Promise<UserRe
     }
   `
 
-  const data = await graphqlRequest<UserRegistrationQueryResult>(query, { user: userAddress })
-  return data.facts_referral_system_user_registered_events[0] || null
+  const data = await graphqlRequest<{
+    view_latest_user_registered_events: UserRegisteredEvent[]
+  }>(query, { user: userAddress })
+  return data.view_latest_user_registered_events[0] || null
 }
 
 /**
  * Fetch traders registered under a specific referral code (Tier 1 only)
+ * Updated to use deduplicated view instead of event table
  */
 export async function fetchTradersForCode(referralCode: string): Promise<UserRegisteredEvent[]> {
   const query = `
     query GetTradersForCode($code: String!) {
-      facts_referral_system_user_registered_events(
+      view_latest_user_registered_events(
         where: { referral_code: { _eq: $code } }
         order_by: { block_time: desc }
       ) {
@@ -357,18 +363,21 @@ export async function fetchTradersForCode(referralCode: string): Promise<UserReg
     }
   `
 
-  const data = await graphqlRequest<UserRegistrationQueryResult>(query, { code: referralCode })
-  return data.facts_referral_system_user_registered_events
+  const data = await graphqlRequest<{
+    view_latest_user_registered_events: UserRegisteredEvent[]
+  }>(query, { code: referralCode })
+  return data.view_latest_user_registered_events
 }
 
 /**
  * Fetch tier-2 referrals for a given wallet address
  * These are users whose tier2_referrer matches the wallet
+ * Updated to use deduplicated view instead of event table
  */
 export async function fetchTier2ReferralsForWallet(walletAddress: string): Promise<UserRegisteredEvent[]> {
   const query = `
     query GetTier2Referrals($wallet: String!) {
-      facts_referral_system_user_registered_events(
+      view_latest_user_registered_events(
         where: { tier2_referrer: { _eq: $wallet } }
         order_by: { block_time: desc }
       ) {
@@ -385,18 +394,21 @@ export async function fetchTier2ReferralsForWallet(walletAddress: string): Promi
     }
   `
 
-  const data = await graphqlRequest<UserRegistrationQueryResult>(query, { wallet: walletAddress })
-  return data.facts_referral_system_user_registered_events
+  const data = await graphqlRequest<{
+    view_latest_user_registered_events: UserRegisteredEvent[]
+  }>(query, { wallet: walletAddress })
+  return data.view_latest_user_registered_events
 }
 
 /**
  * Fetch tier-3 referrals for a given wallet address
  * These are users whose tier3_referrer matches the wallet
+ * Updated to use deduplicated view instead of event table
  */
 export async function fetchTier3ReferralsForWallet(walletAddress: string): Promise<UserRegisteredEvent[]> {
   const query = `
     query GetTier3Referrals($wallet: String!) {
-      facts_referral_system_user_registered_events(
+      view_latest_user_registered_events(
         where: { tier3_referrer: { _eq: $wallet } }
         order_by: { block_time: desc }
       ) {
@@ -413,8 +425,10 @@ export async function fetchTier3ReferralsForWallet(walletAddress: string): Promi
     }
   `
 
-  const data = await graphqlRequest<UserRegistrationQueryResult>(query, { wallet: walletAddress })
-  return data.facts_referral_system_user_registered_events
+  const data = await graphqlRequest<{
+    view_latest_user_registered_events: UserRegisteredEvent[]
+  }>(query, { wallet: walletAddress })
+  return data.view_latest_user_registered_events
 }
 
 /**
