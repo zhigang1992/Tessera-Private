@@ -31,8 +31,8 @@ interface ReferralCodeCreatedEvent {
 }
 
 interface UserInteractionQueryResult {
-  facts_referral_system_user_registered_events: UserRegisteredEvent[]
-  facts_referral_system_referral_code_created_events: ReferralCodeCreatedEvent[]
+  view_latest_user_registered_events: UserRegisteredEvent[]
+  view_latest_referral_system_referral_code_created_events: ReferralCodeCreatedEvent[]
 }
 
 async function graphqlRequest<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
@@ -118,8 +118,10 @@ export async function getWhitelistInfo(walletAddress: string, vaultId: string): 
 /**
  * Check if a user has interacted with the website (for whitelist checker page only)
  * A user is considered whitelisted if they have either:
- * - Registered with a referral code (facts_referral_system_user_registered_events)
- * - Created a referral code (facts_referral_system_referral_code_created_events)
+ * - Registered with a referral code (view_latest_user_registered_events)
+ * - Created a referral code (view_latest_referral_system_referral_code_created_events)
+ *
+ * Updated to use deduplicated views instead of event tables
  *
  * @param walletAddress - The wallet public key as a string
  * @returns boolean indicating if the user has interacted with the website
@@ -127,12 +129,12 @@ export async function getWhitelistInfo(walletAddress: string, vaultId: string): 
 export async function checkWhitelistStatus(walletAddress: string): Promise<boolean> {
   const query = `
     query GetUserInteraction($user: String!) {
-      facts_referral_system_user_registered_events(where: { user: { _eq: $user } }) {
+      view_latest_user_registered_events(where: { user: { _eq: $user } }) {
         signature
         user
         referral_code
       }
-      facts_referral_system_referral_code_created_events(where: { owner: { _eq: $user } }) {
+      view_latest_referral_system_referral_code_created_events(where: { owner: { _eq: $user } }) {
         code
       }
     }
@@ -142,8 +144,8 @@ export async function checkWhitelistStatus(walletAddress: string): Promise<boole
     const data = await graphqlRequest<UserInteractionQueryResult>(query, { user: walletAddress })
 
     // User is whitelisted if they have either registered OR created a referral code
-    const hasRegistered = data.facts_referral_system_user_registered_events.length > 0
-    const hasCreatedCode = data.facts_referral_system_referral_code_created_events.length > 0
+    const hasRegistered = data.view_latest_user_registered_events.length > 0
+    const hasCreatedCode = data.view_latest_referral_system_referral_code_created_events.length > 0
 
     return hasRegistered || hasCreatedCode
   } catch (error) {
