@@ -1,6 +1,7 @@
 import { FormEvent, useMemo, useState } from 'react'
 import { useAffiliateData, useCreateReferralCode } from '../hooks/use-referral-onchain'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useWallet, useConnection } from '@solana/wallet-adapter-react'
+import { findReferralCodeByString } from '@/lib/solana/on-chain-client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Copy, Plus, Share2, Loader2, Download, Send, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -22,6 +23,7 @@ const SHARE_IMAGE_BASE = import.meta.env.VITE_REFERRAL_SHARE_IMAGE_BASE || '/api
 
 export default function CreateCodeCard() {
   const { connected, publicKey } = useWallet()
+  const { connection } = useConnection()
   const walletAddress = publicKey?.toBase58()
   const { data: affiliateData, isLoading } = useAffiliateData(connected, walletAddress)
   const createCodeMutation = useCreateReferralCode()
@@ -105,6 +107,22 @@ export default function CreateCodeCard() {
       setFormError(validationMessage)
       toast.error(validationMessage)
       return
+    }
+
+    // Check if custom code already exists
+    if (isCustomCodeProvided) {
+      try {
+        const existingCode = await findReferralCodeByString(connection, normalizedCustomCode)
+        if (existingCode && existingCode.isActive) {
+          const validationMessage = 'This referral code already exists'
+          setFormError(validationMessage)
+          toast.error(validationMessage)
+          return
+        }
+      } catch (error) {
+        console.error('Failed to check existing referral code', error)
+        // Continue with creation if check fails
+      }
     }
 
     const payload = isCustomCodeProvided ? { codeSlug: normalizedCustomCode } : {}

@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
 import { useCreateReferralCode } from '@/features/referral/hooks/use-referral-onchain'
+import { useConnection } from '@solana/wallet-adapter-react'
+import { findReferralCodeByString } from '@/lib/solana/on-chain-client'
 
 interface CreateReferralCodeModalProps {
   open: boolean
@@ -17,6 +19,7 @@ export function CreateReferralCodeModal({ open, onOpenChange, onSuccess }: Creat
   const [customCode, setCustomCode] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
   const createCodeMutation = useCreateReferralCode()
+  const { connection } = useConnection()
 
   const trimmedCustomCode = useMemo(() => customCode.trim(), [customCode])
   const normalizedCustomCode = useMemo(() => trimmedCustomCode.toUpperCase(), [trimmedCustomCode])
@@ -39,6 +42,21 @@ export function CreateReferralCodeModal({ open, onOpenChange, onSuccess }: Creat
       return
     }
 
+    // Check if custom code already exists
+    if (isCustomCodeProvided) {
+      try {
+        const existingCode = await findReferralCodeByString(connection, normalizedCustomCode)
+        if (existingCode && existingCode.isActive) {
+          const validationMessage = 'This referral code already exists'
+          setFormError(validationMessage)
+          return
+        }
+      } catch (error) {
+        console.error('Failed to check existing referral code', error)
+        // Continue with creation if check fails
+      }
+    }
+
     const payload = isCustomCodeProvided ? { codeSlug: normalizedCustomCode } : {}
 
     setFormError(null)
@@ -58,7 +76,7 @@ export function CreateReferralCodeModal({ open, onOpenChange, onSuccess }: Creat
       setFormError(message)
       console.error('Failed to create referral code', error)
     }
-  }, [isCreateDisabled, isCustomCodeProvided, isCustomCodeLengthValid, normalizedCustomCode, createCodeMutation, onOpenChange, onSuccess])
+  }, [isCreateDisabled, isCustomCodeProvided, isCustomCodeLengthValid, normalizedCustomCode, createCodeMutation, onOpenChange, onSuccess, connection])
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
