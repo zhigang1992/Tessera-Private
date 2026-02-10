@@ -407,7 +407,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
                   <p className="leading-4">Price Impact</p>
                 </div>
                 <div className="flex flex-col justify-center text-[#1d8f00]">
-                  <p className="leading-4">{parseFloat(quote.priceImpactPct || '0').toFixed(2)}%</p>
+                  <p className="leading-4">{(parseFloat(quote.priceImpactPct || '0') * 100).toFixed(2)}%</p>
                 </div>
               </div>
             </div>
