@@ -27,7 +27,7 @@ const exploreAssets: ExploreAsset[] = [
     category: 'Aerospace',
     headerColor: '#555555',
     headerImage: spacexBg,
-    price: 421,
+    price: 423,
     valuation: '$800bn',
     status: 'auction',
   },
