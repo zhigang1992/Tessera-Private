@@ -2,7 +2,7 @@ import type { PagesFunction } from '@cloudflare/workers-types'
 
 // Static imports for merkle proof files
 import devnetMerkleProofs from '../../data/merkle-proofs-9SVYLpDkevkZ3e5muhtWVou3bo3Y34KufFNT8bfjHVXH.json'
-import mainnetMerkleProofs from '../../data/merkle-proofs-5Kv2VDegJAs8UdGGsg6d3x3wsqzVPSYXpbt8TgavbeGA.json'
+import mainnetMerkleProofs from '../../data/merkle-proofs-Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5.json'
 
 type MerkleProofData = {
   proof: number[][]
@@ -14,7 +14,7 @@ type MerkleProofsDB = Record<string, MerkleProofData>
 
 // Supported vault IDs (strong typed union)
 const DEVNET_VAULT_ID = '9SVYLpDkevkZ3e5muhtWVou3bo3Y34KufFNT8bfjHVXH' as const
-const MAINNET_VAULT_ID = '5Kv2VDegJAs8UdGGsg6d3x3wsqzVPSYXpbt8TgavbeGA' as const
+const MAINNET_VAULT_ID = 'Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5' as const
 
 type VaultId = typeof DEVNET_VAULT_ID | typeof MAINNET_VAULT_ID
 

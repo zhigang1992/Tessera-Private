@@ -247,7 +247,7 @@ const TOKEN_NETWORK_CONFIGS: Record<AppTokenId, {
   'T-SpaceX': {
     mint: {
       devnet: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj',
-      'mainnet-beta': 'DwtmRMoEcynQsw8GtdMiZdpPfZctPK2PiCBZntL2f8g9',
+      'mainnet-beta': 'TSPXcLV76s6V2zDiZQ18kBfcbnjaE2ZzNT3ga2Pd99v',
     },
     decimals: {
       devnet: 6,
@@ -257,11 +257,11 @@ const TOKEN_NETWORK_CONFIGS: Record<AppTokenId, {
   USDC: {
     mint: {
       devnet: '466us572CY33Jevd889znwFdbkgXjf3gza8W2jnEjAKA',
-      'mainnet-beta': '9JNRX9amJQrXdskbkeAkMdVYJmTEGYH8nHXpcy4MzbMe',
+      'mainnet-beta': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
     },
     decimals: {
       devnet: 6,
-      'mainnet-beta': 9,
+      'mainnet-beta': 6,
     },
   },
 }
@@ -299,7 +299,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       quoteToken: 'USDC',
       address: network({
         devnet: '8HTtYzUBfmoDADXvnraScXwXeTanW8c3ExmwspuVCq8Z',
-        'mainnet-beta': '5WhZbWnUbS7oTj8jFJ2JRR1mfXThWELVcg7Vr9NU1bW6',
+        'mainnet-beta': '8obGpjiUu7QTJHK58YHCoz5HxobmrVP2x5zpMZu3c4BT',
       }),
     },
     alphaVault: {
@@ -310,8 +310,8 @@ const TOKENS: Record<AppTokenId, AppToken> = {
         dlmmPool: '8HTtYzUBfmoDADXvnraScXwXeTanW8c3ExmwspuVCq8Z',
       },
       'mainnet-beta': {
-        vault: '5Kv2VDegJAs8UdGGsg6d3x3wsqzVPSYXpbt8TgavbeGA',
-        dlmmPool: '5WhZbWnUbS7oTj8jFJ2JRR1mfXThWELVcg7Vr9NU1bW6',
+        vault: 'Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5',
+        dlmmPool: '8obGpjiUu7QTJHK58YHCoz5HxobmrVP2x5zpMZu3c4BT',
       },
     },
   },
