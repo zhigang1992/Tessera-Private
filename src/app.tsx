@@ -28,7 +28,7 @@ export function App() {
             {/* Redirect trade and auction routes to explorer in production mode */}
             <Route
               path="/trade"
-              element={PRODUCTION_MODE ? <Navigate to="/explorer" replace /> : <TradePage />}
+              element={<TradePage />}
             />
             <Route
               path="/auction"
@@ -42,15 +42,6 @@ export function App() {
               path="/auction/:auctionId/whitelist"
               element={<WhitelistCheckerPage />}
             />
-            <Route
-              path="/auctions"
-              element={PRODUCTION_MODE ? <Navigate to="/explorer" replace /> : <AuctionListPage />}
-            />
-            <Route
-              path="/auctions/:auctionId"
-              element={PRODUCTION_MODE ? <Navigate to="/explorer" replace /> : <AuctionDetailPage />}
-            />
-
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/support" element={<SupportPage />} />
           </Routes>

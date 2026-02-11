@@ -100,9 +100,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   }, [])
 
   // Filter nav items based on production mode
-  const visibleNavItems = PRODUCTION_MODE
-    ? navItems.filter((item) => item.path !== '/trade')
-    : navItems
+  const visibleNavItems = navItems
 
   const handleDisconnect = useCallback(async () => {
     try {
