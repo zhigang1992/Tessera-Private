@@ -64,7 +64,7 @@ function SolanaProviderInner({ children }: { children: ReactNode }) {
   return (
     <SolanaClientContext.Provider value={client}>
       <ConnectionProvider endpoint={cluster.endpoint}>
-        <WalletProvider autoConnect wallets={wallets} onError={onError}>
+        <WalletProvider autoConnect wallets={wallets} onError={onError} localStorageKey="tessera:wallet">
           <WalletModalProvider>{children}</WalletModalProvider>
         </WalletProvider>
       </ConnectionProvider>

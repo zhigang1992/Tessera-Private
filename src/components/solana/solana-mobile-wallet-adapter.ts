@@ -7,7 +7,11 @@ import {
 import type { SolanaCluster } from './solana-cluster-context'
 
 export function solanaMobileWalletAdapter({
-  appIdentity = { name: 'Wallet UI' },
+  appIdentity = {
+    name: 'Tessera',
+    uri: 'https://app.tessera.pe',
+    icon: 'https://app.tessera.pe/favicon.ico'
+  },
   clusters,
 }: {
   appIdentity?: { uri?: string; icon?: string; name?: string }
