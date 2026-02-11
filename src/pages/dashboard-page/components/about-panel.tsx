@@ -17,7 +17,7 @@ const TOKEN_METADATA: Record<AppTokenId, TokenMetadata> = {
     categories: ['Equities'],
     underlyingAssetName: 'SpaceX Equity',
     underlyingAssetCompany: 'SpaceX',
-    sharesPerToken: '1:1000'
+    sharesPerToken: '1:1'
   },
   'USDC': {
     description: 'USD Coin is a fully reserved digital dollar.',
