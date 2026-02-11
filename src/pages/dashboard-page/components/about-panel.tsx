@@ -1,5 +1,3 @@
-import { useQuery } from '@tanstack/react-query'
-import { getDashboardTokenInfo } from '@/services'
 import { AppTokenId, DEFAULT_BASE_TOKEN_ID, getAppToken, getExplorerUrl } from '@/config'
 import SolanaIcon from './_/solana-icon.svg?react'
 
@@ -41,11 +39,6 @@ interface AboutPanelProps {
 }
 
 export function AboutPanel({ tokenId = DEFAULT_BASE_TOKEN_ID }: AboutPanelProps) {
-  const { data: tokenInfo } = useQuery({
-    queryKey: ['dashboardTokenInfo', tokenId],
-    queryFn: getDashboardTokenInfo,
-  })
-
   const token = getAppToken(tokenId)
   const metadata = TOKEN_METADATA[tokenId]
   const description = metadata.description
