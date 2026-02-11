@@ -34,11 +34,6 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
           <h3 className="text-xl font-semibold text-[#18181b] mb-1 leading-normal">{asset.name}</h3>
           <p className="text-xs text-[#52525b] leading-normal">{asset.ticker}</p>
         </div>
-        {!PRODUCTION_MODE && (
-          <button className="text-[#71717a] hover:text-[#18181b] transition-colors h-fit">     
-               <ExternalLinkIcon className="w-[14px] h-[14px]" />
-          </button>
-        )}
       </div>
 
       {/* Body */}

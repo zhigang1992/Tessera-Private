@@ -200,25 +200,19 @@ export function AuctionHeaderCard() {
           </div>
 
           <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col justify-between gap-4">
-            <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">TOKEN INFO</span>
+            <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">IMPLIED VALUATION</span>
             <div className="flex flex-col gap-2.5">
-              <div className="flex items-center gap-2.5">
-                <span className="text-lg font-bold font-mono text-foreground">
-                  <AppTokenName token={token} variant="symbol" />
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold text-foreground">
+                  {token.impliedValuation?.valuation ?? '-'}
                 </span>
-                <span className="text-xs bg-[#3b82f6]/20 text-[#3b82f6] px-2 py-0.5 rounded">
-                  {token.metadata?.type ?? 'Tokenized Asset'}
-                </span>
+                <span className="text-sm text-[#71717a] dark:text-[#999]">FDV</span>
               </div>
               <div className="h-px bg-zinc-300 dark:bg-[#666]" />
               <div className="flex flex-col gap-1 text-[10px]">
                 <div className="flex items-center justify-between">
-                  <span className="text-[#71717a] dark:text-[#999]">Quote Token</span>
-                  <AppTokenName token={quoteToken} variant="symbol" className="font-mono text-foreground" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#71717a] dark:text-[#999]">Vesting</span>
-                  <span className="font-mono text-foreground">{vestingDuration}</span>
+                  <span className="text-[#71717a] dark:text-[#999]">Based on Yoet Price:</span>
+                  <span className="font-mono text-foreground">{token.impliedValuation?.yoetPrice ?? '-'}</span>
                 </div>
               </div>
             </div>

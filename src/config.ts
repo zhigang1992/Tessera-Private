@@ -233,6 +233,10 @@ export interface AppToken {
   metadata?: AppTokenMetadata
   dlmmPool?: DlmmPoolConfig
   alphaVault?: AlphaVaultConfig
+  impliedValuation?: {
+    valuation: string,
+    yoetPrice: string
+  }
 }
 
 // Raw network-specific configs (before network() resolution)
@@ -275,6 +279,10 @@ const TOKENS: Record<AppTokenId, AppToken> = {
     iconUrl: 'https://cdn.tesseralab.co/tessera/tokenicon_T-SpaceX.svg',
     mint: network(TOKEN_NETWORK_CONFIGS['T-SpaceX'].mint),
     program: 'token-2022',
+    impliedValuation: {
+      valuation: "$800B",
+      yoetPrice: "$400.00"
+    },
     metadata: {
       name: 'T-SpaceX Token',
       code: 'TSX-001',
