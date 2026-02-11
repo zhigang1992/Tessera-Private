@@ -45,25 +45,25 @@ export function StatsCards() {
   const statCards = [
     {
       label: 'Total Market Cap',
-      value: isLoading || !stats ? '—' : formatLargeNumber(stats.totalMarketCap),
+      value: isLoading || !stats || stats.totalMarketCap === 0 ? '—' : formatLargeNumber(stats.totalMarketCap),
       change: stats?.totalMarketCap24hChangePct ? formatPercentChange(stats.totalMarketCap24hChangePct) : null,
       isPositive: stats?.totalMarketCap24hChangePct ? stats.totalMarketCap24hChangePct >= 0 : null,
     },
     {
       label: 'Total Trading Volume',
-      value: isLoading || !stats ? '—' : formatLargeNumber(stats.totalTradingVolume),
+      value: isLoading || !stats || stats.totalTradingVolume === 0 ? '—' : formatLargeNumber(stats.totalTradingVolume),
       change: stats?.totalVolume24hChangePct ? formatPercentChange(stats.totalVolume24hChangePct) : null,
       isPositive: stats?.totalVolume24hChangePct ? stats.totalVolume24hChangePct >= 0 : null,
     },
     {
       label: 'Active Traders',
-      value: isLoading || !stats ? '—' : stats.activeTraders.toLocaleString(),
+      value: isLoading || !stats || stats.activeTraders === 0 ? '—' : stats.activeTraders.toLocaleString(),
       change: stats?.activeTraders24hChange ? formatNumberChange(stats.activeTraders24hChange) : null,
       isPositive: stats?.activeTraders24hChange ? stats.activeTraders24hChange >= 0 : null,
     },
     {
       label: 'Assets Tokenized',
-      value: isLoading || !stats ? '—' : stats.assetsTokenized.toString(),
+      value: isLoading || !stats || stats.assetsTokenized === 0 ? '—' : stats.assetsTokenized.toString(),
       change: null, // No 24h change for assets tokenized
       isPositive: null,
     },
