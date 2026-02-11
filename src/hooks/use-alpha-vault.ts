@@ -50,6 +50,7 @@ export interface UseAlphaVaultReturn {
   poolPrice: number | null // USDC per T-SpaceX
 
   // Time remaining
+  depositOpensIn: { hours: number; minutes: number; seconds: number } | null
   depositEndsIn: { hours: number; minutes: number; seconds: number } | null
   vestingEndsIn: { hours: number; minutes: number; seconds: number } | null
 
@@ -116,6 +117,12 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
     const interval = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(interval)
   }, [])
+
+  const depositOpensIn = useMemo(() => {
+    if (!vaultInfo?.depositOpenTime) return null
+    // Recalculates every second due to 'now' dependency
+    return getTimeRemaining(vaultInfo.depositOpenTime)
+  }, [vaultInfo?.depositOpenTime, now])
 
   const depositEndsIn = useMemo(() => {
     if (!vaultInfo?.depositCloseTime) return null
@@ -512,6 +519,7 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
     claimInfo,
     usdcBalance,
     poolPrice,
+    depositOpensIn,
     depositEndsIn,
     vestingEndsIn,
     totalRaised,

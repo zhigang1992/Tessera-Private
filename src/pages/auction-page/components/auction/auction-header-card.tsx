@@ -18,6 +18,7 @@ export function AuctionHeaderCard() {
     vaultInfo,
     vaultStateDisplay,
     escrowInfo,
+    depositOpensIn,
     depositEndsIn,
     totalRaised,
     targetRaise,
@@ -43,9 +44,15 @@ export function AuctionHeaderCard() {
     : 0
   const hasPosition = escrowInfo && mathIs`${escrowInfo.totalDeposited} > ${0}`
   const quoteToken = config.quoteToken
+
+  // Check if deposits haven't started yet
+  const depositsNotStarted = vaultInfo?.depositOpenTime && vaultInfo.depositOpenTime.getTime() > Date.now()
+
   const depositStatusText =
     vaultInfo?.state === 'deposit_open'
-      ? 'Deposits Close in'
+      ? depositsNotStarted
+        ? 'Deposits Open in'
+        : 'Deposits Close in'
       : vaultInfo?.state === 'purchasing'
         ? 'Purchasing in Progress'
         : 'Deposits Closed'
@@ -98,20 +105,28 @@ export function AuctionHeaderCard() {
           <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col justify-between gap-4">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">VAULT STATUS</span>
-              <div
-                className="flex items-center gap-1.5 px-2 py-1 rounded-full"
-                style={{ backgroundColor: `${vaultStateDisplay?.color ?? '#6b7280'}20` }}
-              >
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: vaultStateDisplay?.color ?? '#6b7280' }} />
-                <span className="text-[10px] font-semibold" style={{ color: vaultStateDisplay?.color ?? '#6b7280' }}>
-                  {vaultStateDisplay?.label ?? 'LOADING'}
-                </span>
-              </div>
+              {!depositsNotStarted && (
+                <div
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-full"
+                  style={{ backgroundColor: `${vaultStateDisplay?.color ?? '#6b7280'}20` }}
+                >
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: vaultStateDisplay?.color ?? '#6b7280' }} />
+                  <span className="text-[10px] font-semibold" style={{ color: vaultStateDisplay?.color ?? '#6b7280' }}>
+                    {vaultStateDisplay?.label ?? 'LOADING'}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <div className="flex flex-col">
                 <span className="text-xs text-[#71717a] dark:text-[#999]">{depositStatusText}</span>
-                {depositEndsIn ? (
+                {depositsNotStarted && depositOpensIn ? (
+                  <div className="flex items-center gap-1.5 font-mono text-xl font-semibold text-foreground">
+                    <span>{depositOpensIn.hours}h</span>
+                    <span>{depositOpensIn.minutes}m</span>
+                    <span>{depositOpensIn.seconds}s</span>
+                  </div>
+                ) : depositEndsIn ? (
                   <div className="flex items-center gap-1.5 font-mono text-xl font-semibold text-foreground">
                     <span>{depositEndsIn.hours}h</span>
                     <span>{depositEndsIn.minutes}m</span>
