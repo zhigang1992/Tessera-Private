@@ -8,8 +8,8 @@ import { useEffect } from 'react'
  */
 export function useScrollLockFix(isOpen: boolean) {
   useEffect(() => {
-    // Cleanup function that runs when the modal closes or component unmounts
-    return () => {
+    // Only run cleanup when the modal closes or component unmounts
+    if (!isOpen) {
       // Small delay to allow Radix's cleanup to run first
       const timeoutId = setTimeout(() => {
         // Force remove any scroll lock styles that might have been left behind
