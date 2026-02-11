@@ -343,96 +343,36 @@ export async function fetchUserRegistration(userAddress: string): Promise<UserRe
   return data.view_latest_user_registered_events[0] || null
 }
 
+
+
 /**
- * Fetch traders registered under a specific referral code (Tier 1 only)
- * Updated to use deduplicated view instead of event table
+ * Fetch all users registered under a specific referral code
+ * Uses view_code_register_view which includes all tier levels
  */
-export async function fetchTradersForCode(referralCode: string): Promise<UserRegisteredEvent[]> {
+export interface CodeRegisterView {
+  user_address: string
+  level_label: string // 'L1', 'L2', or 'L3'
+  block_number: number
+}
+
+export async function fetchUsersForCode(referralCode: string): Promise<CodeRegisterView[]> {
   const query = `
-    query GetTradersForCode($code: String!) {
-      view_latest_user_registered_events(
-        where: { referral_code: { _eq: $code } }
-        order_by: { block_time: desc }
+    query GetUsersForCode($code: String!) {
+      view_code_register_view(
+        where: { origin_code: { _eq: $code } }
+        order_by: { block_number: desc }
       ) {
-        signature
-        user
-        referral_code
-        referral_code_key
-        tier1_referrer
-        tier2_referrer
-        tier3_referrer
-        is_new_registration
-        block_time
+        user_address
+        level_label
+        block_number
       }
     }
   `
 
   const data = await graphqlRequest<{
-    view_latest_user_registered_events: UserRegisteredEvent[]
+    view_code_register_view: CodeRegisterView[]
   }>(query, { code: referralCode })
-  return data.view_latest_user_registered_events
-}
-
-/**
- * Fetch tier-2 referrals for a given wallet address
- * These are users whose tier2_referrer matches the wallet
- * Updated to use deduplicated view instead of event table
- */
-export async function fetchTier2ReferralsForWallet(walletAddress: string): Promise<UserRegisteredEvent[]> {
-  const query = `
-    query GetTier2Referrals($wallet: String!) {
-      view_latest_user_registered_events(
-        where: { tier2_referrer: { _eq: $wallet } }
-        order_by: { block_time: desc }
-      ) {
-        signature
-        user
-        referral_code
-        referral_code_key
-        tier1_referrer
-        tier2_referrer
-        tier3_referrer
-        is_new_registration
-        block_time
-      }
-    }
-  `
-
-  const data = await graphqlRequest<{
-    view_latest_user_registered_events: UserRegisteredEvent[]
-  }>(query, { wallet: walletAddress })
-  return data.view_latest_user_registered_events
-}
-
-/**
- * Fetch tier-3 referrals for a given wallet address
- * These are users whose tier3_referrer matches the wallet
- * Updated to use deduplicated view instead of event table
- */
-export async function fetchTier3ReferralsForWallet(walletAddress: string): Promise<UserRegisteredEvent[]> {
-  const query = `
-    query GetTier3Referrals($wallet: String!) {
-      view_latest_user_registered_events(
-        where: { tier3_referrer: { _eq: $wallet } }
-        order_by: { block_time: desc }
-      ) {
-        signature
-        user
-        referral_code
-        referral_code_key
-        tier1_referrer
-        tier2_referrer
-        tier3_referrer
-        is_new_registration
-        block_time
-      }
-    }
-  `
-
-  const data = await graphqlRequest<{
-    view_latest_user_registered_events: UserRegisteredEvent[]
-  }>(query, { wallet: walletAddress })
-  return data.view_latest_user_registered_events
+  return data.view_code_register_view
 }
 
 /**
@@ -1253,30 +1193,3 @@ export interface RewardDetailByCodeReferral {
   fees_by_token: FeeByToken[] | null // jsonb array of {fee, mint}
 }
 
-/**
- * Fetch reward details for all referrals under a specific code
- * Returns reward data per referral (user) for the given code
- */
-export async function fetchRewardDetailsByCode(
-  code: string
-): Promise<RewardDetailByCodeReferral[]> {
-  const query = `
-    query GetRewardDetailsByCode($code: String!) {
-      public_marts_reward_detail_by_code_referral(
-        where: { code: { _eq: $code } }
-      ) {
-        code
-        referral
-        tier
-        total_rewards_usd
-        fees_by_token
-      }
-    }
-  `
-
-  const data = await graphqlRequest<{
-    public_marts_reward_detail_by_code_referral: RewardDetailByCodeReferral[]
-  }>(query, { code })
-
-  return data.public_marts_reward_detail_by_code_referral
-}

@@ -4,9 +4,7 @@ import {
   fetchSwapEvents,
   fetchUserTradingVolume,
   fetchRewardDetailsByCode,
-  fetchTradersForCode,
-  fetchTier2ReferralsForWallet,
-  fetchTier3ReferralsForWallet,
+  fetchUsersForCode,
   fetchTradingPointsByAccount,
   type AggregatedAffiliateStats,
   type FeeByToken,
@@ -277,74 +275,46 @@ function parseFeesToRewards(fees: FeeByToken[] | null): RewardItem[] {
 }
 
 /**
- * Map tier number to layer string
+ * Map level label string to layer type
  */
-function tierToLayer(tier: number): 'L1' | 'L2' | 'L3' {
-  if (tier === 1) return 'L1'
-  if (tier === 2) return 'L2'
-  return 'L3'
+function levelLabelToLayer(levelLabel: string): 'L1' | 'L2' | 'L3' {
+  if (levelLabel === 'L1') return 'L1'
+  if (levelLabel === 'L2') return 'L2'
+  if (levelLabel === 'L3') return 'L3'
+  return 'L1' // Default fallback
 }
 
 /**
- * Format block time to readable date
+ * Format block number to readable date
+ * Note: block_number is used as timestamp in seconds
  */
-function formatBlockTime(blockTime: number): string {
-  const date = new Date(blockTime * 1000)
+function formatBlockNumber(blockNumber: number): string {
+  const date = new Date(blockNumber * 1000)
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 export async function getReferralUsersByCode(code: string): Promise<ReferralUser[]> {
-  // Fetch tier-1 users (direct referrals using this code)
-  const [tier1Users, rewardDetails] = await Promise.all([
-    fetchTradersForCode(code),
-    fetchRewardDetailsByCode(code),
+  // Fetch all users registered under this code and their reward details
+  const [users] = await Promise.all([
+    fetchUsersForCode(code),
   ])
 
-  // Get the code owner (wallet address) from tier-1 users
-  const codeOwner = tier1Users[0]?.tier1_referrer ?? ''
-
-  if (!codeOwner) {
+  if (users.length === 0) {
     // No users found for this code
     return []
   }
 
-  // Fetch tier-2 and tier-3 referrals for the code owner
-  const [tier2Users, tier3Users] = await Promise.all([
-    fetchTier2ReferralsForWallet(codeOwner),
-    fetchTier3ReferralsForWallet(codeOwner),
-  ])
-
-  // Create a map of rewards by wallet address for quick lookup
-  const rewardsMap = new Map<string, RewardItem[]>()
-  const tierMap = new Map<string, number>()
-  for (const detail of rewardDetails) {
-    rewardsMap.set(detail.referral, parseFeesToRewards(detail.fees_by_token))
-    tierMap.set(detail.referral, detail.tier)
-  }
-
-  // Combine all users with their tier information
-  const allUsers = [
-    ...tier1Users.map(user => ({ ...user, explicitTier: 1 as const })),
-    ...tier2Users.map(user => ({ ...user, explicitTier: 2 as const })),
-    ...tier3Users.map(user => ({ ...user, explicitTier: 3 as const })),
-  ]
-
-  // Sort by block_time descending (newest first)
-  allUsers.sort((a, b) => b.block_time - a.block_time)
-
   // Map all users with their tier labels
-  return allUsers.map((user, index) => {
-    const walletAddress = user.user
-    const rewards = rewardsMap.get(walletAddress) ?? []
-    // Use explicit tier (from which query fetched it)
-    const layer = tierToLayer(user.explicitTier)
+  return users.map((user, index) => {
+    const walletAddress = user.user_address
+    const layer = levelLabelToLayer(user.level_label)
 
     return {
       id: `${code}-${walletAddress}-${index}`,
       email: formatWalletAddress(walletAddress),
-      dateJoined: formatBlockTime(user.block_time),
+      dateJoined: formatBlockNumber(user.block_number),
       layer,
-      rewards,
+      rewards: [],
     }
   })
 }

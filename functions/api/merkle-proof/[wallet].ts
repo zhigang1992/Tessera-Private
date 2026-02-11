@@ -1,7 +1,7 @@
 import type { PagesFunction } from '@cloudflare/workers-types'
 
 // Static imports for merkle proof files
-import devnetMerkleProofs from '../../data/merkle-proofs-9vksN3mK4BeVD31UPjnZWTqm61DCg2LENdRjALSqu3dM.json'
+import devnetMerkleProofs from '../../data/merkle-proofs-9SVYLpDkevkZ3e5muhtWVou3bo3Y34KufFNT8bfjHVXH.json'
 import mainnetMerkleProofs from '../../data/merkle-proofs-5Kv2VDegJAs8UdGGsg6d3x3wsqzVPSYXpbt8TgavbeGA.json'
 
 type MerkleProofData = {
@@ -13,7 +13,7 @@ type MerkleProofData = {
 type MerkleProofsDB = Record<string, MerkleProofData>
 
 // Supported vault IDs (strong typed union)
-const DEVNET_VAULT_ID = '9vksN3mK4BeVD31UPjnZWTqm61DCg2LENdRjALSqu3dM' as const
+const DEVNET_VAULT_ID = '9SVYLpDkevkZ3e5muhtWVou3bo3Y34KufFNT8bfjHVXH' as const
 const MAINNET_VAULT_ID = '5Kv2VDegJAs8UdGGsg6d3x3wsqzVPSYXpbt8TgavbeGA' as const
 
 type VaultId = typeof DEVNET_VAULT_ID | typeof MAINNET_VAULT_ID
@@ -61,7 +61,7 @@ function loadMerkleProofsForVault(vaultId: VaultId): MerkleProofsDB {
  *   - vaultId: The vault address (required) - must be one of the supported vaults
  *
  * Supported Vault IDs:
- *   - Devnet: 9vksN3mK4BeVD31UPjnZWTqm61DCg2LENdRjALSqu3dM
+ *   - Devnet: 9SVYLpDkevkZ3e5muhtWVou3bo3Y34KufFNT8bfjHVXH
  *   - Mainnet: GaAMF2kAytKbQjDJvgTSoK8CeM6ShX21Gukkdk1D6kKN
  *
  * Returns the merkle proof data for the specified wallet address in the vault,

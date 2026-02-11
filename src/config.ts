@@ -252,7 +252,7 @@ const TOKEN_NETWORK_CONFIGS: Record<AppTokenId, {
   },
   USDC: {
     mint: {
-      devnet: '7iENkTQY9RCwbWhASSrTbXCTtKBvGmn8wf6x2Su1GYVc',
+      devnet: '466us572CY33Jevd889znwFdbkgXjf3gza8W2jnEjAKA',
       'mainnet-beta': '9JNRX9amJQrXdskbkeAkMdVYJmTEGYH8nHXpcy4MzbMe',
     },
     decimals: {
@@ -290,7 +290,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       id: 'T-SpaceX-USDC',
       quoteToken: 'USDC',
       address: network({
-        devnet: '8YJfkiCCdSHjWZuXw1wWXnxSEjsUG8Y8nDQQUta733Qm',
+        devnet: '8HTtYzUBfmoDADXvnraScXwXeTanW8c3ExmwspuVCq8Z',
         'mainnet-beta': '5WhZbWnUbS7oTj8jFJ2JRR1mfXThWELVcg7Vr9NU1bW6',
       }),
     },
@@ -298,8 +298,8 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       quoteToken: 'USDC',
       hasVestingPeriod: false,
       devnet: {
-        vault: '2GpAqQXVuwHGutxJBt2UcrDXAAprSVYo7ErFVXyETaNN',
-        dlmmPool: '8YJfkiCCdSHjWZuXw1wWXnxSEjsUG8Y8nDQQUta733Qm',
+        vault: '9SVYLpDkevkZ3e5muhtWVou3bo3Y34KufFNT8bfjHVXH',
+        dlmmPool: '8HTtYzUBfmoDADXvnraScXwXeTanW8c3ExmwspuVCq8Z',
       },
       'mainnet-beta': {
         vault: '5Kv2VDegJAs8UdGGsg6d3x3wsqzVPSYXpbt8TgavbeGA',
