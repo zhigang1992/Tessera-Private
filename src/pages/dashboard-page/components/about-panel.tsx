@@ -1,7 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import { getDashboardTokenInfo } from '@/services'
-import { AppTokenId, DEFAULT_BASE_TOKEN_ID } from '@/config'
+import { AppTokenId, DEFAULT_BASE_TOKEN_ID, getAppToken } from '@/config'
 import SolanaIcon from './_/solana-icon.svg?react'
+
+/**
+ * Format mint address for display (e.g., "TSPXcL...Pd99v")
+ */
+function formatMintAddress(address: string): string {
+  if (address.length < 12) return address
+  return `${address.slice(0, 6)}...${address.slice(-5)}`
+}
 
 interface TokenMetadata {
   description: string
@@ -38,8 +46,10 @@ export function AboutPanel({ tokenId = DEFAULT_BASE_TOKEN_ID }: AboutPanelProps)
     queryFn: getDashboardTokenInfo,
   })
 
+  const token = getAppToken(tokenId)
   const metadata = TOKEN_METADATA[tokenId]
   const description = metadata.description
+  const onchainAddress = formatMintAddress(token.mint)
 
   return (
     <div className="bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl p-4 lg:p-6">
@@ -67,7 +77,7 @@ export function AboutPanel({ tokenId = DEFAULT_BASE_TOKEN_ID }: AboutPanelProps)
             <span className="text-xs lg:text-sm text-[#999]">Onchain Address</span>
             <div className="flex items-center gap-1.5">
               <SolanaIcon className="w-6 h-6" />
-              <span className="text-sm lg:text-base text-black dark:text-[#d2d2d2]">{tokenInfo?.onchainAddress ?? '0x...'}</span>
+              <span className="text-sm lg:text-base text-black dark:text-[#d2d2d2]">{onchainAddress}</span>
               <svg
                 className="w-4 h-4 opacity-50 text-black dark:text-[#d2d2d2]"
                 fill="none"
