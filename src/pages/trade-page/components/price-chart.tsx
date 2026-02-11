@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createChart, ColorType, LineSeries } from 'lightweight-charts'
 import type { IChartApi, LineData, Time } from 'lightweight-charts'
@@ -6,17 +6,33 @@ import { getPriceHistory, getTokenPrice, type TimeRange } from '@/services/price
 import { useMarketDepth, calculateBarHeights, formatTvl, formatBinStep } from '@/hooks/useMarketDepth'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
-import { DEFAULT_BASE_TOKEN_ID, getAppToken, getTokenBySymbol } from '@/config'
+import { type AppTokenId, DEFAULT_BASE_TOKEN_ID, getAppToken, getTokenBySymbol } from '@/config'
 
 interface PriceChartProps {
+  baseTokenId?: AppTokenId
   tokenSymbol?: string
   disabled?: boolean
 }
 
 type ChartTab = 'price' | 'market-depth'
 
-export function PriceChart({ tokenSymbol = 'T-SpaceX', disabled = false }: PriceChartProps) {
-  const tokenConfig = getTokenBySymbol(tokenSymbol) ?? getAppToken(DEFAULT_BASE_TOKEN_ID)
+export function PriceChart({
+  baseTokenId,
+  tokenSymbol,
+  disabled = false
+}: PriceChartProps) {
+  // If baseTokenId is provided, use it. Otherwise fall back to tokenSymbol or default
+  const tokenConfig = useMemo(() => {
+    if (baseTokenId) {
+      return getAppToken(baseTokenId)
+    }
+    if (tokenSymbol) {
+      return getTokenBySymbol(tokenSymbol) ?? getAppToken(DEFAULT_BASE_TOKEN_ID)
+    }
+    return getAppToken(DEFAULT_BASE_TOKEN_ID)
+  }, [baseTokenId, tokenSymbol])
+
+  const effectiveTokenSymbol = tokenConfig.symbol
   const [activeTab, setActiveTab] = useState<ChartTab>('price')
   const [timeRange, setTimeRange] = useState<TimeRange>('1D')
   const chartContainerRef = useRef<HTMLDivElement>(null)
@@ -26,8 +42,8 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX', disabled = false }: Price
 
   // Fetch token price info from backend (skip if disabled)
   const { data: token } = useQuery({
-    queryKey: ['tokenPrice', tokenSymbol],
-    queryFn: () => getTokenPrice(tokenSymbol),
+    queryKey: ['tokenPrice', effectiveTokenSymbol],
+    queryFn: () => getTokenPrice(effectiveTokenSymbol),
     refetchInterval: 30 * 1000, // Refresh every 30 seconds
     staleTime: 15 * 1000, // Consider data stale after 15 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
@@ -36,8 +52,8 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX', disabled = false }: Price
 
   // Fetch price history from backend - updates when timeRange changes (skip if disabled)
   const { data: priceHistory } = useQuery({
-    queryKey: ['priceHistory', tokenSymbol, timeRange],
-    queryFn: () => getPriceHistory(tokenSymbol, timeRange),
+    queryKey: ['priceHistory', effectiveTokenSymbol, timeRange],
+    queryFn: () => getPriceHistory(effectiveTokenSymbol, timeRange),
     staleTime: 30 * 1000, // Consider data stale after 30 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
     enabled: !disabled,

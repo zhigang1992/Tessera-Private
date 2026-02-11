@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useJupiterSwap, type SwapDirection } from '@/hooks/use-jupiter-swap'
-import { DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getAppToken, getExplorerUrl, getTokenDecimals } from '@/config'
+import { type AppTokenId, DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getAppToken, getExplorerUrl, getTokenDecimals } from '@/config'
 import { BigNumber } from '@/lib/bignumber'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
@@ -14,9 +14,6 @@ import { useCountdown } from '@/hooks/use-countdown'
 import { getAlphaVaultClient } from '@/services/alpha-vault'
 import type { CountdownConfig } from '@/types/countdown'
 
-const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
-const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
-
 function getTokenPrecision(decimals: number) {
   return {
     minimumFractionDigits: decimals >= 2 ? 2 : 0,
@@ -25,27 +22,36 @@ function getTokenPrecision(decimals: number) {
 }
 
 interface TokenSwapPanelProps {
+  baseTokenId?: AppTokenId
+  quoteTokenId?: Extract<AppTokenId, 'USDC'>
   disabled?: boolean
 }
 
-export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
+export function TokenSwapPanel({
+  baseTokenId = DEFAULT_BASE_TOKEN_ID,
+  quoteTokenId = QUOTE_TOKEN_ID,
+  disabled = false
+}: TokenSwapPanelProps) {
   const wallet = useWallet()
   const { connection } = useConnection()
   const { setVisible } = useWalletModal()
+
+  const BASE_TOKEN = useMemo(() => getAppToken(baseTokenId), [baseTokenId])
+  const QUOTE_TOKEN = useMemo(() => getAppToken(quoteTokenId), [quoteTokenId])
 
   const {
     isLoading,
     error,
     quote,
     txSignature,
-    usdcBalance,
-    tSpaceXBalance,
+    quoteBalance,
+    baseBalance,
     loadPool,
     getQuote,
     executeSwap,
     refreshBalances,
     clearError,
-  } = useJupiterSwap()
+  } = useJupiterSwap({ baseTokenId, quoteTokenId })
 
   // State for vault-based countdown config
   const [countdownConfig, setCountdownConfig] = useState<CountdownConfig>({ type: 'disabled' })
@@ -57,7 +63,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
     async function fetchCountdownConfig() {
       try {
         // Get alpha vault client
-        const vaultClient = getAlphaVaultClient(DEFAULT_BASE_TOKEN_ID, { connection })
+        const vaultClient = getAlphaVaultClient(baseTokenId, { connection })
 
         // Fetch vault info to get activation point and type
         const vaultInfo = await vaultClient.getVaultInfo()
@@ -96,22 +102,22 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
     return () => {
       mounted = false
     }
-  }, [connection])
+  }, [connection, baseTokenId])
 
   const { timeRemaining } = useCountdown(countdownConfig)
   const isTradingActive = timeRemaining.isExpired
 
-  // Default: USDC -> T-SpaceX (buying T-SpaceX)
-  const [direction, setDirection] = useState<SwapDirection>('USDC_TO_TSPACEX')
+  // Default: BUY (QUOTE -> BASE)
+  const [direction, setDirection] = useState<SwapDirection>('BUY')
   const [inputAmount, setInputAmount] = useState('')
   const [isSwapping, setIsSwapping] = useState(false)
 
   // Derived state
-  const isBuying = direction === 'USDC_TO_TSPACEX' // Buying T-SpaceX with USDC
+  const isBuying = direction === 'BUY' // Buying base with quote
   const sellingTokenConfig = isBuying ? QUOTE_TOKEN : BASE_TOKEN
   const buyingTokenConfig = isBuying ? BASE_TOKEN : QUOTE_TOKEN
   // BigNumber value for max button calculation
-  const sellingBalance = isBuying ? usdcBalance : tSpaceXBalance
+  const sellingBalance = isBuying ? quoteBalance : baseBalance
   const sellingDecimals = getTokenDecimals(sellingTokenConfig.id)
   const buyingDecimals = getTokenDecimals(buyingTokenConfig.id)
   const sellingPrecision = getTokenPrecision(sellingDecimals)
@@ -178,7 +184,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
   }, [txSignature])
 
   const handleSwapDirection = () => {
-    setDirection((prev) => (prev === 'USDC_TO_TSPACEX' ? 'TSPACEX_TO_USDC' : 'USDC_TO_TSPACEX'))
+    setDirection((prev) => (prev === 'BUY' ? 'SELL' : 'BUY'))
     setInputAmount('')
   }
 

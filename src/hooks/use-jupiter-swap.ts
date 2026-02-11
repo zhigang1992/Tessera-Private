@@ -2,8 +2,7 @@
  * React Hook for Jupiter Aggregator Swap Operations
  *
  * Uses Jupiter to route swaps across all Solana DEXs for best price execution
- * - USDC is the quote token (what you pay with when buying T-SpaceX)
- * - T-SpaceX is the base token (what you buy/sell)
+ * Supports any base token paired with any quote token
  */
 
 import { useState, useCallback, useMemo } from 'react'
@@ -18,6 +17,7 @@ import {
 import { type BigNumberValue, fromTokenAmount, parseAmount, ZERO, isZero } from '@/lib/bignumber'
 import { addTermsAcceptanceMemoToVersionedTx, MemoType } from '@/lib/transaction-memo'
 import {
+  type AppTokenId,
   DEFAULT_BASE_TOKEN_ID,
   QUOTE_TOKEN_ID,
   getAppToken,
@@ -27,13 +27,18 @@ import {
   getRpcEndpoint,
 } from '@/config'
 
-// Direction: USDC -> T-SpaceX (buy T-SpaceX) or T-SpaceX -> USDC (sell T-SpaceX)
-export type SwapDirection = 'USDC_TO_TSPACEX' | 'TSPACEX_TO_USDC'
+// Direction: QUOTE -> BASE (buy base) or BASE -> QUOTE (sell base)
+export type SwapDirection = 'BUY' | 'SELL'
 
 // Pool info is not needed for Jupiter (no pool-specific data), but we keep it for interface compatibility
 export interface PoolInfo {
   // Jupiter doesn't have pool-specific info, but we keep minimal structure for compatibility
   dynamicFeePercentage?: string
+}
+
+export interface UseJupiterSwapParams {
+  baseTokenId?: AppTokenId
+  quoteTokenId?: Extract<AppTokenId, 'USDC'>
 }
 
 export interface UseJupiterSwapReturn {
@@ -45,12 +50,12 @@ export interface UseJupiterSwapReturn {
   txSignature: string | null
 
   // Token info
-  usdcMint: string
-  tSpaceXMint: string
-  /** USDC balance as BigNumber for calculations */
-  usdcBalance: BigNumberValue | null
-  /** T-SpaceX balance as BigNumber for calculations */
-  tSpaceXBalance: BigNumberValue | null
+  quoteMint: string
+  baseMint: string
+  /** Quote token balance as BigNumber for calculations */
+  quoteBalance: BigNumberValue | null
+  /** Base token balance as BigNumber for calculations */
+  baseBalance: BigNumberValue | null
 
   // Actions
   loadPool: () => Promise<void>
@@ -60,19 +65,22 @@ export interface UseJupiterSwapReturn {
   clearError: () => void
 }
 
-// Get current network and configure tokens accordingly
-const CURRENT_NETWORK = getCurrentNetwork()
-const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
-const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
-const BASE_MINT_CONFIG = getTokenMintConfig(BASE_TOKEN.id, CURRENT_NETWORK)
-const QUOTE_MINT_CONFIG = getTokenMintConfig(QUOTE_TOKEN.id, CURRENT_NETWORK)
-const TSPACEX_MINT = getTokenMintAddress(BASE_TOKEN.id, CURRENT_NETWORK)
-const USDC_MINT = getTokenMintAddress(QUOTE_TOKEN.id, CURRENT_NETWORK)
-const TSPACEX_DECIMALS = BASE_MINT_CONFIG.decimals
-const USDC_DECIMALS = QUOTE_MINT_CONFIG.decimals
-
-export function useJupiterSwap(): UseJupiterSwapReturn {
+export function useJupiterSwap({
+  baseTokenId = DEFAULT_BASE_TOKEN_ID,
+  quoteTokenId = QUOTE_TOKEN_ID,
+}: UseJupiterSwapParams = {}): UseJupiterSwapReturn {
   const wallet = useWallet()
+
+  // Get current network and configure tokens accordingly
+  const CURRENT_NETWORK = getCurrentNetwork()
+  const BASE_TOKEN = useMemo(() => getAppToken(baseTokenId), [baseTokenId])
+  const QUOTE_TOKEN = useMemo(() => getAppToken(quoteTokenId), [quoteTokenId])
+  const BASE_MINT_CONFIG = useMemo(() => getTokenMintConfig(BASE_TOKEN.id, CURRENT_NETWORK), [BASE_TOKEN.id, CURRENT_NETWORK])
+  const QUOTE_MINT_CONFIG = useMemo(() => getTokenMintConfig(QUOTE_TOKEN.id, CURRENT_NETWORK), [QUOTE_TOKEN.id, CURRENT_NETWORK])
+  const BASE_MINT = useMemo(() => getTokenMintAddress(BASE_TOKEN.id, CURRENT_NETWORK), [BASE_TOKEN.id, CURRENT_NETWORK])
+  const QUOTE_MINT = useMemo(() => getTokenMintAddress(QUOTE_TOKEN.id, CURRENT_NETWORK), [QUOTE_TOKEN.id, CURRENT_NETWORK])
+  const BASE_DECIMALS = BASE_MINT_CONFIG.decimals
+  const QUOTE_DECIMALS = QUOTE_MINT_CONFIG.decimals
 
   // State
   const [isLoading, setIsLoading] = useState(false)
@@ -80,8 +88,8 @@ export function useJupiterSwap(): UseJupiterSwapReturn {
   const [poolInfo, setPoolInfo] = useState<PoolInfo | null>(null)
   const [quote, setQuote] = useState<JupiterSwapQuote | null>(null)
   const [txSignature, setTxSignature] = useState<string | null>(null)
-  const [usdcBalance, setUsdcBalance] = useState<BigNumberValue | null>(null)
-  const [tSpaceXBalance, setTessBalance] = useState<BigNumberValue | null>(null)
+  const [quoteBalance, setQuoteBalance] = useState<BigNumberValue | null>(null)
+  const [baseBalance, setBaseBalance] = useState<BigNumberValue | null>(null)
 
   // Create a connection for the current network
   const connection = useMemo(() => {
@@ -114,54 +122,50 @@ export function useJupiterSwap(): UseJupiterSwapReturn {
   // Refresh token balances from current network
   const refreshBalances = useCallback(async () => {
     if (!wallet.publicKey) {
-      setUsdcBalance(null)
-      setTessBalance(null)
+      setQuoteBalance(null)
+      setBaseBalance(null)
       return
     }
 
     try {
-      // Get USDC balance
-      // Use the program specified in token config (spl-token for USDC)
-      const usdcProgram = QUOTE_MINT_CONFIG.program === 'token-2022' ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID
+      // Get quote token balance
+      const quoteProgram = QUOTE_MINT_CONFIG.program === 'token-2022' ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID
       try {
-        const usdcMintPubkey = new PublicKey(USDC_MINT)
+        const quoteMintPubkey = new PublicKey(QUOTE_MINT)
         const ata = await getAssociatedTokenAddress(
-          usdcMintPubkey,
+          quoteMintPubkey,
           wallet.publicKey,
           false,
-          usdcProgram
+          quoteProgram
         )
-        const account = await getAccount(connection, ata, 'confirmed', usdcProgram)
-        // Convert raw amount to BigNumber using token decimals
-        const usdcBigNum = fromTokenAmount(account.amount.toString(), USDC_DECIMALS)
-        setUsdcBalance(usdcBigNum)
+        const account = await getAccount(connection, ata, 'confirmed', quoteProgram)
+        const quoteBigNum = fromTokenAmount(account.amount.toString(), QUOTE_DECIMALS)
+        setQuoteBalance(quoteBigNum)
       } catch {
         // Token account doesn't exist
-        setUsdcBalance(ZERO)
+        setQuoteBalance(ZERO)
       }
 
-      // Get T-SpaceX balance
-      // Use the program specified in token config (token-2022 for T-SpaceX)
-      const tSpaceXProgram = BASE_MINT_CONFIG.program === 'token-2022' ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID
+      // Get base token balance
+      const baseProgram = BASE_MINT_CONFIG.program === 'token-2022' ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID
       try {
-        const tSpaceXMintPubkey = new PublicKey(TSPACEX_MINT)
+        const baseMintPubkey = new PublicKey(BASE_MINT)
         const ata = await getAssociatedTokenAddress(
-          tSpaceXMintPubkey,
+          baseMintPubkey,
           wallet.publicKey,
           false,
-          tSpaceXProgram
+          baseProgram
         )
-        const account = await getAccount(connection, ata, 'confirmed', tSpaceXProgram)
-        // Convert raw amount to BigNumber using token decimals
-        const tessBigNum = fromTokenAmount(account.amount.toString(), TSPACEX_DECIMALS)
-        setTessBalance(tessBigNum)
+        const account = await getAccount(connection, ata, 'confirmed', baseProgram)
+        const baseBigNum = fromTokenAmount(account.amount.toString(), BASE_DECIMALS)
+        setBaseBalance(baseBigNum)
       } catch {
-        setTessBalance(ZERO)
+        setBaseBalance(ZERO)
       }
     } catch (err) {
       console.error('Failed to fetch balances:', err)
     }
-  }, [connection, wallet.publicKey])
+  }, [connection, wallet.publicKey, QUOTE_MINT, BASE_MINT, QUOTE_DECIMALS, BASE_DECIMALS, QUOTE_MINT_CONFIG.program, BASE_MINT_CONFIG.program])
 
   // Get swap quote from Jupiter
   const getQuote = useCallback(
@@ -178,11 +182,11 @@ export function useJupiterSwap(): UseJupiterSwapReturn {
 
       try {
         // Determine input/output mints and decimals based on direction
-        const isBuying = direction === 'USDC_TO_TSPACEX'
-        const inputMint = isBuying ? USDC_MINT : TSPACEX_MINT
-        const outputMint = isBuying ? TSPACEX_MINT : USDC_MINT
-        const inputDecimals = isBuying ? USDC_DECIMALS : TSPACEX_DECIMALS
-        const outputDecimals = isBuying ? TSPACEX_DECIMALS : USDC_DECIMALS
+        const isBuying = direction === 'BUY'
+        const inputMint = isBuying ? QUOTE_MINT : BASE_MINT
+        const outputMint = isBuying ? BASE_MINT : QUOTE_MINT
+        const inputDecimals = isBuying ? QUOTE_DECIMALS : BASE_DECIMALS
+        const outputDecimals = isBuying ? BASE_DECIMALS : QUOTE_DECIMALS
 
         // Convert amount to smallest units
         const amountInSmallestUnits = JupiterClient.parseAmount(amount, inputDecimals)
@@ -208,7 +212,7 @@ export function useJupiterSwap(): UseJupiterSwapReturn {
         setIsLoading(false)
       }
     },
-    [client]
+    [client, QUOTE_MINT, BASE_MINT, QUOTE_DECIMALS, BASE_DECIMALS]
   )
 
   // Execute swap
@@ -296,10 +300,10 @@ export function useJupiterSwap(): UseJupiterSwapReturn {
     poolInfo,
     quote,
     txSignature,
-    usdcMint: USDC_MINT,
-    tSpaceXMint: TSPACEX_MINT,
-    usdcBalance,
-    tSpaceXBalance,
+    quoteMint: QUOTE_MINT,
+    baseMint: BASE_MINT,
+    quoteBalance,
+    baseBalance,
     loadPool,
     getQuote,
     executeSwap,
