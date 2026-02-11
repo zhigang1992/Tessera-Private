@@ -235,7 +235,7 @@ export interface AppToken {
   alphaVault?: AlphaVaultConfig
   impliedValuation?: {
     valuation: string,
-    yoetPrice: string
+    auctionPrice: string
   }
 }
 
@@ -281,7 +281,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
     program: 'token-2022',
     impliedValuation: {
       valuation: "$800B",
-      yoetPrice: "$400.00"
+      auctionPrice: "~$423"
     },
     metadata: {
       name: 'T-SpaceX Token',

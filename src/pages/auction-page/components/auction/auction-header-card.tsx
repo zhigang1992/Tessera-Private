@@ -209,9 +209,9 @@ export function AuctionHeaderCard() {
               </div>
               <div className="h-px bg-zinc-300 dark:bg-[#666]" />
               <div className="flex flex-col gap-1 text-[10px]">
-                <div className="flex items-center justify-between">
-                  <span className="text-[#71717a] dark:text-[#999]">Based on Yoet Price:</span>
-                  <span className="font-mono text-foreground">{token.impliedValuation?.yoetPrice ?? '-'}</span>
+                <div className="flex items-center space-x-1">
+                  <span className="text-[#71717a] dark:text-[#999]">Based on Auction Price:</span>
+                  <span className="font-mono text-foreground">{token.impliedValuation?.auctionPrice ?? '-'}</span>
                 </div>
               </div>
             </div>
