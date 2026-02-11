@@ -126,19 +126,19 @@ export function DashboardPriceChart() {
           <div className="bg-[rgba(0,0,0,0.1)] rounded-lg px-4 py-3">
             <p className="text-xs font-normal text-black mb-1">Protocol Backing Ratio</p>
             <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-black">
-              {stats?.protocolBackingRatio ?? 0}%
+              {stats?.protocolBackingRatio ? `${stats.protocolBackingRatio}%` : '—'}
             </p>
           </div>
           <div className="bg-[rgba(0,0,0,0.1)] rounded-lg px-4 py-3">
             <p className="text-xs font-normal text-black mb-1">{TOKEN_DISPLAY_NAME} Supply</p>
             <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-black">
-              {stats?.tokenSupply ?? '0'}
+              {stats?.tokenSupply ?? '—'}
             </p>
           </div>
           <div className="bg-[rgba(0,0,0,0.1)] rounded-lg px-4 py-3">
             <p className="text-xs font-normal text-black mb-1">{TOKEN_DISPLAY_NAME} Price</p>
             <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-black">
-              ${stats?.tokenPrice.toFixed(1) ?? '0.0'}
+              {stats?.tokenPrice ? `$${stats.tokenPrice.toFixed(1)}` : '—'}
             </p>
           </div>
         </div>
@@ -151,17 +151,21 @@ export function DashboardPriceChart() {
           </div>
           <div className="flex flex-col items-end">
             <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-[#111]">
-              ${tokenInfo?.price?.toFixed(2) ?? '0.00'}
+              {tokenInfo?.price ? `$${tokenInfo.price.toFixed(2)}` : '—'}
             </p>
-            <div className="flex items-center gap-1.5">
-              <span className={`text-xs ${isPositive ? 'text-[#269700]' : 'text-red-500'}`}>
-                {isPositive ? '▲' : '▼'}
-              </span>
-              <p className="text-[10px] font-medium text-black">
-                ${Math.abs(tokenInfo?.priceChange24h ?? 0).toFixed(2)} (
-                {Math.abs(tokenInfo?.priceChangePercent24h ?? 0).toFixed(2)}%) 24H
-              </p>
-            </div>
+            {tokenInfo?.price ? (
+              <div className="flex items-center gap-1.5">
+                <span className={`text-xs ${isPositive ? 'text-[#269700]' : 'text-red-500'}`}>
+                  {isPositive ? '▲' : '▼'}
+                </span>
+                <p className="text-[10px] font-medium text-black">
+                  ${Math.abs(tokenInfo.priceChange24h ?? 0).toFixed(2)} (
+                  {Math.abs(tokenInfo.priceChangePercent24h ?? 0).toFixed(2)}%) 24H
+                </p>
+              </div>
+            ) : (
+              <p className="text-[10px] font-medium text-black">—</p>
+            )}
           </div>
         </div>
 
@@ -192,17 +196,21 @@ export function DashboardPriceChart() {
             <div className="bg-[rgba(0,0,0,0.5)] h-10 w-px" />
             <div className="flex flex-col justify-center">
               <p className="font-['Martian_Mono',monospace] font-medium text-[24px] text-[#111]">
-                ${tokenInfo?.price?.toFixed(2) ?? '0.00'}
+                {tokenInfo?.price ? `$${tokenInfo.price.toFixed(2)}` : '—'}
               </p>
-              <div className="flex items-center gap-1.5">
-                <span className={`text-xs ${isPositive ? 'text-[#269700]' : 'text-red-500'}`}>
-                  {isPositive ? '▲' : '▼'}
-                </span>
-                <p className="text-xs font-medium text-black">
-                  ${Math.abs(tokenInfo?.priceChange24h ?? 0).toFixed(2)} (
-                  {Math.abs(tokenInfo?.priceChangePercent24h ?? 0).toFixed(2)}%) 24H
-                </p>
-              </div>
+              {tokenInfo?.price ? (
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-xs ${isPositive ? 'text-[#269700]' : 'text-red-500'}`}>
+                    {isPositive ? '▲' : '▼'}
+                  </span>
+                  <p className="text-xs font-medium text-black">
+                    ${Math.abs(tokenInfo.priceChange24h ?? 0).toFixed(2)} (
+                    {Math.abs(tokenInfo.priceChangePercent24h ?? 0).toFixed(2)}%) 24H
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs font-medium text-black">—</p>
+              )}
             </div>
           </div>
 
