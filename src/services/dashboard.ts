@@ -282,53 +282,50 @@ function formatValuation(tokenPrice: number): string {
 
 /**
  * Get list of tokenized assets for the assets table
- * Fetches real data from GraphQL and merges with token metadata
- * Returns empty array when no real data is available
+ * Always returns tokens from frontend TOKEN_REGISTRY, enriched with backend data when available
+ * Shows placeholders (0 or null) for missing backend data instead of hiding rows
  */
 export async function getTokenizedAssets(): Promise<AssetData[]> {
-  let tokenDetails: Awaited<ReturnType<typeof fetchAllTokenDetails>> = []
+  // Create a map of backend data by token mint address
+  const backendDataMap = new Map<string, { price: number; holders: number }>()
 
   try {
-    tokenDetails = await fetchAllTokenDetails()
-  } catch (error) {
-    console.error('[dashboard] Failed to fetch token details', error)
-    return []
-  }
-
-  if (!tokenDetails || tokenDetails.length === 0) {
-    return []
-  }
-
-  return tokenDetails.map((token) => {
-    const metadata = TOKEN_REGISTRY[token.token]
-    const price = BigNumber.toNumber(fromHasuraToNative(token.price))
-    const holders = Number(token.holder_count) || 0
-
-    // If we have metadata for this token, use it; otherwise create generic entry
-    if (metadata) {
-      return {
-        id: metadata.id,
-        symbol: metadata.symbol,
-        name: metadata.name,
-        code: metadata.code,
-        sector: metadata.sector,
-        price,
-        holders,
-        valuation: formatValuation(price),
-      }
+    const tokenDetails = await fetchAllTokenDetails()
+    if (tokenDetails && tokenDetails.length > 0) {
+      tokenDetails.forEach((token) => {
+        const price = BigNumber.toNumber(fromHasuraToNative(token.price))
+        const holders = Number(token.holder_count) || 0
+        backendDataMap.set(token.token, { price, holders })
+      })
     }
+  } catch (error) {
+    console.error('[dashboard] Failed to fetch token details from backend', error)
+    // Continue with empty backend data - will show placeholders
+  }
 
-    // Fallback for unknown tokens
-    const shortMint = `${token.token.slice(0, 4)}...${token.token.slice(-4)}`
+  // Deduplicate TOKEN_REGISTRY by token ID (since same token can have devnet and mainnet mints)
+  const uniqueTokens = new Map<string, typeof TOKEN_REGISTRY[string]>()
+  Object.values(TOKEN_REGISTRY).forEach((metadata) => {
+    if (!uniqueTokens.has(metadata.id)) {
+      uniqueTokens.set(metadata.id, metadata)
+    }
+  })
+
+  // Always return all unique tokens from TOKEN_REGISTRY
+  return Array.from(uniqueTokens.values()).map((metadata) => {
+    const backendData = backendDataMap.get(metadata.mint)
+    const price = backendData?.price ?? 0
+    const holders = backendData?.holders ?? 0
+
     return {
-      id: token.token,
-      symbol: shortMint,
-      name: shortMint,
-      code: token.token.slice(0, 8),
-      sector: 'Unknown',
+      id: metadata.id,
+      symbol: metadata.symbol,
+      name: metadata.name,
+      code: metadata.code,
+      sector: metadata.sector,
       price,
       holders,
-      valuation: formatValuation(price),
+      valuation: price > 0 ? formatValuation(price) : '—',
     }
   })
 }

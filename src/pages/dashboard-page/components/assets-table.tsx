@@ -98,7 +98,7 @@ export function AssetsTable({ selectedTokenId, onSelectToken }: AssetsTableProps
                     selectedTokenId === getTokenIdForAsset(asset.id) ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
                   }`}
                 >
-                  ${asset.price.toFixed(2)}
+                  {asset.price > 0 ? `$${asset.price.toFixed(2)}` : '—'}
                 </p>
               </div>
               <div className="w-[17.5%] min-w-[100px]">
@@ -178,7 +178,7 @@ export function AssetsTable({ selectedTokenId, onSelectToken }: AssetsTableProps
                       selectedTokenId === getTokenIdForAsset(asset.id) ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
                     }`}
                   >
-                    ${asset.price.toFixed(2)}
+                    {asset.price > 0 ? `$${asset.price.toFixed(2)}` : '—'}
                   </p>
                 </div>
                 <div className="flex-1">
