@@ -4,8 +4,8 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { Connection } from '@solana/web3.js'
-import { createMeteoraClient, DEVNET_POOLS, type MarketDepthData } from '@/services/meteora'
-import { getCurrentNetwork, getRpcEndpoint } from '@/config'
+import { createMeteoraClient, type MarketDepthData } from '@/services/meteora'
+import { getCurrentNetwork, getRpcEndpoint, getAppToken, DEFAULT_BASE_TOKEN_ID } from '@/config'
 
 // Get RPC URL based on current network configuration
 const getRpcUrl = () => {
@@ -58,14 +58,18 @@ async function fetchMarketDepth(
  * @returns Market depth data, loading state, and error state
  */
 export function useMarketDepth({
-  poolAddress = DEVNET_POOLS['T-SpaceX-USDC'].address,
+  poolAddress,
   binsToLeft = 17,
   binsToRight = 17,
   enabled = true,
 }: UseMarketDepthOptions = {}): MarketDepthResult {
+  // Use network-aware pool address from token config if not provided
+  const defaultToken = getAppToken(DEFAULT_BASE_TOKEN_ID)
+  const defaultPoolAddress = defaultToken.dlmmPool?.address ?? ''
+  const resolvedPoolAddress = poolAddress ?? defaultPoolAddress
   const query = useQuery({
-    queryKey: ['marketDepth', poolAddress, binsToLeft, binsToRight],
-    queryFn: () => fetchMarketDepth(poolAddress, binsToLeft, binsToRight),
+    queryKey: ['marketDepth', resolvedPoolAddress, binsToLeft, binsToRight],
+    queryFn: () => fetchMarketDepth(resolvedPoolAddress, binsToLeft, binsToRight),
     enabled,
     staleTime: 30 * 1000, // Consider stale after 30 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes

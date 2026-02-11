@@ -11,7 +11,6 @@ import {
   fetchTokenPrice24hOHLC,
   fetchTokenDetails,
 } from '@/features/referral/lib/graphql-client'
-import { DEVNET_POOLS } from './meteora'
 import { fromHasuraToNative, BigNumber } from '@/lib/bignumber'
 import {
   DEFAULT_BASE_TOKEN_ID,
@@ -42,17 +41,8 @@ export type TimeRange = '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL'
 // ============ Helpers ============
 
 function resolveDlmmPoolAddress(tokenId: AppTokenId): string | null {
-  const configured = getTokenDlmmPoolAddress(tokenId)
-  if (configured) {
-    return configured
-  }
-
-  const poolId = getAppToken(tokenId).dlmmPool?.id
-  if (poolId && DEVNET_POOLS[poolId]) {
-    return DEVNET_POOLS[poolId].address
-  }
-
-  return null
+  // Get network-aware pool address from config
+  return getTokenDlmmPoolAddress(tokenId)
 }
 
 function resolvePriceContext(symbol: string): { token: AppToken; mint: string; poolAddress: string | null } {

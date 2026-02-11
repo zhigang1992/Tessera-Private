@@ -429,6 +429,11 @@ export function getTokenIdByMint(mint: string): AppTokenId | null {
   return MINT_TO_TOKEN_ID[mint] ?? null
 }
 
+export function getTokenByMint(mint: string): AppToken | null {
+  const tokenId = getTokenIdByMint(mint)
+  return tokenId ? getAppToken(tokenId) : null
+}
+
 export function getTokenDlmmPool(tokenId: AppTokenId): DlmmPoolConfig | null {
   return getAppToken(tokenId).dlmmPool ?? null
 }

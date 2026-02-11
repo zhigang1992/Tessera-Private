@@ -8,7 +8,6 @@ import {
   type AggregatedAffiliateStats,
   type TradingPointsByAccountData,
 } from '@/features/referral/lib/graphql-client'
-import { DEVNET_POOLS } from './meteora'
 import { fromHasuraToNative, formatBigNumber, BigNumber, type BigNumberSource } from '@/lib/bignumber'
 import {
   DEFAULT_BASE_TOKEN_ID,
@@ -20,15 +19,8 @@ import {
 const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
 
 function getBasePoolAddress(): string | null {
-  const configured = getTokenDlmmPoolAddress(BASE_TOKEN.id)
-  if (configured) return configured
-
-  const poolId = BASE_TOKEN.dlmmPool?.id
-  if (poolId && DEVNET_POOLS[poolId]) {
-    return DEVNET_POOLS[poolId].address
-  }
-
-  return null
+  // Get network-aware pool address from config
+  return getTokenDlmmPoolAddress(BASE_TOKEN.id)
 }
 
 function getSymbolForMint(mint: string): string {

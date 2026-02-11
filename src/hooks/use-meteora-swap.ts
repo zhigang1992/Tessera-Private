@@ -13,7 +13,6 @@ import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@s
 import {
   MeteoraClient,
   createMeteoraClient,
-  DEVNET_POOLS,
   type MeteoraSwapQuote,
   type PoolInfo,
 } from '@/services/meteora'
@@ -63,11 +62,7 @@ const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
 const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
 const BASE_MINT_CONFIG = getTokenMintConfig(BASE_TOKEN.id, CURRENT_NETWORK)
 const QUOTE_MINT_CONFIG = getTokenMintConfig(QUOTE_TOKEN.id, CURRENT_NETWORK)
-const POOL_ADDRESS =
-  getTokenDlmmPoolAddress(BASE_TOKEN.id) ??
-  (BASE_TOKEN.dlmmPool?.id && DEVNET_POOLS[BASE_TOKEN.dlmmPool.id]?.address) ??
-  DEVNET_POOLS['T-SpaceX-USDC']?.address ??
-  ''
+const POOL_ADDRESS = getTokenDlmmPoolAddress(BASE_TOKEN.id) ?? ''
 const TSPACEX_MINT = getTokenMintAddress(BASE_TOKEN.id, CURRENT_NETWORK)
 const USDC_MINT = getTokenMintAddress(QUOTE_TOKEN.id, CURRENT_NETWORK)
 const TSPACEX_DECIMALS = BASE_MINT_CONFIG.decimals
