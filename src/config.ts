@@ -234,8 +234,10 @@ export interface AppToken {
   dlmmPool?: DlmmPoolConfig
   alphaVault?: AlphaVaultConfig
   impliedValuation?: {
-    valuation: string,
+    valuation: string
+    valuationNumber: number
     auctionPrice: string
+    auctionPriceNumber: number
   }
 }
 
@@ -280,8 +282,10 @@ const TOKENS: Record<AppTokenId, AppToken> = {
     mint: network(TOKEN_NETWORK_CONFIGS['T-SpaceX'].mint),
     program: 'token-2022',
     impliedValuation: {
-      valuation: "$800B",
-      auctionPrice: "~$423"
+      valuation: '$800B',
+      valuationNumber: 800_000_000_000,
+      auctionPrice: '~$423',
+      auctionPriceNumber: 423,
     },
     metadata: {
       name: 'T-SpaceX',

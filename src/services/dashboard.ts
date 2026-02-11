@@ -274,17 +274,34 @@ Object.values(APP_TOKENS).forEach((token) => {
 
 /**
  * Format market cap to human-readable valuation string
- * Uses the implied valuation formula: Token Price × 19.0023753
- * (8000/421 = 19.0023753)
+ * Uses the implied valuation formula from config: (valuation / initial_auction_price) * current_price
+ * For T-SpaceX: (800,000,000,000 / 423) * current_price
  */
 function formatValuation(tokenPrice: number): string {
-  // Calculate implied valuation: Token Price × 19.0023753
-  const impliedValue = tokenPrice * 19.0023753
+  // Get implied valuation config for T-SpaceX
+  const impliedValConfig = BASE_TOKEN.impliedValuation
 
-  if (impliedValue > 10000) {
-    return `$${(impliedValue / 10000).toFixed(1)}T`
+  if (!impliedValConfig) {
+    // Fallback to showing price if no config available
+    return `$${tokenPrice.toFixed(2)}`
+  }
+
+  // Use numeric values directly from config (no parsing needed)
+  const baseValuation = impliedValConfig.valuationNumber // 800,000,000,000
+  const initialAuctionPrice = impliedValConfig.auctionPriceNumber // 423
+
+  // Calculate implied valuation: (base_valuation / initial_auction_price) * current_price
+  // Formula: 800,000,000,000 / 423 * current_price
+  const impliedValue = (baseValuation / initialAuctionPrice) * tokenPrice
+
+  if (impliedValue >= 1_000_000_000_000) {
+    return `$${(impliedValue / 1_000_000_000_000).toFixed(1)}T`
+  } else if (impliedValue >= 1_000_000_000) {
+    return `$${(impliedValue / 1_000_000_000).toFixed(1)}B`
+  } else if (impliedValue >= 1_000_000) {
+    return `$${(impliedValue / 1_000_000).toFixed(1)}M`
   } else {
-    return `$${(impliedValue / 10).toFixed(1)}B`
+    return `$${impliedValue.toFixed(0)}`
   }
 }
 
