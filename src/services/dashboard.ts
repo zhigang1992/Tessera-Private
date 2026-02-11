@@ -3,7 +3,6 @@ import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetch
 import { fromHasuraToNative, formatBigNumber, BigNumber, math, mathIs, type BigNumberSource, fromTokenAmount, type BigNumberValue } from '@/lib/bignumber'
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
-import { DEVNET_POOLS } from './meteora'
 import { getCurrentTokenPrice } from './price'
 import {
   APP_TOKENS,
@@ -22,17 +21,8 @@ const BASE_MINT_ADDRESS = BASE_MINT_CONFIG?.address ?? null
 const BASE_DECIMALS = BASE_MINT_CONFIG?.decimals ?? BASE_TOKEN.decimals
 
 function getBasePoolAddress(): string | null {
-  const configured = getTokenDlmmPoolAddress(BASE_TOKEN.id)
-  if (configured) {
-    return configured
-  }
-
-  const poolId = BASE_TOKEN.dlmmPool?.id
-  if (poolId && DEVNET_POOLS[poolId]) {
-    return DEVNET_POOLS[poolId].address
-  }
-
-  return null
+  // Get network-aware pool address from config
+  return getTokenDlmmPoolAddress(BASE_TOKEN.id)
 }
 
 // ============ Types ============

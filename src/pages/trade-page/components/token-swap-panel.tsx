@@ -123,19 +123,18 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
   const outputSizeClass =
     outputLength === 0 ? 'text-[28px]' : outputLength <= 6 ? 'text-[36px]' : outputLength <= 10 ? 'text-[28px]' : 'text-[20px]'
 
-  // Load pool and balances on mount (skip if disabled)
+  // Load pool on mount - always load, even when trading is disabled
   useEffect(() => {
-    if (!disabled) {
-      loadPool()
-    }
-  }, [loadPool, disabled])
+    loadPool()
+  }, [loadPool])
 
-  // Refresh balances when wallet changes (skip if disabled)
+  // Refresh balances when wallet changes - always refresh, even when trading is disabled
+  // Users should see their balances even when trading is not active
   useEffect(() => {
-    if (!disabled && wallet.publicKey) {
+    if (wallet.publicKey) {
       refreshBalances()
     }
-  }, [wallet.publicKey, refreshBalances, disabled])
+  }, [wallet.publicKey, refreshBalances])
 
   // Get quote when input changes (debounced) - skip if disabled
   useEffect(() => {
@@ -255,7 +254,7 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
                       <AppTokenCount
                         token={sellingTokenConfig}
                         value={sellingBalance}
-                        fallback="0.00"
+                        fallback="-"
                         showSymbol={false}
                         minimumFractionDigits={sellingPrecision.minimumFractionDigits}
                         maximumFractionDigits={sellingPrecision.maximumFractionDigits}

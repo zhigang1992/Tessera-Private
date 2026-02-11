@@ -145,12 +145,15 @@ export function PriceChart({ tokenSymbol = 'T-SpaceX', disabled = false }: Price
             </div>
             <div>
               <div className="text-xl lg:text-[28px] font-bold text-[#111]">
-                ${token?.price?.toFixed(2) ?? '0.00'}
+                {token?.price ? `$${token.price.toFixed(2)}` : '-'}
               </div>
               <div className="flex items-center gap-1 text-[10px] lg:text-xs">
                 <span className={isPositive ? 'text-[#269700]' : 'text-red-500'}>
-                  {isPositive ? '▲' : '▼'} ${Math.abs(token?.priceChange24h ?? 0).toFixed(2)} (
-                  {Math.abs(token?.priceChangePercent24h ?? 0).toFixed(2)}%)
+                  {token?.priceChange24h !== undefined ? (
+                    <>{isPositive ? '▲' : '▼'} ${Math.abs(token.priceChange24h).toFixed(2)} ({Math.abs(token.priceChangePercent24h ?? 0).toFixed(2)}%)</>
+                  ) : (
+                    '-'
+                  )}
                 </span>
                 <span className="text-[#999]">24H</span>
               </div>

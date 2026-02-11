@@ -10,7 +10,6 @@ import DLMM from '@meteora-ag/dlmm'
 import BN from 'bn.js'
 import { BigNumber, math, mathIs, formatBigNumber, type BigNumberValue } from '@/lib/bignumber'
 import { DEVNET_POOLS } from '@/config'
-export { DEVNET_POOLS }
 
 export type DevnetPoolId = keyof typeof DEVNET_POOLS
 export type PoolId = DevnetPoolId
