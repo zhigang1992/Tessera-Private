@@ -1,10 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router'
 import { AppProviders } from '@/components/app-providers.tsx'
 import { MainLayout } from '@/components/layout'
-import { ReferralPage, LeaderboardPage, TradePage, DashboardPage, SupportPage, AuctionPage, ExplorePage, WhitelistCheckerPage } from '@/pages'
-import { AuctionListPage } from '@/features/auction/pages/AuctionListPage'
-import { AuctionDetailPage } from '@/features/auction/pages/AuctionDetailPage'
-import { PRODUCTION_MODE } from '@/config'
+import { AuctionPage, DashboardPage, ExplorePage, LeaderboardPage, ReferralPage, SupportPage, TradePage, WhitelistCheckerPage } from '@/pages'
+import { BrowserRouter, Navigate, Route, Routes, useSearchParams } from 'react-router'
 
 // Component to handle /s redirect with query params
 function ShareRedirect() {
