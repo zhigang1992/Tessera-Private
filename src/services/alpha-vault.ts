@@ -430,8 +430,7 @@ export class AlphaVaultClient {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       // const vaultData = vault.vault as any
-      // const maxDeposit = merkleProof?.maxCap?.toString() ?? vaultData.individualDepositingCap?.toString() ?? '0'
-      const maxDeposit = "1000000000"
+      const maxDeposit = merkleProof?.maxCap?.toString() ?? '0'
       const remainingQuota = quota?.toString() ?? '0'
 
       const canDeposit = parseFloat(remainingQuota) > 0
