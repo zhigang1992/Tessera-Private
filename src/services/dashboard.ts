@@ -25,6 +25,14 @@ function getBasePoolAddress(): string | null {
   return getTokenDlmmPoolAddress(BASE_TOKEN.id)
 }
 
+/**
+ * Format mint address for display (e.g., "TSPXcL...Pd99v")
+ */
+function formatMintAddress(address: string | null): string {
+  if (!address || address.length < 12) return address ?? '—'
+  return `${address.slice(0, 6)}...${address.slice(-5)}`
+}
+
 // ============ Types ============
 
 export interface MarketStatsData {
@@ -442,7 +450,7 @@ export async function getDashboardTokenInfo(): Promise<TokenInfo> {
       description:
         'SpaceX is a private aerospace company founded by Elon Musk that designs and manufactures rockets and spacecraft, provides commercial and government orbital launch services, and operates the Starlink global satellite internet constellation. Its business covers reusable launch systems, crewed missions, satellite broadband.',
       supportedChains: ['Solana'],
-      onchainAddress: '0xf6b1...103f', // TODO: Get actual address from config
+      onchainAddress: formatMintAddress(BASE_MINT_ADDRESS),
       categories: ['Equities'],
       underlyingAssetName: 'SpaceX, Inc. Private Equity',
       underlyingAssetCompany: 'SpaceX',
@@ -479,7 +487,7 @@ export async function getDashboardTokenInfo(): Promise<TokenInfo> {
     description:
       'SpaceX is a private aerospace company founded by Elon Musk that designs and manufactures rockets and spacecraft, provides commercial and government orbital launch services, and operates the Starlink global satellite internet constellation. Its business covers reusable launch systems, crewed missions, satellite broadband.',
     supportedChains: ['Solana'],
-    onchainAddress: '0xf6b1...103f', // TODO: Get actual address from config
+    onchainAddress: formatMintAddress(BASE_MINT_ADDRESS),
     categories: ['Equities'],
     underlyingAssetName: 'SpaceX, Inc. Private Equity',
     underlyingAssetCompany: 'SpaceX',
