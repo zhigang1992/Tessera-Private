@@ -222,12 +222,18 @@ export function DepositUSDCCard() {
             Deposit <AppTokenName token={config.quoteToken} variant="symbol" />
           </h3>
         </div>
-        <span
-          className="text-white text-[10px] font-semibold px-2 py-1 rounded tracking-wider"
-          style={{ backgroundColor: vaultStateDisplay?.color ?? '#6b7280' }}
-        >
-          {vaultStateDisplay?.label ?? 'LOADING'}
-        </span>
+        {vaultStateDisplay ? (
+          <span
+            className="text-white text-[10px] font-semibold px-2 py-1 rounded tracking-wider"
+            style={{ backgroundColor: vaultStateDisplay.color }}
+          >
+            {vaultStateDisplay.label}
+          </span>
+        ) : (
+          <span className="text-[#6b7280] text-[10px] font-semibold px-2 py-1 rounded tracking-wider bg-[#6b7280]/20">
+            LOADING
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col gap-4">
@@ -417,15 +423,17 @@ export function DepositUSDCCard() {
                     </>
                   ) : (
                     <p className="font-semibold text-lg leading-7 text-white">
-                      {!isDepositActive
-                        ? 'Deposits Not Active Yet'
-                        : !isDepositOpen
-                          ? vaultInfo?.state === 'purchasing'
-                            ? 'Purchasing in Progress'
-                            : 'Deposits Closed'
-                          : !depositQuota?.canDeposit
-                            ? (depositQuota?.reason ?? 'Cannot Deposit')
-                            : 'Confirm Deposit'}
+                      {!vaultInfo
+                        ? 'Loading...'
+                        : !isDepositActive
+                          ? 'Deposits Not Active Yet'
+                          : !isDepositOpen
+                            ? vaultInfo.state === 'purchasing'
+                              ? 'Purchasing in Progress'
+                              : 'Deposits Closed'
+                            : !depositQuota?.canDeposit
+                              ? (depositQuota?.reason ?? 'Cannot Deposit')
+                              : 'Confirm Deposit'}
                     </p>
                   )}
                 </div>
