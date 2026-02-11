@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { getDashboardTokenInfo } from '@/services'
-import { AppTokenId, DEFAULT_BASE_TOKEN_ID, getAppToken } from '@/config'
+import { AppTokenId, DEFAULT_BASE_TOKEN_ID, getAppToken, getExplorerUrl } from '@/config'
 import SolanaIcon from './_/solana-icon.svg?react'
 
 /**
@@ -50,6 +50,7 @@ export function AboutPanel({ tokenId = DEFAULT_BASE_TOKEN_ID }: AboutPanelProps)
   const metadata = TOKEN_METADATA[tokenId]
   const description = metadata.description
   const onchainAddress = formatMintAddress(token.mint)
+  const explorerUrl = getExplorerUrl(token.mint, 'address')
 
   return (
     <div className="bg-white dark:bg-[#323334] border border-black/15 dark:border-[rgba(210,210,210,0.1)] rounded-2xl p-4 lg:p-6">
@@ -75,18 +76,23 @@ export function AboutPanel({ tokenId = DEFAULT_BASE_TOKEN_ID }: AboutPanelProps)
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
           <div className="flex items-center justify-between py-2.5">
             <span className="text-xs lg:text-sm text-[#999]">Onchain Address</span>
-            <div className="flex items-center gap-1.5">
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 hover:opacity-70 transition-opacity"
+            >
               <SolanaIcon className="w-6 h-6" />
               <span className="text-sm lg:text-base text-black dark:text-[#d2d2d2]">{onchainAddress}</span>
               <svg
-                className="w-4 h-4 opacity-50 text-black dark:text-[#d2d2d2]"
+                className="w-4 h-4 text-black dark:text-[#d2d2d2]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
-            </div>
+            </a>
           </div>
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
           <div className="flex items-center justify-between py-2.5">
