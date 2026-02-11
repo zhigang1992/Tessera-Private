@@ -235,7 +235,7 @@ export function ClaimTokensCard() {
         {/* Countdown Notification - shown when vesting hasn't started */}
         {!isVestingActive && (
           <div className="w-full mb-4">
-            <CountdownNotification config={countdownConfig} title={`${token.displayName} vesting period`} />
+            <CountdownNotification config={countdownConfig} title={`${token.displayName} claim period`} />
           </div>
         )}
 
@@ -376,7 +376,7 @@ export function ClaimTokensCard() {
         <div className="w-full flex flex-col gap-4">
           {/* Countdown Notification - shown when vesting hasn't started */}
           {!isVestingActive && (
-            <CountdownNotification config={countdownConfig} title={`${token.displayName} vesting period`} />
+            <CountdownNotification config={countdownConfig} title={`${token.displayName} claim period`} />
           )}
 
           {wallet.connected ? (
