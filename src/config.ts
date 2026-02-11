@@ -270,7 +270,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
   'T-SpaceX': {
     id: 'T-SpaceX',
     symbol: 'T-SpaceX',
-    displayName: 'T-SpaceX Token',
+    displayName: 'T-SpaceX',
     slug: 't-spacex',
     routeSegment: 'T-SpaceX',
     decimals: network(TOKEN_NETWORK_CONFIGS['T-SpaceX'].decimals),
@@ -284,7 +284,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       auctionPrice: "~$423"
     },
     metadata: {
-      name: 'T-SpaceX Token',
+      name: 'T-SpaceX',
       code: 'TSX-001',
       sector: 'Aerospace',
       type: 'PRE-IPO',
