@@ -1,11 +1,9 @@
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { ExploreAsset } from '@/services'
-import ExternalLinkIcon from './_/external-link.svg?react'
 import SwapIcon from './_/swap.svg?react'
 import GavelIcon from './_/gavel.svg?react'
 import HourglassIcon from './_/hourglass.svg?react'
-import { PRODUCTION_MODE } from '@/config'
 
 interface AssetCardProps {
   asset: ExploreAsset

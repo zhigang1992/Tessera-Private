@@ -26,7 +26,6 @@ export function AuctionHeaderCard() {
     userDeposited,
     estimatedAllocation,
     estimatedRefund,
-    vestingDuration,
   } = useAuctionAlphaVault()
 
   const totalRaisedBN = vaultInfo

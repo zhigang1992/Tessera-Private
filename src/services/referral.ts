@@ -3,11 +3,9 @@ import {
   fetchUserRegistration,
   fetchSwapEvents,
   fetchUserTradingVolume,
-  fetchRewardDetailsByCode,
   fetchUsersForCode,
   fetchTradingPointsByAccount,
   type AggregatedAffiliateStats,
-  type FeeByToken,
   type TradingPointsByAccountData,
 } from '@/features/referral/lib/graphql-client'
 import { DEVNET_POOLS } from './meteora'
@@ -253,26 +251,6 @@ function formatWalletAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
 
-/**
- * Convert fees_by_token array to array of RewardItem
- * Maps token mints to symbols and formats amounts
- */
-function parseFeesToRewards(fees: FeeByToken[] | null): RewardItem[] {
-  if (!fees || fees.length === 0) return []
-
-  const rewards: RewardItem[] = []
-  for (const { mint, fee } of fees) {
-    // Map mint to a human-readable symbol
-    const symbol = getSymbolForMint(mint)
-    // Convert from Hasura 18-decimal precision
-    const formattedAmount = formatBigNumber(fromHasuraToNative(fee), { maximumFractionDigits: 4 })
-    const numAmount = parseFloat(formattedAmount)
-    if (numAmount > 0) {
-      rewards.push({ amount: numAmount, token: symbol })
-    }
-  }
-  return rewards
-}
 
 /**
  * Map level label string to layer type

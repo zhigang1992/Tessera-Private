@@ -11,10 +11,11 @@ import {
   fetchAffiliateStats,
   fetchReferralCodesByOwner,
   fetchUserRegistration,
-  fetchTradersForCode,
+  fetchUsersForCode,
   type AggregatedAffiliateStats,
   type ReferralCodeCreatedEvent,
   type UserRegisteredEvent,
+  type CodeRegisterView,
 } from '../lib/graphql-client'
 
 /**
@@ -91,11 +92,11 @@ export function useUserRegistrationGraphql(walletAddress?: string | null) {
  * Fetch traders registered under a specific referral code
  */
 export function useTradersForCode(referralCode?: string | null) {
-  return useQuery<UserRegisteredEvent[]>({
+  return useQuery<CodeRegisterView[]>({
     queryKey: referralGraphqlKeys.tradersForCode(referralCode ?? 'no-code'),
     queryFn: async () => {
       if (!referralCode) return []
-      return fetchTradersForCode(referralCode)
+      return fetchUsersForCode(referralCode)
     },
     enabled: !!referralCode,
     staleTime: 30 * 1000,
