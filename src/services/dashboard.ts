@@ -107,30 +107,6 @@ export interface UserTradeHistoryResponse {
   totalPages: number
 }
 
-// ============ Mock Data ============
-
-const dashboardStats: DashboardStats = {
-  protocolBackingRatio: 100,
-  tokenSupply: '300K',
-  tokenPrice: 183.2,
-}
-
-const tokenInfo: TokenInfo = {
-  symbol: BASE_TOKEN.symbol,
-  name: BASE_TOKEN.displayName,
-  price: 449.94,
-  priceChange24h: 2.74,
-  priceChangePercent24h: 0.6203,
-  description:
-    'SpaceX is a private aerospace company founded by Elon Musk that designs and manufactures rockets and spacecraft, provides commercial and government orbital launch services, and operates the Starlink global satellite internet constellation. Its business covers reusable launch systems, crewed missions, satellite broadband.',
-  supportedChains: ['Solana'],
-  onchainAddress: '0xf6b1...103f',
-  categories: ['Equities'],
-  underlyingAssetName: 'SpaceX, Inc. Private Equity',
-  underlyingAssetCompany: 'SpaceX',
-  sharesPerToken: `1 ${BASE_TOKEN.symbol} = 1.00 SPACEX EQUITY`,
-}
-
 // ============ Helper Functions ============
 
 /**
@@ -378,31 +354,36 @@ function formatSupply(value: number): string {
 /**
  * Get dashboard stats including real token price and supply from backend
  * Uses public_marts_token_details for latest price
+ * @throws {Error} When token mint is not configured or token data is unavailable
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
   const tokenMint = BASE_MINT_ADDRESS
 
   if (!tokenMint) {
-    return dashboardStats
+    throw new Error('Base token mint address is not configured')
   }
 
   // Fetch token details (includes price and circulating supply)
   const tokenData = await fetchTokenDetails(tokenMint)
 
   if (!tokenData) {
-    return dashboardStats
+    throw new Error('Token data is not available from backend')
   }
 
   // Get latest price from token_details
   const tokenPrice = BigNumber.toNumber(fromHasuraToNative(tokenData.price))
+
+  if (tokenPrice <= 0) {
+    throw new Error('Invalid token price received from backend')
+  }
 
   // Get circulating supply from token_details
   const supplyValue = BigNumber.toNumber(fromHasuraToNative(tokenData.circulating_supply))
   const tokenSupply = formatSupply(supplyValue)
 
   return {
-    ...dashboardStats,
-    tokenPrice: tokenPrice > 0 ? tokenPrice : dashboardStats.tokenPrice,
+    protocolBackingRatio: 100, // TODO: Get this from backend
+    tokenPrice,
     tokenSupply,
   }
 }
@@ -410,13 +391,18 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 /**
  * Get token info with real price data from backend
  * Falls back to calculating from swap events if backend data unavailable
+ * @throws {Error} When token mint or pool address is not configured, or when price data is unavailable
  */
 export async function getDashboardTokenInfo(): Promise<TokenInfo> {
   const tokenMint = BASE_MINT_ADDRESS
   const poolAddress = getBasePoolAddress()
 
-  if (!tokenMint || !poolAddress) {
-    return tokenInfo
+  if (!tokenMint) {
+    throw new Error('Base token mint address is not configured')
+  }
+
+  if (!poolAddress) {
+    throw new Error('Pool address is not configured')
   }
 
   // Fetch 24h OHLC data and swap events in parallel
@@ -442,7 +428,7 @@ export async function getDashboardTokenInfo(): Promise<TokenInfo> {
   }
 
   if (currentPrice === 0) {
-    return tokenInfo
+    throw new Error('Unable to determine current token price from backend or swap events')
   }
 
   // Use backend 24h change data if available
@@ -451,10 +437,19 @@ export async function getDashboardTokenInfo(): Promise<TokenInfo> {
     const priceChangePercent24h = BigNumber.toNumber(fromHasuraToNative(ohlcData.price_change_pct_24h))
 
     return {
-      ...tokenInfo,
+      symbol: BASE_TOKEN.symbol,
+      name: BASE_TOKEN.displayName,
       price: currentPrice,
       priceChange24h,
       priceChangePercent24h,
+      description:
+        'SpaceX is a private aerospace company founded by Elon Musk that designs and manufactures rockets and spacecraft, provides commercial and government orbital launch services, and operates the Starlink global satellite internet constellation. Its business covers reusable launch systems, crewed missions, satellite broadband.',
+      supportedChains: ['Solana'],
+      onchainAddress: '0xf6b1...103f', // TODO: Get actual address from config
+      categories: ['Equities'],
+      underlyingAssetName: 'SpaceX, Inc. Private Equity',
+      underlyingAssetCompany: 'SpaceX',
+      sharesPerToken: `1 ${BASE_TOKEN.symbol} = 1.00 SPACEX EQUITY`,
     }
   }
 
@@ -479,10 +474,19 @@ export async function getDashboardTokenInfo(): Promise<TokenInfo> {
   const priceChangePercent24h = price24hAgo !== 0 ? (priceChange24h / price24hAgo) * 100 : 0
 
   return {
-    ...tokenInfo,
+    symbol: BASE_TOKEN.symbol,
+    name: BASE_TOKEN.displayName,
     price: currentPrice,
     priceChange24h,
     priceChangePercent24h,
+    description:
+      'SpaceX is a private aerospace company founded by Elon Musk that designs and manufactures rockets and spacecraft, provides commercial and government orbital launch services, and operates the Starlink global satellite internet constellation. Its business covers reusable launch systems, crewed missions, satellite broadband.',
+    supportedChains: ['Solana'],
+    onchainAddress: '0xf6b1...103f', // TODO: Get actual address from config
+    categories: ['Equities'],
+    underlyingAssetName: 'SpaceX, Inc. Private Equity',
+    underlyingAssetCompany: 'SpaceX',
+    sharesPerToken: `1 ${BASE_TOKEN.symbol} = 1.00 SPACEX EQUITY`,
   }
 }
 
