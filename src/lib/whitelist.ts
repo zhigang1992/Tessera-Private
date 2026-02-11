@@ -9,7 +9,9 @@
  */
 
 import { BigNumber, math, type BigNumberValue } from '@/lib/bignumber'
-import { getGraphQLEndpoint } from '@/config'
+import { getGraphQLEndpoint, DEFAULT_BASE_TOKEN_ID, getTokenAlphaVaultConfig, getCurrentNetwork, getRpcEndpoint } from '@/config'
+import { AlphaVaultClient } from '@/services/alpha-vault'
+import { Connection } from '@solana/web3.js'
 
 const GRAPHQL_ENDPOINT = getGraphQLEndpoint()
 
@@ -116,17 +118,52 @@ export async function getWhitelistInfo(walletAddress: string, vaultId: string): 
 }
 
 /**
- * Check if a user has interacted with the website (for whitelist checker page only)
+ * Check if vault deposits are currently open
+ * This determines which whitelist checking method to use
+ *
+ * @returns boolean indicating if deposits are open (true) or not yet open (false)
+ */
+async function areDepositsOpen(): Promise<boolean> {
+  try {
+    // Get vault configuration
+    const vaultConfig = getTokenAlphaVaultConfig(DEFAULT_BASE_TOKEN_ID, getCurrentNetwork())
+
+    if (!vaultConfig) {
+      console.warn('Alpha vault config not found, defaulting to GraphQL whitelist check')
+      return false
+    }
+
+    // Create connection and alpha vault client
+    const connection = new Connection(getRpcEndpoint(), 'confirmed')
+    const alphaVaultClient = new AlphaVaultClient({
+      tokenId: DEFAULT_BASE_TOKEN_ID,
+      connection,
+    })
+
+    // Get vault info from on-chain
+    const vaultInfo = await alphaVaultClient.getVaultInfo()
+
+    // Deposits are open if state is 'deposit_open'
+    return vaultInfo.state === 'deposit_open'
+  } catch (error) {
+    console.error('Error checking vault deposit status:', error)
+    // Default to GraphQL check on error
+    return false
+  }
+}
+
+/**
+ * Check whitelist status via GraphQL backend API
+ * Used when deposits are NOT yet open
+ *
  * A user is considered whitelisted if they have either:
  * - Registered with a referral code (view_latest_user_registered_events)
  * - Created a referral code (view_latest_referral_system_referral_code_created_events)
  *
- * Updated to use deduplicated views instead of event tables
- *
  * @param walletAddress - The wallet public key as a string
  * @returns boolean indicating if the user has interacted with the website
  */
-export async function checkWhitelistStatus(walletAddress: string): Promise<boolean> {
+async function checkWhitelistViaGraphQL(walletAddress: string): Promise<boolean> {
   const query = `
     query GetUserInteraction($user: String!) {
       view_latest_user_registered_events(where: { user: { _eq: $user } }) {
@@ -140,16 +177,48 @@ export async function checkWhitelistStatus(walletAddress: string): Promise<boole
     }
   `
 
+  const data = await graphqlRequest<UserInteractionQueryResult>(query, { user: walletAddress })
+
+  // User is whitelisted if they have either registered OR created a referral code
+  const hasRegistered = data.view_latest_user_registered_events.length > 0
+  const hasCreatedCode = data.view_latest_referral_system_referral_code_created_events.length > 0
+
+  return hasRegistered || hasCreatedCode
+}
+
+/**
+ * Check if a user is whitelisted (for whitelist checker page)
+ *
+ * Strategy:
+ * - If deposits are OPEN: Check using alpha vault merkle proof API (auction whitelist)
+ * - If deposits are NOT OPEN: Check using backend GraphQL API (registration/referral events)
+ *
+ * This ensures users can verify their whitelist status before deposits open,
+ * and then checks the actual vault whitelist once deposits begin.
+ *
+ * @param walletAddress - The wallet public key as a string
+ * @returns boolean indicating if the user is whitelisted
+ */
+export async function checkWhitelistStatus(walletAddress: string): Promise<boolean> {
   try {
-    const data = await graphqlRequest<UserInteractionQueryResult>(query, { user: walletAddress })
+    const depositsOpen = await areDepositsOpen()
 
-    // User is whitelisted if they have either registered OR created a referral code
-    const hasRegistered = data.view_latest_user_registered_events.length > 0
-    const hasCreatedCode = data.view_latest_referral_system_referral_code_created_events.length > 0
+    if (depositsOpen) {
+      // Deposits are open - use alpha vault merkle proof API
+      const vaultConfig = getTokenAlphaVaultConfig(DEFAULT_BASE_TOKEN_ID, getCurrentNetwork())
 
-    return hasRegistered || hasCreatedCode
+      if (!vaultConfig) {
+        throw new Error('Alpha vault configuration not found')
+      }
+
+      const whitelistInfo = await getWhitelistInfo(walletAddress, vaultConfig.vault)
+      return whitelistInfo.isWhitelisted
+    } else {
+      // Deposits not yet open - use backend GraphQL API
+      return await checkWhitelistViaGraphQL(walletAddress)
+    }
   } catch (error) {
-    console.error('Error checking whitelist status via GraphQL:', error)
+    console.error('Error checking whitelist status:', error)
     throw new Error('Failed to check whitelist status. Please try again later.')
   }
 }
