@@ -113,14 +113,7 @@ export function useJupiterSwap(): UseJupiterSwapReturn {
 
   // Refresh token balances from current network
   const refreshBalances = useCallback(async () => {
-    console.log('[useJupiterSwap] refreshBalances called', {
-      hasWallet: !!wallet,
-      hasPublicKey: !!wallet.publicKey,
-      publicKey: wallet.publicKey?.toBase58()
-    })
-
     if (!wallet.publicKey) {
-      console.log('[useJupiterSwap] No wallet.publicKey, setting balances to null')
       setUsdcBalance(null)
       setTessBalance(null)
       return
@@ -130,12 +123,6 @@ export function useJupiterSwap(): UseJupiterSwapReturn {
       // Get USDC balance
       // Use the program specified in token config (spl-token for USDC)
       const usdcProgram = QUOTE_MINT_CONFIG.program === 'token-2022' ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID
-      console.log('[useJupiterSwap] Fetching USDC balance:', {
-        mint: USDC_MINT,
-        program: QUOTE_MINT_CONFIG.program,
-        programId: usdcProgram.toBase58(),
-        wallet: wallet.publicKey.toBase58()
-      })
       try {
         const usdcMintPubkey = new PublicKey(USDC_MINT)
         const ata = await getAssociatedTokenAddress(
@@ -144,30 +131,18 @@ export function useJupiterSwap(): UseJupiterSwapReturn {
           false,
           usdcProgram
         )
-        console.log('[useJupiterSwap] USDC ATA:', ata.toBase58())
         const account = await getAccount(connection, ata, 'confirmed', usdcProgram)
-        console.log('[useJupiterSwap] USDC account data:', {
-          amount: account.amount.toString(),
-          decimals: USDC_DECIMALS
-        })
         // Convert raw amount to BigNumber using token decimals
         const usdcBigNum = fromTokenAmount(account.amount.toString(), USDC_DECIMALS)
-        console.log('[useJupiterSwap] USDC balance set to:', usdcBigNum)
         setUsdcBalance(usdcBigNum)
-      } catch (err) {
+      } catch {
         // Token account doesn't exist
-        console.error('[useJupiterSwap] USDC balance fetch error:', err)
         setUsdcBalance(ZERO)
       }
 
       // Get T-SpaceX balance
       // Use the program specified in token config (token-2022 for T-SpaceX)
       const tSpaceXProgram = BASE_MINT_CONFIG.program === 'token-2022' ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID
-      console.log('[useJupiterSwap] Fetching T-SpaceX balance:', {
-        mint: TSPACEX_MINT,
-        program: BASE_MINT_CONFIG.program,
-        programId: tSpaceXProgram.toBase58()
-      })
       try {
         const tSpaceXMintPubkey = new PublicKey(TSPACEX_MINT)
         const ata = await getAssociatedTokenAddress(
@@ -176,18 +151,11 @@ export function useJupiterSwap(): UseJupiterSwapReturn {
           false,
           tSpaceXProgram
         )
-        console.log('[useJupiterSwap] T-SpaceX ATA:', ata.toBase58())
         const account = await getAccount(connection, ata, 'confirmed', tSpaceXProgram)
-        console.log('[useJupiterSwap] T-SpaceX account data:', {
-          amount: account.amount.toString(),
-          decimals: TSPACEX_DECIMALS
-        })
         // Convert raw amount to BigNumber using token decimals
         const tessBigNum = fromTokenAmount(account.amount.toString(), TSPACEX_DECIMALS)
-        console.log('[useJupiterSwap] T-SpaceX balance set to:', tessBigNum)
         setTessBalance(tessBigNum)
-      } catch (err) {
-        console.error('[useJupiterSwap] T-SpaceX balance fetch error:', err)
+      } catch {
         setTessBalance(ZERO)
       }
     } catch (err) {
