@@ -32,11 +32,11 @@ export function App() {
             />
             <Route
               path="/auction"
-              element={PRODUCTION_MODE ? <Navigate to="/explorer" replace /> : <Navigate to="/auction/T-SpaceX" replace />}
+              element={<Navigate to="/auction/T-SpaceX" replace />}
             />
             <Route
               path="/auction/:tokenId"
-              element={PRODUCTION_MODE ? <Navigate to="/explorer" replace /> : <AuctionPage />}
+              element={<AuctionPage />}
             />
             <Route
               path="/auction/:auctionId/whitelist"
