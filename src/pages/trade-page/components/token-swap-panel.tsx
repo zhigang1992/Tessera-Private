@@ -368,7 +368,14 @@ export function TokenSwapPanel({ disabled = false }: TokenSwapPanelProps) {
 
         {/* Countdown Notification - shown when trading hasn't started */}
         {!isTradingActive && (
-          <CountdownNotification config={countdownConfig} title="T-SpaceX trading pool" />
+          <CountdownNotification
+            config={countdownConfig}
+            title={
+              <>
+                <AppTokenName token={BASE_TOKEN.id} /> trading will start in
+              </>
+            }
+          />
         )}
 
         {/* Rate Info */}

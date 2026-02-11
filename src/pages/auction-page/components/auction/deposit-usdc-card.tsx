@@ -385,7 +385,14 @@ export function DepositUSDCCard() {
 
         {/* Countdown Notification - shown when deposits haven't started */}
         {!isDepositActive && (
-          <CountdownNotification config={depositStartCountdownConfig} title={`${token.displayName} deposit window`} />
+          <CountdownNotification
+            config={depositStartCountdownConfig}
+            title={
+              <>
+                <AppTokenName token={token.id} /> deposits will open in
+              </>
+            }
+          />
         )}
 
         {/* Action Button */}
