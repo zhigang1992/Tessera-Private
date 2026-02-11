@@ -4,12 +4,12 @@ import { useSearchParams } from 'react-router'
 import { PriceChart } from './components/price-chart'
 import { TokenSwapPanel } from './components/token-swap-panel'
 import { TradeHistory } from './components/trade-history'
-import { type AppTokenId, DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getTokenByMint, getAppToken } from '@/config'
+import { type AppTokenId, DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getTokenByMint } from '@/config'
 import { getAlphaVaultClient } from '@/services/alpha-vault'
 
 export default function TradePage() {
   const { connection } = useConnection()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
   const [tradingEnabled, setTradingEnabled] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
