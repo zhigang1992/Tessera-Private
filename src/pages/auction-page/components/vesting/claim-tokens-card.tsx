@@ -207,7 +207,7 @@ export function ClaimTokensCard() {
 
           {/* Transaction Fee Notice */}
           <p className="text-[10px] font-normal leading-[15px] text-[#999] dark:text-[#666]">
-            Transaction will imply a small network fee.
+            Transaction subject to a network fee
           </p>
         </div>
       )
@@ -281,7 +281,7 @@ export function ClaimTokensCard() {
 
         {/* Transaction Fee Notice */}
         <p className="text-[10px] font-normal leading-[15px] text-[#999] dark:text-[#666]">
-          Transaction will imply a small network fee.
+          Transaction subject to a network fee
         </p>
       </div>
     )

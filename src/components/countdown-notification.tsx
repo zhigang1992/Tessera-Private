@@ -28,7 +28,7 @@ export function CountdownNotification({ config, title, className = '' }: Countdo
     <div className={`bg-[rgba(255,255,255,0.5)] rounded-lg px-6 py-4 w-full ${className}`}>
       <div className="flex items-center justify-center w-full">
         <p className="font-normal text-xs leading-4 text-center text-black">
-          The {title} is not yet active. Trading will be available in{' '}
+          The {title} is not yet active. Deposits will open in{' '}
           <span className="font-semibold">{formattedTime}</span>.
         </p>
       </div>
