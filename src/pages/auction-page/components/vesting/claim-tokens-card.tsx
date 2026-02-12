@@ -35,8 +35,8 @@ export function ClaimTokensCard() {
   } = useAuctionAlphaVault()
   const quoteToken = config.quoteToken
 
-  const depositedAmount = escrowInfo ? fromTokenAmount(escrowInfo.totalDeposited, config.quoteDecimals) : null
-  const depositedAmountValue = depositedAmount ?? ZERO
+  // escrowInfo.totalDeposited is already a BigNumberValue from the service layer
+  const depositedAmountValue = escrowInfo?.totalDeposited ?? ZERO
   const totalAllocationAmount = claimInfo ? fromTokenAmount(claimInfo.totalAllocation, config.baseDecimals) : null
   const totalAllocationValue = totalAllocationAmount ?? ZERO
   const totalClaimedAmount = claimInfo ? fromTokenAmount(claimInfo.totalClaimed, config.baseDecimals) : null

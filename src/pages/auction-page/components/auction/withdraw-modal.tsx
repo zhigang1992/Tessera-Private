@@ -15,7 +15,7 @@ import { AppTokenName } from '@/components/app-token-name'
 import { getExplorerUrl } from '@/config'
 import { useAuctionAlphaVault } from '../../context'
 import { toast } from 'sonner'
-import { fromTokenAmount, BigNumber, ZERO } from '@/lib/bignumber'
+import { BigNumber, ZERO } from '@/lib/bignumber'
 
 interface WithdrawModalProps {
   open: boolean
@@ -28,8 +28,8 @@ export function WithdrawModal({ open, onOpenChange }: WithdrawModalProps) {
   const { isLoading, escrowInfo, vaultInfo, withdraw, error, clearError, config } = useAuctionAlphaVault()
   const quoteToken = config.quoteToken
 
-  const depositedAmount = escrowInfo ? fromTokenAmount(escrowInfo.totalDeposited, config.quoteDecimals) : null
-  const normalizedDeposit = depositedAmount ?? ZERO
+  // escrowInfo.totalDeposited is already a BigNumberValue from the service layer
+  const normalizedDeposit = escrowInfo?.totalDeposited ?? ZERO
   const userDeposited = BigNumber.toNumber(normalizedDeposit)
 
   const isWithdrawOpen = vaultInfo?.state === 'deposit_open'
