@@ -245,31 +245,15 @@ Object.values(APP_TOKENS).forEach((token) => {
   // Skip quote token (USDC) - not a tokenized asset
   if (token.id === QUOTE_TOKEN_ID) return
 
-  // Register both devnet and mainnet mints
-  const devnetMint = getTokenMintForNetwork(token.id, 'devnet')
-  const mainnetMint = getTokenMintForNetwork(token.id, 'mainnet-beta')
-
-  if (devnetMint) {
-    TOKEN_REGISTRY[devnetMint] = {
-      id: token.slug,
-      symbol: token.symbol,
-      name: token.displayName,
-      code: token.metadata?.code ?? token.slug.toUpperCase(),
-      sector: token.metadata?.sector ?? 'Private Markets',
-      mint: devnetMint,
-    }
+  TOKEN_REGISTRY[token.mint] = {
+    id: token.slug,
+    symbol: token.symbol,
+    name: token.displayName,
+    code: token.metadata?.code ?? token.slug.toUpperCase(),
+    sector: token.metadata?.sector ?? 'Private Markets',
+    mint: token.mint,
   }
 
-  if (mainnetMint) {
-    TOKEN_REGISTRY[mainnetMint] = {
-      id: token.slug,
-      symbol: token.symbol,
-      name: token.displayName,
-      code: token.metadata?.code ?? token.slug.toUpperCase(),
-      sector: token.metadata?.sector ?? 'Private Markets',
-      mint: mainnetMint,
-    }
-  }
 })
 
 /**
