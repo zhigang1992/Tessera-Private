@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Card } from '@/components/ui/card'
 import { AppTokenName } from '@/components/app-token-name'
@@ -26,7 +26,17 @@ export function AuctionHeaderCard() {
     userDeposited,
     estimatedAllocation,
     estimatedRefund,
+    refreshVaultInfo,
   } = useAuctionAlphaVault()
+
+  // Auto-refresh vault info every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshVaultInfo()
+    }, 30000) // 30 seconds
+
+    return () => clearInterval(interval)
+  }, [refreshVaultInfo])
 
   const totalRaisedBN = vaultInfo
     ? fromTokenAmount(vaultInfo.totalDeposited, config.quoteDecimals)
