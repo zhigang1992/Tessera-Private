@@ -124,14 +124,14 @@ export function AuctionChart() {
     })
 
     // Add a price line for the target ($80k) - blue dashed line as in design
-    lineSeries.createPriceLine({
-      price: 80000,
-      color: '#5865f2',
-      lineWidth: 2,
-      lineStyle: 2, // Dashed
-      axisLabelVisible: false,
-      title: '',
-    })
+    // lineSeries.createPriceLine({
+    //   price: 80000,
+    //   color: '#5865f2',
+    //   lineWidth: 2,
+    //   lineStyle: 2, // Dashed
+    //   axisLabelVisible: false,
+    //   title: '',
+    // })
 
     chartRef.current = chart
 
