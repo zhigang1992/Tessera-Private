@@ -2,7 +2,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { Clock, CheckCircle } from 'lucide-react'
 import { AppTokenName } from '@/components/app-token-name'
 import { AppTokenAmount } from '@/components/app-token-amount'
-import { BigNumber, fromTokenAmount, mathIs } from '@/lib/bignumber'
+import { BigNumber, mathIs } from '@/lib/bignumber'
 import { useAuctionAlphaVault, useAuctionToken } from '../../context'
 
 export function ClaimHeaderCard() {
