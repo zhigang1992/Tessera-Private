@@ -42,12 +42,14 @@ export function AuctionChart() {
         secondsVisible: false,
         fixLeftEdge: true,
         fixRightEdge: true,
+        minBarSpacing: 0.1,
         tickMarkFormatter: (time: number) => {
           const date = new Date(time * 1000)
           const month = date.getMonth() + 1
           const day = date.getDate()
           const hours = date.getHours().toString().padStart(2, '0')
-          return `${month}/${day} ${hours}:00`
+          const minutes = date.getMinutes().toString().padStart(2, '0')
+          return `${month}/${day} ${hours}:${minutes}`
         },
       },
       localization: {
@@ -56,7 +58,8 @@ export function AuctionChart() {
           const month = date.getMonth() + 1
           const day = date.getDate()
           const hours = date.getHours().toString().padStart(2, '0')
-          return `${month}/${day} ${hours}:00`
+          const minutes = date.getMinutes().toString().padStart(2, '0')
+          return `${month}/${day} ${hours}:${minutes}`
         },
         priceFormatter: (price: number) => {
           return `$${Math.round(price / 1000)}k`

@@ -77,20 +77,32 @@ export async function getAuctionChartData(tokenId: AppTokenId = DEFAULT_BASE_TOK
   const sortedEvents = [...events].sort((a, b) => a.block_time - b.block_time)
   const startTime = sortedEvents[0].block_time
 
+  // Bucket transactions by time intervals
+  // Use 2-minute buckets to reduce data points while maintaining detail
+  const BUCKET_SIZE_SECONDS = 2 * 60 // 2 minutes
+  const bucketMap = new Map<number, BigNumber>()
+
   let cumulativeTotal = BigNumber.from(0)
-  const chartPoints: AuctionChartDataPoint[] = []
 
   for (const event of sortedEvents) {
     const amount = fromHasuraToNative(event.amount)
     cumulativeTotal = math`${cumulativeTotal} + ${amount}`
 
-    const hoursSinceStart = (event.block_time - startTime) / 3600
+    // Determine which bucket this event belongs to
+    const timeSinceStart = event.block_time - startTime
+    const bucketKey = Math.floor(timeSinceStart / BUCKET_SIZE_SECONDS)
 
-    chartPoints.push({
-      hour: hoursSinceStart,
-      value: BigNumber.toNumber(cumulativeTotal),
-    })
+    // Store the cumulative total at the end of each bucket
+    bucketMap.set(bucketKey, cumulativeTotal)
   }
+
+  // Convert buckets to chart points
+  const chartPoints: AuctionChartDataPoint[] = Array.from(bucketMap.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map(([bucketKey, total]) => ({
+      hour: (bucketKey * BUCKET_SIZE_SECONDS) / 3600,
+      value: BigNumber.toNumber(total),
+    }))
 
   return { data: chartPoints, startTime }
 }
