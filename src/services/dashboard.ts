@@ -10,19 +10,13 @@ import {
   QUOTE_TOKEN_ID,
   getAppToken,
   getRpcEndpoint,
-  getTokenDlmmPoolAddress,
   getTokenMintAddress,
   type AppTokenId,
 } from '@/config'
 
 // Helper constants for default base token
 const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
-const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
 
-function getBasePoolAddress(): string | null {
-  // Get network-aware pool address from config
-  return getTokenDlmmPoolAddress(BASE_TOKEN.id)
-}
 
 // ============ Types ============
 
@@ -217,48 +211,18 @@ export async function getMarketStats(): Promise<MarketStatsData> {
   }
 }
 
-// ============ Token Registry ============
-// Static metadata for tokens (not available in GraphQL)
-// This could be moved to a separate config file as more tokens are added
-
-interface TokenMetadata {
-  id: string
-  symbol: string
-  name: string
-  code: string
-  sector: string
-  mint: string
-}
-
-const TOKEN_REGISTRY: Record<string, TokenMetadata> = {}
-
-Object.values(APP_TOKENS).forEach((token) => {
-  // Skip quote token (USDC) - not a tokenized asset
-  if (token.id === QUOTE_TOKEN_ID) return
-
-  TOKEN_REGISTRY[token.mint] = {
-    id: token.slug,
-    symbol: token.symbol,
-    name: token.displayName,
-    code: token.metadata?.code ?? token.slug.toUpperCase(),
-    sector: token.metadata?.sector ?? 'Private Markets',
-    mint: token.mint,
-  }
-
-})
 
 /**
  * Format market cap to human-readable valuation string
  * Uses the implied valuation formula from config: (valuation / initial_auction_price) * current_price
  * For T-SpaceX: (800,000,000,000 / 423) * current_price
  */
-function formatValuation(tokenPrice: number): string {
+function formatValuation(tokenId: AppTokenId, tokenPrice: number): string {
   // Get implied valuation config for T-SpaceX
-  const impliedValConfig = BASE_TOKEN.impliedValuation
+  const impliedValConfig = APP_TOKENS[tokenId].impliedValuation
 
   if (!impliedValConfig) {
-    // Fallback to showing price if no config available
-    return `$${tokenPrice.toFixed(2)}`
+    return `--`
   }
 
   // Use numeric values directly from config (no parsing needed)
@@ -303,29 +267,21 @@ export async function getTokenizedAssets(): Promise<AssetData[]> {
     // Continue with empty backend data - will show placeholders
   }
 
-  // Deduplicate TOKEN_REGISTRY by token ID (since same token can have devnet and mainnet mints)
-  const uniqueTokens = new Map<string, typeof TOKEN_REGISTRY[string]>()
-  Object.values(TOKEN_REGISTRY).forEach((metadata) => {
-    if (!uniqueTokens.has(metadata.id)) {
-      uniqueTokens.set(metadata.id, metadata)
-    }
-  })
-
   // Always return all unique tokens from TOKEN_REGISTRY
-  return Array.from(uniqueTokens.values()).map((metadata) => {
-    const backendData = backendDataMap.get(metadata.mint)
+  return Object.entries(APP_TOKENS).filter(x => x[0] !== "USDC").map(([tokenId, token]) => {
+    const backendData = backendDataMap.get(token.mint)
     const price = backendData?.price ?? 0
     const holders = backendData?.holders ?? 0
 
     return {
-      id: metadata.id,
-      symbol: metadata.symbol,
-      name: metadata.name,
-      code: metadata.code,
-      sector: metadata.sector,
+      id: token.id,
+      symbol: token.symbol,
+      name: token.displayName,
+      code: token.metadata?.code || '',
+      sector: token.metadata?.sector || '',
       price,
       holders,
-      valuation: price > 0 ? formatValuation(price) : '—',
+      valuation: price > 0 ? formatValuation(tokenId as AppTokenId, price) : '—',
     }
   })
 }
@@ -445,7 +401,7 @@ export async function getDashboardStatistics(tokenId: AppTokenId): Promise<Token
   }
 
   // Fallback: Calculate from swap events if backend data unavailable
-  const poolAddress = getBasePoolAddress()
+  const poolAddress = APP_TOKENS[tokenId].dlmmPool?.address
   if (!poolAddress) {
     return {
       tokenPrice24h: { open: 0, high: 0, low: 0 },
@@ -570,14 +526,12 @@ export async function getUserDashboard(tokenId: AppTokenId, walletAddress?: stri
 }
 
 /**
- * Get user-specific trade history from GraphQL
- * @param tokenId - The token ID to fetch trade history for
+ * Get user-specific trade history from GraphQL for all supported tokens
  * @param walletAddress - The wallet address to fetch history for
  * @param page - Page number (1-indexed)
  * @param pageSize - Number of items per page
  */
 export async function getUserTradeHistory(
-  tokenId: AppTokenId,
   walletAddress: string | undefined,
   page: number = 1,
   pageSize: number = 10
@@ -593,15 +547,22 @@ export async function getUserTradeHistory(
     }
   }
 
-  const token = getAppToken(tokenId)
+  // Get all base token mints (exclude quote token USDC)
+  const supportedMints = Object.values(APP_TOKENS)
+    .filter((token) => token.id !== QUOTE_TOKEN_ID)
+    .map((token) => token.mint)
+
   const quoteToken = getAppToken(QUOTE_TOKEN_ID)
 
   const offset = (page - 1) * pageSize
-  const { events, total } = await fetchUserSwapEvents(walletAddress, pageSize, offset)
+  const { events, total } = await fetchUserSwapEvents(walletAddress, pageSize, offset, supportedMints)
 
   // Transform swap events to trade history items
   const items: UserTradeHistoryItem[] = events.map((event) => {
     const isBuy = event.type === 'swap-y-for-x' // USDC -> Token is a buy
+
+    // Determine which token this trade is for based on mint_x
+    const tradeToken = Object.values(APP_TOKENS).find((t) => t.mint === event.mint_x) ?? BASE_TOKEN
 
     // Format amounts using BigNumber utilities
     const amountX = formatSwapAmount(event.amount_x)
@@ -609,9 +570,9 @@ export async function getUserTradeHistory(
 
     return {
       id: `${event.signature}-${event.block_time}`,
-      token: token.symbol,
-      amountIn: isBuy ? `${amountY} ${quoteToken.symbol}` : `${amountX} ${token.symbol}`,
-      amountOut: isBuy ? `${amountX} ${token.symbol}` : `${amountY} ${quoteToken.symbol}`,
+      token: tradeToken.symbol,
+      amountIn: isBuy ? `${amountY} ${quoteToken.symbol}` : `${amountX} ${tradeToken.symbol}`,
+      amountOut: isBuy ? `${amountX} ${tradeToken.symbol}` : `${amountY} ${quoteToken.symbol}`,
       type: isBuy ? 'Buy' : 'Sell',
       account: formatWalletAddress(event.sender),
       time: formatBlockTimeWithTime(event.block_time),

@@ -605,12 +605,16 @@ export async function fetchDashboardStats(): Promise<DashboardStatsResult> {
 export async function fetchUserSwapEvents(
   userAddress: string,
   limit: number = 10,
-  offset: number = 0
+  offset: number = 0,
+  supportedMints?: string[]
 ): Promise<{ events: MeteoraSwapEvent[]; total: number }> {
   const query = `
-    query GetUserSwapEvents($sender: String!, $limit: Int!, $offset: Int!) {
+    query GetUserSwapEvents($sender: String!, $limit: Int!, $offset: Int!, $supportedMints: [String!]) {
       facts_meteora_token_swap_events(
-        where: { sender: { _eq: $sender } }
+        where: {
+          sender: { _eq: $sender }
+          ${supportedMints ? 'mint_x: { _in: $supportedMints }' : ''}
+        }
         limit: $limit
         offset: $offset
         order_by: { block_time: desc }
@@ -625,7 +629,12 @@ export async function fetchUserSwapEvents(
         block_time
         pool_address
       }
-      facts_meteora_token_swap_events_aggregate(where: { sender: { _eq: $sender } }) {
+      facts_meteora_token_swap_events_aggregate(
+        where: {
+          sender: { _eq: $sender }
+          ${supportedMints ? 'mint_x: { _in: $supportedMints }' : ''}
+        }
+      ) {
         aggregate {
           count
         }
@@ -637,6 +646,7 @@ export async function fetchUserSwapEvents(
     sender: userAddress,
     limit,
     offset,
+    supportedMints: supportedMints ?? null,
   })
 
   return {
