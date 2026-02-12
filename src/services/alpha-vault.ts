@@ -210,16 +210,14 @@ export class AlphaVaultClient {
     // Get current slot for time estimation
     const currentSlot = await this.connection.getSlot()
 
-    // Extract vault configuration - use any to handle SDK type variations
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const vaultDataAny = vaultData as any
+    const vaultDataAny = vaultData
 
     // Read activation type from SDK: 0 = SLOT, 1 = TIMESTAMP
     const activationTypeValue = vaultDataAny.activationType ?? 0
     const activationType: 'slot' | 'timestamp' = activationTypeValue === 0 ? 'slot' : 'timestamp'
 
     const depositOpenSlot = vaultDataAny.depositingPoint?.toNumber() ?? 0
-    const depositCloseSlot = vaultDataAny.startVestingPoint?.toNumber() ?? 0
+    const depositCloseSlot = vault.vaultPoint.lastJoinPoint ?? 0
     const vestingStartSlot = vaultDataAny.startVestingPoint?.toNumber() ?? 0
     const vestingEndSlot = vaultDataAny.endVestingPoint?.toNumber() ?? 0
     const activationPoint = vault.activationPoint?.toNumber() ?? 0
