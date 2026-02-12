@@ -1,27 +1,25 @@
-import { useWallet } from '@solana/wallet-adapter-react'
-import { Clock, CheckCircle } from 'lucide-react'
-import { AppTokenName } from '@/components/app-token-name'
 import { AppTokenAmount } from '@/components/app-token-amount'
-import { BigNumber, mathIs } from '@/lib/bignumber'
+import { AppTokenName } from '@/components/app-token-name'
+import { mathIs } from '@/lib/bignumber'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { CheckCircle, Clock } from 'lucide-react'
 import { useAuctionAlphaVault, useAuctionToken } from '../../context'
 
 export function ClaimHeaderCard() {
   const wallet = useWallet()
   const token = useAuctionToken()
-  const { escrowInfo, estimatedRefund, config } = useAuctionAlphaVault()
+  const { escrowInfo, config } = useAuctionAlphaVault()
 
   // Check if user is eligible (has allocation)
   const isEligible =
     wallet.connected && escrowInfo && mathIs`${escrowInfo.estimatedAllocation} > ${0}`
 
   // Calculate amounts
-  const totalTokens = escrowInfo
-    ? escrowInfo.estimatedAllocation
-    : BigNumber.from(0)
+  const totalTokens = escrowInfo?.estimatedAllocation
 
-  const refundAmount = estimatedRefund ?? BigNumber.from(0)
+  const refundAmount = escrowInfo?.estimatedRefund
 
-  if (!isEligible) {
+  if (wallet.connected && escrowInfo && !isEligible) {
     return (
       <div className="rounded-2xl border p-6 bg-white dark:bg-[#323334] border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
         <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -60,7 +58,11 @@ export function ClaimHeaderCard() {
             TOTAL TOKENS
           </p>
           <p className="text-4xl font-bold leading-[48px] text-black dark:text-[#d2d2d2] font-mono">
-            <AppTokenAmount token={token} amount={totalTokens} minimumFractionDigits={2} maximumFractionDigits={4} />
+            {totalTokens != null ? (
+              <AppTokenAmount token={token} amount={totalTokens} minimumFractionDigits={2} maximumFractionDigits={4} />
+            ) : (
+              '-'
+            )}
           </p>
           <p className="text-sm font-normal leading-[21px] text-[#06a800] dark:text-[#AAD36D]">
             <AppTokenName token={token} variant="symbol" />
@@ -73,12 +75,16 @@ export function ClaimHeaderCard() {
             REFUND AMOUNT
           </p>
           <p className="text-4xl font-bold leading-[48px] text-black dark:text-[#d2d2d2] font-mono">
-            <AppTokenAmount
-              token={config.quoteToken}
-              amount={refundAmount}
-              minimumFractionDigits={2}
-              maximumFractionDigits={4}
-            />
+            {refundAmount != null ? (
+              <AppTokenAmount
+                token={config.quoteToken}
+                amount={refundAmount}
+                minimumFractionDigits={2}
+                maximumFractionDigits={4}
+              />
+            ) : (
+              '-'
+            )}
           </p>
           <p className="text-sm font-normal leading-[21px] text-[#666] dark:text-[#999]">
             <AppTokenName token={config.quoteToken} variant="symbol" />
