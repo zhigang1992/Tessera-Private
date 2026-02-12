@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Connection } from '@solana/web3.js'
 import { createMeteoraClient, type MarketDepthData } from '@/services/meteora'
 import { getCurrentNetwork, getRpcEndpoint, getAppToken, DEFAULT_BASE_TOKEN_ID } from '@/config'
+import { BigNumber, math } from 'math-literal'
 
 // Get RPC URL based on current network configuration
 const getRpcUrl = () => {
@@ -59,8 +60,8 @@ async function fetchMarketDepth(
  */
 export function useMarketDepth({
   poolAddress,
-  binsToLeft = 17,
-  binsToRight = 17,
+  binsToLeft = 100,
+  binsToRight = 100,
   enabled = true,
 }: UseMarketDepthOptions = {}): MarketDepthResult {
   // Use network-aware pool address from token config if not provided
@@ -114,12 +115,30 @@ export function calculateBarHeights(
 }
 
 /**
- * Format TVL for display
+ * Calculate and format TVL for display
+ *
+ * TVL is calculated as:
+ * - Sum of all X amounts across all bins × active bin price
+ * - Plus sum of all Y amounts across all bins
+ *
+ * This values all liquidity at the current market price (active bin)
  */
-export function formatTvl(tvlX: string, tvlY: string, decimals: number = 6): string {
-  const x = parseFloat(tvlX) / Math.pow(10, decimals)
-  const y = parseFloat(tvlY) / Math.pow(10, decimals)
-  const total = x + y
+export function formatTvl(marketDepth: MarketDepthData): string {
+  // Find the active bin to get its price
+  const activeBin = marketDepth.bins.find(bin => bin.binId === marketDepth.activeBinId)
+
+  if (!activeBin) {
+    return '--'
+  }
+
+  const activeBinPrice = parseFloat(activeBin.price)
+
+  // Sum all X amounts and Y amounts across all bins
+  // These amounts are in raw token units, so we need to adjust for decimals
+  let totalXAmount = BigNumber.sum(marketDepth.bins.map(x => x.xAmount))
+  let totalYAmount = BigNumber.sum(marketDepth.bins.map(x => x.yAmount))
+
+  const total = BigNumber.toNumber(math`(${totalXAmount} * ${activeBinPrice} + ${totalYAmount}) / ${1e6}`)
 
   if (total >= 1_000_000_000) {
     return `$${(total / 1_000_000_000).toFixed(2)}B`

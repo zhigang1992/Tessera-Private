@@ -66,11 +66,31 @@ export function PriceChart({
 
   const isPositive = (token?.priceChange24h ?? 0) >= 0
 
-  // Calculate bar heights from market depth data
-  const barHeights = marketDepth ? calculateBarHeights(marketDepth.bins) : []
-  const activeBinIndex = marketDepth
-    ? marketDepth.bins.findIndex((bin) => bin.binId === marketDepth.activeBinId)
-    : -1
+  // Limit bins for display to prevent overflow (max 40 bins on each side of active bin)
+  const displayBins = useMemo(() => {
+    if (!marketDepth) return []
+
+    const MAX_BINS_PER_SIDE = 17
+    const activeBinIndex = marketDepth.bins.findIndex((bin) => bin.binId === marketDepth.activeBinId)
+
+    if (activeBinIndex === -1) return marketDepth.bins
+
+    // Calculate how many bins to show on each side
+    const leftBins = activeBinIndex
+    const rightBins = marketDepth.bins.length - activeBinIndex - 1
+
+    const binsToShowLeft = Math.min(leftBins, MAX_BINS_PER_SIDE)
+    const binsToShowRight = Math.min(rightBins, MAX_BINS_PER_SIDE)
+
+    const startIndex = activeBinIndex - binsToShowLeft
+    const endIndex = activeBinIndex + binsToShowRight + 1
+
+    return marketDepth.bins.slice(startIndex, endIndex)
+  }, [marketDepth])
+
+  // Calculate bar heights from display bins
+  const barHeights = displayBins.length > 0 ? calculateBarHeights(displayBins) : []
+  const activeBinIndex = displayBins.findIndex((bin) => bin.binId === marketDepth?.activeBinId)
 
   // Initialize chart
   useEffect(() => {
@@ -238,14 +258,14 @@ export function PriceChart({
                 ) : barHeights.length > 0 ? (
                   barHeights.map((height, index) => (
                     <div
-                      key={marketDepth?.bins[index]?.binId ?? index}
+                      key={displayBins[index]?.binId ?? index}
                       className={`${
                         index === activeBinIndex
                           ? 'bg-[#1d8f00]' // Active bin - darker green
                           : 'bg-[#9eca87]' // Regular bins - lighter green
                       } rounded-tl-[999px] rounded-tr-[999px] shrink-0 w-[8px] lg:w-[12px] transition-all hover:opacity-80`}
                       style={{ height: `${Math.max(height, 2)}px` }}
-                      title={marketDepth?.bins[index] ? `Bin ${marketDepth.bins[index].binId}: $${parseFloat(marketDepth.bins[index].price).toFixed(4)}` : `Bin ${index + 1}`}
+                      title={displayBins[index] ? `Bin ${displayBins[index].binId}: $${parseFloat(displayBins[index].price).toFixed(4)}` : `Bin ${index + 1}`}
                     />
                   ))
                 ) : (
@@ -261,7 +281,7 @@ export function PriceChart({
                   Bin Step: {marketDepth ? formatBinStep(marketDepth.binStep) : '--'}
                 </p>
                 <p className="text-black">
-                  Total TVL: {marketDepth ? formatTvl(marketDepth.totalTvlX, marketDepth.totalTvlY) : '--'}
+                  Total TVL: {marketDepth ? formatTvl(marketDepth) : '--'}
                 </p>
                 <p className="text-[#1d8f00]">
                   Active Bin: {marketDepth ? marketDepth.activeBinId.toLocaleString() : '--'}
