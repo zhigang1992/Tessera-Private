@@ -1,18 +1,18 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useWallet, useConnection } from '@solana/wallet-adapter-react'
-import { useWalletModal } from '@solana/wallet-adapter-react-ui'
-import { useJupiterSwap, type SwapDirection } from '@/hooks/use-jupiter-swap'
-import { type AppTokenId, DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getAppToken, getExplorerUrl, getTokenDecimals } from '@/config'
-import { BigNumber, math } from '@/lib/bignumber'
+import { AppTokenCount } from '@/components/app-token-count'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
-import { AppTokenCount } from '@/components/app-token-count'
 import { CountdownNotification } from '@/components/countdown-notification'
-import SwapIcon from './_/swap-icon.svg?react'
-import { toast } from 'sonner'
+import { DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getAppToken, getExplorerUrl, getTokenDecimals, type AppTokenId } from '@/config'
 import { useCountdown } from '@/hooks/use-countdown'
+import { useJupiterSwap, type SwapDirection } from '@/hooks/use-jupiter-swap'
+import { BigNumber, math } from '@/lib/bignumber'
 import { getAlphaVaultClient } from '@/services/alpha-vault'
 import type { CountdownConfig } from '@/types/countdown'
+import { useConnection, useWallet } from '@solana/wallet-adapter-react'
+import { useWalletModal } from '@solana/wallet-adapter-react-ui'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
+import SwapIcon from './_/swap-icon.svg?react'
 
 function getTokenPrecision(decimals: number) {
   return {
@@ -242,189 +242,211 @@ export function TokenSwapPanel({
       <div className="size-full">
         <div className="flex flex-col items-start px-6 py-8 w-full">
           <div className="flex flex-col gap-4 items-center w-full">
-        {/* Token Input Blocks with centered swap button */}
-        <div className="relative w-full">
-          {/* Pay Input */}
-          <div className="relative rounded-lg w-full group bg-white dark:bg-[rgba(0,0,0,0.6)]">
-            <div className="rounded-[inherit] size-full">
-              <div className="flex flex-col gap-1.5 items-start pb-4 pt-2 px-4 w-full">
-                <div className="flex items-center justify-between leading-5 text-sm w-full text-[#a1a1aa] dark:text-[#ffffff] dark:opacity-50">
-                  <p className="font-bold">Pay</p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleMaxClick}
-                      className="text-xs text-zinc-600 dark:text-white dark:opacity-50 hover:text-black dark:hover:text-white dark:hover:opacity-100 transition-colors disabled:opacity-30"
-                      disabled={!sellingBalance}
-                    >
-                      MAX:{' '}
+            {/* Token Input Blocks with centered swap button */}
+            <div className="relative w-full">
+              {/* Pay Input */}
+              <div className="relative rounded-lg w-full group bg-white dark:bg-[rgba(0,0,0,0.6)]">
+                <div className="rounded-[inherit] size-full">
+                  <div className="flex flex-col gap-1.5 items-start pb-4 pt-2 px-4 w-full">
+                    <div className="flex items-center justify-between leading-5 text-sm w-full text-[#a1a1aa] dark:text-[#ffffff] dark:opacity-50">
+                      <p className="font-bold">Pay</p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleMaxClick}
+                          className="text-xs text-zinc-600 dark:text-white dark:opacity-50 hover:text-black dark:hover:text-white dark:hover:opacity-100 transition-colors disabled:opacity-30"
+                          disabled={!sellingBalance}
+                        >
+                          MAX:{' '}
+                          <AppTokenCount
+                            token={sellingTokenConfig}
+                            value={sellingBalance}
+                            fallback="-"
+                            showSymbol={false}
+                            minimumFractionDigits={sellingPrecision.minimumFractionDigits}
+                            maximumFractionDigits={sellingPrecision.maximumFractionDigits}
+                          />
+                        </button>
+                        {inputAmount && (
+                          <button
+                            onClick={() => setInputAmount('')}
+                            className="flex items-center justify-center size-4 transition-opacity hover:opacity-60"
+                          >
+                            <svg className="size-4" fill="none" viewBox="0 0 16 16">
+                              <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.2" fill="none" className="text-[#a1a1aa] dark:text-[#d2d2d2]" />
+                              <path d="M10 6L6 10M6 6L10 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" className="text-[#a1a1aa] dark:text-[#d2d2d2]" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between w-full">
+                      <div className="relative rounded-md flex-shrink-0">
+                        <div className="flex gap-2.5 items-center overflow-clip px-3 py-2 rounded-[inherit]">
+                          <div className="relative flex-shrink-0 size-8">
+                            <AppTokenIcon token={sellingTokenConfig} className="block size-full" size={32} />
+                          </div>
+                          <div className="flex gap-1 items-center flex-shrink-0">
+                            <p className="font-semibold leading-7 text-xl text-black dark:text-[#ffffff]">
+                              <AppTokenName token={sellingTokenConfig} variant="symbol" />
+                            </p>
+                          </div>
+                        </div>
+                        <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-md border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)]" />
+                      </div>
+                      <div className="flex flex-col items-end justify-center flex-1 min-w-0">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={inputAmount}
+                          onChange={(e) => handleInputChange(e.target.value)}
+                          placeholder="0.0"
+                          className={`font-semibold leading-10 bg-transparent outline-none border-none text-right w-full overflow-hidden text-black dark:text-white placeholder:text-black dark:placeholder:text-white ${inputAmount.length <= 6 ? 'text-[36px]' : inputAmount.length <= 10 ? 'text-[28px]' : 'text-[20px]'
+                            }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-lg transition-colors border-[#dddbd0] dark:border-[#393b3d] group-focus-within:border-black dark:group-focus-within:border-[#d2fb95]" />
+              </div>
+
+              {/* Swap Button - positioned between the two input blocks */}
+              <button
+                onClick={handleSwapDirection}
+                className="absolute left-1/2 top-[86px] -translate-x-1/2 bg-white dark:bg-black border border-[#dddbd0] dark:border-[rgba(210,210,210,0.1)] rounded-full p-2 hover:bg-gray-50 dark:hover:bg-[#27272a] transition-colors z-10"
+              >
+                <SwapIcon className="w-5 h-5 rotate-[270deg] text-[#999999] dark:text-[#ffffff]" />
+              </button>
+            </div>
+
+            {/* Receive Input */}
+            <div className="relative rounded-lg w-full group bg-white dark:bg-[rgba(0,0,0,0.6)]">
+              <div className="rounded-[inherit] size-full">
+                <div className="flex flex-col gap-1.5 items-start pb-4 pt-2 px-4 w-full">
+                  <div className="flex items-center justify-between leading-5 text-sm w-full text-[#a1a1aa] dark:text-[#ffffff] dark:opacity-50">
+                    <p className="font-bold">Receive</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs">Estimated</p>
+                      {hasOutputAmount && (
+                        <button
+                          className="flex items-center justify-center size-4 transition-opacity hover:opacity-60"
+                        >
+                          <svg className="size-4" fill="none" viewBox="0 0 16 16">
+                            <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.2" fill="none" className="text-[#a1a1aa] dark:text-[#d2d2d2]" />
+                            <path d="M10 6L6 10M6 6L10 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" className="text-[#a1a1aa] dark:text-[#d2d2d2]" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between w-full">
+                    <div className="relative rounded-md flex-shrink-0">
+                      <div className="flex gap-2.5 items-center overflow-clip px-3 py-2 rounded-[inherit]">
+                        <div className="relative flex-shrink-0 size-8">
+                          <AppTokenIcon token={buyingTokenConfig} className="block size-full" size={32} />
+                        </div>
+                        <div className="flex gap-1 items-center flex-shrink-0">
+                          <p className="font-semibold leading-7 text-xl text-black dark:text-[#ffffff]">
+                            <AppTokenName token={buyingTokenConfig} variant="symbol" />
+                          </p>
+                        </div>
+                      </div>
+                      <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-md border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)]" />
+                    </div>
+                    <div className="flex flex-col items-end justify-center flex-1 min-w-0">
                       <AppTokenCount
-                        token={sellingTokenConfig}
-                        value={sellingBalance}
-                        fallback="-"
+                        token={buyingTokenConfig}
+                        value={outputAmountValue}
                         showSymbol={false}
-                        minimumFractionDigits={sellingPrecision.minimumFractionDigits}
-                        maximumFractionDigits={sellingPrecision.maximumFractionDigits}
+                        fallback={isLoading ? '...' : '0.0'}
+                        minimumFractionDigits={buyingPrecision.minimumFractionDigits}
+                        maximumFractionDigits={buyingPrecision.maximumFractionDigits}
+                        className={`block font-semibold leading-10 text-right w-full overflow-hidden text-black dark:text-white ${hasOutputAmount ? '' : 'opacity-20'} ${outputSizeClass}`}
                       />
-                    </button>
-                    {inputAmount && (
-                      <button
-                        onClick={() => setInputAmount('')}
-                        className="flex items-center justify-center size-4 transition-opacity hover:opacity-60"
-                      >
-                        <svg className="size-4" fill="none" viewBox="0 0 16 16">
-                          <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.2" fill="none" className="text-[#a1a1aa] dark:text-[#d2d2d2]" />
-                          <path d="M10 6L6 10M6 6L10 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" className="text-[#a1a1aa] dark:text-[#d2d2d2]" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between w-full">
-                  <div className="relative rounded-md flex-shrink-0">
-                    <div className="flex gap-2.5 items-center overflow-clip px-3 py-2 rounded-[inherit]">
-                    <div className="relative flex-shrink-0 size-8">
-                      <AppTokenIcon token={sellingTokenConfig} className="block size-full" size={32} />
                     </div>
-                    <div className="flex gap-1 items-center flex-shrink-0">
-                      <p className="font-semibold leading-7 text-xl text-black dark:text-[#ffffff]">
-                        <AppTokenName token={sellingTokenConfig} variant="symbol" />
-                      </p>
-                    </div>
-                    </div>
-                    <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-md border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)]" />
-                  </div>
-                  <div className="flex flex-col items-end justify-center flex-1 min-w-0">
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={inputAmount}
-                      onChange={(e) => handleInputChange(e.target.value)}
-                      placeholder="0.0"
-                      className={`font-semibold leading-10 bg-transparent outline-none border-none text-right w-full overflow-hidden text-black dark:text-white placeholder:text-black dark:placeholder:text-white ${
-                        inputAmount.length <= 6 ? 'text-[36px]' : inputAmount.length <= 10 ? 'text-[28px]' : 'text-[20px]'
-                      }`}
-                    />
                   </div>
                 </div>
               </div>
+              <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-lg transition-colors border-[#dddbd0] dark:border-[#393b3d] group-focus-within:border-black dark:group-focus-within:border-[#d2fb95]" />
             </div>
-            <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-lg transition-colors border-[#dddbd0] dark:border-[#393b3d] group-focus-within:border-black dark:group-focus-within:border-[#d2fb95]" />
-          </div>
 
-          {/* Swap Button - positioned between the two input blocks */}
-          <button
-            onClick={handleSwapDirection}
-            className="absolute left-1/2 top-[86px] -translate-x-1/2 bg-white dark:bg-black border border-[#dddbd0] dark:border-[rgba(210,210,210,0.1)] rounded-full p-2 hover:bg-gray-50 dark:hover:bg-[#27272a] transition-colors z-10"
-          >
-            <SwapIcon className="w-5 h-5 rotate-[270deg] text-[#999999] dark:text-[#ffffff]" />
-          </button>
-        </div>
+            {/* Countdown Notification - shown when trading hasn't started */}
+            {!isTradingActive && (
+              <CountdownNotification
+                config={countdownConfig}
+                title={
+                  <>
+                    <AppTokenName token={BASE_TOKEN.id} /> trading will start in
+                  </>
+                }
+              />
+            )}
 
-        {/* Receive Input */}
-        <div className="relative rounded-lg w-full group bg-white dark:bg-[rgba(0,0,0,0.6)]">
-          <div className="rounded-[inherit] size-full">
-            <div className="flex flex-col gap-1.5 items-start pb-4 pt-2 px-4 w-full">
-              <div className="flex items-center justify-between leading-5 text-sm w-full text-[#a1a1aa] dark:text-[#ffffff] dark:opacity-50">
-                <p className="font-bold">Receive</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-xs">Estimated</p>
-                  {hasOutputAmount && (
-                    <button
-                      className="flex items-center justify-center size-4 transition-opacity hover:opacity-60"
-                    >
-                      <svg className="size-4" fill="none" viewBox="0 0 16 16">
-                        <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.2" fill="none" className="text-[#a1a1aa] dark:text-[#d2d2d2]" />
-                        <path d="M10 6L6 10M6 6L10 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" className="text-[#a1a1aa] dark:text-[#d2d2d2]" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center justify-between w-full">
-                <div className="relative rounded-md flex-shrink-0">
-                  <div className="flex gap-2.5 items-center overflow-clip px-3 py-2 rounded-[inherit]">
-                    <div className="relative flex-shrink-0 size-8">
-                      <AppTokenIcon token={buyingTokenConfig} className="block size-full" size={32} />
+            {/* Rate Info */}
+            {quote && hasValidInput && (
+              <div className="bg-[rgba(255,255,255,0.5)] rounded-lg px-6 py-4 self-stretch">
+                <div className="flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between text-xs leading-4">
+                    <div className="flex flex-col justify-center text-[#52525b]">
+                      <p className="leading-4">Rate</p>
                     </div>
-                    <div className="flex gap-1 items-center flex-shrink-0">
-                      <p className="font-semibold leading-7 text-xl text-black dark:text-[#ffffff]">
-                        <AppTokenName token={buyingTokenConfig} variant="symbol" />
+                    <div className="flex flex-col justify-center text-black">
+                      <p className="leading-4">
+                        1 <AppTokenName token={BASE_TOKEN} variant="symbol" /> ={' '}
+                        <AppTokenCount
+                          token={QUOTE_TOKEN}
+                          value={rateValue != null ? (isBuying ? math`${1} / ${rateValue}` : rateValue) : null}
+                          showSymbol={false}
+                          minimumFractionDigits={buyingPrecision.minimumFractionDigits}
+                          maximumFractionDigits={Math.max(4, buyingPrecision.maximumFractionDigits)}
+                          fallback="0.0000"
+                        />{' '}
+                        <AppTokenName token={QUOTE_TOKEN} variant="symbol" />
                       </p>
                     </div>
                   </div>
-                  <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-md border-[#dddbd0] dark:border-[rgba(255,255,255,0.15)]" />
-                </div>
-                <div className="flex flex-col items-end justify-center flex-1 min-w-0">
-                  <AppTokenCount
-                    token={buyingTokenConfig}
-                    value={outputAmountValue}
-                    showSymbol={false}
-                    fallback={isLoading ? '...' : '0.0'}
-                    minimumFractionDigits={buyingPrecision.minimumFractionDigits}
-                    maximumFractionDigits={buyingPrecision.maximumFractionDigits}
-                    className={`block font-semibold leading-10 text-right w-full overflow-hidden text-black dark:text-white ${hasOutputAmount ? '' : 'opacity-20'} ${outputSizeClass}`}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div aria-hidden="true" className="absolute border border-solid inset-0 pointer-events-none rounded-lg transition-colors border-[#dddbd0] dark:border-[#393b3d] group-focus-within:border-black dark:group-focus-within:border-[#d2fb95]" />
-        </div>
-
-        {/* Countdown Notification - shown when trading hasn't started */}
-        {!isTradingActive && (
-          <CountdownNotification
-            config={countdownConfig}
-            title={
-              <>
-                <AppTokenName token={BASE_TOKEN.id} /> trading will start in
-              </>
-            }
-          />
-        )}
-
-        {/* Rate Info */}
-        {quote && hasValidInput && (
-          <div className="bg-[rgba(255,255,255,0.5)] rounded-lg px-6 py-4 self-stretch">
-            <div className="flex flex-col gap-2.5">
-              <div className="flex items-center justify-between text-xs leading-4">
-                <div className="flex flex-col justify-center text-[#52525b]">
-                  <p className="leading-4">Rate</p>
-                </div>
-                <div className="flex flex-col justify-center text-black">
-                  <p className="leading-4">
-                    1 <AppTokenName token={BASE_TOKEN} variant="symbol" /> ={' '}
-                    <AppTokenCount
-                      token={QUOTE_TOKEN}
-                      value={rateValue != null ? (isBuying ? math`${1} / ${rateValue}` : rateValue) : null}
-                      showSymbol={false}
-                      minimumFractionDigits={buyingPrecision.minimumFractionDigits}
-                      maximumFractionDigits={Math.max(4, buyingPrecision.maximumFractionDigits)}
-                      fallback="0.0000"
-                    />{' '}
-                    <AppTokenName token={QUOTE_TOKEN} variant="symbol" />
-                  </p>
+                  <div className="flex items-center justify-between text-xs leading-4">
+                    <div className="flex flex-col justify-center text-[#52525b]">
+                      <p className="leading-4">Route</p>
+                    </div>
+                    <div className="flex flex-col justify-center text-[#1d8f00]">
+                      <p className="leading-4">{quote.routeLabel}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs leading-4">
+                    <div className="flex flex-col justify-center text-[#52525b]">
+                      <p className="leading-4">Price Impact</p>
+                    </div>
+                    <div className="flex flex-col justify-center text-[#1d8f00]">
+                      <p className="leading-4">{(-parseFloat(quote.priceImpactPct || '0') * 100).toFixed(2)}%</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs leading-4">
+                    <div className="flex flex-col justify-center text-[#52525b]">
+                      <p className="leading-4">Implied Valuation</p>
+                    </div>
+                    <div className="flex flex-col justify-center text-[#1d8f00]">
+                      <p className="leading-4">{(() => {
+                        if (rateValue == null) return "-"
+                        if (BASE_TOKEN.impliedValuation == null) return "-"
+                        const price = (isBuying ? math`${1} / ${rateValue}` : rateValue)
+                        // return rateValue != null ? (isBuying ? math`${1} / ${rateValue}` : rateValue) : null
+                        const impliedValue = BigNumber.toNumber(math`${BASE_TOKEN.impliedValuation.valuationNumber} / ${BASE_TOKEN.impliedValuation.auctionPriceNumber} * ${price}`)
+                        if (impliedValue >= 1_000_000_000_000) {
+                          return `$${(impliedValue / 1_000_000_000_000).toFixed(1)}T`
+                        } else if (impliedValue >= 1_000_000_000) {
+                          return `$${(impliedValue / 1_000_000_000).toFixed(1)}B`
+                        } else if (impliedValue >= 1_000_000) {
+                          return `$${(impliedValue / 1_000_000).toFixed(1)}M`
+                        } else {
+                          return `$${impliedValue.toFixed(0)}`
+                        }
+                      })()}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between text-xs leading-4">
-                <div className="flex flex-col justify-center text-[#52525b]">
-                  <p className="leading-4">Route</p>
-                </div>
-                <div className="flex flex-col justify-center text-[#1d8f00]">
-                  <p className="leading-4">{quote.routeLabel}</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-xs leading-4">
-                <div className="flex flex-col justify-center text-[#52525b]">
-                  <p className="leading-4">Price Impact</p>
-                </div>
-                <div className="flex flex-col justify-center text-[#1d8f00]">
-                  <p className="leading-4">{(-parseFloat(quote.priceImpactPct || '0') * 100).toFixed(2)}%</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+            )}
 
             {/* SWAP Button */}
             <button

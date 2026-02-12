@@ -646,19 +646,6 @@ export function getAlphaVaultClient(
 // ============ Utility Functions ============
 
 /**
- * Format vault amount to human readable string
- * @deprecated Use formatBigNumber from @/lib/bignumber instead
- */
-export function formatVaultAmount(amount: string | BN, decimals: number = 6): string {
-  const amountStr = amount instanceof BN ? amount.toString() : amount
-  const humanAmount = fromTokenAmount(amountStr, decimals)
-  return BigNumber.toNumber(humanAmount).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 6,
-  })
-}
-
-/**
  * Parse human readable amount to BN
  */
 export function parseVaultAmount(amount: string, decimals: number = 6): BN {

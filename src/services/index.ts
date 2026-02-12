@@ -10,7 +10,6 @@ export {
   DEFAULT_ALPHA_VAULT_TOKEN_ID,
   AlphaVaultClient,
   getAlphaVaultClient,
-  formatVaultAmount,
   parseVaultAmount,
   getVaultStateDisplay,
   getTimeUntilSlot,
