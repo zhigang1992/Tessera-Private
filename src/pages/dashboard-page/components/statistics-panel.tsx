@@ -19,12 +19,12 @@ interface StatisticsPanelProps {
 export function StatisticsPanel({ tokenId = DEFAULT_BASE_TOKEN_ID }: StatisticsPanelProps) {
   const { data: statistics } = useQuery({
     queryKey: ['dashboardStatistics', tokenId],
-    queryFn: getDashboardStatistics,
+    queryFn: () => getDashboardStatistics(tokenId),
   })
 
   const { data: dashboardStats } = useQuery({
-    queryKey: ['dashboardStats'],
-    queryFn: getDashboardStats,
+    queryKey: ['dashboardStats', tokenId],
+    queryFn: () => getDashboardStats(tokenId),
   })
 
   const token = getAppToken(tokenId)

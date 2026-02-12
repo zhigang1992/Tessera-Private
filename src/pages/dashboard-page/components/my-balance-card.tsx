@@ -11,8 +11,8 @@ export function MyBalanceCard() {
   const walletAddress = publicKey?.toBase58()
 
   const { data: userDashboard } = useQuery({
-    queryKey: ['userDashboard', walletAddress],
-    queryFn: () => getUserDashboard(walletAddress),
+    queryKey: ['userDashboard', DEFAULT_BASE_TOKEN_ID, walletAddress],
+    queryFn: () => getUserDashboard(DEFAULT_BASE_TOKEN_ID, walletAddress),
     enabled: connected && !!walletAddress,
     refetchInterval: 10000, // Refetch every 10 seconds
   })

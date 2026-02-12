@@ -6,6 +6,7 @@ import { getUserTradeHistory } from '@/services'
 import { Pagination } from '@/components/ui/pagination'
 import { TableContainer, tableStyles } from '@/components/ui/table-header'
 import TokenIconIcon from './_/token-icon.svg?react'
+import { DEFAULT_BASE_TOKEN_ID } from '@/config'
 
 const PAGE_SIZE = 10
 
@@ -27,8 +28,8 @@ export function TradingHistory() {
   const walletAddress = publicKey?.toBase58()
 
   const { data, isLoading } = useQuery({
-    queryKey: ['userTradeHistory', walletAddress, currentPage],
-    queryFn: () => getUserTradeHistory(walletAddress, currentPage, PAGE_SIZE),
+    queryKey: ['userTradeHistory', DEFAULT_BASE_TOKEN_ID, walletAddress, currentPage],
+    queryFn: () => getUserTradeHistory(DEFAULT_BASE_TOKEN_ID, walletAddress, currentPage, PAGE_SIZE),
     enabled: connected,
   })
 

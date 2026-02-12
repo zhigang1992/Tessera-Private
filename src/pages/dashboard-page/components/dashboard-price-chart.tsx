@@ -29,8 +29,8 @@ export function DashboardPriceChart() {
 
   // Fetch stats for top cards
   const { data: stats } = useQuery({
-    queryKey: ['dashboardStats'],
-    queryFn: getDashboardStats,
+    queryKey: ['dashboardStats', DEFAULT_BASE_TOKEN_ID],
+    queryFn: () => getDashboardStats(DEFAULT_BASE_TOKEN_ID),
   })
 
   // Fetch price history from backend (using T-SpaceX symbol)

@@ -17,8 +17,8 @@ export function MyTradeHistory() {
   const walletAddress = publicKey?.toBase58()
 
   const { data, isLoading } = useQuery({
-    queryKey: ['userTradeHistory', walletAddress, currentPage],
-    queryFn: () => getUserTradeHistory(walletAddress, currentPage, PAGE_SIZE),
+    queryKey: ['userTradeHistory', DEFAULT_BASE_TOKEN_ID, walletAddress, currentPage],
+    queryFn: () => getUserTradeHistory(DEFAULT_BASE_TOKEN_ID, walletAddress, currentPage, PAGE_SIZE),
     enabled: connected,
   })
 

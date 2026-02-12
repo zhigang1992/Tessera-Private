@@ -1,7 +1,7 @@
 import { sleep } from './utils'
-import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchSwapEventsForPrice, fetchTotalMarketCap, fetchAllTokenDetails, fetchDashboardSummary, fetchTokenPrice24hOHLC, fetchTokenDetails } from '@/features/referral/lib/graphql-client'
+import { fetchDashboardStats, fetchUserSwapEvents, fetchSwapEventsLast24h, fetchTotalMarketCap, fetchAllTokenDetails, fetchDashboardSummary, fetchTokenPrice24hOHLC, fetchTokenDetails } from '@/features/referral/lib/graphql-client'
 import { fromHasuraToNative, formatBigNumber, BigNumber, math, mathIs, type BigNumberSource, fromTokenAmount, type BigNumberValue } from '@/lib/bignumber'
-import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js'
+import { Connection, PublicKey } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import { getCurrentTokenPrice } from './price'
 import {
@@ -9,27 +9,19 @@ import {
   DEFAULT_BASE_TOKEN_ID,
   QUOTE_TOKEN_ID,
   getAppToken,
+  getRpcEndpoint,
   getTokenDlmmPoolAddress,
-  getTokenMintConfig,
+  getTokenMintAddress,
+  type AppTokenId,
 } from '@/config'
 
+// Helper constants for default base token
 const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
 const QUOTE_TOKEN = getAppToken(QUOTE_TOKEN_ID)
-const BASE_MINT_CONFIG = getTokenMintConfig(BASE_TOKEN.id)
-const BASE_MINT_ADDRESS = BASE_MINT_CONFIG?.address ?? null
-const BASE_DECIMALS = BASE_MINT_CONFIG?.decimals ?? BASE_TOKEN.decimals
 
 function getBasePoolAddress(): string | null {
   // Get network-aware pool address from config
   return getTokenDlmmPoolAddress(BASE_TOKEN.id)
-}
-
-/**
- * Format mint address for display (e.g., "TSPXcL...Pd99v")
- */
-function formatMintAddress(address: string | null): string {
-  if (!address || address.length < 12) return address ?? '—'
-  return `${address.slice(0, 6)}...${address.slice(-5)}`
 }
 
 // ============ Types ============
@@ -359,13 +351,14 @@ function formatSupply(value: number): string {
 /**
  * Get dashboard stats including real token price and supply from backend
  * Uses public_marts_token_details for latest price
+ * @param tokenId - The token ID to fetch stats for
  * @throws {Error} When token mint is not configured or token data is unavailable
  */
-export async function getDashboardStats(): Promise<DashboardStats> {
-  const tokenMint = BASE_MINT_ADDRESS
+export async function getDashboardStats(tokenId: AppTokenId): Promise<DashboardStats> {
+  const tokenMint = getTokenMintAddress(tokenId)
 
   if (!tokenMint) {
-    throw new Error('Base token mint address is not configured')
+    throw new Error('Token mint address is not configured')
   }
 
   // Fetch token details (includes price and circulating supply)
@@ -394,108 +387,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 }
 
 /**
- * Get token info with real price data from backend
- * Falls back to calculating from swap events if backend data unavailable
- * @throws {Error} When token mint or pool address is not configured, or when price data is unavailable
- */
-export async function getDashboardTokenInfo(): Promise<TokenInfo> {
-  const tokenMint = BASE_MINT_ADDRESS
-  const poolAddress = getBasePoolAddress()
-
-  if (!tokenMint) {
-    throw new Error('Base token mint address is not configured')
-  }
-
-  if (!poolAddress) {
-    throw new Error('Pool address is not configured')
-  }
-
-  // Fetch 24h OHLC data and swap events in parallel
-  const [ohlcData, events] = await Promise.all([
-    fetchTokenPrice24hOHLC(tokenMint),
-    fetchSwapEventsForPrice(poolAddress, 100),
-  ])
-
-  // Get current price from most recent swap
-  let currentPrice = 0
-  if (events.length > 0) {
-    const latestEvent = events[events.length - 1]
-    const x = fromHasuraToNative(latestEvent.amount_x)
-    const y = fromHasuraToNative(latestEvent.amount_y)
-    if (mathIs`${x} > ${0}`) {
-      currentPrice = BigNumber.toNumber(math`${y} / ${x}`)
-    }
-  }
-
-  // Use close_price_24h if available, otherwise fall back to current price
-  if (ohlcData?.close_price_24h) {
-    currentPrice = BigNumber.toNumber(fromHasuraToNative(ohlcData.close_price_24h))
-  }
-
-  if (currentPrice === 0) {
-    throw new Error('Unable to determine current token price from backend or swap events')
-  }
-
-  // Use backend 24h change data if available
-  if (ohlcData?.price_change_24h && ohlcData?.price_change_pct_24h) {
-    const priceChange24h = BigNumber.toNumber(fromHasuraToNative(ohlcData.price_change_24h))
-    const priceChangePercent24h = BigNumber.toNumber(fromHasuraToNative(ohlcData.price_change_pct_24h))
-
-    return {
-      symbol: BASE_TOKEN.symbol,
-      name: BASE_TOKEN.displayName,
-      price: currentPrice,
-      priceChange24h,
-      priceChangePercent24h,
-      description:
-        'SpaceX is a private aerospace company founded by Elon Musk that designs and manufactures rockets and spacecraft, provides commercial and government orbital launch services, and operates the Starlink global satellite internet constellation. Its business covers reusable launch systems, crewed missions, satellite broadband.',
-      supportedChains: ['Solana'],
-      onchainAddress: formatMintAddress(BASE_MINT_ADDRESS),
-      categories: ['Equities'],
-      underlyingAssetName: 'SpaceX, Inc. Private Equity',
-      underlyingAssetCompany: 'SpaceX',
-      sharesPerToken: `1 ${BASE_TOKEN.symbol} = 1.00 SPACEX EQUITY`,
-    }
-  }
-
-  // Fallback: Calculate 24h change from swap events
-  const now = Math.floor(Date.now() / 1000)
-  const dayAgo = now - 24 * 60 * 60
-
-  let price24hAgo = currentPrice
-  for (const event of events) {
-    if (event.block_time <= dayAgo) {
-      const eventX = fromHasuraToNative(event.amount_x)
-      const eventY = fromHasuraToNative(event.amount_y)
-      if (mathIs`${eventX} > ${0}`) {
-        price24hAgo = BigNumber.toNumber(math`${eventY} / ${eventX}`)
-      }
-    } else {
-      break
-    }
-  }
-
-  const priceChange24h = currentPrice - price24hAgo
-  const priceChangePercent24h = price24hAgo !== 0 ? (priceChange24h / price24hAgo) * 100 : 0
-
-  return {
-    symbol: BASE_TOKEN.symbol,
-    name: BASE_TOKEN.displayName,
-    price: currentPrice,
-    priceChange24h,
-    priceChangePercent24h,
-    description:
-      'SpaceX is a private aerospace company founded by Elon Musk that designs and manufactures rockets and spacecraft, provides commercial and government orbital launch services, and operates the Starlink global satellite internet constellation. Its business covers reusable launch systems, crewed missions, satellite broadband.',
-    supportedChains: ['Solana'],
-    onchainAddress: formatMintAddress(BASE_MINT_ADDRESS),
-    categories: ['Equities'],
-    underlyingAssetName: 'SpaceX, Inc. Private Equity',
-    underlyingAssetCompany: 'SpaceX',
-    sharesPerToken: `1 ${BASE_TOKEN.symbol} = 1.00 SPACEX EQUITY`,
-  }
-}
-
-/**
  * Calculate price from swap event amounts
  * For the base/quote pool: price = amount_y (quote) / amount_x (base)
  */
@@ -514,9 +405,10 @@ function calculatePriceFromSwap(amountX: string, amountY: string): BigNumberValu
 /**
  * Get dashboard statistics with 24h OHLC data from backend
  * Falls back to calculating from swap events if backend data unavailable
+ * @param tokenId - The token ID to fetch statistics for
  */
-export async function getDashboardStatistics(): Promise<TokenStatistics> {
-  const tokenMint = BASE_MINT_ADDRESS
+export async function getDashboardStatistics(tokenId: AppTokenId): Promise<TokenStatistics> {
+  const tokenMint = getTokenMintAddress(tokenId)
 
   if (!tokenMint) {
     return {
@@ -618,30 +510,34 @@ export async function getDashboardStatistics(): Promise<TokenStatistics> {
 
 /**
  * Get user dashboard data including balances
+ * @param tokenId - The token ID to fetch balance for
+ * @param walletAddress - The wallet address to fetch balance for
  */
-export async function getUserDashboard(walletAddress?: string): Promise<UserDashboard> {
+export async function getUserDashboard(tokenId: AppTokenId, walletAddress?: string): Promise<UserDashboard> {
+  const token = getAppToken(tokenId)
+
   if (!walletAddress) {
     // Return default/empty data when no wallet connected
     return {
       balance: 0,
       tokenBalance: 0,
-      tokenSymbol: BASE_TOKEN.symbol,
-      tokenName: BASE_TOKEN.displayName,
+      tokenSymbol: token.symbol,
+      tokenName: token.displayName,
     }
   }
 
   // Get devnet RPC connection
-  const DEVNET_RPC_URL = import.meta.env.VITE_DEVNET_RPC_URL || clusterApiUrl('devnet')
-  const connection = new Connection(DEVNET_RPC_URL, 'confirmed')
+  const connection = new Connection(getRpcEndpoint(), 'confirmed')
   const publicKey = new PublicKey(walletAddress)
 
-  // Get base token balance (Token-2022)
+  // Get token balance
   let tessBalance = 0
   try {
-    if (!BASE_MINT_ADDRESS) {
-      throw new Error('Base mint not configured')
+    const tokenMint = getTokenMintAddress(tokenId)
+    if (!tokenMint) {
+      throw new Error('Token mint not configured')
     }
-    const tessMint = new PublicKey(BASE_MINT_ADDRESS)
+    const tessMint = new PublicKey(tokenMint)
     const tessAta = await getAssociatedTokenAddress(
       tessMint,
       publicKey,
@@ -649,7 +545,7 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
       TOKEN_2022_PROGRAM_ID
     )
     const tessAccount = await getAccount(connection, tessAta, 'confirmed', TOKEN_2022_PROGRAM_ID)
-    const tessBigNum = fromTokenAmount(tessAccount.amount.toString(), BASE_DECIMALS)
+    const tessBigNum = fromTokenAmount(tessAccount.amount.toString(), token.decimals)
     tessBalance = BigNumber.toNumber(tessBigNum)
   } catch {
     // Token account doesn't exist, balance is 0
@@ -657,8 +553,9 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
   }
 
   // Get current token price from shared price service
-  const tokenPriceUsd = BASE_MINT_ADDRESS
-    ? (await getCurrentTokenPrice(BASE_MINT_ADDRESS)) ?? 0
+  const tokenMint = getTokenMintAddress(tokenId)
+  const tokenPriceUsd = tokenMint
+    ? (await getCurrentTokenPrice(tokenMint)) ?? 0
     : 0
 
   // Calculate USD value of token holdings
@@ -667,15 +564,20 @@ export async function getUserDashboard(walletAddress?: string): Promise<UserDash
   return {
     balance: balanceUsd,
     tokenBalance: tessBalance,
-    tokenSymbol: BASE_TOKEN.symbol,
-    tokenName: BASE_TOKEN.displayName,
+    tokenSymbol: token.symbol,
+    tokenName: token.displayName,
   }
 }
 
 /**
  * Get user-specific trade history from GraphQL
+ * @param tokenId - The token ID to fetch trade history for
+ * @param walletAddress - The wallet address to fetch history for
+ * @param page - Page number (1-indexed)
+ * @param pageSize - Number of items per page
  */
 export async function getUserTradeHistory(
+  tokenId: AppTokenId,
   walletAddress: string | undefined,
   page: number = 1,
   pageSize: number = 10
@@ -691,6 +593,9 @@ export async function getUserTradeHistory(
     }
   }
 
+  const token = getAppToken(tokenId)
+  const quoteToken = getAppToken(QUOTE_TOKEN_ID)
+
   const offset = (page - 1) * pageSize
   const { events, total } = await fetchUserSwapEvents(walletAddress, pageSize, offset)
 
@@ -704,9 +609,9 @@ export async function getUserTradeHistory(
 
     return {
       id: `${event.signature}-${event.block_time}`,
-      token: BASE_TOKEN.symbol,
-      amountIn: isBuy ? `${amountY} ${QUOTE_TOKEN.symbol}` : `${amountX} ${BASE_TOKEN.symbol}`,
-      amountOut: isBuy ? `${amountX} ${BASE_TOKEN.symbol}` : `${amountY} ${QUOTE_TOKEN.symbol}`,
+      token: token.symbol,
+      amountIn: isBuy ? `${amountY} ${quoteToken.symbol}` : `${amountX} ${token.symbol}`,
+      amountOut: isBuy ? `${amountX} ${token.symbol}` : `${amountY} ${quoteToken.symbol}`,
       type: isBuy ? 'Buy' : 'Sell',
       account: formatWalletAddress(event.sender),
       time: formatBlockTimeWithTime(event.block_time),
