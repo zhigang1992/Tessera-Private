@@ -62,8 +62,8 @@ export function AboutPanel({ tokenId = DEFAULT_BASE_TOKEN_ID }: AboutPanelProps)
           <div className="flex items-center justify-between py-2.5">
             <span className="text-xs lg:text-sm text-[#999]">Supported Chains</span>
             <div className="flex items-center gap-1.5">
-              <SolanaIcon className="w-6 h-6" />
-              <span className="text-sm lg:text-base text-black dark:text-[#d2d2d2]">Solana</span>
+              <SolanaIcon className="w-5 h-5" />
+              <span className="text-xs lg:text-sm text-black dark:text-[#d2d2d2]">Solana</span>
             </div>
           </div>
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
@@ -75,8 +75,8 @@ export function AboutPanel({ tokenId = DEFAULT_BASE_TOKEN_ID }: AboutPanelProps)
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 hover:opacity-70 transition-opacity"
             >
-              <SolanaIcon className="w-6 h-6" />
-              <span className="text-sm lg:text-base text-black dark:text-[#d2d2d2]">{onchainAddress}</span>
+              <SolanaIcon className="w-5 h-5" />
+              <span className="text-xs lg:text-sm text-black dark:text-[#d2d2d2]">{onchainAddress}</span>
               <svg
                 className="w-4 h-4 text-black dark:text-[#d2d2d2]"
                 fill="none"
@@ -109,17 +109,17 @@ export function AboutPanel({ tokenId = DEFAULT_BASE_TOKEN_ID }: AboutPanelProps)
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
           <div className="flex items-center justify-between py-2.5">
             <span className="text-xs lg:text-sm text-[#999]">Underlying Asset Name</span>
-            <span className="text-sm lg:text-base text-black dark:text-[#d2d2d2]">{metadata.underlyingAssetName}</span>
+            <span className="text-xs lg:text-sm text-black dark:text-[#d2d2d2]">{metadata.underlyingAssetName}</span>
           </div>
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
           <div className="flex items-center justify-between py-2.5">
             <span className="text-xs lg:text-sm text-[#999]">Underlying Asset Company</span>
-            <span className="text-sm lg:text-base text-black dark:text-[#d2d2d2]">{metadata.underlyingAssetCompany}</span>
+            <span className="text-xs lg:text-sm text-black dark:text-[#d2d2d2]">{metadata.underlyingAssetCompany}</span>
           </div>
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
           <div className="flex items-center justify-between py-2.5">
             <span className="text-xs lg:text-sm text-[#999]">Shares Per Token</span>
-            <span className="text-sm lg:text-base text-black dark:text-[#d2d2d2]">{metadata.sharesPerToken}</span>
+            <span className="text-xs lg:text-sm text-black dark:text-[#d2d2d2]">{metadata.sharesPerToken}</span>
           </div>
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
         </div>
