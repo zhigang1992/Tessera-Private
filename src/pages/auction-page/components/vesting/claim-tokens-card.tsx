@@ -332,7 +332,7 @@ export function ClaimTokensCard() {
                 <>
                   <span className="text-lg font-semibold leading-7 text-white">
                     {!isVestingActive
-                      ? 'Vesting Not Started'
+                      ? 'Claim Not Started'
                       : hasClaimedAll
                         ? 'Already Claimed'
                         : !canClaim
