@@ -68,7 +68,7 @@ export interface UseAlphaVaultReturn {
   initialize: () => Promise<void>
   refreshVaultInfo: () => Promise<void>
   refreshUserPosition: () => Promise<void>
-  deposit: (amount: string) => Promise<string | null>
+  deposit: (amount: string, onSuccess?: () => void) => Promise<string | null>
   withdraw: (amount: string) => Promise<string | null>
   claim: () => Promise<string | null>
   withdrawRemaining: () => Promise<string | null>
@@ -301,7 +301,7 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
 
   // Deposit action
   const deposit = useCallback(
-    async (amount: string): Promise<string | null> => {
+    async (amount: string, onSuccess?: () => void): Promise<string | null> => {
       if (!wallet.publicKey || !wallet.signTransaction) {
         setError('Wallet not connected')
         return null
@@ -341,6 +341,11 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
           blockhash,
           lastValidBlockHeight,
         })
+
+        // Call onSuccess callback before refreshing data
+        if (onSuccess) {
+          onSuccess()
+        }
 
         // Refresh position
         await refreshUserPosition()

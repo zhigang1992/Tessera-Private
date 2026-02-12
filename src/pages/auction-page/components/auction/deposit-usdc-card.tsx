@@ -178,7 +178,10 @@ export function DepositUSDCCard() {
       return
     }
 
-    const signature = await deposit(depositAmount)
+    const signature = await deposit(depositAmount, () => {
+      // Clear input immediately on success, before balance refresh
+      setDepositAmount('')
+    })
 
     if (signature) {
       toast.success('Deposit successful!', {
@@ -188,7 +191,6 @@ export function DepositUSDCCard() {
           onClick: () => window.open(getExplorerUrl(signature), '_blank'),
         },
       })
-      setDepositAmount('')
     } else if (error) {
       toast.error('Deposit failed', { description: error })
       clearError()
