@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Card } from '@/components/ui/card'
@@ -7,6 +7,7 @@ import { Loader2, Lock, ArrowRight, AlertCircle } from 'lucide-react'
 import { AppTokenName } from '@/components/app-token-name'
 import { AppTokenAmount } from '@/components/app-token-amount'
 import { CountdownNotification } from '@/components/countdown-notification'
+import { EmailCaptureModal } from '@/components/email-capture-modal'
 import { getExplorerUrl } from '@/config'
 import { formatDuration } from '@/services/alpha-vault-helpers'
 import { toast } from 'sonner'
@@ -20,6 +21,8 @@ export function ClaimTokensCard() {
   const wallet = useWallet()
   const { setVisible } = useWalletModal()
   const token = useAuctionToken()
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [emailCaptured, setEmailCaptured] = useState(false)
 
   const {
     config,
@@ -83,6 +86,37 @@ export function ClaimTokensCard() {
     mathIs`${availableAmountValue} === ${0}` &&
     mathIs`${totalAllocationValue} > ${0}`
 
+  const handleEmailSubmit = async (email: string) => {
+    if (!wallet.publicKey) {
+      throw new Error('Wallet not connected')
+    }
+
+    try {
+      const response = await fetch('/api/email-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          walletAddress: wallet.publicKey.toBase58(),
+          email,
+          source: 'auction_claim',
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to save email')
+      }
+
+      setEmailCaptured(true)
+      toast.success('Email saved successfully!')
+    } catch (err) {
+      console.error('Failed to save email:', err)
+      throw err
+    }
+  }
+
   const handleClaimTokens = async () => {
     if (!wallet.connected) {
       toast.error('Please connect your wallet')
@@ -94,6 +128,16 @@ export function ClaimTokensCard() {
       return
     }
 
+    // Show email modal before claiming (unless already captured)
+    if (!emailCaptured) {
+      setShowEmailModal(true)
+      return
+    }
+
+    await proceedWithClaim()
+  }
+
+  const proceedWithClaim = async () => {
     const signature = await claim()
 
     if (signature) {
@@ -108,6 +152,12 @@ export function ClaimTokensCard() {
       toast.error('Claim failed', { description: error })
       clearError()
     }
+  }
+
+  const handleEmailModalClose = () => {
+    setShowEmailModal(false)
+    // Proceed with claim after modal is closed (user either submitted email or skipped)
+    proceedWithClaim()
   }
 
   const handleWithdrawRefund = async () => {
@@ -360,6 +410,16 @@ export function ClaimTokensCard() {
   }
 
   return (
+    <>
+      {/* Email Capture Modal */}
+      <EmailCaptureModal
+        isOpen={showEmailModal}
+        onClose={handleEmailModalClose}
+        onSubmit={handleEmailSubmit}
+        walletAddress={wallet.publicKey?.toBase58() ?? ''}
+      />
+
+      {/* Main Card */}
     <Card className="bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] p-6 h-full">
       <div className="flex flex-col items-center gap-6 h-full justify-between">
         {/* Icon and Title */}
@@ -469,5 +529,6 @@ export function ClaimTokensCard() {
         </div>
       </div>
     </Card>
+    </>
   )
 }
