@@ -2,21 +2,21 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { Clock, CheckCircle } from 'lucide-react'
 import { AppTokenName } from '@/components/app-token-name'
 import { AppTokenAmount } from '@/components/app-token-amount'
-import { BigNumber, fromTokenAmount } from '@/lib/bignumber'
+import { BigNumber, fromTokenAmount, mathIs } from '@/lib/bignumber'
 import { useAuctionAlphaVault, useAuctionToken } from '../../context'
 
 export function ClaimHeaderCard() {
   const wallet = useWallet()
   const token = useAuctionToken()
-  const { claimInfo, estimatedRefund, config, isLoading } = useAuctionAlphaVault()
+  const { escrowInfo, estimatedRefund, config } = useAuctionAlphaVault()
 
   // Check if user is eligible (has allocation)
   const isEligible =
-    wallet.connected && claimInfo && parseFloat(claimInfo.totalAllocation) > 0
+    wallet.connected && escrowInfo && mathIs`${escrowInfo.estimatedAllocation} > ${0}`
 
   // Calculate amounts
-  const totalTokens = claimInfo
-    ? fromTokenAmount(claimInfo.totalAllocation, config.baseDecimals)
+  const totalTokens = escrowInfo
+    ? escrowInfo.estimatedAllocation
     : BigNumber.from(0)
 
   const refundAmount = estimatedRefund ?? BigNumber.from(0)
@@ -26,11 +26,9 @@ export function ClaimHeaderCard() {
       <div className="rounded-2xl border p-6 bg-white dark:bg-[#323334] border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <p className="text-sm text-[#666] dark:text-[#999]">
-            {!wallet.connected
-              ? 'Connect your wallet to view your allocation'
-              : isLoading
-                ? 'Loading...'
-                : 'No allocation found for your wallet'}
+            {wallet.connected
+              ? 'No allocation found for your wallet'
+              : 'Connect your wallet to view your allocation'}
           </p>
         </div>
       </div>

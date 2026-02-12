@@ -316,12 +316,8 @@ export class AlphaVaultClient {
       let estimatedRefund: BigNumberValue = BigNumber.ZERO
 
       const vaultData = vault.vault
-      const boughtToken = BigNumber.from(vaultData.boughtToken?.toString() ?? '0')
 
-      if (mathIs`${boughtToken} > ${0}`) {
-        // Vault has already bought tokens - use actual allocation from claimInfo
-        estimatedAllocation = fromTokenAmount(claimInfo?.totalAllocated?.toString() ?? '0', this.config.baseDecimals)
-      } else if (vaultInfo.mode === 'prorata') {
+      if (vaultInfo.mode === 'prorata') {
         // During deposit period, estimate based on pool liquidity and price
         const tessAvailable = await this.getPoolTessReserve()
         const poolPrice = await this.getPoolPrice()
