@@ -23,7 +23,7 @@ export default function AuctionPage() {
 
   const token = useMemo(() => getAppToken(tokenId), [tokenId])
   const alphaVault = useAlphaVault(tokenId)
-  const [activeTab, setActiveTab] = useState('auction')
+  const [activeTab, setActiveTab] = useState('vesting')
   const hasVestingPeriod = alphaVault.config.hasVestingPeriod
 
   const handleCheckWhitelist = () => {
