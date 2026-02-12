@@ -19,7 +19,7 @@ export function ClaimHeaderCard() {
     ? fromTokenAmount(claimInfo.totalAllocation, config.baseDecimals)
     : BigNumber.from(0)
 
-  const refundAmount = estimatedRefund ?? '0'
+  const refundAmount = estimatedRefund ?? BigNumber.from(0)
 
   if (!isEligible) {
     return (

@@ -477,13 +477,16 @@ export class AlphaVaultClient {
       const totalClaimed = escrow.claimedToken?.toString() ?? '0'
       const availableToClaim = claimInfo.totalClaimable?.toString() ?? '0'
 
-      const totalAllocationNum = parseFloat(totalAllocation)
-      const totalClaimedNum = parseFloat(totalClaimed)
-      const availableNum = parseFloat(availableToClaim)
-      const lockedAmount = Math.max(0, totalAllocationNum - totalClaimedNum - availableNum).toFixed(0)
+      // Calculate locked amount using BigNumber arithmetic on raw values (no conversion yet)
+      const totalAllocationBN = BigNumber.from(totalAllocation)
+      const totalClaimedBN = BigNumber.from(totalClaimed)
+      const availableBN = BigNumber.from(availableToClaim)
+      const lockedBN = math`max(${0}, ${totalAllocationBN} - ${totalClaimedBN} - ${availableBN})`
+      const lockedAmount = BigNumber.toString(lockedBN)
 
-      const vestingProgress = totalAllocationNum > 0
-        ? ((totalClaimedNum + availableNum) / totalAllocationNum) * 100
+      // Calculate vesting progress as percentage
+      const vestingProgress = mathIs`${totalAllocationBN} > ${0}`
+        ? BigNumber.toNumber(math`((${totalClaimedBN} + ${availableBN}) / ${totalAllocationBN}) * ${100}`)
         : 0
 
       // Estimate next unlock time
