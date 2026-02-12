@@ -3,7 +3,7 @@ import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useJupiterSwap, type SwapDirection } from '@/hooks/use-jupiter-swap'
 import { type AppTokenId, DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getAppToken, getExplorerUrl, getTokenDecimals } from '@/config'
-import { BigNumber } from '@/lib/bignumber'
+import { BigNumber, math } from '@/lib/bignumber'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
 import { AppTokenCount } from '@/components/app-token-count'
@@ -393,16 +393,16 @@ export function TokenSwapPanel({
                 </div>
                 <div className="flex flex-col justify-center text-black">
                   <p className="leading-4">
-                    1 <AppTokenName token={sellingTokenConfig} variant="symbol" /> ={' '}
+                    1 <AppTokenName token={BASE_TOKEN} variant="symbol" /> ={' '}
                     <AppTokenCount
-                      token={buyingTokenConfig}
-                      value={rateValue}
+                      token={QUOTE_TOKEN}
+                      value={rateValue != null ? (isBuying ? math`${1} / ${rateValue}` : rateValue) : null}
                       showSymbol={false}
                       minimumFractionDigits={buyingPrecision.minimumFractionDigits}
                       maximumFractionDigits={Math.max(4, buyingPrecision.maximumFractionDigits)}
                       fallback="0.0000"
                     />{' '}
-                    <AppTokenName token={buyingTokenConfig} variant="symbol" />
+                    <AppTokenName token={QUOTE_TOKEN} variant="symbol" />
                   </p>
                 </div>
               </div>
