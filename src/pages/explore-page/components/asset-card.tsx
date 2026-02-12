@@ -37,13 +37,13 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
       {/* Body */}
       <div className="px-5 py-5">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-[#71717a] leading-normal">Price</span>
+          <span className="text-xs text-[#71717a] leading-normal">Auction Price</span>
           <span className="text-base font-semibold text-[#18181b] dark:text-[#d2d2d2] leading-normal">
             {asset.price != null ? '$' + asset.price.toFixed(2) : "TBA"}
           </span>
         </div>
         <div className="flex items-center justify-between mb-5">
-          <span className="text-xs text-[#71717a] leading-normal">Valuation at Price</span>
+          <span className="text-xs text-[#71717a] leading-normal">Valuation at Auction Price</span>
           <span className="text-base font-semibold text-[#18181b] dark:text-[#d2d2d2] leading-normal">{asset.valuation ?? "TBA"}</span>
         </div>
 
