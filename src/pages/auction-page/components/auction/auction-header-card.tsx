@@ -89,6 +89,8 @@ export function AuctionHeaderCard() {
                   token={quoteToken}
                   amount={totalRaised}
                   showSymbol
+                  minimumFractionDigits={0}
+                  maximumFractionDigits={0}
                   className="text-2xl font-semibold font-mono text-foreground"
                 />
                 <span className="bg-[rgba(210,251,149,0.5)] text-foreground text-xs font-medium px-2 py-0.5 rounded">

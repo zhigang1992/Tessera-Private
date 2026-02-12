@@ -26,7 +26,7 @@ export function AuctionProgressCard() {
           {progress && progress.oversubscribedRatio > 1 && (
             <div className="flex items-center gap-2 text-[#06a800] font-bold text-sm">
               <TrendingUp className="w-6 h-6" />
-              <span>{progress.oversubscribedRatio}x Oversubscribed</span>
+              <span>{progress.oversubscribedRatio.toFixed(2)}x Oversubscribed</span>
             </div>
           )}
         </div>

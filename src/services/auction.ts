@@ -68,13 +68,25 @@ export async function getAuctionProgress(tokenId: AppTokenId = DEFAULT_BASE_TOKE
 
 export async function getAuctionChartData(tokenId: AppTokenId = DEFAULT_BASE_TOKEN_ID): Promise<AuctionChartDataWithStartTime> {
   const { poolAddress } = requireAuctionConfig(tokenId)
-  const events = await fetchAuctionDepositEvents(poolAddress)
+  const { deposits, withdrawals } = await fetchAuctionDepositEvents(poolAddress)
 
-  if (events.length === 0) {
+  // Combine deposits and withdrawals into a single timeline with event type
+  type TimelineEvent = {
+    block_time: number
+    amount: string
+    type: 'deposit' | 'withdraw'
+  }
+
+  const allEvents: TimelineEvent[] = [
+    ...deposits.map((e) => ({ ...e, type: 'deposit' as const })),
+    ...withdrawals.map((e) => ({ ...e, type: 'withdraw' as const })),
+  ]
+
+  if (allEvents.length === 0) {
     return { data: [], startTime: 0 }
   }
 
-  const sortedEvents = [...events].sort((a, b) => a.block_time - b.block_time)
+  const sortedEvents = allEvents.sort((a, b) => a.block_time - b.block_time)
   const startTime = sortedEvents[0].block_time
 
   // Bucket transactions by time intervals
@@ -86,7 +98,13 @@ export async function getAuctionChartData(tokenId: AppTokenId = DEFAULT_BASE_TOK
 
   for (const event of sortedEvents) {
     const amount = fromHasuraToNative(event.amount)
-    cumulativeTotal = math`${cumulativeTotal} + ${amount}`
+
+    // Add for deposits, subtract for withdrawals
+    if (event.type === 'deposit') {
+      cumulativeTotal = math`${cumulativeTotal} + ${amount}`
+    } else {
+      cumulativeTotal = math`${cumulativeTotal} - ${amount}`
+    }
 
     // Determine which bucket this event belongs to
     const timeSinceStart = event.block_time - startTime

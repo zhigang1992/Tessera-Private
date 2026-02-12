@@ -1043,6 +1043,19 @@ export interface EscrowDepositEvent {
   signature: string
 }
 
+export interface EscrowWithdrawEvent {
+  amount: string // numeric from GraphQL (18 decimals)
+  block_time: number
+  owner: string
+  pool: string
+  signature: string
+}
+
+export interface AuctionEvents {
+  deposits: EscrowDepositEvent[]
+  withdrawals: EscrowWithdrawEvent[]
+}
+
 /**
  * Fetch total raised amount for an auction pool
  */
@@ -1064,16 +1077,27 @@ export async function fetchAuctionTotalRaised(poolAddress: string): Promise<Auct
 }
 
 /**
- * Fetch all escrow deposit events for an auction pool (for chart data)
- * Returns events ordered by block_time ascending
+ * Fetch all escrow deposit and withdrawal events for an auction pool (for chart data)
+ * Returns both deposits and withdrawals ordered by block_time ascending
  */
 export async function fetchAuctionDepositEvents(
   poolAddress: string,
   limit: number = 1000
-): Promise<EscrowDepositEvent[]> {
+): Promise<AuctionEvents> {
   const query = `
     query GetAuctionDepositEvents($pool: String!, $limit: Int!) {
       facts_meteora_escrow_deposited_events(
+        where: { pool: { _eq: $pool } }
+        order_by: { block_time: asc }
+        limit: $limit
+      ) {
+        amount
+        block_time
+        owner
+        pool
+        signature
+      }
+      facts_meteora_escrow_withdrawn_events(
         where: { pool: { _eq: $pool } }
         order_by: { block_time: asc }
         limit: $limit
@@ -1089,9 +1113,13 @@ export async function fetchAuctionDepositEvents(
 
   const data = await graphqlRequest<{
     facts_meteora_escrow_deposited_events: EscrowDepositEvent[]
+    facts_meteora_escrow_withdrawn_events: EscrowWithdrawEvent[]
   }>(query, { pool: poolAddress, limit })
 
-  return data.facts_meteora_escrow_deposited_events
+  return {
+    deposits: data.facts_meteora_escrow_deposited_events,
+    withdrawals: data.facts_meteora_escrow_withdrawn_events,
+  }
 }
 
 // ============ Dashboard Summary ============
