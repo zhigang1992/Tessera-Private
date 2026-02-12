@@ -194,6 +194,14 @@ export function ClaimTokensCard() {
     // Check for purchase failure case
     if (vaultInfo?.purchaseFailed) {
       return (
+        <>
+          {/* Email Capture Modal */}
+          <EmailCaptureModal
+            isOpen={showEmailModal}
+            onClose={handleEmailModalClose}
+            onSubmit={handleEmailSubmit}
+            walletAddress={wallet.publicKey?.toBase58() ?? ''}
+          />
         <div className="w-full rounded-2xl border p-6 bg-white dark:bg-[#323334] border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] flex flex-col justify-center items-center text-center">
           {/* Warning Icon */}
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#f59e0b] to-[#ef4444] flex items-center justify-center">
@@ -260,11 +268,20 @@ export function ClaimTokensCard() {
             Transaction subject to a network fee
           </p>
         </div>
+        </>
       )
     }
 
     // Simplified Claim layout (matching reference design)
     return (
+      <>
+        {/* Email Capture Modal */}
+        <EmailCaptureModal
+          isOpen={showEmailModal}
+          onClose={handleEmailModalClose}
+          onSubmit={handleEmailSubmit}
+          walletAddress={wallet.publicKey?.toBase58() ?? ''}
+        />
       <div className="w-full rounded-2xl border p-6 bg-white dark:bg-[#323334] border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] flex flex-col justify-center items-center text-center">
         {/* Lock Icon */}
         <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#f59e0b] to-[#f97316] flex items-center justify-center">
@@ -341,6 +358,7 @@ export function ClaimTokensCard() {
           Transaction subject to a network fee
         </p>
       </div>
+      </>
     )
   }
 
