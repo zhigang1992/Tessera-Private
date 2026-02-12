@@ -411,7 +411,7 @@ export function DepositUSDCCard() {
           {wallet.connected ? (
             <button
               onClick={handleConfirmDeposit}
-              disabled={isLoading || !canDeposit || exceedsRemainingQuota}
+              disabled={isLoading || !canDeposit || exceedsRemainingQuota || exceedsBalance}
               className="bg-black h-14 rounded-lg w-full hover:bg-[#333] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div className="flex items-center justify-center size-full px-6 py-0">

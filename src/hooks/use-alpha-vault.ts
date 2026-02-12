@@ -348,7 +348,15 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
 
         return signature
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Deposit failed'
+        let message = err instanceof Error ? err.message : 'Deposit failed'
+
+        // Provide helpful error messages for common issues
+        if (message.includes('Attempt to debit an account but found no record of a prior credit')) {
+          message = 'Insufficient USDC balance or USDC token account not found. Please ensure you have USDC in your wallet.'
+        } else if (message.includes('custom program error: 0x1')) {
+          message = 'Insufficient funds for transaction fee'
+        }
+
         setError(message)
         return null
       } finally {
