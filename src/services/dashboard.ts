@@ -11,7 +11,6 @@ import {
   getAppToken,
   getTokenDlmmPoolAddress,
   getTokenMintConfig,
-  getTokenMintForNetwork,
 } from '@/config'
 
 const BASE_TOKEN = getAppToken(DEFAULT_BASE_TOKEN_ID)
