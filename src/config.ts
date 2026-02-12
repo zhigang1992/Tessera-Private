@@ -289,7 +289,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
     },
     metadata: {
       name: 'T-SpaceX',
-      code: 'TSX-001',
+      code: 'tSpaceX',
       sector: 'Aerospace',
       type: 'PRE-IPO',
       website: 'https://spacex.com',

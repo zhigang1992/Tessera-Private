@@ -29,7 +29,7 @@ const exploreAssets: ExploreAsset[] = [
     headerImage: spacexBg,
     price: 423,
     valuation: '$800bn',
-    status: 'auction',
+    status: 'trading',
   },
   {
     id: 'kalshi',
