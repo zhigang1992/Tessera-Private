@@ -103,6 +103,7 @@ export interface EscrowInfo {
   availableToClaim: string
   // Vesting progress
   vestingProgress: number
+  refunded?: boolean
 }
 
 export interface DepositQuota {
@@ -374,6 +375,7 @@ export class AlphaVaultClient {
         estimatedRefund,
         availableToClaim,
         vestingProgress,
+        refunded: escrow.refunded > 0,
       }
     } catch {
       return null

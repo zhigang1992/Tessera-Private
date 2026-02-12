@@ -27,6 +27,7 @@ export function ClaimTokensCard() {
   const {
     config,
     isLoading,
+    isInitialized,
     vaultInfo,
     escrowInfo,
     claimInfo,
@@ -191,86 +192,6 @@ export function ClaimTokensCard() {
 
   // Render different layouts based on config
   if (!config.hasVestingPeriod) {
-    // Check for purchase failure case
-    if (vaultInfo?.purchaseFailed) {
-      return (
-        <>
-          {/* Email Capture Modal */}
-          <EmailCaptureModal
-            isOpen={showEmailModal}
-            onClose={handleEmailModalClose}
-            onSubmit={handleEmailSubmit}
-            walletAddress={wallet.publicKey?.toBase58() ?? ''}
-          />
-        <div className="w-full rounded-2xl border p-6 bg-white dark:bg-[#323334] border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] flex flex-col justify-center items-center text-center">
-          {/* Warning Icon */}
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#f59e0b] to-[#ef4444] flex items-center justify-center">
-            <AlertCircle className="w-10 h-10 text-white" strokeWidth={2} />
-          </div>
-
-          {/* Title */}
-          <h3 className="text-2xl font-semibold leading-8 mb-3 text-black dark:text-[#d2d2d2]">
-            Token Purchase Failed
-          </h3>
-
-          {/* Description */}
-          <p className="text-sm font-normal leading-[21px] mb-6 text-[#666] dark:text-[#999]">
-            The vault did not complete the token purchase during the buying window. You can withdraw your deposited{' '}
-            <AppTokenName token={quoteToken} variant="symbol" /> back to your wallet.
-          </p>
-
-          {/* Deposit Amount Info */}
-          {hasDepositedFunds && (
-            <div className="w-full bg-[#f5f5f5] dark:bg-[#2a2b2c] rounded-lg p-4 mb-6">
-              <p className="text-xs text-[#666] dark:text-[#999] mb-1">Your Deposited Amount</p>
-              <p className="text-xl font-semibold font-mono text-black dark:text-[#d2d2d2]">
-                <AppTokenAmount token={quoteToken} amount={depositedAmountValue} showSymbol />
-              </p>
-            </div>
-          )}
-
-          {/* Withdraw USDC Button */}
-          {wallet.connected ? (
-            <button
-              onClick={handleWithdrawRefund}
-              disabled={isLoading}
-              className="h-14 w-full rounded-lg bg-black hover:bg-[#333] transition-colors mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className="flex items-center justify-center gap-2">
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin text-white" />
-                    <span className="text-lg font-semibold leading-7 text-white">
-                      Processing...
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-lg font-semibold leading-7 text-white flex items-center gap-1">
-                      Withdraw <AppTokenName token={quoteToken} variant="symbol" />
-                    </span>
-                    <ArrowRight className="w-5 h-5 text-white" strokeWidth={2.5} />
-                  </>
-                )}
-              </div>
-            </button>
-          ) : (
-            <button
-              onClick={() => setVisible(true)}
-              className="h-14 w-full rounded-lg bg-black hover:bg-[#333] transition-colors mb-4"
-            >
-              <span className="text-lg font-semibold leading-7 text-white">Connect Wallet</span>
-            </button>
-          )}
-
-          {/* Transaction Fee Notice */}
-          <p className="text-[10px] font-normal leading-[15px] text-[#999] dark:text-[#666]">
-            Transaction subject to a network fee
-          </p>
-        </div>
-        </>
-      )
-    }
 
     // Simplified Claim layout (matching reference design)
     return (
@@ -313,29 +234,15 @@ export function ClaimTokensCard() {
           </div>
         )}
 
-{wallet.connected ? (
+          {wallet.connected && !isLoading && isInitialized && (
               <Button
                 onClick={handleWithdrawRefund}
-                disabled={isLoading}
+                disabled={isLoading || escrowInfo?.refunded}
                 className="w-full mb-4 h-14 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 text-lg font-semibold disabled:opacity-50"
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1">
                     Withdraw <AppTokenName token={quoteToken} variant="symbol" />
                   </span>
-                )}
-              </Button>
-            ) : (
-              <Button
-                onClick={() => setVisible(true)}
-                className="w-full h-14 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 text-lg font-semibold"
-              >
-                Connect Wallet
               </Button>
             )}
         {/* Claim All Button */}
@@ -359,7 +266,7 @@ export function ClaimTokensCard() {
                     {!isVestingActive
                       ? 'Claim Not Started'
                       : hasClaimedAll
-                        ? 'Already Claimed'
+                        ? 'Token already Claimed'
                         : !canClaim
                           ? 'No Tokens to Claim'
                           : 'Claim Token'}
