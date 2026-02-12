@@ -8,7 +8,7 @@ import { useAuctionAlphaVault, useAuctionToken } from '../../context'
 export function ClaimHeaderCard() {
   const wallet = useWallet()
   const token = useAuctionToken()
-  const { claimInfo, estimatedRefund, config } = useAuctionAlphaVault()
+  const { claimInfo, estimatedRefund, config, isLoading } = useAuctionAlphaVault()
 
   // Check if user is eligible (has allocation)
   const isEligible =
@@ -26,9 +26,11 @@ export function ClaimHeaderCard() {
       <div className="rounded-2xl border p-6 bg-white dark:bg-[#323334] border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <p className="text-sm text-[#666] dark:text-[#999]">
-            {wallet.connected
-              ? 'No allocation found for your wallet'
-              : 'Connect your wallet to view your allocation'}
+            {!wallet.connected
+              ? 'Connect your wallet to view your allocation'
+              : isLoading
+                ? 'Loading...'
+                : 'No allocation found for your wallet'}
           </p>
         </div>
       </div>
