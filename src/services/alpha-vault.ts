@@ -318,13 +318,23 @@ export class AlphaVaultClient {
       const vaultData = vault.vault
 
       if (vaultInfo.mode === 'prorata') {
-        // During deposit period, estimate based on pool liquidity and price
         const tessAvailable = await this.getPoolTessReserve()
         const poolPrice = await this.getPoolPrice()
         const totalDeposit = fromTokenAmount(vaultData.totalDeposit?.toString() ?? '0', this.config.quoteDecimals)
         const maxCap = fromTokenAmount(vaultInfo.maxCap, this.config.quoteDecimals)
 
-        if (mathIs`${totalDeposit} > ${0}` && mathIs`${poolPrice} > ${0}`) {
+        if (claimInfo.totalAllocated.toNumber() > 0) {
+          const allocated = fromTokenAmount(claimInfo.totalAllocated.toString(), this.config.baseDecimals)
+          estimatedAllocation = allocated
+
+          if (mathIs`${totalDeposit} > ${maxCap}`) {
+            const usedRatio = math`${maxCap} / ${totalDeposit}` // Ratio of deposits that will be used
+            const usedUsdc = math`${userDeposited} * ${usedRatio}`
+            estimatedRefund = math`${userDeposited} - ${usedUsdc}`
+          }
+
+        // During deposit period, estimate based on pool liquidity and price
+        } else if (mathIs`${totalDeposit} > ${0}` && mathIs`${poolPrice} > ${0}`) {
           // User's share of deposits
           const userShare = math`${userDeposited} / ${totalDeposit}`
 
