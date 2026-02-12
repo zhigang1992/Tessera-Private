@@ -313,6 +313,31 @@ export function ClaimTokensCard() {
           </div>
         )}
 
+{wallet.connected ? (
+              <Button
+                onClick={handleWithdrawRefund}
+                disabled={isLoading}
+                className="w-full mb-4 h-14 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 text-lg font-semibold disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <span className="flex items-center gap-1">
+                    Withdraw <AppTokenName token={quoteToken} variant="symbol" />
+                  </span>
+                )}
+              </Button>
+            ) : (
+              <Button
+                onClick={() => setVisible(true)}
+                className="w-full h-14 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 text-lg font-semibold"
+              >
+                Connect Wallet
+              </Button>
+            )}
         {/* Claim All Button */}
         {wallet.connected ? (
           <button
@@ -337,7 +362,7 @@ export function ClaimTokensCard() {
                         ? 'Already Claimed'
                         : !canClaim
                           ? 'No Tokens to Claim'
-                          : 'Claim All'}
+                          : 'Claim Token'}
                   </span>
                   {canClaim && <ArrowRight className="w-5 h-5 text-white" strokeWidth={2.5} />}
                 </>
