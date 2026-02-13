@@ -10,9 +10,23 @@ export function TradingLeaderboard() {
   const walletAddress = publicKey?.toBase58()
   const [currentPage, setCurrentPage] = useState(1)
 
-  const { data, isLoading } = useLeaderboard(currentPage, 'trading')
+  const { data, isLoading } = useLeaderboard(currentPage, 'trading', walletAddress)
 
   const totalPages = data?.totalPages ?? 1
+  const entries = data?.entries ?? []
+  const currentUserEntry = data?.currentUserEntry ?? null
+  const currentPageStartRank = entries[0]?.rank ?? ((currentPage - 1) * 10) + 1
+
+  const isCurrentUserInPage = Boolean(
+    walletAddress && entries.some((entry) => entry.account.toLowerCase() === walletAddress.toLowerCase())
+  )
+  const shouldShowPinnedCurrentUser = Boolean(currentUserEntry) && !isCurrentUserInPage
+  const shouldPinCurrentUserToTop = (currentUserEntry?.rank ?? Number.POSITIVE_INFINITY) < currentPageStartRank
+  const displayEntries = shouldShowPinnedCurrentUser
+    ? shouldPinCurrentUserToTop
+      ? [currentUserEntry!, ...entries]
+      : [...entries, currentUserEntry!]
+    : entries
 
   const formatCurrency = (value: number) => {
     return `$${value.toLocaleString('en-US')}`
@@ -38,14 +52,14 @@ export function TradingLeaderboard() {
                   Loading...
                 </td>
               </tr>
-            ) : !data?.entries.length ? (
+            ) : !displayEntries.length ? (
               <tr>
                 <td colSpan={5} className="px-6 py-8 text-center text-sm text-muted-foreground">
                   Upcoming
                 </td>
               </tr>
             ) : (
-              data.entries.map((entry) => {
+              displayEntries.map((entry) => {
                 const isCurrentUser = walletAddress && entry.account.toLowerCase() === walletAddress.toLowerCase()
                 const medal = getMedalIcon(entry.rank)
                 const displayAddress = entry.account.length <= 12
@@ -90,18 +104,18 @@ export function TradingLeaderboard() {
           <div className="px-6 py-8 text-center text-sm text-muted-foreground">
             Loading...
           </div>
-        ) : !data?.entries.length ? (
+        ) : !displayEntries.length ? (
           <div className="px-6 py-8 text-center text-sm text-muted-foreground">
             Upcoming
           </div>
         ) : (
-          data.entries.map((entry, index) => {
+          displayEntries.map((entry, index) => {
             const isCurrentUser = walletAddress && entry.account.toLowerCase() === walletAddress.toLowerCase()
             const medal = getMedalIcon(entry.rank)
             const displayAddress = entry.account.length <= 12
               ? entry.account
               : `${entry.account.slice(0, 4)}...${entry.account.slice(-4)}`
-            const isLastItem = index === data.entries.length - 1
+            const isLastItem = index === displayEntries.length - 1
 
             return (
               <div

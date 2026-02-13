@@ -36,7 +36,7 @@ export function LeaderboardPage() {
   const [activeTab, setActiveTab] = useState<LeaderboardType>('trading')
   const [page, setPage] = useState(1)
   const { publicKey } = useWallet()
-  const { data, isLoading, error } = useLeaderboard(page, activeTab)
+  const { data, isLoading, error } = useLeaderboard(page, activeTab, publicKey?.toBase58())
 
   const handleTabChange = (tab: LeaderboardType) => {
     setActiveTab(tab)
