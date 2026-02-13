@@ -16,6 +16,21 @@ interface PriceChartProps {
 
 type ChartTab = 'price' | 'market-depth'
 
+function toLocalTimestamp(originalTime: number): number {
+  const d = new Date(originalTime * 1000)
+  return Math.floor(
+    Date.UTC(
+      d.getFullYear(),
+      d.getMonth(),
+      d.getDate(),
+      d.getHours(),
+      d.getMinutes(),
+      d.getSeconds(),
+      d.getMilliseconds()
+    ) / 1000
+  )
+}
+
 export function PriceChart({
   baseTokenId,
   tokenSymbol,
@@ -172,7 +187,7 @@ export function PriceChart({
   useEffect(() => {
     if (seriesRef.current && priceHistory) {
       const chartData: LineData<Time>[] = priceHistory.map((point) => ({
-        time: point.time as Time,
+        time: toLocalTimestamp(point.time) as Time,
         value: point.value,
       }))
       seriesRef.current.setData(chartData)
