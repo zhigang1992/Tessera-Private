@@ -14,6 +14,8 @@ import {
   VersionedTransaction,
   TransactionMessage,
   ComputeBudgetProgram,
+  Connection,
+  AddressLookupTableAccount,
 } from '@solana/web3.js'
 
 /**
@@ -114,13 +116,42 @@ export function addTermsAcceptanceMemo(
  * @param type - The type of terms being accepted
  * @returns A new VersionedTransaction with the memo instruction added and compute budget ensured
  */
-export function addTermsAcceptanceMemoToVersionedTx(
+async function resolveAddressLookupTableAccounts(
+  transaction: VersionedTransaction,
+  connection: Connection
+): Promise<AddressLookupTableAccount[]> {
+  const lookups = transaction.message.addressTableLookups
+  if (!lookups || lookups.length === 0) {
+    return []
+  }
+
+  const lookupAccounts = await Promise.all(
+    lookups.map(async (lookup) => {
+      const result = await connection.getAddressLookupTable(lookup.accountKey)
+      return result.value
+    }),
+  )
+
+  const unresolvedCount = lookupAccounts.filter((account) => account === null).length
+  if (unresolvedCount > 0) {
+    throw new Error('Failed to resolve address lookup tables for swap transaction')
+  }
+
+  return lookupAccounts.filter((account): account is AddressLookupTableAccount => account !== null)
+}
+
+export async function addTermsAcceptanceMemoToVersionedTx(
   transaction: VersionedTransaction,
   signer: PublicKey,
-  type: MemoType
-): VersionedTransaction {
+  type: MemoType,
+  connection: Connection
+): Promise<VersionedTransaction> {
+  const lookupTableAccounts = await resolveAddressLookupTableAccounts(transaction, connection)
+
   // Decompose the versioned transaction
-  const message = TransactionMessage.decompile(transaction.message)
+  const message = TransactionMessage.decompile(transaction.message, {
+    addressLookupTableAccounts: lookupTableAccounts,
+  })
 
   // Create memo instruction
   const memoIx = createMemoInstruction(type, signer)
@@ -144,7 +175,7 @@ export function addTermsAcceptanceMemoToVersionedTx(
     payerKey: message.payerKey,
     recentBlockhash: message.recentBlockhash,
     instructions: newInstructions,
-  }).compileToV0Message()
+  }).compileToV0Message(lookupTableAccounts)
 
   // Create and return new VersionedTransaction
   return new VersionedTransaction(newMessage)

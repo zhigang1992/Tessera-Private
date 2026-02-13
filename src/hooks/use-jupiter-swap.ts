@@ -232,10 +232,11 @@ export function useJupiterSwap({
         const swapTx = await client.createSwapTransaction(swapQuote, wallet.publicKey)
 
         // Add terms acceptance memo to the versioned transaction
-        const swapTxWithMemo = addTermsAcceptanceMemoToVersionedTx(
+        const swapTxWithMemo = await addTermsAcceptanceMemoToVersionedTx(
           swapTx,
           wallet.publicKey,
-          MemoType.TRADING
+          MemoType.TRADING,
+          connection
         )
 
         // Sign the transaction
