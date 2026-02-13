@@ -29,6 +29,15 @@ export interface PriceDataPoint {
   value: number
 }
 
+export interface PriceCandlePoint {
+  time: number // Unix timestamp in seconds
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+}
+
 export interface TokenPriceInfo {
   symbol: string
   price: number
@@ -37,6 +46,23 @@ export interface TokenPriceInfo {
 }
 
 export type TimeRange = '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL'
+
+type JupiterChartInterval = '1_MINUTE' | '5_MINUTE' | '15_MINUTE' | '1_HOUR' | '4_HOUR' | '1_DAY' | '1_WEEK'
+
+interface JupiterChartCandle {
+  time: number
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+}
+
+interface JupiterChartResponse {
+  candles: JupiterChartCandle[]
+}
+
+const JUPITER_DATA_API_BASE = 'https://datapi.jup.ag'
 
 // ============ Helpers ============
 
@@ -72,6 +98,126 @@ function getDaysForRange(range: TimeRange): number {
     case 'ALL':
       return 9999 // All available data
   }
+}
+
+/**
+ * Map UI range to Jupiter chart interval/candle request.
+ */
+function getJupiterChartParams(range: TimeRange): { interval: JupiterChartInterval; candles: number } {
+  switch (range) {
+    case '1D':
+      return { interval: '1_HOUR', candles: 5 * 24 } // wider context for 1D
+    case '1W':
+      return { interval: '1_HOUR', candles: 7 * 24 }
+    case '1M':
+      return { interval: '4_HOUR', candles: 30 * 6 }
+    case '3M':
+      return { interval: '1_DAY', candles: 90 }
+    case '1Y':
+      return { interval: '1_DAY', candles: 365 }
+    case 'ALL':
+      return { interval: '1_DAY', candles: 2000 }
+    default:
+      return { interval: '1_HOUR', candles: 5 * 24 }
+  }
+}
+
+async function fetchJupiterPriceCandles(tokenMint: string, range: TimeRange): Promise<PriceCandlePoint[]> {
+  const { interval, candles } = getJupiterChartParams(range)
+  const to = Date.now()
+  const params = new URLSearchParams({
+    interval,
+    to: String(to),
+    candles: String(candles),
+    type: 'price',
+    quote: 'usd',
+  })
+
+  const response = await fetch(`${JUPITER_DATA_API_BASE}/v2/charts/${tokenMint}?${params.toString()}`)
+  if (!response.ok) {
+    throw new Error(`Jupiter chart request failed: ${response.status}`)
+  }
+
+  const data: JupiterChartResponse = await response.json()
+
+  if (!Array.isArray(data.candles) || data.candles.length === 0) {
+    return []
+  }
+
+  return data.candles
+    .map((candle) => ({
+      time: candle.time,
+      open: Number(candle.open) || 0,
+      high: Number(candle.high) || 0,
+      low: Number(candle.low) || 0,
+      close: Number(candle.close) || 0,
+      volume: Number(candle.volume) || 0,
+    }))
+    .filter((point) => point.close > 0)
+    .sort((a, b) => a.time - b.time)
+}
+
+/**
+ * Get OHLCV candle history for charting
+ */
+export async function getPriceCandles(
+  symbol: string,
+  range: TimeRange = '1D'
+): Promise<PriceCandlePoint[]> {
+  const { mint } = resolvePriceContext(symbol)
+  if (!mint) return []
+
+  // Primary source: Jupiter Data API (candles)
+  try {
+    const jupiterCandles = await fetchJupiterPriceCandles(mint, range)
+    if (jupiterCandles.length > 0) {
+      return jupiterCandles
+    }
+  } catch (error) {
+    console.error('Failed to fetch Jupiter chart candles, falling back to backend data:', error)
+  }
+
+  // Fallback source: existing backend tables (synthetic OHLC from point prices)
+  const days = getDaysForRange(range)
+  if (days <= 7) {
+    const hourlyPrices = await fetchTokenPricesHourly(mint, days * 24)
+
+    if (hourlyPrices.length > 0) {
+      return hourlyPrices
+        .map((p) => {
+          const price = BigNumber.toNumber(fromHasuraToNative(p.price))
+          return {
+            time: p.hour_timestamp,
+            open: price,
+            high: price,
+            low: price,
+            close: price,
+            volume: 0,
+          }
+        })
+        .sort((a, b) => a.time - b.time)
+    }
+    return []
+  }
+
+  const dailyPrices = await fetchTokenPricesDaily(mint, days)
+  if (dailyPrices.length > 0) {
+    return dailyPrices
+      .map((p) => {
+        const price = BigNumber.toNumber(fromHasuraToNative(p.price))
+        return {
+          time: p.day_timestamp,
+          open: price,
+          high: price,
+          low: price,
+          close: price,
+          volume: 0,
+        }
+      })
+      .sort((a, b) => a.time - b.time)
+  }
+
+  return []
 }
 
 // ============ API Functions ============
@@ -121,40 +267,11 @@ export async function getPriceHistory(
   symbol: string,
   range: TimeRange = '1D'
 ): Promise<PriceDataPoint[]> {
-  const { mint } = resolvePriceContext(symbol)
-  if (!mint) return []
-
-  const days = getDaysForRange(range)
-
-  // For short time ranges (< 7 days), use hourly prices
-  if (days < 7) {
-    const hours = days * 24
-    const hourlyPrices = await fetchTokenPricesHourly(mint, hours)
-
-    if (hourlyPrices.length > 0) {
-      return hourlyPrices
-        .map((p) => ({
-          time: p.hour_timestamp,
-          value: BigNumber.toNumber(fromHasuraToNative(p.price)),
-        }))
-        .sort((a, b) => a.time - b.time) // Ensure ascending order
-    }
-    return []
-  }
-
-  // For longer time ranges, use daily prices
-  const dailyPrices = await fetchTokenPricesDaily(mint, days)
-
-  if (dailyPrices.length > 0) {
-    return dailyPrices
-      .map((p) => ({
-        time: p.day_timestamp,
-        value: BigNumber.toNumber(fromHasuraToNative(p.price)),
-      }))
-      .sort((a, b) => a.time - b.time) // Ensure ascending order
-  }
-
-  return []
+  const candles = await getPriceCandles(symbol, range)
+  return candles.map((candle) => ({
+    time: candle.time,
+    value: candle.close,
+  }))
 }
 
 /**
