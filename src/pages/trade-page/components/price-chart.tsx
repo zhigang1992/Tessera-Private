@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { createChart, ColorType, CandlestickSeries, HistogramSeries } from 'lightweight-charts'
-import type { IChartApi, CandlestickData, HistogramData, Time } from 'lightweight-charts'
-import { getPriceCandles, getTokenPrice, type TimeRange } from '@/services/price'
+import { createChart, ColorType, LineSeries } from 'lightweight-charts'
+import type { IChartApi, LineData, Time } from 'lightweight-charts'
+import { getPriceHistory, getTokenPrice, type TimeRange } from '@/services/price'
 import { useMarketDepth, calculateBarHeights, formatTvl, formatBinStep } from '@/hooks/useMarketDepth'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
@@ -38,9 +38,7 @@ export function PriceChart({
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const candleSeriesRef = useRef<any>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const volumeSeriesRef = useRef<any>(null)
+  const seriesRef = useRef<any>(null)
 
   // Fetch token price info from backend (skip if disabled)
   const { data: token } = useQuery({
@@ -53,9 +51,9 @@ export function PriceChart({
   })
 
   // Fetch price history from backend - updates when timeRange changes (skip if disabled)
-  const { data: priceCandles } = useQuery({
-    queryKey: ['priceCandles', effectiveTokenSymbol, timeRange],
-    queryFn: () => getPriceCandles(effectiveTokenSymbol, timeRange),
+  const { data: priceHistory } = useQuery({
+    queryKey: ['priceHistory', effectiveTokenSymbol, timeRange],
+    queryFn: () => getPriceHistory(effectiveTokenSymbol, timeRange),
     staleTime: 30 * 1000, // Consider data stale after 30 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
     enabled: !disabled,
@@ -145,36 +143,16 @@ export function PriceChart({
       },
     })
 
-    const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#1D8F00',
-      downColor: '#B42318',
-      wickUpColor: '#1D8F00',
-      wickDownColor: '#B42318',
-      borderVisible: false,
+    const lineSeries = chart.addSeries(LineSeries, {
+      color: '#1D8F00',
+      lineWidth: 3,
       priceLineVisible: false,
       lastValueVisible: false,
-    })
-
-    const volumeSeries = chart.addSeries(HistogramSeries, {
-      priceFormat: {
-        type: 'volume',
-      },
-      priceScaleId: 'volume',
-      lastValueVisible: false,
-      priceLineVisible: false,
-    })
-
-    chart.priceScale('volume').applyOptions({
-      scaleMargins: {
-        top: 0.72,
-        bottom: 0.0,
-      },
-      borderVisible: false,
+      crosshairMarkerVisible: false,
     })
 
     chartRef.current = chart
-    candleSeriesRef.current = candleSeries
-    volumeSeriesRef.current = volumeSeries
+    seriesRef.current = lineSeries
 
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
@@ -190,28 +168,16 @@ export function PriceChart({
     }
   }, [])
 
-  // Update chart data when price candles change
+  // Update chart data when price history changes
   useEffect(() => {
-    if (candleSeriesRef.current && volumeSeriesRef.current && priceCandles) {
-      const candleData: CandlestickData<Time>[] = priceCandles.map((candle) => ({
-        time: candle.time as Time,
-        open: candle.open,
-        high: candle.high,
-        low: candle.low,
-        close: candle.close,
+    if (seriesRef.current && priceHistory) {
+      const chartData: LineData<Time>[] = priceHistory.map((point) => ({
+        time: point.time as Time,
+        value: point.value,
       }))
-
-      const volumeData: HistogramData<Time>[] = priceCandles.map((candle) => ({
-        time: candle.time as Time,
-        value: candle.volume,
-        color: candle.close >= candle.open ? 'rgba(29, 143, 0, 0.35)' : 'rgba(180, 35, 24, 0.35)',
-      }))
-
-      candleSeriesRef.current.setData(candleData)
-      volumeSeriesRef.current.setData(volumeData)
-      chartRef.current?.timeScale().fitContent()
+      seriesRef.current.setData(chartData)
     }
-  }, [priceCandles])
+  }, [priceHistory])
 
   return (
     <div className="h-full rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
