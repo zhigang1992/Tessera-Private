@@ -1137,13 +1137,15 @@ export async function fetchAuctionDepositEvents(
 export interface DashboardSummaryData {
   total_active_traders: number // bigint from GraphQL
   total_assets_tokenized: number // bigint from GraphQL
-  total_market_cap: string // numeric from GraphQL (18 decimals)
-  total_market_cap_24h_change: string | null // numeric from GraphQL (18 decimals)
-  total_market_cap_24h_change_pct: string | null // numeric from GraphQL (18 decimals)
+  // numeric values may come back as strings (Hasura numeric) or numbers (custom scalar / client),
+  // so accept either and keep the 18-decimal conversion at the service layer.
+  total_market_cap: BigNumberSource // numeric from GraphQL (18 decimals)
+  total_market_cap_24h_change: BigNumberSource | null // numeric from GraphQL (18 decimals)
+  total_market_cap_24h_change_pct: BigNumberSource | null // numeric from GraphQL (18 decimals)
   total_traders_24h_change: number | null // bigint from GraphQL
-  total_trading_volume: string // numeric from GraphQL (18 decimals)
-  total_volume_24h_change: string | null // numeric from GraphQL (18 decimals)
-  total_volume_24h_change_pct: string | null // numeric from GraphQL (18 decimals)
+  total_trading_volume: BigNumberSource // numeric from GraphQL (18 decimals)
+  total_volume_24h_change: BigNumberSource | null // numeric from GraphQL (18 decimals)
+  total_volume_24h_change_pct: BigNumberSource | null // numeric from GraphQL (18 decimals)
 }
 
 /**
@@ -1151,8 +1153,8 @@ export interface DashboardSummaryData {
  */
 export async function fetchDashboardSummary(): Promise<DashboardSummaryData | null> {
   const query = `
-    query GetDashboardSummary {
-      public_marts_dashboard_summary(limit: 1) {
+    query {
+      public_marts_dashboard_summary {
         total_active_traders
         total_assets_tokenized
         total_market_cap
@@ -1230,4 +1232,3 @@ export interface RewardDetailByCodeReferral {
   total_rewards_usd: string // numeric from GraphQL (18 decimals)
   fees_by_token: FeeByToken[] | null // jsonb array of {fee, mint}
 }
-

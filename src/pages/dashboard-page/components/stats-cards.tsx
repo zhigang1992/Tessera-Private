@@ -46,20 +46,21 @@ export function StatsCards() {
     {
       label: 'Total Market Cap',
       value: isLoading || !stats || stats.totalMarketCap === 0 ? '—' : formatLargeNumber(stats.totalMarketCap),
-      change: stats?.totalMarketCap24hChangePct ? formatPercentChange(stats.totalMarketCap24hChangePct) : null,
-      isPositive: stats?.totalMarketCap24hChangePct ? stats.totalMarketCap24hChangePct >= 0 : null,
+      // Don't use truthy checks here: 0 is a valid change but would incorrectly hide the badge.
+      change: stats?.totalMarketCap24hChangePct != null ? formatPercentChange(stats.totalMarketCap24hChangePct) : null,
+      isPositive: stats?.totalMarketCap24hChangePct != null ? stats.totalMarketCap24hChangePct >= 0 : null,
     },
     {
       label: 'Total Trading Volume',
       value: isLoading || !stats || stats.totalTradingVolume === 0 ? '—' : formatLargeNumber(stats.totalTradingVolume),
-      change: stats?.totalVolume24hChangePct ? formatPercentChange(stats.totalVolume24hChangePct) : null,
-      isPositive: stats?.totalVolume24hChangePct ? stats.totalVolume24hChangePct >= 0 : null,
+      change: stats?.totalVolume24hChangePct != null ? formatPercentChange(stats.totalVolume24hChangePct) : null,
+      isPositive: stats?.totalVolume24hChangePct != null ? stats.totalVolume24hChangePct >= 0 : null,
     },
     {
       label: 'Active Traders',
       value: isLoading || !stats || stats.activeTraders === 0 ? '—' : stats.activeTraders.toLocaleString(),
-      change: stats?.activeTraders24hChange ? formatNumberChange(stats.activeTraders24hChange) : null,
-      isPositive: stats?.activeTraders24hChange ? stats.activeTraders24hChange >= 0 : null,
+      change: stats?.activeTraders24hChange != null ? formatNumberChange(stats.activeTraders24hChange) : null,
+      isPositive: stats?.activeTraders24hChange != null ? stats.activeTraders24hChange >= 0 : null,
     },
     {
       label: 'Assets Tokenized',

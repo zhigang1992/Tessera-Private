@@ -193,12 +193,20 @@ export async function getMarketStats(): Promise<MarketStatsData> {
   const totalTradingVolume = summary.total_trading_volume
     ? BigNumber.toNumber(fromHasuraToNative(summary.total_trading_volume))
     : 0
-  const totalMarketCap24hChangePct = summary.total_market_cap_24h_change_pct
-    ? BigNumber.toNumber(fromHasuraToNative(summary.total_market_cap_24h_change_pct))
-    : null
-  const totalVolume24hChangePct = summary.total_volume_24h_change_pct
-    ? BigNumber.toNumber(fromHasuraToNative(summary.total_volume_24h_change_pct))
-    : null
+
+  // The dashboard summary "pct" fields have been observed to come back either as:
+  // - a plain percentage number (e.g. 94.456...), or
+  // - a 1e18-scaled numeric (e.g. 94.456 * 1e18) that needs fromHasuraToNative().
+  // Use a magnitude heuristic to support both.
+  const parsePercentMaybeScaled = (value: BigNumberSource | null): number | null => {
+    if (value == null) return null
+    const raw = BigNumber.toNumber(BigNumber.from(value))
+    if (Number.isFinite(raw) && Math.abs(raw) <= 10_000) return raw
+    return BigNumber.toNumber(fromHasuraToNative(value))
+  }
+
+  const totalMarketCap24hChangePct = parsePercentMaybeScaled(summary.total_market_cap_24h_change_pct)
+  const totalVolume24hChangePct = parsePercentMaybeScaled(summary.total_volume_24h_change_pct)
 
   return {
     totalMarketCap,
