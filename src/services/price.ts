@@ -11,7 +11,7 @@ import {
   fetchTokenPrice24hOHLC,
   fetchTokenDetails,
 } from '@/features/referral/lib/graphql-client'
-import { fromHasuraToNative, BigNumber } from '@/lib/bignumber'
+import { fromHasuraToNative, BigNumber, type BigNumberSource } from '@/lib/bignumber'
 import {
   DEFAULT_BASE_TOKEN_ID,
   getAppToken,
@@ -59,6 +59,20 @@ function resolvePriceContext(symbol: string): { token: AppToken; mint: string; p
   const mint = getTokenMintAddress(token.id)
   const poolAddress = resolveDlmmPoolAddress(token.id)
   return { token, mint, poolAddress }
+}
+
+/**
+ * Parse numeric values that may be returned either in native units or 1e18-scaled form.
+ */
+function parseNumericMaybeScaled(value: BigNumberSource | null, nativeAbsMax: number): number {
+  if (value == null) return 0
+
+  const raw = BigNumber.toNumber(BigNumber.from(value))
+  if (Number.isFinite(raw) && Math.abs(raw) <= nativeAbsMax) {
+    return raw
+  }
+
+  return BigNumber.toNumber(fromHasuraToNative(value))
 }
 
 // ============ Helper Functions ============
@@ -174,12 +188,8 @@ export async function getTokenPrice(symbol: string): Promise<TokenPriceInfo | nu
   const currentPrice = BigNumber.toNumber(fromHasuraToNative(tokenDetails.price))
 
   // Get 24h change from OHLC data
-  const priceChange = ohlc?.price_change_24h
-    ? BigNumber.toNumber(fromHasuraToNative(ohlc.price_change_24h))
-    : 0
-  const priceChangePct = ohlc?.price_change_pct_24h
-    ? BigNumber.toNumber(fromHasuraToNative(ohlc.price_change_pct_24h))
-    : 0
+  const priceChange = parseNumericMaybeScaled(ohlc?.price_change_24h ?? null, 1_000_000_000)
+  const priceChangePct = parseNumericMaybeScaled(ohlc?.price_change_pct_24h ?? null, 10_000)
 
   return {
     symbol: token.symbol,

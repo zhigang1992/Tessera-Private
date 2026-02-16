@@ -704,12 +704,12 @@ export interface TokenPriceDaily {
 
 export interface TokenPrice24hOHLC {
   token: string
-  open_price_24h: string | null
-  high_price_24h: string | null
-  low_price_24h: string | null
-  close_price_24h: string | null
-  price_change_24h: string | null
-  price_change_pct_24h: string | null
+  open_price_24h: BigNumberSource | null
+  high_price_24h: BigNumberSource | null
+  low_price_24h: BigNumberSource | null
+  close_price_24h: BigNumberSource | null
+  price_change_24h: BigNumberSource | null
+  price_change_pct_24h: BigNumberSource | null
   swap_count_24h: number | null
 }
 
