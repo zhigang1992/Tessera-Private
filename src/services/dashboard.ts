@@ -223,7 +223,7 @@ export async function getMarketStats(): Promise<MarketStatsData> {
 /**
  * Format market cap to human-readable valuation string
  * Uses the implied valuation formula from config: (valuation / initial_auction_price) * current_price
- * For T-SpaceX: (800,000,000,000 / 423) * current_price
+ * For T-SpaceX: current_price * 2,374,000,000 (= 1,004,202,000,000 / 423)
  */
 function formatValuation(tokenId: AppTokenId, tokenPrice: number): string {
   // Get implied valuation config for T-SpaceX
@@ -234,11 +234,11 @@ function formatValuation(tokenId: AppTokenId, tokenPrice: number): string {
   }
 
   // Use numeric values directly from config (no parsing needed)
-  const baseValuation = impliedValConfig.valuationNumber // 800,000,000,000
+  const baseValuation = impliedValConfig.valuationNumber // 1,004,202,000,000 (423 * 2.374bn)
   const initialAuctionPrice = impliedValConfig.auctionPriceNumber // 423
 
   // Calculate implied valuation: (base_valuation / initial_auction_price) * current_price
-  // Formula: 800,000,000,000 / 423 * current_price
+  // Formula: price * 2,374,000,000
   const impliedValue = (baseValuation / initialAuctionPrice) * tokenPrice
 
   if (impliedValue >= 1_000_000_000_000) {

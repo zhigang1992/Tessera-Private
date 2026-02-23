@@ -282,8 +282,8 @@ const TOKENS: Record<AppTokenId, AppToken> = {
     mint: network(TOKEN_NETWORK_CONFIGS['T-SpaceX'].mint),
     program: 'token-2022',
     impliedValuation: {
-      valuation: '$800B',
-      valuationNumber: 800_000_000_000,
+      valuation: '$1T',
+      valuationNumber: 1_004_202_000_000,
       auctionPrice: '~$423',
       auctionPriceNumber: 423,
     },
