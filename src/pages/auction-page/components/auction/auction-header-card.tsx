@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import * as Tooltip from '@radix-ui/react-tooltip'
+import { Info } from 'lucide-react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Card } from '@/components/ui/card'
 import { AppTokenName } from '@/components/app-token-name'
@@ -219,6 +221,30 @@ export function AuctionHeaderCard() {
                   {token.impliedValuation?.valuation ?? '-'}
                 </span>
                 <span className="text-sm text-[#71717a] dark:text-[#999]">FDV</span>
+                {token.impliedValuation?.disclaimer && (
+                  <Tooltip.Provider delayDuration={0}>
+                    <Tooltip.Root>
+                      <Tooltip.Trigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center touch-manipulation p-0.5"
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          <Info className="w-3 h-3 text-[#71717a] cursor-help" />
+                        </button>
+                      </Tooltip.Trigger>
+                      <Tooltip.Portal>
+                        <Tooltip.Content
+                          className="max-w-[280px] px-3 py-2 bg-black text-white text-xs leading-[1.4] rounded-lg z-50 shadow-lg"
+                          sideOffset={4}
+                          side="bottom"
+                        >
+                          {token.impliedValuation.disclaimer}
+                        </Tooltip.Content>
+                      </Tooltip.Portal>
+                    </Tooltip.Root>
+                  </Tooltip.Provider>
+                )}
               </div>
               <div className="h-px bg-zinc-300 dark:bg-[#666]" />
               <div className="flex flex-col gap-1 text-[10px]">
