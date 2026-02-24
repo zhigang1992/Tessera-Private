@@ -25,12 +25,14 @@ interface TokenSwapPanelProps {
   baseTokenId?: AppTokenId
   quoteTokenId?: Extract<AppTokenId, 'USDC'>
   disabled?: boolean
+  disabledReason?: string | null
 }
 
 export function TokenSwapPanel({
   baseTokenId = DEFAULT_BASE_TOKEN_ID,
   quoteTokenId = QUOTE_TOKEN_ID,
-  disabled = false
+  disabled = false,
+  disabledReason = null
 }: TokenSwapPanelProps) {
   const wallet = useWallet()
   const { connection } = useConnection()
@@ -220,6 +222,7 @@ export function TokenSwapPanel({
   const isDisabled = !isTradingActive || !isWalletConnected || !hasValidInput || !hasQuote || isLoading || isSwapping || disabled
 
   const getButtonText = () => {
+    if (disabledReason) return disabledReason
     if (!isTradingActive) return 'Trading Not Active Yet'
     if (disabled) return 'Trading Not Enabled Yet'
     if (!isWalletConnected) return 'Connect Wallet'

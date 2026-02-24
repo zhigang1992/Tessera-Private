@@ -7,11 +7,31 @@ import { TradeHistory } from './components/trade-history'
 import { type AppTokenId, DEFAULT_BASE_TOKEN_ID, QUOTE_TOKEN_ID, getTokenByMint } from '@/config'
 import { getAlphaVaultClient } from '@/services/alpha-vault'
 
+function getTradingStatusErrorMessage(error: unknown): string {
+  const rawMessage = error instanceof Error ? error.message : String(error ?? '')
+  const normalizedMessage = rawMessage.toLowerCase()
+
+  if (normalizedMessage.includes('429') || normalizedMessage.includes('too many requests')) {
+    return 'RPC rate limit reached. Please retry in a moment.'
+  }
+
+  if (
+    normalizedMessage.includes('failed to fetch') ||
+    normalizedMessage.includes('network') ||
+    normalizedMessage.includes('timeout')
+  ) {
+    return 'Unable to reach RPC endpoint. Check network or RPC settings.'
+  }
+
+  return 'Unable to verify trading status right now.'
+}
+
 export default function TradePage() {
   const { connection } = useConnection()
   const [searchParams] = useSearchParams()
   const [tradingEnabled, setTradingEnabled] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [tradingStatusError, setTradingStatusError] = useState<string | null>(null)
 
   // Parse tokens from URL parameters (base and quote mint addresses)
   const baseTokenId = useMemo((): AppTokenId => {
@@ -36,6 +56,11 @@ export default function TradePage() {
     let mounted = true
 
     async function checkTradingStatus() {
+      if (mounted) {
+        setIsLoading(true)
+        setTradingStatusError(null)
+      }
+
       try {
         // Get alpha vault client
         const vaultClient = getAlphaVaultClient(baseTokenId, { connection })
@@ -61,6 +86,7 @@ export default function TradePage() {
         if (mounted) {
           setTradingEnabled(isActive)
           setIsLoading(false)
+          setTradingStatusError(null)
         }
       } catch (error) {
         console.error('Failed to check trading status from alpha vault:', error)
@@ -68,6 +94,7 @@ export default function TradePage() {
         if (mounted) {
           setTradingEnabled(false)
           setIsLoading(false)
+          setTradingStatusError(getTradingStatusErrorMessage(error))
         }
       }
     }
@@ -78,6 +105,10 @@ export default function TradePage() {
       mounted = false
     }
   }, [connection, baseTokenId])
+
+  const swapDisabledReason = isLoading
+    ? 'Checking trading status...'
+    : tradingStatusError
 
   return (
     <div className="flex flex-col gap-4 lg:gap-6">
@@ -95,7 +126,12 @@ export default function TradePage() {
         {/* Right: Swap Panel - 2 parts of 5 total (40%) - order-1 on mobile, order-2 on desktop */}
         <div className="w-full md:w-2/5 flex-shrink-0 order-1 md:order-2">
           {/* Swap panel should disable trading but still show balances */}
-          <TokenSwapPanel baseTokenId={baseTokenId} quoteTokenId={quoteTokenId} disabled={isLoading || !tradingEnabled} />
+          <TokenSwapPanel
+            baseTokenId={baseTokenId}
+            quoteTokenId={quoteTokenId}
+            disabled={isLoading || !tradingEnabled}
+            disabledReason={swapDisabledReason}
+          />
         </div>
       </div>
 
