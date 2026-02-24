@@ -1,45 +1,10 @@
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import * as Tooltip from '@radix-ui/react-tooltip'
-import { Info, TrendingUp } from 'lucide-react'
+import { TrendingUp } from 'lucide-react'
 import { getTokenizedAssets } from '@/services'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { AppTokenId, DEFAULT_BASE_TOKEN_ID, getAppToken, resolveTokenIdFromParam } from '@/config'
-
-function ValuationDisclaimer({ text }: { text: string }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <Tooltip.Provider delayDuration={0} skipDelayDuration={0}>
-      <Tooltip.Root open={open} onOpenChange={setOpen}>
-        <Tooltip.Trigger asChild>
-          <button
-            type="button"
-            className="inline-flex items-center justify-center touch-manipulation p-1 -m-1"
-            onPointerDown={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              setOpen(!open)
-            }}
-          >
-            <Info className="w-3 h-3 text-[#71717a] cursor-help" />
-          </button>
-        </Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Content
-            className="max-w-[280px] px-3 py-2 bg-black text-white text-xs leading-[1.4] rounded-lg z-50 shadow-lg"
-            sideOffset={4}
-            side="bottom"
-            collisionPadding={16}
-            onPointerDownOutside={() => setOpen(false)}
-          >
-            {text}
-          </Tooltip.Content>
-        </Tooltip.Portal>
-      </Tooltip.Root>
-    </Tooltip.Provider>
-  )
-}
 
 interface AssetsTableProps {
   selectedTokenId: AppTokenId
@@ -159,7 +124,7 @@ export function AssetsTable({ selectedTokenId, onSelectToken }: AssetsTableProps
                     {asset.valuation}
                   </p>
                   {getAppToken(getTokenIdForAsset(asset.id)).impliedValuation?.disclaimer && (
-                    <ValuationDisclaimer text={getAppToken(getTokenIdForAsset(asset.id)).impliedValuation!.disclaimer!} />
+                    <InfoTooltip text={getAppToken(getTokenIdForAsset(asset.id)).impliedValuation!.disclaimer!} />
                   )}
                 </div>
               </div>
@@ -233,7 +198,7 @@ export function AssetsTable({ selectedTokenId, onSelectToken }: AssetsTableProps
                       {asset.valuation}
                     </p>
                     {getAppToken(getTokenIdForAsset(asset.id)).impliedValuation?.disclaimer && (
-                      <ValuationDisclaimer text={getAppToken(getTokenIdForAsset(asset.id)).impliedValuation!.disclaimer!} />
+                      <InfoTooltip text={getAppToken(getTokenIdForAsset(asset.id)).impliedValuation!.disclaimer!} />
                     )}
                   </div>
                 </div>

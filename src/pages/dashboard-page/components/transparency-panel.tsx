@@ -1,48 +1,13 @@
 import { getAllReserveData } from '@/services'
 import { useQuery } from '@tanstack/react-query'
-import { Info } from 'lucide-react'
-import * as Tooltip from '@radix-ui/react-tooltip'
-import { useState } from 'react'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 
 export function TransparencyPanel() {
-  const [reserveTooltipOpen, setReserveTooltipOpen] = useState(false)
-  const [tokensTooltipOpen, setTokensTooltipOpen] = useState(false)
   const { data: reserveData, isLoading, isError } = useQuery({
     queryKey: ['reserveData'],
     queryFn: getAllReserveData,
     refetchInterval: 60000, // Refresh every minute
   })
-
-  const LedgerLensTooltip = ({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: (open: boolean) => void }) => (
-    <Tooltip.Provider delayDuration={0} skipDelayDuration={0}>
-      <Tooltip.Root open={isOpen} onOpenChange={onOpenChange}>
-        <Tooltip.Trigger asChild>
-          <button
-            type="button"
-            className="inline-flex items-center justify-center touch-manipulation p-0.5"
-            onPointerDown={(e) => {
-              e.preventDefault()
-              onOpenChange(!isOpen)
-            }}
-          >
-            <Info className="w-3 h-3 text-[#71717a] cursor-help" />
-          </button>
-        </Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Content
-            className="max-w-[280px] px-3 py-2 bg-black text-white text-xs leading-[1.4] rounded-lg z-50 shadow-lg"
-            sideOffset={4}
-            side="bottom"
-            align="center"
-            collisionPadding={16}
-            onPointerDownOutside={() => onOpenChange(false)}
-          >
-            Real-time proof of reserves provided by LedgerLens, https://ledgerlens.io/
-          </Tooltip.Content>
-        </Tooltip.Portal>
-      </Tooltip.Root>
-    </Tooltip.Provider>
-  )
 
   return (
     <div className="flex flex-col gap-6">
@@ -77,7 +42,7 @@ export function TransparencyPanel() {
                           <p className="text-xs font-normal text-[#71717a] leading-4 whitespace-nowrap">
                             Reserve
                           </p>
-                          <LedgerLensTooltip isOpen={reserveTooltipOpen} onOpenChange={setReserveTooltipOpen} />
+                          <InfoTooltip text="Real-time proof of reserves provided by LedgerLens, https://ledgerlens.io/" />
                         </div>
                       </div>
                       <div className="flex-1">
@@ -85,7 +50,7 @@ export function TransparencyPanel() {
                           <p className="text-xs font-normal text-[#71717a] leading-4 whitespace-nowrap">
                             Tokens
                           </p>
-                          <LedgerLensTooltip isOpen={tokensTooltipOpen} onOpenChange={setTokensTooltipOpen} />
+                          <InfoTooltip text="Real-time proof of reserves provided by LedgerLens, https://ledgerlens.io/" />
                         </div>
                       </div>
                       <div className="flex-1">

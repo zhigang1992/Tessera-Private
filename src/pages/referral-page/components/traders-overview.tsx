@@ -7,9 +7,9 @@ import { useTraderData, useBindReferralCode } from '@/features/referral/hooks/us
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2, Info } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import * as Tooltip from '@radix-ui/react-tooltip'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 
 export function TradersOverview() {
   const { connected, publicKey } = useWallet()
@@ -87,28 +87,7 @@ export function TradersOverview() {
           <div className="flex flex-col gap-[5px] w-full">
             <div className="flex items-center gap-1">
               <p className="text-[12px] text-zinc-900 dark:text-[#d2d2d2]">Referred By</p>
-              <Tooltip.Provider delayDuration={0}>
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <button
-                      type="button"
-                      className="inline-flex items-center justify-center touch-manipulation p-0.5"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      <Info className="w-3 h-3 text-[#71717a] cursor-help" />
-                    </button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Portal>
-                    <Tooltip.Content
-                      className="max-w-[280px] px-3 py-2 bg-black text-white text-xs leading-[1.4] rounded-lg z-50 shadow-lg"
-                      sideOffset={4}
-                      side="bottom"
-                    >
-                      Referral code used by this account
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                </Tooltip.Root>
-              </Tooltip.Provider>
+              <InfoTooltip text="Referral code used by this account" />
             </div>
             <div className="flex items-center w-full">
               {showCodeDash ? (

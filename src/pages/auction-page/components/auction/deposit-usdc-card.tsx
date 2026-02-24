@@ -359,15 +359,12 @@ export function DepositUSDCCard() {
             <div className="flex items-center gap-1">
               <span className="font-normal leading-[18px] text-xs text-[#666]">Est. Allocation (Total)</span>
               <Tooltip.Provider delayDuration={0} skipDelayDuration={0}>
-                <Tooltip.Root open={tooltipOpen} onOpenChange={setTooltipOpen}>
+                <Tooltip.Root open={tooltipOpen}>
                   <Tooltip.Trigger asChild>
                     <button
                       type="button"
                       className="inline-flex items-center justify-center touch-manipulation p-1 -m-1"
-                      onPointerDown={(e) => {
-                        e.preventDefault()
-                        setTooltipOpen(!tooltipOpen)
-                      }}
+                      onClick={() => setTooltipOpen(!tooltipOpen)}
                     >
                       <Info className="w-4 h-4 text-[#666] cursor-help" />
                     </button>

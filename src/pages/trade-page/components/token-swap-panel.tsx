@@ -1,5 +1,3 @@
-import * as Tooltip from '@radix-ui/react-tooltip'
-import { Info } from 'lucide-react'
 import { AppTokenCount } from '@/components/app-token-count'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
@@ -14,40 +12,8 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
 import SwapIcon from './_/swap-icon.svg?react'
-
-function ValuationDisclaimer({ text }: { text: string }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <Tooltip.Provider delayDuration={0} skipDelayDuration={0}>
-      <Tooltip.Root open={open} onOpenChange={setOpen}>
-        <Tooltip.Trigger asChild>
-          <button
-            type="button"
-            className="inline-flex items-center justify-center touch-manipulation p-1 -m-1"
-            onPointerDown={(e) => {
-              e.preventDefault()
-              setOpen(!open)
-            }}
-          >
-            <Info className="w-3 h-3 text-[#71717a] cursor-help" />
-          </button>
-        </Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Content
-            className="max-w-[280px] px-3 py-2 bg-black text-white text-xs leading-[1.4] rounded-lg z-50 shadow-lg"
-            sideOffset={4}
-            side="bottom"
-            collisionPadding={16}
-            onPointerDownOutside={() => setOpen(false)}
-          >
-            {text}
-          </Tooltip.Content>
-        </Tooltip.Portal>
-      </Tooltip.Root>
-    </Tooltip.Provider>
-  )
-}
 
 function getTokenPrecision(decimals: number) {
   return {
@@ -481,7 +447,7 @@ export function TokenSwapPanel({
                         }
                       })()}</p>
                       {BASE_TOKEN.impliedValuation?.disclaimer && (
-                        <ValuationDisclaimer text={BASE_TOKEN.impliedValuation.disclaimer} />
+                        <InfoTooltip text={BASE_TOKEN.impliedValuation.disclaimer} />
                       )}
                     </div>
                   </div>
