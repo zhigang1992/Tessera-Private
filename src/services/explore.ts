@@ -28,7 +28,7 @@ const exploreAssets: ExploreAsset[] = [
     headerColor: '#555555',
     headerImage: spacexBg,
     price: 423,
-    valuation: '$800bn',
+    valuation: '$1T',
     status: 'trading',
   },
   {
