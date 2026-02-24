@@ -11,6 +11,39 @@ import { useAuctionAlphaVault, useAuctionToken } from '../../context'
 import { fromTokenAmount } from '@/lib/bignumber'
 import { BigNumber, math, mathIs } from 'math-literal'
 
+function ValuationDisclaimer({ text }: { text: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <Tooltip.Provider delayDuration={0} skipDelayDuration={0}>
+      <Tooltip.Root open={open} onOpenChange={setOpen}>
+        <Tooltip.Trigger asChild>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center touch-manipulation p-1 -m-1"
+            onPointerDown={(e) => {
+              e.preventDefault()
+              setOpen(!open)
+            }}
+          >
+            <Info className="w-3 h-3 text-[#71717a] cursor-help" />
+          </button>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Content
+            className="max-w-[280px] px-3 py-2 bg-black text-white text-xs leading-[1.4] rounded-lg z-50 shadow-lg"
+            sideOffset={4}
+            side="bottom"
+            collisionPadding={16}
+            onPointerDownOutside={() => setOpen(false)}
+          >
+            {text}
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+    </Tooltip.Provider>
+  )
+}
+
 export function AuctionHeaderCard() {
   const wallet = useWallet()
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false)
@@ -222,28 +255,7 @@ export function AuctionHeaderCard() {
                 </span>
                 <span className="text-sm text-[#71717a] dark:text-[#999]">FDV</span>
                 {token.impliedValuation?.disclaimer && (
-                  <Tooltip.Provider delayDuration={0}>
-                    <Tooltip.Root>
-                      <Tooltip.Trigger asChild>
-                        <button
-                          type="button"
-                          className="inline-flex items-center justify-center touch-manipulation p-0.5"
-                          onClick={(e) => e.preventDefault()}
-                        >
-                          <Info className="w-3 h-3 text-[#71717a] cursor-help" />
-                        </button>
-                      </Tooltip.Trigger>
-                      <Tooltip.Portal>
-                        <Tooltip.Content
-                          className="max-w-[280px] px-3 py-2 bg-black text-white text-xs leading-[1.4] rounded-lg z-50 shadow-lg"
-                          sideOffset={4}
-                          side="bottom"
-                        >
-                          {token.impliedValuation.disclaimer}
-                        </Tooltip.Content>
-                      </Tooltip.Portal>
-                    </Tooltip.Root>
-                  </Tooltip.Provider>
+                  <ValuationDisclaimer text={token.impliedValuation.disclaimer} />
                 )}
               </div>
               <div className="h-px bg-zinc-300 dark:bg-[#666]" />

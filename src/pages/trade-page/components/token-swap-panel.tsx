@@ -16,6 +16,39 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import SwapIcon from './_/swap-icon.svg?react'
 
+function ValuationDisclaimer({ text }: { text: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <Tooltip.Provider delayDuration={0} skipDelayDuration={0}>
+      <Tooltip.Root open={open} onOpenChange={setOpen}>
+        <Tooltip.Trigger asChild>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center touch-manipulation p-1 -m-1"
+            onPointerDown={(e) => {
+              e.preventDefault()
+              setOpen(!open)
+            }}
+          >
+            <Info className="w-3 h-3 text-[#71717a] cursor-help" />
+          </button>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Content
+            className="max-w-[280px] px-3 py-2 bg-black text-white text-xs leading-[1.4] rounded-lg z-50 shadow-lg"
+            sideOffset={4}
+            side="bottom"
+            collisionPadding={16}
+            onPointerDownOutside={() => setOpen(false)}
+          >
+            {text}
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+    </Tooltip.Provider>
+  )
+}
+
 function getTokenPrecision(decimals: number) {
   return {
     minimumFractionDigits: decimals >= 2 ? 2 : 0,
@@ -438,38 +471,17 @@ export function TokenSwapPanel({
                         // return rateValue != null ? (isBuying ? math`${1} / ${rateValue}` : rateValue) : null
                         const impliedValue = BigNumber.toNumber(math`${BASE_TOKEN.impliedValuation.valuationNumber} / ${BASE_TOKEN.impliedValuation.auctionPriceNumber} * ${price}`)
                         if (impliedValue >= 1_000_000_000_000) {
-                          return `$${(impliedValue / 1_000_000_000_000).toFixed(1)}T`
+                          return `$${(impliedValue / 1_000_000_000_000).toFixed(2)}T`
                         } else if (impliedValue >= 1_000_000_000) {
-                          return `$${(impliedValue / 1_000_000_000).toFixed(1)}B`
+                          return `$${(impliedValue / 1_000_000_000).toFixed(2)}B`
                         } else if (impliedValue >= 1_000_000) {
-                          return `$${(impliedValue / 1_000_000).toFixed(1)}M`
+                          return `$${(impliedValue / 1_000_000).toFixed(2)}M`
                         } else {
                           return `$${impliedValue.toFixed(0)}`
                         }
                       })()}</p>
                       {BASE_TOKEN.impliedValuation?.disclaimer && (
-                        <Tooltip.Provider delayDuration={0}>
-                          <Tooltip.Root>
-                            <Tooltip.Trigger asChild>
-                              <button
-                                type="button"
-                                className="inline-flex items-center justify-center touch-manipulation p-0.5"
-                                onClick={(e) => e.preventDefault()}
-                              >
-                                <Info className="w-3 h-3 text-[#71717a] cursor-help" />
-                              </button>
-                            </Tooltip.Trigger>
-                            <Tooltip.Portal>
-                              <Tooltip.Content
-                                className="max-w-[280px] px-3 py-2 bg-black text-white text-xs leading-[1.4] rounded-lg z-50 shadow-lg"
-                                sideOffset={4}
-                                side="bottom"
-                              >
-                                {BASE_TOKEN.impliedValuation.disclaimer}
-                              </Tooltip.Content>
-                            </Tooltip.Portal>
-                          </Tooltip.Root>
-                        </Tooltip.Provider>
+                        <ValuationDisclaimer text={BASE_TOKEN.impliedValuation.disclaimer} />
                       )}
                     </div>
                   </div>

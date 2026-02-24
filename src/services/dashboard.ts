@@ -242,11 +242,11 @@ function formatValuation(tokenId: AppTokenId, tokenPrice: number): string {
   const impliedValue = (baseValuation / initialAuctionPrice) * tokenPrice
 
   if (impliedValue >= 1_000_000_000_000) {
-    return `$${(impliedValue / 1_000_000_000_000).toFixed(1)}T`
+    return `$${(impliedValue / 1_000_000_000_000).toFixed(2)}T`
   } else if (impliedValue >= 1_000_000_000) {
-    return `$${(impliedValue / 1_000_000_000).toFixed(1)}B`
+    return `$${(impliedValue / 1_000_000_000).toFixed(2)}B`
   } else if (impliedValue >= 1_000_000) {
-    return `$${(impliedValue / 1_000_000).toFixed(1)}M`
+    return `$${(impliedValue / 1_000_000).toFixed(2)}M`
   } else {
     return `$${impliedValue.toFixed(0)}`
   }
