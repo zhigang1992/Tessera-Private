@@ -1,17 +1,20 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { Info } from 'lucide-react'
 
 /**
- * Mobile-friendly info icon tooltip.
+ * Info icon tooltip that works on both desktop (hover) and mobile (tap).
  *
- * Radix Tooltip fires `onOpenChange(false)` when the pointer leaves the
- * trigger, which on touch devices happens immediately when the finger lifts.
- * This component takes full control of the `open` state — Radix cannot
- * close it — so tap-to-toggle works reliably on both mobile and desktop.
+ * Desktop: standard hover open/close via onMouseEnter/onMouseLeave.
+ * Mobile:  tap to toggle, tap outside to dismiss.
+ *
+ * A `isTouch` ref tracks whether the current interaction originated from
+ * a touch event so that the simulated mouse events fired by mobile browsers
+ * after a tap don't conflict with the touch handling.
  */
 export function InfoTooltip({ text }: { text: string }) {
   const [open, setOpen] = useState(false)
+  const isTouchRef = useRef(false)
 
   return (
     <Tooltip.Provider delayDuration={0} skipDelayDuration={0}>
@@ -20,9 +23,19 @@ export function InfoTooltip({ text }: { text: string }) {
           <button
             type="button"
             className="inline-flex items-center justify-center touch-manipulation p-1 -m-1"
+            onTouchStart={() => {
+              isTouchRef.current = true
+            }}
             onClick={(e) => {
+              if (!isTouchRef.current) return
               e.stopPropagation()
               setOpen((prev) => !prev)
+            }}
+            onMouseEnter={() => {
+              if (!isTouchRef.current) setOpen(true)
+            }}
+            onMouseLeave={() => {
+              if (!isTouchRef.current) setOpen(false)
             }}
           >
             <Info className="w-3 h-3 text-[#71717a] cursor-help" />

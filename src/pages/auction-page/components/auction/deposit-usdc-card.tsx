@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Info, Loader2, AlertCircle } from 'lucide-react'
@@ -19,6 +19,7 @@ export function DepositUSDCCard() {
   const { setVisible } = useWalletModal()
   const [depositAmount, setDepositAmount] = useState('')
   const [tooltipOpen, setTooltipOpen] = useState(false)
+  const isTouchRef = useRef(false)
 
   const {
     config,
@@ -364,7 +365,17 @@ export function DepositUSDCCard() {
                     <button
                       type="button"
                       className="inline-flex items-center justify-center touch-manipulation p-1 -m-1"
-                      onClick={() => setTooltipOpen(!tooltipOpen)}
+                      onTouchStart={() => { isTouchRef.current = true }}
+                      onClick={() => {
+                        if (!isTouchRef.current) return
+                        setTooltipOpen(!tooltipOpen)
+                      }}
+                      onMouseEnter={() => {
+                        if (!isTouchRef.current) setTooltipOpen(true)
+                      }}
+                      onMouseLeave={() => {
+                        if (!isTouchRef.current) setTooltipOpen(false)
+                      }}
                     >
                       <Info className="w-4 h-4 text-[#666] cursor-help" />
                     </button>
