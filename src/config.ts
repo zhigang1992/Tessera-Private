@@ -238,6 +238,7 @@ export interface AppToken {
     valuationNumber: number
     auctionPrice: string
     auctionPriceNumber: number
+    disclaimer?: string
   }
 }
 
@@ -286,6 +287,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       valuationNumber: 1_004_202_000_000,
       auctionPrice: '~$423',
       auctionPriceNumber: 423,
+      disclaimer: 'Valuation reflects the combined SpaceX entity post-acquisition of xAI (Feb 2026), which increased total shares outstanding by ~20%.',
     },
     metadata: {
       name: 'T-SpaceX',

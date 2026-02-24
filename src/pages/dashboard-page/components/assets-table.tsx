@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { TrendingUp } from 'lucide-react'
+import * as Tooltip from '@radix-ui/react-tooltip'
+import { Info, TrendingUp } from 'lucide-react'
 import { getTokenizedAssets } from '@/services'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
@@ -114,13 +115,39 @@ export function AssetsTable({ selectedTokenId, onSelectToken }: AssetsTableProps
                 </div>
               </div>
               <div className="w-[17.5%] min-w-[100px]">
-                <p
-                  className={`text-sm font-semibold ${
-                    selectedTokenId === getTokenIdForAsset(asset.id) ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
-                  }`}
-                >
-                  {asset.valuation}
-                </p>
+                <div className="flex items-center gap-1">
+                  <p
+                    className={`text-sm font-semibold ${
+                      selectedTokenId === getTokenIdForAsset(asset.id) ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
+                    }`}
+                  >
+                    {asset.valuation}
+                  </p>
+                  {getAppToken(getTokenIdForAsset(asset.id)).impliedValuation?.disclaimer && (
+                    <Tooltip.Provider delayDuration={0}>
+                      <Tooltip.Root>
+                        <Tooltip.Trigger asChild>
+                          <button
+                            type="button"
+                            className="inline-flex items-center justify-center touch-manipulation p-0.5"
+                            onClick={(e) => e.preventDefault()}
+                          >
+                            <Info className="w-3 h-3 text-[#71717a] cursor-help" />
+                          </button>
+                        </Tooltip.Trigger>
+                        <Tooltip.Portal>
+                          <Tooltip.Content
+                            className="max-w-[280px] px-3 py-2 bg-black text-white text-xs leading-[1.4] rounded-lg z-50 shadow-lg"
+                            sideOffset={4}
+                            side="bottom"
+                          >
+                            {getAppToken(getTokenIdForAsset(asset.id)).impliedValuation?.disclaimer}
+                          </Tooltip.Content>
+                        </Tooltip.Portal>
+                      </Tooltip.Root>
+                    </Tooltip.Provider>
+                  )}
+                </div>
               </div>
             </div>
             ))
@@ -183,13 +210,39 @@ export function AssetsTable({ selectedTokenId, onSelectToken }: AssetsTableProps
                 </div>
                 <div className="flex-1">
                   <p className="text-[10px] font-normal text-[#71717a] mb-1 uppercase">VALUATION</p>
-                  <p
-                    className={`text-xl font-semibold ${
-                      selectedTokenId === getTokenIdForAsset(asset.id) ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
-                    }`}
-                  >
-                    {asset.valuation}
-                  </p>
+                  <div className="flex items-center gap-1">
+                    <p
+                      className={`text-xl font-semibold ${
+                        selectedTokenId === getTokenIdForAsset(asset.id) ? 'text-black' : 'text-foreground dark:text-[#d2d2d2]'
+                      }`}
+                    >
+                      {asset.valuation}
+                    </p>
+                    {getAppToken(getTokenIdForAsset(asset.id)).impliedValuation?.disclaimer && (
+                      <Tooltip.Provider delayDuration={0}>
+                        <Tooltip.Root>
+                          <Tooltip.Trigger asChild>
+                            <button
+                              type="button"
+                              className="inline-flex items-center justify-center touch-manipulation p-0.5"
+                              onClick={(e) => e.preventDefault()}
+                            >
+                              <Info className="w-3 h-3 text-[#71717a] cursor-help" />
+                            </button>
+                          </Tooltip.Trigger>
+                          <Tooltip.Portal>
+                            <Tooltip.Content
+                              className="max-w-[280px] px-3 py-2 bg-black text-white text-xs leading-[1.4] rounded-lg z-50 shadow-lg"
+                              sideOffset={4}
+                              side="bottom"
+                            >
+                              {getAppToken(getTokenIdForAsset(asset.id)).impliedValuation?.disclaimer}
+                            </Tooltip.Content>
+                          </Tooltip.Portal>
+                        </Tooltip.Root>
+                      </Tooltip.Provider>
+                    )}
+                  </div>
                 </div>
               </div>
 

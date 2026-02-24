@@ -1,3 +1,5 @@
+import * as Tooltip from '@radix-ui/react-tooltip'
+import { Info } from 'lucide-react'
 import { AppTokenCount } from '@/components/app-token-count'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
@@ -428,7 +430,7 @@ export function TokenSwapPanel({
                     <div className="flex flex-col justify-center text-[#52525b]">
                       <p className="leading-4">Implied Valuation</p>
                     </div>
-                    <div className="flex flex-col justify-center text-[#1d8f00]">
+                    <div className="flex items-center gap-1 justify-center text-[#1d8f00]">
                       <p className="leading-4">{(() => {
                         if (rateValue == null) return "-"
                         if (BASE_TOKEN.impliedValuation == null) return "-"
@@ -445,6 +447,30 @@ export function TokenSwapPanel({
                           return `$${impliedValue.toFixed(0)}`
                         }
                       })()}</p>
+                      {BASE_TOKEN.impliedValuation?.disclaimer && (
+                        <Tooltip.Provider delayDuration={0}>
+                          <Tooltip.Root>
+                            <Tooltip.Trigger asChild>
+                              <button
+                                type="button"
+                                className="inline-flex items-center justify-center touch-manipulation p-0.5"
+                                onClick={(e) => e.preventDefault()}
+                              >
+                                <Info className="w-3 h-3 text-[#71717a] cursor-help" />
+                              </button>
+                            </Tooltip.Trigger>
+                            <Tooltip.Portal>
+                              <Tooltip.Content
+                                className="max-w-[280px] px-3 py-2 bg-black text-white text-xs leading-[1.4] rounded-lg z-50 shadow-lg"
+                                sideOffset={4}
+                                side="bottom"
+                              >
+                                {BASE_TOKEN.impliedValuation.disclaimer}
+                              </Tooltip.Content>
+                            </Tooltip.Portal>
+                          </Tooltip.Root>
+                        </Tooltip.Provider>
+                      )}
                     </div>
                   </div>
                 </div>
