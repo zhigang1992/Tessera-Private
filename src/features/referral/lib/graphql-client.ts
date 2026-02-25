@@ -352,7 +352,7 @@ export async function fetchUserRegistration(userAddress: string): Promise<UserRe
 export interface CodeRegisterView {
   user_address: string
   level_label: string // 'L1', 'L2', or 'L3'
-  block_number: number
+  block_time: number
 }
 
 export async function fetchUsersForCode(referralCode: string): Promise<CodeRegisterView[]> {
@@ -360,11 +360,11 @@ export async function fetchUsersForCode(referralCode: string): Promise<CodeRegis
     query GetUsersForCode($code: String!) {
       view_code_register_view(
         where: { origin_code: { _eq: $code } }
-        order_by: { block_number: desc }
+        order_by: { block_time: desc }
       ) {
         user_address
         level_label
-        block_number
+        block_time
       }
     }
   `
