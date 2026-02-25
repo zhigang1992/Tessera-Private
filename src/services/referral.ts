@@ -4,11 +4,12 @@ import {
   fetchSwapEvents,
   fetchUserTradingVolume,
   fetchUsersForCode,
+  fetchRewardDetailsByCode,
   fetchTradingPointsByAccount,
   type AggregatedAffiliateStats,
   type TradingPointsByAccountData,
 } from '@/features/referral/lib/graphql-client'
-import { fromHasuraToNative, formatBigNumber, BigNumber, type BigNumberSource } from '@/lib/bignumber'
+import { fromHasuraToNative, formatBigNumber, BigNumber, math, mathIs, type BigNumberSource, type BigNumberValue } from '@/lib/bignumber'
 import {
   DEFAULT_BASE_TOKEN_ID,
   getAppToken,
@@ -53,8 +54,8 @@ export interface ReferralCode {
 }
 
 export interface RewardItem {
-  amount: number
-  token: string
+  amount: BigNumberValue
+  mint: string
 }
 
 export interface ReferralUser {
@@ -264,17 +265,34 @@ function formatBlockNumber(blockNumber: number): string {
 }
 
 export async function getReferralUsersByCode(code: string): Promise<ReferralUser[]> {
-  // Fetch all users registered under this code and their reward details
-  const [users] = await Promise.all([
+  // Fetch all users registered under this code and their reward details in parallel
+  const [users, rewardDetails] = await Promise.all([
     fetchUsersForCode(code),
+    fetchRewardDetailsByCode(code),
   ])
 
   if (users.length === 0) {
-    // No users found for this code
     return []
   }
 
-  // Map all users with their tier labels
+  // Build a lookup map: referral wallet address -> reward items
+  const rewardsByReferral = new Map<string, RewardItem[]>()
+  for (const detail of rewardDetails) {
+    const items: RewardItem[] = []
+    if (detail.fees_by_token) {
+      for (const feeEntry of detail.fees_by_token) {
+        const amount = fromHasuraToNative(feeEntry.fee)
+        if (mathIs`${amount} > ${0}`) {
+          items.push({ amount, mint: feeEntry.mint })
+        }
+      }
+    }
+    // Merge with any existing entries (a referral can appear in multiple tiers)
+    const existing = rewardsByReferral.get(detail.referral) ?? []
+    rewardsByReferral.set(detail.referral, mergeRewardItems(existing, items))
+  }
+
+  // Map all users with their tier labels and rewards
   return users.map((user, index) => {
     const walletAddress = user.user_address
     const layer = levelLabelToLayer(user.level_label)
@@ -284,9 +302,21 @@ export async function getReferralUsersByCode(code: string): Promise<ReferralUser
       email: formatWalletAddress(walletAddress),
       dateJoined: formatBlockNumber(user.block_number),
       layer,
-      rewards: [],
+      rewards: rewardsByReferral.get(walletAddress) ?? [],
     }
   })
+}
+
+/**
+ * Merge reward items by mint, summing amounts for the same mint
+ */
+function mergeRewardItems(existing: RewardItem[], incoming: RewardItem[]): RewardItem[] {
+  const byMint = new Map<string, BigNumberValue>()
+  for (const item of [...existing, ...incoming]) {
+    const prev = byMint.get(item.mint)
+    byMint.set(item.mint, prev ? math`${prev} + ${item.amount}` : item.amount)
+  }
+  return Array.from(byMint.entries()).map(([mint, amount]) => ({ amount, mint }))
 }
 
 // Clear cache when wallet changes

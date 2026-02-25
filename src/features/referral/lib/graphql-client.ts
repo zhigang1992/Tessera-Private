@@ -1232,3 +1232,27 @@ export interface RewardDetailByCodeReferral {
   total_rewards_usd: string // numeric from GraphQL (18 decimals)
   fees_by_token: FeeByToken[] | null // jsonb array of {fee, mint}
 }
+
+/**
+ * Fetch reward details for all referrals under a specific code
+ */
+export async function fetchRewardDetailsByCode(code: string): Promise<RewardDetailByCodeReferral[]> {
+  const query = `
+    query GetRewardDetailsByCode($code: String!) {
+      public_marts_reward_detail_by_code_referral(
+        where: { code: { _eq: $code } }
+      ) {
+        code
+        referral
+        tier
+        total_rewards_usd
+        fees_by_token
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_reward_detail_by_code_referral: RewardDetailByCodeReferral[]
+  }>(query, { code })
+  return data.public_marts_reward_detail_by_code_referral
+}
