@@ -19,7 +19,7 @@ export default defineConfig({
     }),
   ],
   server: {
-    port: 6173,
+    port: parseInt(process.env.PORT || '6173', 10),
     proxy: {
       // Proxy API endpoints to Cloudflare Workers local dev server
       '/api': {

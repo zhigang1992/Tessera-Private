@@ -375,51 +375,11 @@ export function CodeSection() {
               </div>
 
               {/* Pagination buttons */}
-              <div className="flex gap-[5px] items-center">
-                {/* Page numbers */}
-                {Array.from({ length: Math.min(usersTotalPages, 5) }, (_, i) => {
-                  const pageNum = i + 1
-                  const isCurrentPage = pageNum === usersCurrentPage
-
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => setUsersCurrentPage(pageNum)}
-                      className={cn(
-                        'flex items-center justify-center w-10 h-10 rounded-lg text-xs font-normal transition-colors cursor-pointer',
-                        isCurrentPage
-                          ? 'dark:bg-[#d2fb95] dark:text-black bg-black text-white'
-                          : 'dark:bg-[rgba(212,212,216,0.4)] dark:text-[#d2d2d2] dark:hover:bg-[#3f3f46] bg-[rgba(212,212,216,0.4)] text-black hover:bg-gray-100'
-                      )}
-                    >
-                      {pageNum}
-                    </button>
-                  )
-                })}
-
-                {/* Ellipsis and last page if there are more than 5 pages */}
-                {usersTotalPages > 5 && (
-                  <>
-                    <button
-                      disabled
-                      className="flex items-center justify-center w-10 h-10 rounded-lg text-xs font-normal dark:bg-[rgba(212,212,216,0.4)] dark:text-[#d2d2d2] bg-[rgba(212,212,216,0.4)] text-black cursor-default"
-                    >
-                      ...
-                    </button>
-                    <button
-                      onClick={() => setUsersCurrentPage(usersTotalPages)}
-                      className={cn(
-                        'flex items-center justify-center w-10 h-10 rounded-lg text-xs font-normal transition-colors cursor-pointer',
-                        usersCurrentPage === usersTotalPages
-                          ? 'dark:bg-[#d2fb95] dark:text-black bg-black text-white'
-                          : 'dark:bg-[rgba(212,212,216,0.4)] dark:text-[#d2d2d2] dark:hover:bg-[#3f3f46] bg-[rgba(212,212,216,0.4)] text-black hover:bg-gray-100'
-                      )}
-                    >
-                      {usersTotalPages}
-                    </button>
-                  </>
-                )}
-              </div>
+              <Pagination
+                currentPage={usersCurrentPage}
+                totalPages={usersTotalPages}
+                onPageChange={setUsersCurrentPage}
+              />
 
               {/* Page info */}
               <div className="text-xs text-muted-foreground">
