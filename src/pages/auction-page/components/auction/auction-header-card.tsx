@@ -7,7 +7,6 @@ import { AppTokenAmount } from '@/components/app-token-amount'
 import { WithdrawModal } from './withdraw-modal'
 import { useAuctionAlphaVault, useAuctionToken } from '../../context'
 import { fromTokenAmount } from '@/lib/bignumber'
-import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { BigNumber, math, mathIs } from 'math-literal'
 
 export function AuctionHeaderCard() {
@@ -217,18 +216,15 @@ export function AuctionHeaderCard() {
             <div className="flex flex-col gap-2.5">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold text-foreground">
-                  {token.impliedValuation?.valuation ?? '-'}
+                  {token.auctionValuation?.valuation ?? token.impliedValuation?.valuation ?? '-'}
                 </span>
                 <span className="text-sm text-[#71717a] dark:text-[#999]">FDV</span>
-                {token.impliedValuation?.disclaimer && (
-                  <InfoTooltip text={token.impliedValuation.disclaimer} />
-                )}
               </div>
               <div className="h-px bg-zinc-300 dark:bg-[#666]" />
               <div className="flex flex-col gap-1 text-[10px]">
                 <div className="flex items-center space-x-1">
                   <span className="text-[#71717a] dark:text-[#999]">Based on Auction Price:</span>
-                  <span className="font-mono text-foreground">{token.impliedValuation?.auctionPrice ?? '-'}</span>
+                  <span className="font-mono text-foreground">{token.auctionValuation?.auctionPrice ?? token.impliedValuation?.auctionPrice ?? '-'}</span>
                 </div>
               </div>
             </div>
