@@ -4,6 +4,9 @@ import { useQuery } from '@tanstack/react-query'
 import { Share2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, getReferralUsersByCode } from '@/services'
+import { getTokenByMint } from '@/config'
+import { AppTokenCount } from '@/components/app-token-count'
+import { formatBigNumber } from '@/lib/bignumber'
 import { WalletDropdown } from '@/components/wallet-dropdown'
 import { Pagination } from '@/components/ui/pagination'
 import { TableContainer, tableStyles } from '@/components/ui/table-header'
@@ -345,9 +348,13 @@ export function CodeSection() {
                       </td>
                       <td className="px-4 md:px-6 py-3 md:py-4 text-[12px] md:text-[13px] whitespace-pre-line dark:text-[#d2d2d2] text-black">
                         {user.rewards.length > 0 ? (
-                          user.rewards.map((reward, idx) => (
-                            <div key={idx}>{reward.amount} {reward.token}</div>
-                          ))
+                          user.rewards.map((reward, idx) => {
+                            const token = getTokenByMint(reward.mint)
+                            if (token) {
+                              return <AppTokenCount key={idx} token={token} value={reward.amount} showSymbol maximumFractionDigits={6} />
+                            }
+                            return <div key={idx}>{formatBigNumber(reward.amount, { maximumFractionDigits: 6 })} {reward.mint.slice(0, 4)}...{reward.mint.slice(-4)}</div>
+                          })
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
