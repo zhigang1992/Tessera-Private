@@ -254,12 +254,8 @@ function levelLabelToLayer(levelLabel: string): 'L1' | 'L2' | 'L3' {
   return 'L1' // Default fallback
 }
 
-/**
- * Format block number to readable date
- * Note: block_number is used as timestamp in seconds
- */
-function formatBlockNumber(blockNumber: number): string {
-  const date = new Date(blockNumber * 1000)
+function formatBlockTime(blockTime: number): string {
+  const date = new Date(blockTime * 1000)
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
@@ -282,7 +278,7 @@ export async function getReferralUsersByCode(code: string): Promise<ReferralUser
     return {
       id: `${code}-${walletAddress}-${index}`,
       email: formatWalletAddress(walletAddress),
-      dateJoined: formatBlockNumber(user.block_number),
+      dateJoined: formatBlockTime(user.block_time),
       layer,
       rewards: [],
     }
