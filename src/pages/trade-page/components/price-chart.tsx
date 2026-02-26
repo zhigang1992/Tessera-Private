@@ -7,6 +7,7 @@ import { useMarketDepth, calculateBarHeights, formatTvl, formatBinStep } from '@
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
 import { type AppTokenId, DEFAULT_BASE_TOKEN_ID, getAppToken, getTokenBySymbol } from '@/config'
+import { toast } from 'sonner'
 
 interface PriceChartProps {
   baseTokenId?: AppTokenId
@@ -206,6 +207,25 @@ export function PriceChart({
               <span className="text-sm lg:text-base font-extrabold text-black">
                 {token?.symbol ?? <AppTokenName token={tokenConfig} variant="symbol" />}
               </span>
+              <button
+                onClick={() => {
+                  void navigator.clipboard.writeText(tokenConfig.mint).then(() => {
+                    toast.success('Address copied to clipboard!')
+                  })
+                }}
+                className="hover:opacity-70 transition-opacity"
+                title="Copy contract address"
+              >
+                <svg
+                  className="w-4 h-4 text-black"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeWidth={2} />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                </svg>
+              </button>
             </div>
             <div>
               <div className="text-xl lg:text-[28px] font-bold text-[#111]">
