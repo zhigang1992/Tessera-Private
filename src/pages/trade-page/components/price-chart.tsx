@@ -313,7 +313,7 @@ export function PriceChart({
                           : 'bg-[#9eca87]' // Regular bins - lighter green
                       } rounded-tl-[999px] rounded-tr-[999px] shrink-0 w-[8px] lg:w-[12px] transition-all hover:opacity-80`}
                       style={{ height: `${Math.max(height, 2)}px` }}
-                      title={displayBins[index] ? `Bin ${displayBins[index].binId}: $${parseFloat(displayBins[index].price).toFixed(4)}` : `Bin ${index + 1}`}
+                      title={displayBins[index] ? `Bin ${displayBins[index].binId}: $${parseFloat(displayBins[index].pricePerToken).toFixed(4)}` : `Bin ${index + 1}`}
                     />
                   ))
                 ) : (
