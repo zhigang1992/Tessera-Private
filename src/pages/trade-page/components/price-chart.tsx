@@ -7,6 +7,7 @@ import { useMarketDepth, calculateBarHeights, formatTvl, formatBinStep } from '@
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
 import { type AppTokenId, DEFAULT_BASE_TOKEN_ID, getAppToken, getTokenBySymbol } from '@/config'
+import type { BinLiquidity } from '@/services/meteora'
 import { toast } from 'sonner'
 
 interface PriceChartProps {
@@ -16,6 +17,14 @@ interface PriceChartProps {
 }
 
 type ChartTab = 'price' | 'market-depth'
+
+function formatBinTooltip(bin: BinLiquidity, baseSymbol: string, baseDecimals: number, quoteSymbol: string, quoteDecimals: number): string {
+  const price = parseFloat(bin.pricePerToken).toFixed(4)
+  const xAmount = parseFloat(bin.xAmount) / 10 ** baseDecimals
+  const yAmount = parseFloat(bin.yAmount) / 10 ** quoteDecimals
+  const formatAmount = (v: number) => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return `Bin ${bin.binId}: $${price}\n${baseSymbol}: ${formatAmount(xAmount)}\n${quoteSymbol}: ${formatAmount(yAmount)}`
+}
 
 function toLocalTimestamp(originalTime: number): number {
   const d = new Date(originalTime * 1000)
@@ -47,6 +56,11 @@ export function PriceChart({
     }
     return getAppToken(DEFAULT_BASE_TOKEN_ID)
   }, [baseTokenId, tokenSymbol])
+
+  const quoteTokenConfig = useMemo(() => {
+    const quoteId = tokenConfig.dlmmPool?.quoteToken
+    return quoteId ? getAppToken(quoteId) : null
+  }, [tokenConfig])
 
   const effectiveTokenSymbol = tokenConfig.symbol
   const [activeTab, setActiveTab] = useState<ChartTab>('price')
@@ -313,7 +327,7 @@ export function PriceChart({
                           : 'bg-[#9eca87]' // Regular bins - lighter green
                       } rounded-tl-[999px] rounded-tr-[999px] shrink-0 w-[8px] lg:w-[12px] transition-all hover:opacity-80`}
                       style={{ height: `${Math.max(height, 2)}px` }}
-                      title={displayBins[index] ? `Bin ${displayBins[index].binId}: $${parseFloat(displayBins[index].pricePerToken).toFixed(4)}` : `Bin ${index + 1}`}
+                      title={displayBins[index] && quoteTokenConfig ? formatBinTooltip(displayBins[index], tokenConfig.symbol, tokenConfig.decimals, quoteTokenConfig.symbol, quoteTokenConfig.decimals) : `Bin ${index + 1}`}
                     />
                   ))
                 ) : (
