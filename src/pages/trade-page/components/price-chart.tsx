@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createChart, ColorType, LineSeries } from 'lightweight-charts'
 import type { IChartApi, LineData, Time } from 'lightweight-charts'
+import * as Tooltip from '@radix-ui/react-tooltip'
 import { getPriceHistory, getTokenPrice, type TimeRange } from '@/services/price'
 import { useMarketDepth, calculateBarHeights, formatTvl, formatBinStep } from '@/hooks/useMarketDepth'
 import { AppTokenIcon } from '@/components/app-token-icon'
@@ -18,12 +19,12 @@ interface PriceChartProps {
 
 type ChartTab = 'price' | 'market-depth'
 
-function formatBinTooltip(bin: BinLiquidity, baseSymbol: string, baseDecimals: number, quoteSymbol: string, quoteDecimals: number): string {
+function formatBinTooltip(bin: BinLiquidity, baseSymbol: string, baseDecimals: number, quoteSymbol: string, quoteDecimals: number) {
   const price = parseFloat(bin.pricePerToken).toFixed(4)
   const xAmount = parseFloat(bin.xAmount) / 10 ** baseDecimals
   const yAmount = parseFloat(bin.yAmount) / 10 ** quoteDecimals
   const formatAmount = (v: number) => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  return `Bin ${bin.binId}: $${price}\n${baseSymbol}: ${formatAmount(xAmount)}\n${quoteSymbol}: ${formatAmount(yAmount)}`
+  return { binId: bin.binId, price, baseSymbol, quoteSymbol, xFormatted: formatAmount(xAmount), yFormatted: formatAmount(yAmount) }
 }
 
 function toLocalTimestamp(originalTime: number): number {
@@ -312,30 +313,55 @@ export function PriceChart({
           {activeTab === 'market-depth' && (
             <div className="flex-1 flex flex-col">
               {/* Bar Chart */}
-              <div className="flex items-end justify-center gap-[2px] px-4 mb-4 h-[261px]">
-                {isMarketDepthLoading ? (
-                  <div className="flex items-center justify-center w-full h-full">
-                    <div className="animate-pulse text-black opacity-50">Loading market depth...</div>
-                  </div>
-                ) : barHeights.length > 0 ? (
-                  barHeights.map((height, index) => (
-                    <div
-                      key={displayBins[index]?.binId ?? index}
-                      className={`${
-                        index === activeBinIndex
-                          ? 'bg-[#1d8f00]' // Active bin - darker green
-                          : 'bg-[#9eca87]' // Regular bins - lighter green
-                      } rounded-tl-[999px] rounded-tr-[999px] shrink-0 w-[8px] lg:w-[12px] transition-all hover:opacity-80`}
-                      style={{ height: `${Math.max(height, 2)}px` }}
-                      title={displayBins[index] && quoteTokenConfig ? formatBinTooltip(displayBins[index], tokenConfig.symbol, tokenConfig.decimals, quoteTokenConfig.symbol, quoteTokenConfig.decimals) : `Bin ${index + 1}`}
-                    />
-                  ))
-                ) : (
-                  <div className="flex items-center justify-center w-full h-full">
-                    <div className="text-black opacity-50">No liquidity data available</div>
-                  </div>
-                )}
-              </div>
+              <Tooltip.Provider delayDuration={0} skipDelayDuration={0}>
+                <div className="flex items-end justify-center gap-[2px] px-4 mb-4 h-[261px]">
+                  {isMarketDepthLoading ? (
+                    <div className="flex items-center justify-center w-full h-full">
+                      <div className="animate-pulse text-black opacity-50">Loading market depth...</div>
+                    </div>
+                  ) : barHeights.length > 0 ? (
+                    barHeights.map((height, index) => {
+                      const bin = displayBins[index]
+                      const tip = bin && quoteTokenConfig
+                        ? formatBinTooltip(bin, tokenConfig.symbol, tokenConfig.decimals, quoteTokenConfig.symbol, quoteTokenConfig.decimals)
+                        : null
+                      return (
+                        <Tooltip.Root key={bin?.binId ?? index}>
+                          <Tooltip.Trigger asChild>
+                            <div
+                              className={`${
+                                index === activeBinIndex
+                                  ? 'bg-[#1d8f00]'
+                                  : 'bg-[#9eca87]'
+                              } rounded-tl-[999px] rounded-tr-[999px] shrink-0 w-[8px] lg:w-[12px] transition-all hover:opacity-80`}
+                              style={{ height: `${Math.max(height, 2)}px` }}
+                            />
+                          </Tooltip.Trigger>
+                          {tip && (
+                            <Tooltip.Portal>
+                              <Tooltip.Content
+                                className="px-3 py-2 bg-black text-white text-xs leading-[1.4] rounded-lg z-50 shadow-lg"
+                                sideOffset={4}
+                                side="top"
+                                collisionPadding={16}
+                              >
+                                <div className="font-semibold">Bin {tip.binId}: ${tip.price}</div>
+                                <div>{tip.baseSymbol}: {tip.xFormatted}</div>
+                                <div>{tip.quoteSymbol}: {tip.yFormatted}</div>
+                                <Tooltip.Arrow className="fill-black" />
+                              </Tooltip.Content>
+                            </Tooltip.Portal>
+                          )}
+                        </Tooltip.Root>
+                      )
+                    })
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full">
+                      <div className="text-black opacity-50">No liquidity data available</div>
+                    </div>
+                  )}
+                </div>
+              </Tooltip.Provider>
 
               {/* Legend */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 px-2 text-[10px] lg:text-xs font-semibold">
