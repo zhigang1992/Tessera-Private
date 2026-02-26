@@ -6,6 +6,7 @@ import { getDashboardStats } from '@/services'
 import { getTokenPrice, getPriceHistory, type TimeRange } from '@/services/price'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { DEFAULT_BASE_TOKEN_ID, getAppToken } from '@/config'
+import { toast } from 'sonner'
 
 const TOKEN_CONFIG = getAppToken(DEFAULT_BASE_TOKEN_ID)
 const TOKEN_SYMBOL = TOKEN_CONFIG.symbol
@@ -148,6 +149,25 @@ export function DashboardPriceChart() {
           <div className="flex items-center gap-2.5">
             <AppTokenIcon token={TOKEN_CONFIG} size={48} className="w-12 h-12" />
             <p className="text-[16px] font-extrabold text-black">{tokenInfo?.symbol ?? TOKEN_DISPLAY_NAME}</p>
+            <button
+              onClick={() => {
+                void navigator.clipboard.writeText(TOKEN_CONFIG.mint).then(() => {
+                  toast.success('Address copied to clipboard!')
+                })
+              }}
+              className="hover:opacity-70 transition-opacity"
+              title="Copy contract address"
+            >
+              <svg
+                className="w-4 h-4 text-black"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeWidth={2} />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+              </svg>
+            </button>
           </div>
           <div className="flex flex-col items-end">
             <p className="font-['Martian_Mono',monospace] font-medium text-[20px] text-[#111]">
@@ -192,6 +212,25 @@ export function DashboardPriceChart() {
             <div className="flex items-center gap-2.5">
               <AppTokenIcon token={TOKEN_CONFIG} size={48} className="w-12 h-12" />
               <p className="text-[16px] font-extrabold text-black">{tokenInfo?.symbol ?? TOKEN_DISPLAY_NAME}</p>
+              <button
+                onClick={() => {
+                  void navigator.clipboard.writeText(TOKEN_CONFIG.mint).then(() => {
+                    toast.success('Address copied to clipboard!')
+                  })
+                }}
+                className="hover:opacity-70 transition-opacity"
+                title="Copy contract address"
+              >
+                <svg
+                  className="w-4 h-4 text-black"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeWidth={2} />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                </svg>
+              </button>
             </div>
             <div className="bg-[rgba(0,0,0,0.5)] h-10 w-px" />
             <div className="flex flex-col justify-center">

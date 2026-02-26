@@ -1,4 +1,5 @@
 import { AppTokenId, DEFAULT_BASE_TOKEN_ID, getAppToken, getExplorerUrl } from '@/config'
+import { toast } from 'sonner'
 import SolanaIcon from './_/solana-icon.svg?react'
 
 /**
@@ -69,23 +70,45 @@ export function AboutPanel({ tokenId = DEFAULT_BASE_TOKEN_ID }: AboutPanelProps)
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
           <div className="flex items-center justify-between py-2.5">
             <span className="text-xs lg:text-sm text-[#999]">Onchain Address</span>
-            <a
-              href={explorerUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 hover:opacity-70 transition-opacity"
-            >
+            <div className="flex items-center gap-1.5">
               <SolanaIcon className="w-5 h-5" />
               <span className="text-xs lg:text-sm text-black dark:text-[#d2d2d2]">{onchainAddress}</span>
-              <svg
-                className="w-4 h-4 text-black dark:text-[#d2d2d2]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <button
+                onClick={() => {
+                  void navigator.clipboard.writeText(token.mint).then(() => {
+                    toast.success('Address copied to clipboard!')
+                  })
+                }}
+                className="hover:opacity-70 transition-opacity"
+                title="Copy address"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </a>
+                <svg
+                  className="w-4 h-4 text-black dark:text-[#d2d2d2]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeWidth={2} />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                </svg>
+              </button>
+              <a
+                href={explorerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:opacity-70 transition-opacity"
+                title="View on explorer"
+              >
+                <svg
+                  className="w-4 h-4 text-black dark:text-[#d2d2d2]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
           </div>
           <div className="border-t border-black/15 dark:border-[#d2d2d2]/15" />
           <div className="flex items-center justify-between py-2.5">
