@@ -12,10 +12,12 @@ import {
   fetchReferralCodesByOwner,
   fetchUserRegistration,
   fetchUsersForCode,
+  fetchFeeDistributionRecords,
   type AggregatedAffiliateStats,
   type ReferralCodeCreatedEvent,
   type UserRegisteredEvent,
   type CodeRegisterView,
+  type FeeDistributionRecord,
 } from '../lib/graphql-client'
 
 /**
@@ -27,6 +29,7 @@ export const referralGraphqlKeys = {
   referralCodes: (wallet: string) => [...referralGraphqlKeys.all, 'referral-codes', wallet] as const,
   userRegistration: (wallet: string) => [...referralGraphqlKeys.all, 'user-registration', wallet] as const,
   tradersForCode: (code: string) => [...referralGraphqlKeys.all, 'traders-for-code', code] as const,
+  feeDistribution: (wallet: string, page: number) => [...referralGraphqlKeys.all, 'fee-distribution', wallet, page] as const,
 }
 
 /**
@@ -99,6 +102,29 @@ export function useTradersForCode(referralCode?: string | null) {
       return fetchUsersForCode(referralCode)
     },
     enabled: !!referralCode,
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
+  })
+}
+
+/**
+ * Fetch fee distribution records for a wallet address with pagination
+ */
+export function useFeeDistributionRecords(
+  walletAddress?: string | null,
+  page: number = 1,
+  pageSize: number = 10
+) {
+  const wallet = useWallet()
+  const address = walletAddress ?? wallet.publicKey?.toBase58()
+
+  return useQuery<{ records: FeeDistributionRecord[]; total: number }>({
+    queryKey: referralGraphqlKeys.feeDistribution(address ?? 'no-wallet', page),
+    queryFn: async () => {
+      if (!address) return { records: [], total: 0 }
+      return fetchFeeDistributionRecords(address, pageSize, (page - 1) * pageSize)
+    },
+    enabled: !!address,
     staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
   })

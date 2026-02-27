@@ -1233,6 +1233,67 @@ export interface RewardDetailByCodeReferral {
   fees_by_token: FeeByToken[] | null // jsonb array of {fee, mint}
 }
 
+// ============ Fee Distribution Records ============
+
+export interface FeeDistributionRecord {
+  amount: string // numeric from GraphQL
+  block_number: string // bigint from GraphQL
+  block_time: string // bigint from GraphQL
+  fee: string // numeric from GraphQL
+  mint: string
+  net_amount: string // numeric from GraphQL
+  recipient: string
+  signature: string
+}
+
+/**
+ * Fetch fee distribution transfer records for a specific recipient with pagination
+ */
+export async function fetchFeeDistributionRecords(
+  recipient: string,
+  limit: number = 10,
+  offset: number = 0
+): Promise<{ records: FeeDistributionRecord[]; total: number }> {
+  const query = `
+    query GetFeeDistributionRecords($recipient: String!, $limit: Int!, $offset: Int!) {
+      public_intermediate_int_fee_distribute_transfer_amount_records(
+        where: { recipient: { _eq: $recipient } }
+        order_by: { block_time: desc }
+        limit: $limit
+        offset: $offset
+      ) {
+        amount
+        block_number
+        block_time
+        fee
+        mint
+        net_amount
+        recipient
+        signature
+      }
+      public_intermediate_int_fee_distribute_transfer_amount_records_aggregate(
+        where: { recipient: { _eq: $recipient } }
+      ) {
+        aggregate {
+          count
+        }
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_intermediate_int_fee_distribute_transfer_amount_records: FeeDistributionRecord[]
+    public_intermediate_int_fee_distribute_transfer_amount_records_aggregate: {
+      aggregate: { count: number }
+    }
+  }>(query, { recipient, limit, offset })
+
+  return {
+    records: data.public_intermediate_int_fee_distribute_transfer_amount_records,
+    total: data.public_intermediate_int_fee_distribute_transfer_amount_records_aggregate.aggregate.count,
+  }
+}
+
 /**
  * Fetch reward details for all referrals under a specific code
  */

@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useWallet } from '@/hooks/use-wallet-with-impersonation'
 import { useQuery } from '@tanstack/react-query'
-import { Share2 } from 'lucide-react'
+import { Share2, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, getReferralUsersByCode } from '@/services'
-import { getTokenByMint } from '@/config'
+import { getTokenByMint, getSolscanUrl } from '@/config'
 import { AppTokenCount } from '@/components/app-token-count'
-import { formatBigNumber } from '@/lib/bignumber'
+import { fromHasuraToNative, formatBigNumber } from '@/lib/bignumber'
 import { WalletDropdown } from '@/components/wallet-dropdown'
 import { Pagination } from '@/components/ui/pagination'
 import { TableContainer, tableStyles } from '@/components/ui/table-header'
@@ -17,6 +17,7 @@ import PersonIcon from './_/person.svg?react'
 import { CreateReferralCodeModal } from './create-referral-code-modal'
 import { ShareReferralCodeModal } from './share-referral-code-modal'
 import { useAffiliateData } from '@/features/referral/hooks/use-referral-onchain'
+import { useFeeDistributionRecords } from '@/features/referral/hooks/use-referral-graphql'
 
 const PAGE_SIZE = 3
 
@@ -29,8 +30,16 @@ export function CodeSection() {
   const [usersCurrentPage, setUsersCurrentPage] = useState(1)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [shareModalCode, setShareModalCode] = useState<string | null>(null)
+  const [distributionPage, setDistributionPage] = useState(1)
 
   const { data: affiliateData, isLoading: codesLoading } = useAffiliateData(true, walletAddress)
+
+  const DISTRIBUTION_PAGE_SIZE = 10
+  const { data: distributionData, isLoading: distributionLoading } = useFeeDistributionRecords(
+    walletAddress,
+    distributionPage,
+    DISTRIBUTION_PAGE_SIZE
+  )
 
   // Transform affiliate data to match the expected format
   const codes = useMemo(() => {
@@ -263,11 +272,105 @@ export function CodeSection() {
         )}
 
         {activeTab === 'reward' && (
-          <div className="p-4">
-            <div className="flex items-center justify-center rounded-lg bg-zinc-50 dark:bg-[#27272A] py-16">
-              <span className="text-[14px] text-muted-foreground">Reward Distribution Coming Soon</span>
+          <>
+            <div className={tableStyles.wrapper}>
+              <table className={tableStyles.table}>
+                <thead>
+                  <tr className={tableStyles.thead}>
+                    <th className={tableStyles.th}>Date</th>
+                    <th className={tableStyles.th}>Token</th>
+                    <th className={cn(tableStyles.th, 'whitespace-nowrap')}>Amount</th>
+                    <th className={tableStyles.th}>Tx</th>
+                  </tr>
+                </thead>
+                <tbody className={tableStyles.tbody}>
+                  {!connected ? (
+                    <tr>
+                      <td colSpan={4} className="py-12">
+                        <div className="flex justify-center">
+                          <WalletDropdown
+                            triggerVariant="default"
+                            triggerSize="lg"
+                            triggerClassName="h-11 rounded-lg bg-black dark:bg-[#d2fb95] px-8 text-sm font-medium text-white dark:text-black hover:bg-black/90 dark:hover:bg-[#d2fb95]/80"
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ) : distributionLoading ? (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-10 text-center text-[14px] text-muted-foreground">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : !distributionData || distributionData.records.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="p-4">
+                        <div className="flex items-center justify-center rounded-lg bg-zinc-50 dark:bg-[#27272A] py-16">
+                          <span className="text-[14px] text-muted-foreground">No reward distributions yet</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    distributionData.records.map((record) => {
+                      const token = getTokenByMint(record.mint)
+                      const date = new Date(Number(record.block_time) * 1000)
+                      const formattedDate = date.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })
+                      const amount = fromHasuraToNative(record.amount)
+
+                      return (
+                        <tr key={`${record.signature}-${record.mint}`} className={tableStyles.tr}>
+                          <td className={cn(tableStyles.td, 'whitespace-nowrap')}>
+                            {formattedDate}
+                          </td>
+                          <td className={tableStyles.td}>
+                            {token ? (
+                              <span className="font-medium uppercase">{token.symbol}</span>
+                            ) : (
+                              <span className="text-muted-foreground">
+                                {record.mint.slice(0, 4)}...{record.mint.slice(-4)}
+                              </span>
+                            )}
+                          </td>
+                          <td className={cn(tableStyles.td, 'whitespace-nowrap')}>
+                            {token ? (
+                              <AppTokenCount token={token} value={amount} showSymbol maximumFractionDigits={6} />
+                            ) : (
+                              formatBigNumber(amount, { maximumFractionDigits: 6 })
+                            )}
+                          </td>
+                          <td className={tableStyles.td}>
+                            <a
+                              href={getSolscanUrl(record.signature, 'tx')}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[#6a7282] hover:text-black dark:hover:text-white transition-colors"
+                            >
+                              <ExternalLink className="size-3.5" />
+                            </a>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
-          </div>
+
+            {distributionData && distributionData.total > DISTRIBUTION_PAGE_SIZE && (
+              <div className={tableStyles.paginationWrapper}>
+                <Pagination
+                  currentPage={distributionPage}
+                  totalPages={Math.ceil(distributionData.total / DISTRIBUTION_PAGE_SIZE)}
+                  onPageChange={setDistributionPage}
+                  className="justify-center"
+                />
+              </div>
+            )}
+          </>
         )}
       </TableContainer>
 
