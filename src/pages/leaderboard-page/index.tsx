@@ -1,25 +1,22 @@
-import { useState } from 'react'
 import { LeaderboardHeader } from './components/leaderboard-header'
-import { LeaderboardTabSwitcher } from './components/leaderboard-tab-switcher'
-import { ReferralLeaderboard } from './components/referral-leaderboard'
-import { TradingLeaderboard } from './components/trading-leaderboard'
 
 export default function LeaderboardPage() {
-  // In production mode, default to referral tab and hide trading tab
-  const [activeTab, setActiveTab] = useState<'trading' | 'referral'>(
-    'trading'
-  )
-
   return (
     <div className="space-y-6">
-      {/* Header */}
       <LeaderboardHeader />
 
-      {/* Tab Switcher - hide if only one tab is available */}
-        <LeaderboardTabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
-
-      {/* Show only referral leaderboard in production mode */}
-      {activeTab === 'trading' ? <TradingLeaderboard /> : <ReferralLeaderboard />}
+      <div className="flex min-h-[400px] items-center justify-center rounded-2xl bg-white dark:bg-[#111111]">
+        <div className="text-center space-y-3 px-6">
+          <p className="text-4xl">🔧</p>
+          <h2 className="text-xl font-semibold text-foreground dark:text-[#d2d2d2]">
+            Leaderboard is Under Maintenance
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-md">
+            We're making some improvements to the leaderboard. It will be back
+            shortly. Thanks for your patience!
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
