@@ -1038,6 +1038,37 @@ export async function fetchAllTokenDetails(): Promise<TokenDetailsData[]> {
   return data.public_marts_token_details
 }
 
+// ============ Token Price Changes ============
+
+export interface TokenPriceChangesData {
+  token: string
+  latest_price: string
+  price_change_pct_24h: number | null
+  price_change_pct_30d: number | null
+}
+
+export async function fetchTokenPriceChanges(tokenMint: string): Promise<TokenPriceChangesData | null> {
+  const query = `
+    query GetTokenPriceChanges($token: String!) {
+      public_marts_latest_token_price_changes_view(
+        where: { token: { _eq: $token } }
+        limit: 1
+      ) {
+        token
+        latest_price
+        price_change_pct_24h
+        price_change_pct_30d
+      }
+    }
+  `
+
+  const data = await graphqlRequest<{
+    public_marts_latest_token_price_changes_view: TokenPriceChangesData[]
+  }>(query, { token: tokenMint })
+
+  return data.public_marts_latest_token_price_changes_view[0] ?? null
+}
+
 // ============ Auction Data ============
 
 export interface AuctionTotalRaisedData {

@@ -1,9 +1,20 @@
 import spacexBg from '@/assets/spacex-bg.jpeg'
 import kalshiBg from '@/assets/kalshi-bg.jpeg'
+import { type AppTokenId, APP_TOKENS } from '@/config'
 
 // ============ Types ============
 
 export type AssetStatus = 'trading' | 'auction' | 'whitelisting' | 'coming_soon'
+
+export interface ExploreAssetMetadata {
+  fullName?: string
+  location?: string
+  founded?: string
+  industry?: string
+  twitterUrl?: string
+  meteoraUrl?: string
+  transparencyUrl?: string
+}
 
 export interface ExploreAsset {
   id: string
@@ -15,6 +26,8 @@ export interface ExploreAsset {
   price?: number
   valuation?: string
   status: AssetStatus
+  appTokenId?: AppTokenId
+  metadata?: ExploreAssetMetadata
 }
 
 // ============ Mock Data ============
@@ -30,6 +43,16 @@ const exploreAssets: ExploreAsset[] = [
     price: 423,
     valuation: '$800B',
     status: 'trading',
+    appTokenId: 'T-SpaceX',
+    metadata: {
+      fullName: 'SpaceX Tech Corp',
+      location: 'Hawthorne, CA',
+      founded: 'Founded 2002',
+      industry: 'Aerospace',
+      twitterUrl: 'https://x.com/SpaceX',
+      meteoraUrl: `https://app.meteora.ag/dlmm/${APP_TOKENS['T-SpaceX'].dlmmPool?.address}`,
+      transparencyUrl: '/dashboard?tab=transparency',
+    },
   },
   {
     id: 'kalshi',

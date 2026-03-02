@@ -1,6 +1,6 @@
 import { AppProviders } from '@/components/app-providers.tsx'
 import { MainLayout } from '@/components/layout'
-import { AuctionPage, DashboardPage, ExplorePage, LeaderboardPage, ReferralPage, SupportPage, TradePage, WhitelistCheckerPage } from '@/pages'
+import { AuctionPage, DashboardPage, ExplorePage, LeaderboardPage, ReferralPage, SupportPage, TradePage, TokenDetailPage, WhitelistCheckerPage } from '@/pages'
 import { BrowserRouter, Navigate, Route, Routes, useSearchParams } from 'react-router'
 
 // Component to handle /s redirect with query params
@@ -18,6 +18,7 @@ export function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/explorer" replace />} />
             <Route path="/explorer" element={<ExplorePage />} />
+            <Route path="/explorer/:assetId" element={<TokenDetailPage />} />
             <Route path="/s" element={<ShareRedirect />} />
             <Route path="/referral" element={<ReferralPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />

@@ -1,5 +1,6 @@
 import { AppTokenId, DEFAULT_BASE_TOKEN_ID } from '@/config'
 import { useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { AboutPanel } from './components/about-panel'
 import { AssetsTable } from './components/assets-table'
 import { DashboardPriceChart } from './components/dashboard-price-chart'
@@ -11,8 +12,14 @@ import { StatsCards } from './components/stats-cards'
 import { TransparencyPanel } from './components/transparency-panel'
 
 export default function DashboardPage() {
-  // In production mode, default to transparency tab
-  const [activeTab, setActiveTab] = useState('market-data')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialTab = searchParams.get('tab') ?? 'market-data'
+  const [activeTab, setActiveTab] = useState(initialTab)
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab)
+    setSearchParams(tab === 'market-data' ? {} : { tab })
+  }
   // Default to T-SpaceX token ID
   const [selectedTokenId, setSelectedTokenId] = useState<AppTokenId>(DEFAULT_BASE_TOKEN_ID)
 
@@ -22,7 +29,7 @@ export default function DashboardPage() {
       <h1 className="text-2xl font-semibold text-foreground dark:text-[#d2d2d2]">Dashboard</h1>
 
       {/* Tabs - hide if only one tab is available */}
-      <DashboardTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <DashboardTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
       {/* Content based on active tab */}
       {activeTab === 'market-data' && (

@@ -43,7 +43,12 @@ export default function ExplorePage() {
         ) : (
           <>
             {assets?.map((asset) => (
-              <AssetCard key={asset.id} asset={asset} onAction={handleAssetAction} />
+              <AssetCard
+                key={asset.id}
+                asset={asset}
+                onAction={handleAssetAction}
+                onClick={asset.appTokenId ? () => navigate(`/explorer/${asset.id}`) : undefined}
+              />
             ))}
           </>
         )}

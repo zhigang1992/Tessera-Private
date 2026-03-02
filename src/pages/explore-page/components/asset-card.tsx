@@ -8,15 +8,17 @@ import HourglassIcon from './_/hourglass.svg?react'
 interface AssetCardProps {
   asset: ExploreAsset
   onAction?: (asset: ExploreAsset) => void
+  onClick?: () => void
 }
 
-export function AssetCard({ asset, onAction }: AssetCardProps) {
-  const handleAction = () => {
+export function AssetCard({ asset, onAction, onClick }: AssetCardProps) {
+  const handleAction = (e: React.MouseEvent) => {
+    e.stopPropagation()
     onAction?.(asset)
   }
 
   return (
-    <Card className="overflow-hidden rounded-2xl border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#323334] hover:shadow-[0px_4px_8px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 ease-out cursor-pointer">
+    <Card onClick={onClick} className={`overflow-hidden rounded-2xl border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#323334] hover:shadow-[0px_4px_8px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 ease-out ${onClick ? 'cursor-pointer' : ''}`}>
       {/* Header */}
       <div
         className="aspect-[4/3] px-5 py-5 flex justify-between items-start bg-cover bg-center"
@@ -51,7 +53,7 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
         {asset.status === 'trading' && (
           <Button
             onClick={handleAction}
-            className="w-full rounded-lg py-2.5 px-4 bg-[#18181b] dark:bg-white text-white dark:text-black hover:bg-[#27272a] dark:hover:bg-gray-100 text-[13px] font-medium leading-normal flex items-center justify-center gap-1.5"
+            className="w-full rounded-lg py-2.5 px-4 bg-[#18181b] dark:bg-white text-white dark:text-black hover:bg-[#27272a] dark:hover:bg-gray-100 text-[13px] font-medium leading-normal flex items-center justify-center gap-1.5 relative z-10"
           >
             <SwapIcon className="w-4 h-4" />
             Buy / Sell
@@ -60,7 +62,7 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
         {asset.status === 'auction' && (
           <Button
             onClick={handleAction}
-            className="w-full rounded-lg py-2.5 px-4 bg-[#d2fb95] text-[#18181b] hover:bg-[#c5ed88] text-[13px] font-medium leading-normal flex items-center justify-center gap-1.5"
+            className="w-full rounded-lg py-2.5 px-4 bg-[#d2fb95] text-[#18181b] hover:bg-[#c5ed88] text-[13px] font-medium leading-normal flex items-center justify-center gap-1.5 relative z-10"
           >
             <GavelIcon className="w-4 h-4" />
             Join Auction
@@ -69,7 +71,7 @@ export function AssetCard({ asset, onAction }: AssetCardProps) {
         {asset.status === 'whitelisting' && (
           <Button
             onClick={handleAction}
-            className="w-full rounded-lg py-2.5 px-4 bg-[#d2fb95] text-[#18181b] hover:bg-[#c5ed88] text-[13px] font-medium leading-normal flex items-center justify-center gap-1.5"
+            className="w-full rounded-lg py-2.5 px-4 bg-[#d2fb95] text-[#18181b] hover:bg-[#c5ed88] text-[13px] font-medium leading-normal flex items-center justify-center gap-1.5 relative z-10"
           >
             Check Whitelist
           </Button>

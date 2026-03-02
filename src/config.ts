@@ -302,7 +302,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       code: 'tSpaceX',
       sector: 'Aerospace',
       type: 'PRE-IPO',
-      website: 'https://spacex.com',
+      website: 'https://www.spacex.com',
       description:
         'T-SpaceX represents a loan participation right which provides economic exposure to SpaceX and is redeemable following divestment of the underlying exposure. This is a loan product, not a security - token holders have no ownership, voting, or dividend rights in SpaceX. By owning and using this token, you accept and agree to be bound by the Terms and Conditions available at https://terms.tessera.pe',
       auctionMechanism:
