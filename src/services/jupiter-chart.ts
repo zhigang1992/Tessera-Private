@@ -48,7 +48,8 @@ export async function fetchJupiterCandles(
   const jupInterval = INTERVAL_MAP[interval]
   const candles = CANDLE_COUNTS[interval]
 
-  const url = `/api/charts/${mint}?interval=${jupInterval}&candles=${candles}&type=price&quote=usd`
+  const to = Date.now()
+  const url = `/api/charts/${mint}?interval=${jupInterval}&candles=${candles}&type=price&quote=usd&to=${to}`
   const response = await fetch(url)
 
   if (!response.ok) {

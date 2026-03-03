@@ -40,12 +40,14 @@ export const onRequestGet: PagesFunction<Env, 'mint'> = async ({ params, request
   }
 
   const candleCount = Math.min(Math.max(parseInt(candles, 10) || 148, 1), 500)
+  const to = url.searchParams.get('to') ?? String(Date.now())
 
   const jupUrl = new URL(`${JUP_CHART_BASE}/${mint}`)
   jupUrl.searchParams.set('interval', interval)
   jupUrl.searchParams.set('candles', String(candleCount))
   jupUrl.searchParams.set('type', type)
   jupUrl.searchParams.set('quote', quote)
+  jupUrl.searchParams.set('to', to)
 
   try {
     const response = await fetch(jupUrl.toString(), {
