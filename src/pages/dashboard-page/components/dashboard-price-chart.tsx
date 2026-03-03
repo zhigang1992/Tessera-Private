@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { createChart, ColorType, LineStyle, AreaSeries } from 'lightweight-charts'
-import type { IChartApi, ISeriesApi, LineData, Time } from 'lightweight-charts'
+import { createChart, ColorType, CandlestickSeries, HistogramSeries } from 'lightweight-charts'
+import type { IChartApi, CandlestickData, HistogramData, Time } from 'lightweight-charts'
 import { getDashboardStats } from '@/services'
-import { getTokenPrice, getPriceHistory, type TimeRange } from '@/services/price'
+import { getTokenPrice } from '@/services/price'
+import { fetchJupiterCandles, getRefetchInterval, type ChartInterval } from '@/services/jupiter-chart'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { DEFAULT_BASE_TOKEN_ID, getAppToken } from '@/config'
 import { toast } from 'sonner'
@@ -15,10 +16,13 @@ const TOKEN_DISPLAY_NAME = TOKEN_CONFIG.displayName
 export function DashboardPriceChart() {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
-  const seriesRef = useRef<ISeriesApi<'Area'> | null>(null)
-  const [selectedRange, setSelectedRange] = useState<TimeRange>('1D')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const candleSeriesRef = useRef<any>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const volumeSeriesRef = useRef<any>(null)
+  const [selectedInterval, setSelectedInterval] = useState<ChartInterval>('1H')
 
-  const timeRanges: TimeRange[] = ['1D', '1W', '1M', '3M', '1Y', 'ALL']
+  const chartIntervals: ChartInterval[] = ['15M', '1H', '4H', '1D', '1W']
 
   // Fetch token price info from backend (same as trade page)
   const { data: tokenInfo } = useQuery({
@@ -34,11 +38,13 @@ export function DashboardPriceChart() {
     queryFn: () => getDashboardStats(DEFAULT_BASE_TOKEN_ID),
   })
 
-  // Fetch price history from backend (using T-SpaceX symbol)
-  const { data: priceHistory } = useQuery({
-    queryKey: ['priceHistory', TOKEN_SYMBOL, selectedRange],
-    queryFn: () => getPriceHistory(TOKEN_SYMBOL, selectedRange),
-    staleTime: 30 * 1000,
+  // Fetch Jupiter candle data
+  const { data: jupiterCandles } = useQuery({
+    queryKey: ['jupiterCandles', TOKEN_CONFIG.mint, selectedInterval],
+    queryFn: () => fetchJupiterCandles(TOKEN_CONFIG.mint, selectedInterval),
+    refetchInterval: getRefetchInterval(selectedInterval),
+    staleTime: getRefetchInterval(selectedInterval) / 2,
+    gcTime: 10 * 60 * 1000,
   })
 
   // Initialize chart
@@ -50,45 +56,75 @@ export function DashboardPriceChart() {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#000',
         fontFamily: 'Inter, sans-serif',
+        attributionLogo: false,
       },
       grid: {
         vertLines: { visible: false },
         horzLines: {
-          color: 'rgba(0, 0, 0, 0.2)',
-          style: LineStyle.Dashed,
+          color: 'rgba(0, 0, 0, 0.1)',
+          style: 2,
+          visible: true,
         },
       },
       width: chartContainerRef.current.clientWidth,
       height: 235,
       rightPriceScale: {
         borderVisible: false,
-        scaleMargins: { top: 0.1, bottom: 0.1 },
+        scaleMargins: { top: 0.1, bottom: 0.25 },
       },
       timeScale: {
         borderVisible: false,
         timeVisible: true,
         secondsVisible: false,
       },
-      handleScroll: false,
-      handleScale: false,
+      handleScroll: true,
+      handleScale: true,
       crosshair: {
-        vertLine: { visible: false },
-        horzLine: { visible: false },
+        mode: 1,
+        vertLine: {
+          visible: true,
+          color: 'rgba(0, 0, 0, 0.35)',
+          width: 1,
+          style: 2,
+          labelVisible: true,
+        },
+        horzLine: {
+          visible: true,
+          color: 'rgba(0, 0, 0, 0.35)',
+          width: 1,
+          style: 2,
+          labelVisible: true,
+        },
       },
     })
 
-    const areaSeries = chart.addSeries(AreaSeries, {
-      lineColor: '#1D8F00',
-      lineWidth: 3,
-      topColor: 'rgba(29, 143, 0, 0.3)',
-      bottomColor: 'rgba(29, 143, 0, 0)',
+    const candleSeries = chart.addSeries(CandlestickSeries, {
+      upColor: '#1D8F00',
+      downColor: '#ef4444',
+      borderDownColor: '#ef4444',
+      borderUpColor: '#1D8F00',
+      wickDownColor: '#ef4444',
+      wickUpColor: '#1D8F00',
       priceLineVisible: false,
       lastValueVisible: false,
-      crosshairMarkerVisible: false,
+    })
+
+    const volumeSeries = chart.addSeries(HistogramSeries, {
+      priceFormat: { type: 'volume' },
+      priceScaleId: 'volume',
+      lastValueVisible: false,
+      priceLineVisible: false,
+    })
+
+    chart.priceScale('volume').applyOptions({
+      scaleMargins: { top: 0.8, bottom: 0 },
+      borderVisible: false,
+      visible: false,
     })
 
     chartRef.current = chart
-    seriesRef.current = areaSeries
+    candleSeriesRef.current = candleSeries
+    volumeSeriesRef.current = volumeSeries
 
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
@@ -104,16 +140,31 @@ export function DashboardPriceChart() {
     }
   }, [])
 
-  // Update chart data when price history changes
+  // Update chart data when Jupiter candles change
   useEffect(() => {
-    if (seriesRef.current && priceHistory) {
-      const chartData: LineData<Time>[] = priceHistory.map((point) => ({
-        time: point.time as Time,
-        value: point.value,
-      }))
-      seriesRef.current.setData(chartData)
+    if (!jupiterCandles || !candleSeriesRef.current || !volumeSeriesRef.current) return
+
+    const candleData: CandlestickData<Time>[] = jupiterCandles.map((c) => ({
+      time: c.time as Time,
+      open: c.open,
+      high: c.high,
+      low: c.low,
+      close: c.close,
+    }))
+
+    const volumeData: HistogramData<Time>[] = jupiterCandles.map((c) => ({
+      time: c.time as Time,
+      value: c.volume,
+      color: c.close >= c.open ? 'rgba(29, 143, 0, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+    }))
+
+    candleSeriesRef.current.setData(candleData)
+    volumeSeriesRef.current.setData(volumeData)
+
+    if (chartRef.current) {
+      chartRef.current.timeScale().fitContent()
     }
-  }, [priceHistory])
+  }, [jupiterCandles])
 
   const isPositive = (tokenInfo?.priceChange24h ?? 0) >= 0
 
@@ -191,17 +242,17 @@ export function DashboardPriceChart() {
 
         {/* Mobile - Time Range */}
         <div className="bg-[rgba(0,0,0,0.1)] flex items-center p-1 rounded-lg mb-6 lg:hidden">
-          {timeRanges.map((range) => (
+          {chartIntervals.map((interval) => (
             <button
-              key={range}
-              onClick={() => setSelectedRange(range)}
+              key={interval}
+              onClick={() => setSelectedInterval(interval)}
               className={`flex-1 py-0.5 rounded text-xs font-medium transition-all ${
-                selectedRange === range
+                selectedInterval === interval
                   ? 'bg-white shadow-sm text-black'
                   : 'opacity-50 hover:opacity-100 text-black'
               }`}
             >
-              {range}
+              {interval}
             </button>
           ))}
         </div>
@@ -255,17 +306,17 @@ export function DashboardPriceChart() {
 
           {/* Time Range Selector */}
           <div className="bg-[rgba(0,0,0,0.1)] flex items-center p-1 rounded-lg">
-            {timeRanges.map((range) => (
+            {chartIntervals.map((interval) => (
               <button
-                key={range}
-                onClick={() => setSelectedRange(range)}
+                key={interval}
+                onClick={() => setSelectedInterval(interval)}
                 className={`px-6 py-1 rounded text-xs font-medium transition-all ${
-                  selectedRange === range
+                  selectedInterval === interval
                     ? 'bg-white shadow-sm text-black'
                     : 'opacity-50 hover:opacity-100 text-black'
                 }`}
               >
-                {range}
+                {interval}
               </button>
             ))}
           </div>
