@@ -387,73 +387,75 @@ export function TokenSwapPanel({
             )}
 
             {/* Rate Info */}
-            {quote && hasValidInput && (
-              <div className="bg-[rgba(255,255,255,0.5)] rounded-lg px-6 py-4 self-stretch">
-                <div className="flex flex-col gap-2.5">
-                  <div className="flex items-center justify-between text-xs leading-4">
-                    <div className="flex flex-col justify-center text-[#52525b]">
-                      <p className="leading-4">Rate</p>
-                    </div>
-                    <div className="flex flex-col justify-center text-black">
-                      <p className="leading-4">
-                        1 <AppTokenName token={BASE_TOKEN} variant="symbol" /> ={' '}
-                        <AppTokenCount
-                          token={QUOTE_TOKEN}
-                          value={rateValue != null ? (isBuying ? math`${1} / ${rateValue}` : rateValue) : null}
-                          showSymbol={false}
-                          minimumFractionDigits={buyingPrecision.minimumFractionDigits}
-                          maximumFractionDigits={Math.max(4, buyingPrecision.maximumFractionDigits)}
-                          fallback="0.0000"
-                        />{' '}
-                        <AppTokenName token={QUOTE_TOKEN} variant="symbol" />
-                      </p>
-                    </div>
+            <div className="bg-[rgba(255,255,255,0.5)] rounded-lg px-6 py-4 self-stretch">
+              <div className="flex flex-col gap-2.5">
+                <div className="flex items-center justify-between text-xs leading-4">
+                  <div className="flex flex-col justify-center text-[#52525b]">
+                    <p className="leading-4">Rate</p>
                   </div>
-                  <div className="flex items-center justify-between text-xs leading-4">
-                    <div className="flex flex-col justify-center text-[#52525b]">
-                      <p className="leading-4">Route</p>
-                    </div>
-                    <div className="flex flex-col justify-center text-[#1d8f00]">
-                      <p className="leading-4">{quote.routeLabel}</p>
-                    </div>
+                  <div className="flex flex-col justify-center text-black">
+                    <p className="leading-4">
+                      {quote && hasValidInput ? (
+                        <>
+                          1 <AppTokenName token={BASE_TOKEN} variant="symbol" /> ={' '}
+                          <AppTokenCount
+                            token={QUOTE_TOKEN}
+                            value={rateValue != null ? (isBuying ? math`${1} / ${rateValue}` : rateValue) : null}
+                            showSymbol={false}
+                            minimumFractionDigits={buyingPrecision.minimumFractionDigits}
+                            maximumFractionDigits={Math.max(4, buyingPrecision.maximumFractionDigits)}
+                            fallback="0.0000"
+                          />{' '}
+                          <AppTokenName token={QUOTE_TOKEN} variant="symbol" />
+                        </>
+                      ) : '-'}
+                    </p>
                   </div>
-                  <div className="flex items-center justify-between text-xs leading-4">
-                    <div className="flex flex-col justify-center text-[#52525b]">
-                      <p className="leading-4">Price Impact</p>
-                    </div>
-                    <div className="flex flex-col justify-center text-[#1d8f00]">
-                      <p className="leading-4">{(-parseFloat(quote.priceImpactPct || '0') * 100).toFixed(2)}%</p>
-                    </div>
+                </div>
+                <div className="flex items-center justify-between text-xs leading-4">
+                  <div className="flex flex-col justify-center text-[#52525b]">
+                    <p className="leading-4">Route</p>
                   </div>
-                  <div className="flex items-center justify-between text-xs leading-4">
-                    <div className="flex flex-col justify-center text-[#52525b]">
-                      <p className="leading-4">Implied Valuation</p>
-                    </div>
-                    <div className="flex items-center gap-1 justify-center text-[#1d8f00]">
-                      <p className="leading-4">{(() => {
-                        if (rateValue == null) return "-"
-                        if (BASE_TOKEN.impliedValuation == null) return "-"
-                        const price = (isBuying ? math`${1} / ${rateValue}` : rateValue)
-                        // return rateValue != null ? (isBuying ? math`${1} / ${rateValue}` : rateValue) : null
-                        const impliedValue = BigNumber.toNumber(math`${BASE_TOKEN.impliedValuation.valuationNumber} / ${BASE_TOKEN.impliedValuation.auctionPriceNumber} * ${price}`)
-                        if (impliedValue >= 1_000_000_000_000) {
-                          return `$${(impliedValue / 1_000_000_000_000).toFixed(2)}T`
-                        } else if (impliedValue >= 1_000_000_000) {
-                          return `$${(impliedValue / 1_000_000_000).toFixed(2)}B`
-                        } else if (impliedValue >= 1_000_000) {
-                          return `$${(impliedValue / 1_000_000).toFixed(2)}M`
-                        } else {
-                          return `$${impliedValue.toFixed(0)}`
-                        }
-                      })()}</p>
-                      {BASE_TOKEN.impliedValuation?.disclaimer && (
-                        <InfoTooltip text={BASE_TOKEN.impliedValuation.disclaimer} />
-                      )}
-                    </div>
+                  <div className="flex flex-col justify-center text-[#1d8f00]">
+                    <p className="leading-4">{quote && hasValidInput ? quote.routeLabel : '-'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs leading-4">
+                  <div className="flex flex-col justify-center text-[#52525b]">
+                    <p className="leading-4">Price Impact</p>
+                  </div>
+                  <div className="flex flex-col justify-center text-[#1d8f00]">
+                    <p className="leading-4">{quote && hasValidInput ? `${(-parseFloat(quote.priceImpactPct || '0') * 100).toFixed(2)}%` : '-'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs leading-4">
+                  <div className="flex flex-col justify-center text-[#52525b]">
+                    <p className="leading-4">Implied Valuation</p>
+                  </div>
+                  <div className="flex items-center gap-1 justify-center text-[#1d8f00]">
+                    <p className="leading-4">{(() => {
+                      if (!quote || !hasValidInput) return "-"
+                      if (rateValue == null) return "-"
+                      if (BASE_TOKEN.impliedValuation == null) return "-"
+                      const price = (isBuying ? math`${1} / ${rateValue}` : rateValue)
+                      const impliedValue = BigNumber.toNumber(math`${BASE_TOKEN.impliedValuation.valuationNumber} / ${BASE_TOKEN.impliedValuation.auctionPriceNumber} * ${price}`)
+                      if (impliedValue >= 1_000_000_000_000) {
+                        return `$${(impliedValue / 1_000_000_000_000).toFixed(2)}T`
+                      } else if (impliedValue >= 1_000_000_000) {
+                        return `$${(impliedValue / 1_000_000_000).toFixed(2)}B`
+                      } else if (impliedValue >= 1_000_000) {
+                        return `$${(impliedValue / 1_000_000).toFixed(2)}M`
+                      } else {
+                        return `$${impliedValue.toFixed(0)}`
+                      }
+                    })()}</p>
+                    {BASE_TOKEN.impliedValuation?.disclaimer && (
+                      <InfoTooltip text={BASE_TOKEN.impliedValuation.disclaimer} />
+                    )}
                   </div>
                 </div>
               </div>
-            )}
+            </div>
 
             {/* SWAP Button */}
             <button
