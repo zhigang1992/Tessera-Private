@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { createChart, ColorType, LineSeries } from 'lightweight-charts'
-import type { IChartApi, LineData, Time } from 'lightweight-charts'
+import { createChart, ColorType, CandlestickSeries, HistogramSeries } from 'lightweight-charts'
+import type { IChartApi, CandlestickData, HistogramData, Time } from 'lightweight-charts'
 import * as Tooltip from '@radix-ui/react-tooltip'
-import { getPriceHistory, getTokenPrice, type TimeRange } from '@/services/price'
+import { getTokenPrice } from '@/services/price'
+import { fetchJupiterCandles, getRefetchInterval, type ChartInterval } from '@/services/jupiter-chart'
 import { useMarketDepth, calculateBarHeights, formatTvl, formatBinStep } from '@/hooks/useMarketDepth'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'
@@ -65,11 +66,13 @@ export function PriceChart({
 
   const effectiveTokenSymbol = tokenConfig.symbol
   const [activeTab, setActiveTab] = useState<ChartTab>('price')
-  const [timeRange, setTimeRange] = useState<TimeRange>('1D')
+  const [chartInterval, setChartInterval] = useState<ChartInterval>('1H')
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const seriesRef = useRef<any>(null)
+  const candleSeriesRef = useRef<any>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const volumeSeriesRef = useRef<any>(null)
 
   // Fetch token price info from backend (skip if disabled)
   const { data: token } = useQuery({
@@ -81,12 +84,13 @@ export function PriceChart({
     enabled: !disabled,
   })
 
-  // Fetch price history from backend - updates when timeRange changes (skip if disabled)
-  const { data: priceHistory } = useQuery({
-    queryKey: ['priceHistory', effectiveTokenSymbol, timeRange],
-    queryFn: () => getPriceHistory(effectiveTokenSymbol, timeRange),
-    staleTime: 30 * 1000, // Consider data stale after 30 seconds
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+  // Fetch Jupiter candle data - updates when interval changes (skip if disabled)
+  const { data: jupiterCandles } = useQuery({
+    queryKey: ['jupiterCandles', tokenConfig.mint, chartInterval],
+    queryFn: () => fetchJupiterCandles(tokenConfig.mint, chartInterval),
+    refetchInterval: getRefetchInterval(chartInterval),
+    staleTime: getRefetchInterval(chartInterval) / 2,
+    gcTime: 10 * 60 * 1000,
     enabled: !disabled,
   })
 
@@ -137,53 +141,70 @@ export function PriceChart({
       grid: {
         vertLines: { visible: false },
         horzLines: {
-          color: 'rgba(0, 0, 0, 0.2)',
-          style: 2, // 2 = dashed line
-          visible: true
+          color: 'rgba(0, 0, 0, 0.1)',
+          style: 2,
+          visible: true,
         },
       },
       width: chartContainerRef.current.clientWidth,
-      height: 180,
+      height: 300,
       rightPriceScale: {
         borderVisible: false,
-        scaleMargins: { top: 0.1, bottom: 0.1 },
+        scaleMargins: { top: 0.1, bottom: 0.25 },
       },
       timeScale: {
         borderVisible: false,
         timeVisible: true,
         secondsVisible: false,
       },
-      handleScroll: false,
-      handleScale: false,
+      handleScroll: true,
+      handleScale: true,
       crosshair: {
-        mode: 1, // Normal crosshair mode
+        mode: 1,
         vertLine: {
           visible: true,
           color: 'rgba(0, 0, 0, 0.35)',
           width: 1,
-          style: 2, // dashed
+          style: 2,
           labelVisible: true,
         },
         horzLine: {
           visible: true,
           color: 'rgba(0, 0, 0, 0.35)',
           width: 1,
-          style: 2, // dashed
+          style: 2,
           labelVisible: true,
         },
       },
     })
 
-    const lineSeries = chart.addSeries(LineSeries, {
-      color: '#1D8F00',
-      lineWidth: 3,
+    const candleSeries = chart.addSeries(CandlestickSeries, {
+      upColor: '#1D8F00',
+      downColor: '#ef4444',
+      borderDownColor: '#ef4444',
+      borderUpColor: '#1D8F00',
+      wickDownColor: '#ef4444',
+      wickUpColor: '#1D8F00',
       priceLineVisible: false,
       lastValueVisible: false,
-      crosshairMarkerVisible: false,
+    })
+
+    const volumeSeries = chart.addSeries(HistogramSeries, {
+      priceFormat: { type: 'volume' },
+      priceScaleId: 'volume',
+      lastValueVisible: false,
+      priceLineVisible: false,
+    })
+
+    chart.priceScale('volume').applyOptions({
+      scaleMargins: { top: 0.8, bottom: 0 },
+      borderVisible: false,
+      visible: false,
     })
 
     chartRef.current = chart
-    seriesRef.current = lineSeries
+    candleSeriesRef.current = candleSeries
+    volumeSeriesRef.current = volumeSeries
 
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
@@ -199,16 +220,31 @@ export function PriceChart({
     }
   }, [])
 
-  // Update chart data when price history changes
+  // Update chart data when Jupiter candles change
   useEffect(() => {
-    if (seriesRef.current && priceHistory) {
-      const chartData: LineData<Time>[] = priceHistory.map((point) => ({
-        time: toLocalTimestamp(point.time) as Time,
-        value: point.value,
-      }))
-      seriesRef.current.setData(chartData)
+    if (!jupiterCandles || !candleSeriesRef.current || !volumeSeriesRef.current) return
+
+    const candleData: CandlestickData<Time>[] = jupiterCandles.map((c) => ({
+      time: toLocalTimestamp(c.time) as Time,
+      open: c.open,
+      high: c.high,
+      low: c.low,
+      close: c.close,
+    }))
+
+    const volumeData: HistogramData<Time>[] = jupiterCandles.map((c) => ({
+      time: toLocalTimestamp(c.time) as Time,
+      value: c.volume,
+      color: c.close >= c.open ? 'rgba(29, 143, 0, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+    }))
+
+    candleSeriesRef.current.setData(candleData)
+    volumeSeriesRef.current.setData(volumeData)
+
+    if (chartRef.current) {
+      chartRef.current.timeScale().fitContent()
     }
-  }, [priceHistory])
+  }, [jupiterCandles])
 
   return (
     <div className="h-full rounded-2xl p-4 lg:p-6 bg-gradient-to-b from-[#eeffd4] to-[#d2fb95] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]">
@@ -293,17 +329,17 @@ export function PriceChart({
 
             {/* Time Range Selector */}
             <div className="flex items-center p-1 rounded-lg bg-[rgba(0,0,0,0.1)]">
-              {(['1D', '1W', '1M', '3M', '1Y', 'ALL'] as TimeRange[]).map((range) => (
+              {(['15M', '1H', '4H', '1D', '1W'] as ChartInterval[]).map((interval) => (
                 <button
-                  key={range}
-                  onClick={() => setTimeRange(range)}
+                  key={interval}
+                  onClick={() => setChartInterval(interval)}
                   className={`basis-0 grow flex items-center justify-center h-6 rounded text-xs font-medium transition-all ${
-                    timeRange === range
+                    chartInterval === interval
                       ? 'bg-white text-black shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]'
                       : 'text-black opacity-50 hover:bg-[rgba(255,255,255,0.3)]'
                   }`}
                 >
-                  {range}
+                  {interval}
                 </button>
               ))}
             </div>
