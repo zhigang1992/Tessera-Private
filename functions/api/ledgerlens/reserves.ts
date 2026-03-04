@@ -60,7 +60,7 @@ async function fetchLedgerLensData(
   }
 }
 
-export const onRequestGet: PagesFunction<Env> = async () => {
+export const onRequestGet: PagesFunction<Env> = async ({ request }) => {
   // Fetch both SpaceX and Kalshi data in parallel
   const [spacexData, kalshiData] = await Promise.all([
     fetchLedgerLensData(ENDPOINTS.spacex, SPACEX_API_KEY),

@@ -33,10 +33,10 @@ async function rebuildTreeEdges(traderWallet: string, referrerCodeId: number, db
   let currentLevel = 1
 
   while (currentCodeId && currentLevel <= 3) {
-    const code: { id: number; wallet_address: string; active_layer: number } | null = await db
+    const code = await db
       .prepare('SELECT id, wallet_address, active_layer FROM referral_codes WHERE id = ?')
       .bind(currentCodeId)
-      .first()
+      .first<{ id: number; wallet_address: string; active_layer: number }>()
 
     if (!code) break
 
@@ -50,10 +50,10 @@ async function rebuildTreeEdges(traderWallet: string, referrerCodeId: number, db
     }
 
     // Find the next level up by checking if this referrer is also a trader
-    const nextBinding: { referrer_code_id: number } | null = await db
+    const nextBinding = await db
       .prepare('SELECT referrer_code_id FROM trader_bindings WHERE wallet_address = ?')
       .bind(code.wallet_address)
-      .first()
+      .first<{ referrer_code_id: number }>()
 
     currentCodeId = nextBinding?.referrer_code_id ?? null
     currentLevel++
