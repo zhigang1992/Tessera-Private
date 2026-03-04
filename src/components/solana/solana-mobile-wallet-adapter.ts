@@ -10,7 +10,7 @@ export function solanaMobileWalletAdapter({
   appIdentity = {
     name: 'Tessera',
     uri: 'https://app.tessera.pe',
-    icon: 'https://app.tessera.pe/favicon.ico'
+    icon: 'https://app.tessera.pe/favicon.ico',
   },
   clusters,
 }: {

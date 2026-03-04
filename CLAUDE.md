@@ -4,6 +4,17 @@
 
 - **Math-Literal Usage**: See [.claude/skills/math-literal.md](.claude/skills/math-literal.md) for detailed usage guide on BigNumber and math operations.
 
+## API Endpoints (Cloudflare Workers)
+
+API handlers live in `functions/` using the Pages Functions convention (`onRequest`, `onRequestGet`, `onRequestPost`, etc.). However, since we migrated to the Workers + Assets model, `worker/index.ts` acts as a manual router that imports and dispatches to each handler.
+
+**When adding a new API endpoint in `functions/`**, you must also update `worker/index.ts`:
+
+1. Import the handler at the top of the file
+2. Add an entry to the `routes` array (for static paths) or add a dynamic route block (for parameterized paths like `/api/merkle-proof/:wallet`)
+
+If you skip this step, the new endpoint will not be reachable.
+
 ## BigNumber / Decimal Utilities
 
 We use [math-literal](https://github.com/zhigang1992/math-literal) for precise decimal arithmetic. This library wraps `decimal.js` with a clean template literal syntax.

@@ -1,0 +1,6 @@
+[install]
+# Use pnpm-style isolated node_modules to prevent esbuild version mismatch errors.
+# With the default hoisted linker, multiple dependencies requiring different esbuild
+# versions can end up with mismatched JS wrappers and native binaries, causing
+# "Host version does not match binary version" failures on `bun add`.
+linker = "isolated"

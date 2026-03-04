@@ -6,6 +6,10 @@ import { App } from './app.tsx'
 // Bootstrap URL-hash wallet for testing (registers a Wallet Standard wallet if a private key is present in the URL hash)
 import './dev/url-key-wallet'
 
+if (import.meta.env.DEV) {
+  import('eruda').then((eruda) => eruda.default.init())
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

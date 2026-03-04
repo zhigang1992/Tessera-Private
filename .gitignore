@@ -31,6 +31,7 @@ dist-ssr
 # Environment variables
 .envrc
 .env
+.mise.local.toml
 
 .playwright-mcp
 .dev.vars
@@ -40,3 +41,9 @@ dist-ssr
 data/*.json
 data/migration-*.json
 data/logs/
+
+# code agents
+.claude/settings.local.json
+.alca/
+.alca.mounts/
+.alca.local.toml
