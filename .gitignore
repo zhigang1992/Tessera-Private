@@ -40,3 +40,6 @@ dist-ssr
 data/*.json
 data/migration-*.json
 data/logs/
+
+# Export outputs
+referral-export.*
