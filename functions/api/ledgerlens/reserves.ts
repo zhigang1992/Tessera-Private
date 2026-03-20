@@ -74,7 +74,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request }) => {
       asset: 'SpaceX',
       reserve: spacexData.totalReserve,
       tokens: spacexData.totalToken,
-      chainlink: 'TBA',
+      chainlink: 'https://data.chain.link/streams/tspacex-usd-smartdata-datalink',
       timestamp: spacexData.timestamp,
     })
   }
@@ -84,7 +84,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request }) => {
       asset: 'Kalshi',
       reserve: kalshiData.totalReserve,
       tokens: kalshiData.totalToken,
-      chainlink: 'TBA',
+      chainlink: 'https://data.chain.link/streams/tkalshi-usd-smartdata-datalink',
       timestamp: kalshiData.timestamp,
     })
   }

@@ -106,7 +106,18 @@ export function TransparencyPanel() {
                             </div>
                             <div className="flex-1">
                               <p className="text-sm font-normal text-black dark:text-[#d2d2d2] leading-5 whitespace-nowrap">
-                                {item.chainlink}
+                                {item.chainlink.startsWith('http') ? (
+                                  <a
+                                    href={item.chainlink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary underline"
+                                  >
+                                    View
+                                  </a>
+                                ) : (
+                                  item.chainlink
+                                )}
                               </p>
                             </div>
                           </div>
