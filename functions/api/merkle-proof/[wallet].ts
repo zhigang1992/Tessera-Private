@@ -1,7 +1,8 @@
 import type { PagesFunction } from '@cloudflare/workers-types'
 
 // Static imports for merkle proof files
-import devnetMerkleProofs from '../../data/merkle-proofs-9SVYLpDkevkZ3e5muhtWVou3bo3Y34KufFNT8bfjHVXH.json'
+import devnetSpacexMerkleProofs from '../../data/merkle-proofs-7mw7NH4nZJfMzZmNSNi5y3GUEw5DKQDsWPPKqN2xMVre.json'
+import devnetKalshiMerkleProofs from '../../data/merkle-proofs-9SpeS1znZ82NRY25DQvUG22hN4VYWMRdzX6ud96GtboM.json'
 import mainnetMerkleProofs from '../../data/merkle-proofs-Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5.json'
 
 type MerkleProofData = {
@@ -13,14 +14,16 @@ type MerkleProofData = {
 type MerkleProofsDB = Record<string, MerkleProofData>
 
 // Supported vault IDs (strong typed union)
-const DEVNET_VAULT_ID = '9SVYLpDkevkZ3e5muhtWVou3bo3Y34KufFNT8bfjHVXH' as const
+const DEVNET_SPACEX_VAULT_ID = '7mw7NH4nZJfMzZmNSNi5y3GUEw5DKQDsWPPKqN2xMVre' as const
+const DEVNET_KALSHI_VAULT_ID = '9SpeS1znZ82NRY25DQvUG22hN4VYWMRdzX6ud96GtboM' as const
 const MAINNET_VAULT_ID = 'Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5' as const
 
-type VaultId = typeof DEVNET_VAULT_ID | typeof MAINNET_VAULT_ID
+type VaultId = typeof DEVNET_SPACEX_VAULT_ID | typeof DEVNET_KALSHI_VAULT_ID | typeof MAINNET_VAULT_ID
 
 // Static mapping of vault IDs to merkle proof data
 const VAULT_MERKLE_PROOFS: Record<VaultId, MerkleProofsDB> = {
-  [DEVNET_VAULT_ID]: devnetMerkleProofs as MerkleProofsDB,
+  [DEVNET_SPACEX_VAULT_ID]: devnetSpacexMerkleProofs as MerkleProofsDB,
+  [DEVNET_KALSHI_VAULT_ID]: devnetKalshiMerkleProofs as MerkleProofsDB,
   [MAINNET_VAULT_ID]: mainnetMerkleProofs as MerkleProofsDB,
 }
 
@@ -42,7 +45,7 @@ function isValidSolanaAddress(address: string): boolean {
  * Type guard to check if a string is a valid VaultId
  */
 function isValidVaultId(vaultId: string): vaultId is VaultId {
-  return vaultId === DEVNET_VAULT_ID || vaultId === MAINNET_VAULT_ID
+  return vaultId === DEVNET_SPACEX_VAULT_ID || vaultId === DEVNET_KALSHI_VAULT_ID || vaultId === MAINNET_VAULT_ID
 }
 
 /**
@@ -61,8 +64,9 @@ function loadMerkleProofsForVault(vaultId: VaultId): MerkleProofsDB {
  *   - vaultId: The vault address (required) - must be one of the supported vaults
  *
  * Supported Vault IDs:
- *   - Devnet: 9SVYLpDkevkZ3e5muhtWVou3bo3Y34KufFNT8bfjHVXH
- *   - Mainnet: GaAMF2kAytKbQjDJvgTSoK8CeM6ShX21Gukkdk1D6kKN
+ *   - Devnet T-SpaceX: 7mw7NH4nZJfMzZmNSNi5y3GUEw5DKQDsWPPKqN2xMVre
+ *   - Devnet T-Kalshi: 9SpeS1znZ82NRY25DQvUG22hN4VYWMRdzX6ud96GtboM
+ *   - Mainnet T-SpaceX: Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5
  *
  * Returns the merkle proof data for the specified wallet address in the vault,
  * or 404 if the wallet is not whitelisted for that vault.
@@ -114,7 +118,7 @@ export const onRequest: PagesFunction = async ({ request, params }) => {
       {
         error: 'Vault not found or no whitelist configured',
         vaultId,
-        supportedVaults: [DEVNET_VAULT_ID, MAINNET_VAULT_ID],
+        supportedVaults: [DEVNET_SPACEX_VAULT_ID, DEVNET_KALSHI_VAULT_ID, MAINNET_VAULT_ID],
       },
       {
         status: 404,
