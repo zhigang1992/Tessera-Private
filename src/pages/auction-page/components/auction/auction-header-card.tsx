@@ -77,7 +77,17 @@ export function AuctionHeaderCard() {
             <h2 className="text-xl font-semibold text-foreground flex items-center gap-1">
               <AppTokenName token={token} /> Auction
             </h2>
-            <span className="bg-[#06a800] text-white text-[10px] font-semibold px-2 py-1 rounded">OFFICIAL</span>
+            {token.auctionLive && (
+              <span className="bg-[#06a800] text-white text-[10px] font-semibold px-2 py-1 rounded">AUCTION LIVE</span>
+            )}
+            {!depositsNotStarted && vaultStateDisplay && (
+              <span
+                className="text-[10px] font-semibold px-2 py-1 rounded"
+                style={{ backgroundColor: `${vaultStateDisplay.color}20`, color: vaultStateDisplay.color }}
+              >
+                {vaultStateDisplay.label}
+              </span>
+            )}
           </div>
         </div>
 
@@ -111,25 +121,23 @@ export function AuctionHeaderCard() {
                     <span className="text-[#06a800] font-medium">{oversubscribedRatio}x Oversubscribed</span>
                   )}
                 </div>
+                <div className="flex items-center justify-between text-[10px] mt-1">
+                  <span className="text-[#71717a] dark:text-[#999]">
+                    {vaultInfo?.mode === 'fcfs' ? 'First Come First Served' : vaultInfo?.mode === 'prorata' ? 'Pro-Rata' : '-'}
+                  </span>
+                  {vaultInfo?.mode === 'fcfs' && mathIs`${maxIndividualDeposit} > ${0}` && (
+                    <span className="text-[#71717a] dark:text-[#999]">
+                      Max per wallet:{' '}
+                      <AppTokenAmount token={quoteToken} amount={maxIndividualDeposit} showSymbol className="font-mono" />
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col justify-between gap-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">VAULT STATUS</span>
-              {!depositsNotStarted && vaultStateDisplay && (
-                <div
-                  className="flex items-center gap-1.5 px-2 py-1 rounded-full"
-                  style={{ backgroundColor: `${vaultStateDisplay.color}20` }}
-                >
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: vaultStateDisplay.color }} />
-                  <span className="text-[10px] font-semibold" style={{ color: vaultStateDisplay.color }}>
-                    {vaultStateDisplay.label}
-                  </span>
-                </div>
-              )}
-            </div>
+            <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">VAULT STATUS</span>
             <div className="flex flex-col gap-2">
               <div className="flex flex-col">
                 <span className="text-xs text-[#71717a] dark:text-[#999]">{depositStatusText}</span>
@@ -147,18 +155,6 @@ export function AuctionHeaderCard() {
                   </div>
                 ) : (
                   <span className="font-mono text-xl font-semibold text-foreground">-</span>
-                )}
-              </div>
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-[#71717a] dark:text-[#999]">Mode</span>
-                  <p className="text-xs text-foreground font-medium capitalize">{vaultInfo?.mode === 'fcfs' ? 'First-Come First-Served' : vaultInfo?.mode === 'prorata' ? 'Pro-Rata' : '-'}</p>
-                </div>
-                {vaultInfo?.mode === 'fcfs' && mathIs`${maxIndividualDeposit} > ${0}` && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-[#71717a] dark:text-[#999]">Per-Wallet Cap</span>
-                    <AppTokenAmount token={quoteToken} amount={maxIndividualDeposit} showSymbol className="text-xs text-foreground font-medium font-mono" />
-                  </div>
                 )}
               </div>
             </div>
