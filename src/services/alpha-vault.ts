@@ -226,8 +226,11 @@ export class AlphaVaultClient {
     // Calculate amounts
     const totalDeposited = vaultDataAny.totalDeposit?.toString() ?? '0'
     // For Pro Rata vaults, maxBuyingCap is the target raise (max USDC the vault will spend)
-    // maxDepositingCap is 0 for unlimited deposits in Pro Rata mode
-    const maxCap = vaultDataAny.maxBuyingCap?.toString() ?? vaultDataAny.maxDepositingCap?.toString() ?? '0'
+    // For FCFS vaults, maxDepositingCap is the hard cap on total deposits
+    // Use whichever is non-zero (maxBuyingCap can be 0 for FCFS, maxDepositingCap can be 0 for ProRata)
+    const maxBuyingCap = vaultDataAny.maxBuyingCap?.toString() ?? '0'
+    const maxDepositingCap = vaultDataAny.maxDepositingCap?.toString() ?? '0'
+    const maxCap = maxBuyingCap !== '0' ? maxBuyingCap : maxDepositingCap
     const maxIndividualDeposit = vaultDataAny.individualDepositingCap?.toString() ?? '0'
     const boughtToken = vaultDataAny.boughtToken?.toString() ?? '0'
 
@@ -318,42 +321,45 @@ export class AlphaVaultClient {
 
       const vaultData = vault.vault
 
-      if (vaultInfo.mode === 'prorata') {
-        const tessAvailable = await this.getPoolTessReserve()
-        const poolPrice = await this.getPoolPrice()
-        const totalDeposit = fromTokenAmount(vaultData.totalDeposit?.toString() ?? '0', this.config.quoteDecimals)
-        const maxCap = fromTokenAmount(vaultInfo.maxCap, this.config.quoteDecimals)
+      if (claimInfo.totalAllocated.toNumber() > 0) {
+        // Post-purchase: use actual allocation from chain
+        estimatedAllocation = fromTokenAmount(claimInfo.totalAllocated.toString(), this.config.baseDecimals)
 
-        if (claimInfo.totalAllocated.toNumber() > 0) {
-          const allocated = fromTokenAmount(claimInfo.totalAllocated.toString(), this.config.baseDecimals)
-          estimatedAllocation = allocated
-
+        // For prorata, calculate refund if oversubscribed
+        if (vaultInfo.mode === 'prorata') {
+          const totalDeposit = fromTokenAmount(vaultData.totalDeposit?.toString() ?? '0', this.config.quoteDecimals)
+          const maxCap = fromTokenAmount(vaultInfo.maxCap, this.config.quoteDecimals)
           if (mathIs`${totalDeposit} > ${maxCap}`) {
-            const usedRatio = math`${maxCap} / ${totalDeposit}` // Ratio of deposits that will be used
+            const usedRatio = math`${maxCap} / ${totalDeposit}`
             const usedUsdc = math`${userDeposited} * ${usedRatio}`
             estimatedRefund = math`${userDeposited} - ${usedUsdc}`
           }
-
+        }
+      } else {
         // During deposit period, estimate based on pool liquidity and price
-        } else if (mathIs`${totalDeposit} > ${0}` && mathIs`${poolPrice} > ${0}`) {
-          // User's share of deposits
-          const userShare = math`${userDeposited} / ${totalDeposit}`
+        const poolPrice = await this.getPoolPrice()
+        const tessAvailable = await this.getPoolTessReserve()
 
-          // Effective USDC that will be used (capped by maxBuyingCap)
-          const effectiveUsdc = math`min(${totalDeposit}, ${maxCap})`
+        if (mathIs`${userDeposited} > ${0}` && mathIs`${poolPrice} > ${0}`) {
+          if (vaultInfo.mode === 'prorata') {
+            const totalDeposit = fromTokenAmount(vaultData.totalDeposit?.toString() ?? '0', this.config.quoteDecimals)
+            const maxCap = fromTokenAmount(vaultInfo.maxCap, this.config.quoteDecimals)
+            // User's share of deposits
+            const userShare = math`${userDeposited} / ${totalDeposit}`
+            // Effective USDC that will be used (capped by maxBuyingCap)
+            const effectiveUsdc = math`min(${totalDeposit}, ${maxCap})`
+            const estimatedTessForVault = math`min(${effectiveUsdc} / ${poolPrice}, ${tessAvailable})`
+            estimatedAllocation = math`${estimatedTessForVault} * ${userShare}`
 
-          // Calculate how much T-SpaceX can be bought with effective USDC at current pool price
-          // poolPrice is in USDC per T-SpaceX, so: allocation = USDC / price
-          const estimatedTessForVault = math`min(${effectiveUsdc} / ${poolPrice}, ${tessAvailable})`
-          const userTessAllocation = math`${estimatedTessForVault} * ${userShare}`
-
-          estimatedAllocation = userTessAllocation
-
-          // Calculate refund if oversubscribed
-          if (mathIs`${totalDeposit} > ${maxCap}`) {
-            const usedRatio = math`${effectiveUsdc} / ${totalDeposit}` // Ratio of deposits that will be used
-            const usedUsdc = math`${userDeposited} * ${usedRatio}`
-            estimatedRefund = math`${userDeposited} - ${usedUsdc}`
+            // Calculate refund if oversubscribed
+            if (mathIs`${totalDeposit} > ${maxCap}`) {
+              const usedRatio = math`${effectiveUsdc} / ${totalDeposit}`
+              const usedUsdc = math`${userDeposited} * ${usedRatio}`
+              estimatedRefund = math`${userDeposited} - ${usedUsdc}`
+            }
+          } else {
+            // FCFS: allocation = deposit / price (1:1, no sharing)
+            estimatedAllocation = math`min(${userDeposited} / ${poolPrice}, ${tessAvailable})`
           }
         }
       }
