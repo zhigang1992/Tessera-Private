@@ -61,7 +61,18 @@ const exploreAssets: ExploreAsset[] = [
     category: 'Prediction Markets',
     headerColor: '#1a3a2e',
     headerImage: kalshiBg,
+    price: 360,
+    valuation: '$12B',
     status: 'auction',
+    appTokenId: 'T-Kalshi',
+    metadata: {
+      fullName: 'Kalshi Inc',
+      location: 'New York, NY',
+      founded: 'Founded 2018',
+      industry: 'Prediction Markets',
+      twitterUrl: 'https://x.com/Kalshi',
+      meteoraUrl: `https://app.meteora.ag/dlmm/${APP_TOKENS['T-Kalshi'].dlmmPool?.address}`,
+    },
   },
 ]
 
