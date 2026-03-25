@@ -1,8 +1,8 @@
 import type { PagesFunction } from '@cloudflare/workers-types'
 
 // Static imports for merkle proof files
-import devnetSpacexMerkleProofs from '../../data/merkle-proofs-7mw7NH4nZJfMzZmNSNi5y3GUEw5DKQDsWPPKqN2xMVre.json'
-import devnetKalshiMerkleProofs from '../../data/merkle-proofs-9SpeS1znZ82NRY25DQvUG22hN4VYWMRdzX6ud96GtboM.json'
+import devnetSpacexMerkleProofs from '../../data/merkle-proofs-5cRnirdQurFESgqvTo8GUzjkSeqXGuz3EDMRqEpY7Suo.json'
+import devnetKalshiMerkleProofs from '../../data/merkle-proofs-Mmc92PeFjodsDWifXo2BWAtczqMaxLFq46rYcFrGjPT.json'
 import mainnetMerkleProofs from '../../data/merkle-proofs-Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5.json'
 
 type MerkleProofData = {
@@ -14,8 +14,8 @@ type MerkleProofData = {
 type MerkleProofsDB = Record<string, MerkleProofData>
 
 // Supported vault IDs (strong typed union)
-const DEVNET_SPACEX_VAULT_ID = '7mw7NH4nZJfMzZmNSNi5y3GUEw5DKQDsWPPKqN2xMVre' as const
-const DEVNET_KALSHI_VAULT_ID = '9SpeS1znZ82NRY25DQvUG22hN4VYWMRdzX6ud96GtboM' as const
+const DEVNET_SPACEX_VAULT_ID = '5cRnirdQurFESgqvTo8GUzjkSeqXGuz3EDMRqEpY7Suo' as const
+const DEVNET_KALSHI_VAULT_ID = 'Mmc92PeFjodsDWifXo2BWAtczqMaxLFq46rYcFrGjPT' as const
 const MAINNET_VAULT_ID = 'Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5' as const
 
 type VaultId = typeof DEVNET_SPACEX_VAULT_ID | typeof DEVNET_KALSHI_VAULT_ID | typeof MAINNET_VAULT_ID
@@ -64,8 +64,8 @@ function loadMerkleProofsForVault(vaultId: VaultId): MerkleProofsDB {
  *   - vaultId: The vault address (required) - must be one of the supported vaults
  *
  * Supported Vault IDs:
- *   - Devnet T-SpaceX: 7mw7NH4nZJfMzZmNSNi5y3GUEw5DKQDsWPPKqN2xMVre
- *   - Devnet T-Kalshi: 9SpeS1znZ82NRY25DQvUG22hN4VYWMRdzX6ud96GtboM
+ *   - Devnet T-SpaceX: 5cRnirdQurFESgqvTo8GUzjkSeqXGuz3EDMRqEpY7Suo
+ *   - Devnet T-Kalshi: Mmc92PeFjodsDWifXo2BWAtczqMaxLFq46rYcFrGjPT
  *   - Mainnet T-SpaceX: Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5
  *
  * Returns the merkle proof data for the specified wallet address in the vault,
