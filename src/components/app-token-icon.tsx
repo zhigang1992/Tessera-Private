@@ -1,12 +1,13 @@
 import type { ComponentType, SVGProps } from 'react'
 import type { AppToken, AppTokenId, TokenIconKey } from '@/config'
 import { getAppToken } from '@/config'
+import TokenKalshiIcon from '@/pages/trade-page/components/_/token-kalshi.svg?react'
 import TokenSpaceXIcon from '@/pages/trade-page/components/_/token-spacex.svg?react'
 import TokenUsdcIcon from '@/pages/trade-page/components/_/token-usdc.svg?react'
 
 const ICON_MAP: Record<TokenIconKey, ComponentType<SVGProps<SVGSVGElement>>> = {
   't-spacex': TokenSpaceXIcon,
-  't-kalshi': TokenSpaceXIcon, // TODO: replace with Kalshi icon when available
+  't-kalshi': TokenKalshiIcon,
   usdc: TokenUsdcIcon,
 }
 
