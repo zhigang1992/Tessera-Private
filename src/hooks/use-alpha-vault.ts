@@ -57,6 +57,7 @@ export interface UseAlphaVaultReturn {
   // Formatted values
   totalRaised: BigNumberValue
   targetRaise: BigNumberValue
+  maxIndividualDeposit: BigNumberValue
   oversubscribedRatio: string
   userDeposited: BigNumberValue
   estimatedAllocation: BigNumberValue
@@ -145,6 +146,11 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
   const targetRaise = useMemo(() => {
     if (!vaultInfo) return fromTokenAmount('0', quoteDecimals)
     return fromTokenAmount(vaultInfo.maxCap, quoteDecimals)
+  }, [vaultInfo, quoteDecimals])
+
+  const maxIndividualDeposit = useMemo(() => {
+    if (!vaultInfo) return fromTokenAmount('0', quoteDecimals)
+    return fromTokenAmount(vaultInfo.maxIndividualDeposit, quoteDecimals)
   }, [vaultInfo, quoteDecimals])
 
   const oversubscribedRatio = useMemo(() => {
@@ -537,6 +543,7 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
     vestingEndsIn,
     totalRaised,
     targetRaise,
+    maxIndividualDeposit,
     oversubscribedRatio,
     userDeposited,
     estimatedAllocation,

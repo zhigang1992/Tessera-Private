@@ -113,6 +113,16 @@ export function DepositUSDCCard() {
       }
 
       // totalRaised is already a BigNumberValue (human-scale)
+      if (mathIs`${totalUserDeposit} === ${0}`) {
+        return fallback
+      }
+
+      if (vaultInfo.mode === 'fcfs') {
+        // FCFS: allocation = deposit / price (1:1, no sharing)
+        return math`${totalUserDeposit} / ${BigNumber.from(poolPrice)}`
+      }
+
+      // Pro-rata: user's share of the target raise
       const hypotheticalTotalRaised = math`${totalRaised} + ${newDepositAmount}`
 
       if (mathIs`${hypotheticalTotalRaised} === ${0}`) {
@@ -120,14 +130,9 @@ export function DepositUSDCCard() {
       }
 
       const userShare = math`${totalUserDeposit} / ${hypotheticalTotalRaised}`
-
-      // targetRaise is already a BigNumberValue (human-scale)
       const effectiveUsdc = math`min(${hypotheticalTotalRaised}, ${targetRaise})`
-
       const tessAllocation = math`${effectiveUsdc} / ${BigNumber.from(poolPrice)}`
-      const userTessAllocation = math`${userShare} * ${tessAllocation}`
-
-      return userTessAllocation
+      return math`${userShare} * ${tessAllocation}`
     } catch (error) {
       console.error('Failed to calculate allocation:', error)
       return fallback
@@ -390,7 +395,9 @@ export function DepositUSDCCard() {
                       collisionPadding={16}
                       onPointerDownOutside={() => setTooltipOpen(false)}
                     >
-                      In pro-rata mode, your final allocation may change as more users deposit before the auction ends.
+                      {vaultInfo?.mode === 'fcfs'
+                        ? 'In first-come first-served mode, your full deposit is used to purchase tokens. Once the vault cap is reached, no more deposits are accepted.'
+                        : 'In pro-rata mode, your final allocation may change as more users deposit before the auction ends.'}
                       <Tooltip.Arrow className="fill-black" />
                     </Tooltip.Content>
                   </Tooltip.Portal>
@@ -493,7 +500,7 @@ export function DepositUSDCCard() {
               </div>
             </div>
             <div className="flex items-center justify-between w-full">
-              <p className="font-normal leading-[15px] text-[#666] text-[10px] tracking-[0.1172px]">Target Raise</p>
+              <p className="font-normal leading-[15px] text-[#666] text-[10px] tracking-[0.1172px]">{vaultInfo?.mode === 'fcfs' ? 'Max Deposit Cap' : 'Target Raise'}</p>
               <p className="font-mono font-normal leading-[15px] text-[10px] text-black">
                 $<AppTokenAmount token={config.quoteToken} amount={targetRaise} />
               </p>

@@ -22,6 +22,7 @@ export function AuctionHeaderCard() {
     depositEndsIn,
     totalRaised,
     targetRaise,
+    maxIndividualDeposit,
     oversubscribedRatio,
     userDeposited,
     estimatedAllocation,
@@ -103,10 +104,10 @@ export function AuctionHeaderCard() {
                 </div>
                 <div className="flex items-center justify-between text-[10px]">
                   <span className="text-[#71717a] dark:text-[#999]">
-                    Target:{' '}
+                    {vaultInfo?.mode === 'fcfs' ? 'Max Cap' : 'Target'}:{' '}
                     <AppTokenAmount token={quoteToken} amount={targetRaise} showSymbol className="font-mono" />
                   </span>
-                  {vaultInfo?.isOversubscribed && (
+                  {vaultInfo?.mode === 'prorata' && vaultInfo?.isOversubscribed && (
                     <span className="text-[#06a800] font-medium">{oversubscribedRatio}x Oversubscribed</span>
                   )}
                 </div>
@@ -148,9 +149,17 @@ export function AuctionHeaderCard() {
                   <span className="font-mono text-xl font-semibold text-foreground">-</span>
                 )}
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs text-[#71717a] dark:text-[#999]">Mode</span>
-                <p className="text-xs text-foreground font-medium capitalize">{vaultInfo?.mode ?? '-'}</p>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[#71717a] dark:text-[#999]">Mode</span>
+                  <p className="text-xs text-foreground font-medium capitalize">{vaultInfo?.mode === 'fcfs' ? 'First-Come First-Served' : vaultInfo?.mode === 'prorata' ? 'Pro-Rata' : '-'}</p>
+                </div>
+                {vaultInfo?.mode === 'fcfs' && mathIs`${maxIndividualDeposit} > ${0}` && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-[#71717a] dark:text-[#999]">Per-Wallet Cap</span>
+                    <AppTokenAmount token={quoteToken} amount={maxIndividualDeposit} showSymbol className="text-xs text-foreground font-medium font-mono" />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -175,7 +184,7 @@ export function AuctionHeaderCard() {
                       showSymbol
                       className="text-sm font-semibold font-mono text-foreground"
                     />
-                    {hasPosition && vaultInfo?.state === 'deposit_open' && (
+                    {hasPosition && vaultInfo?.state === 'deposit_open' && vaultInfo?.mode === 'prorata' && (
                       <button
                         onClick={() => setWithdrawModalOpen(true)}
                         className="text-sm font-mono text-foreground underline hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
