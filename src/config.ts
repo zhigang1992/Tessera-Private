@@ -128,6 +128,13 @@ export const POOL_TRADING_CONFIG = {
       | { type: 'timestamp'; targetTimestamp: number }
       | { type: 'disabled' },
   },
+  'T-Kalshi-USDC': {
+    enabled: false,
+    countdown: { type: 'timestamp', targetTimestamp: 1774443600000 } as // 2026-03-25T13:00:00Z
+      | { type: 'slot'; targetSlot: number }
+      | { type: 'timestamp'; targetTimestamp: number }
+      | { type: 'disabled' },
+  },
 } as const
 
 export type TradingPoolId = keyof typeof POOL_TRADING_CONFIG
@@ -180,8 +187,8 @@ export function getSolscanUrl(
 }
 
 export type TokenProgram = 'spl-token' | 'token-2022'
-export type TokenIconKey = 't-spacex' | 'usdc'
-export type AppTokenId = 'T-SpaceX' | 'USDC'
+export type TokenIconKey = 't-spacex' | 't-kalshi' | 'usdc'
+export type AppTokenId = 'T-SpaceX' | 'T-Kalshi' | 'USDC'
 
 export interface TokenMintConfig {
   address: string
@@ -200,8 +207,11 @@ export interface AlphaVaultNetworkConfig {
   dlmmPool: string
 }
 
+export type AlphaVaultType = 'fcfs' | 'prorata'
+
 export interface AlphaVaultConfig {
   quoteToken: Extract<AppTokenId, 'USDC'>
+  vaultType: AlphaVaultType
   hasVestingPeriod: boolean
   devnet: AlphaVaultNetworkConfig
   'mainnet-beta': AlphaVaultNetworkConfig
@@ -233,6 +243,7 @@ export interface AppToken {
   metadata?: AppTokenMetadata
   dlmmPool?: DlmmPoolConfig
   alphaVault?: AlphaVaultConfig
+  auctionLive?: boolean
   impliedValuation?: {
     valuation: string
     valuationNumber: number
@@ -261,9 +272,19 @@ const TOKEN_NETWORK_CONFIGS: Record<AppTokenId, {
       'mainnet-beta': 9,
     },
   },
+  'T-Kalshi': {
+    mint: {
+      devnet: 'ARYx1wGLzm9QrRXeMQ11kDNxvtvUk4VDqBg3uCXx8BG5',
+      'mainnet-beta': 'TODO_KALSHI_MAINNET_MINT', // TODO: set for mainnet launch
+    },
+    decimals: {
+      devnet: 6,
+      'mainnet-beta': 9,
+    },
+  },
   USDC: {
     mint: {
-      devnet: '466us572CY33Jevd889znwFdbkgXjf3gza8W2jnEjAKA',
+      devnet: 'Gcmhi1jpSPm3Dpx8ShG3iLXghKwFFhGH2easMZTcidXV',
       'mainnet-beta': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
     },
     decimals: {
@@ -286,6 +307,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
     iconUrl: 'https://cdn.tesseralab.co/tessera/tokenicon_T-SpaceX.svg',
     mint: network(TOKEN_NETWORK_CONFIGS['T-SpaceX'].mint),
     program: 'token-2022',
+    auctionLive: false,
     impliedValuation: {
       valuation: '$1T',
       valuationNumber: 1_004_202_000_000,
@@ -312,20 +334,76 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       id: 'T-SpaceX-USDC',
       quoteToken: 'USDC',
       address: network({
-        devnet: '8HTtYzUBfmoDADXvnraScXwXeTanW8c3ExmwspuVCq8Z',
+        devnet: 'Bpgu5U7ar2ACwjc2QsnnCpZiT1mzqqo78rpp8hininjx',
         'mainnet-beta': '8obGpjiUu7QTJHK58YHCoz5HxobmrVP2x5zpMZu3c4BT',
       }),
     },
     alphaVault: {
       quoteToken: 'USDC',
+      vaultType: 'prorata',
       hasVestingPeriod: false,
       devnet: {
-        vault: '9SVYLpDkevkZ3e5muhtWVou3bo3Y34KufFNT8bfjHVXH',
-        dlmmPool: '8HTtYzUBfmoDADXvnraScXwXeTanW8c3ExmwspuVCq8Z',
+        vault: '7mw7NH4nZJfMzZmNSNi5y3GUEw5DKQDsWPPKqN2xMVre',
+        dlmmPool: 'Bpgu5U7ar2ACwjc2QsnnCpZiT1mzqqo78rpp8hininjx',
       },
       'mainnet-beta': {
         vault: 'Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5',
         dlmmPool: '8obGpjiUu7QTJHK58YHCoz5HxobmrVP2x5zpMZu3c4BT',
+      },
+    },
+  },
+  'T-Kalshi': {
+    id: 'T-Kalshi',
+    symbol: 'T-Kalshi',
+    displayName: 'T-Kalshi',
+    slug: 't-kalshi',
+    routeSegment: 'T-Kalshi',
+    decimals: network(TOKEN_NETWORK_CONFIGS['T-Kalshi'].decimals),
+    iconKey: 't-kalshi',
+    iconUrl: 'https://cdn.tesseralab.co/tessera/tokenicon_T-Kalshi.svg',
+    mint: network(TOKEN_NETWORK_CONFIGS['T-Kalshi'].mint),
+    program: 'token-2022',
+    auctionLive: true,
+    impliedValuation: {
+      valuation: '$12B',
+      valuationNumber: 12_000_000_000,
+      auctionPrice: '~$360',
+      auctionPriceNumber: 360,
+    },
+    auctionValuation: {
+      valuation: '$12B',
+      auctionPrice: '~$360',
+    },
+    metadata: {
+      name: 'T-Kalshi',
+      code: 'tKalshi',
+      sector: 'Prediction Markets',
+      type: 'PRE-IPO',
+      website: 'https://kalshi.com',
+      description:
+        'T-Kalshi represents a loan participation right which provides economic exposure to Kalshi and is redeemable following divestment of the underlying exposure. This is a loan product, not a security - token holders have no ownership, voting, or dividend rights in Kalshi. By owning and using this token, you accept and agree to be bound by the Terms and Conditions available at https://terms.tessera.pe',
+      auctionMechanism:
+        'Funds are deposited into a single liquidity bin. The auction runs for a set duration on a first-come, first-served basis. Each participant can deposit up to the individual cap.',
+    },
+    dlmmPool: {
+      id: 'T-Kalshi-USDC',
+      quoteToken: 'USDC',
+      address: network({
+        devnet: '3SAFyTGc1rpZkrL6dJ31Sen1Y5TY14deooAWLSfdX3N7',
+        'mainnet-beta': 'TODO_KALSHI_MAINNET_POOL', // TODO: set for mainnet launch
+      }),
+    },
+    alphaVault: {
+      quoteToken: 'USDC',
+      vaultType: 'fcfs',
+      hasVestingPeriod: false,
+      devnet: {
+        vault: '9SpeS1znZ82NRY25DQvUG22hN4VYWMRdzX6ud96GtboM',
+        dlmmPool: '3SAFyTGc1rpZkrL6dJ31Sen1Y5TY14deooAWLSfdX3N7',
+      },
+      'mainnet-beta': {
+        vault: 'TODO_KALSHI_MAINNET_VAULT', // TODO: set for mainnet launch
+        dlmmPool: 'TODO_KALSHI_MAINNET_POOL',
       },
     },
   },
@@ -479,6 +557,7 @@ export function getTokenDisplayMetadata(tokenId: AppTokenId): TokenDisplayMetada
 export interface ResolvedAlphaVaultConfig extends AlphaVaultNetworkConfig {
   token: AppToken
   quoteToken: AppToken
+  vaultType: AlphaVaultType
   hasVestingPeriod: boolean
   baseDecimals: number
   quoteDecimals: number
@@ -500,6 +579,7 @@ export function getTokenAlphaVaultConfig(
     ...envConfig,
     token,
     quoteToken,
+    vaultType: token.alphaVault.vaultType,
     hasVestingPeriod: token.alphaVault.hasVestingPeriod,
     baseDecimals: getTokenDecimals(tokenId, net),
     quoteDecimals: getTokenDecimals(token.alphaVault.quoteToken, net),
@@ -528,23 +608,26 @@ export interface LegacyPoolInfo {
 
 function buildDevnetPools(): Record<string, LegacyPoolInfo> {
   const pools: Record<string, LegacyPoolInfo> = {}
-  const token = APP_TOKENS['T-SpaceX']
   const quote = APP_TOKENS['USDC']
 
-  const poolAddress = token.dlmmPool?.address
-  if (poolAddress) {
-    pools[token.dlmmPool!.id] = {
-      address: poolAddress,
-      tokenX: {
-        mint: token.mint,
-        symbol: token.symbol,
-        decimals: token.decimals,
-      },
-      tokenY: {
-        mint: quote.mint,
-        symbol: quote.symbol,
-        decimals: quote.decimals,
-      },
+  const baseTokenIds: AppTokenId[] = ['T-SpaceX', 'T-Kalshi']
+  for (const tokenId of baseTokenIds) {
+    const token = APP_TOKENS[tokenId]
+    const poolAddress = token.dlmmPool?.address
+    if (poolAddress) {
+      pools[token.dlmmPool!.id] = {
+        address: poolAddress,
+        tokenX: {
+          mint: token.mint,
+          symbol: token.symbol,
+          decimals: token.decimals,
+        },
+        tokenY: {
+          mint: quote.mint,
+          symbol: quote.symbol,
+          decimals: quote.decimals,
+        },
+      }
     }
   }
 
@@ -552,3 +635,21 @@ function buildDevnetPools(): Record<string, LegacyPoolInfo> {
 }
 
 export const DEVNET_POOLS = buildDevnetPools()
+
+/**
+ * Returns all tokens that have an alpha vault (i.e. auction tokens), ordered with live auctions first.
+ */
+export function getAuctionTokens(): AppToken[] {
+  return Object.values(APP_TOKENS)
+    .filter((t) => t.alphaVault != null)
+    .sort((a, b) => (a.auctionLive === b.auctionLive ? 0 : a.auctionLive ? -1 : 1))
+}
+
+/**
+ * Returns the route segment of the first live auction token, or the first auction token if none is live.
+ */
+export function getLiveAuctionRoute(): string {
+  const tokens = getAuctionTokens()
+  const live = tokens.find((t) => t.auctionLive)
+  return (live ?? tokens[0])?.routeSegment ?? DEFAULT_BASE_TOKEN_ID
+}

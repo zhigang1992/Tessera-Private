@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
+import { AuctionSwitcher } from './components/auction/auction-switcher'
 import { AuctionTabs } from './components/auction/auction-tabs'
 import { AuctionHeaderCard } from './components/auction/auction-header-card'
 import { AuctionProgressCard } from './components/auction/auction-progress-card'
@@ -23,8 +24,12 @@ export default function AuctionPage() {
 
   const token = useMemo(() => getAppToken(tokenId), [tokenId])
   const alphaVault = useAlphaVault(tokenId)
-  const [activeTab, setActiveTab] = useState('vesting')
+  const [activeTab, setActiveTab] = useState(token.auctionLive ? 'auction' : 'vesting')
   const hasVestingPeriod = alphaVault.config.hasVestingPeriod
+
+  useEffect(() => {
+    setActiveTab(token.auctionLive ? 'auction' : 'vesting')
+  }, [token.id])
 
   const handleCheckWhitelist = () => {
     navigate(`/auction/${params.tokenId}/whitelist`)
@@ -44,6 +49,8 @@ export default function AuctionPage() {
             Check Whitelist
           </Button>
         </div>
+
+        <AuctionSwitcher activeTokenId={tokenId} />
 
         <AuctionTabs activeTab={activeTab} onTabChange={setActiveTab} />
 

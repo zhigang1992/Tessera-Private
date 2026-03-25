@@ -2,6 +2,7 @@ import { AppProviders } from '@/components/app-providers.tsx'
 import { MainLayout } from '@/components/layout'
 import { AuctionPage, DashboardPage, ExplorePage, LeaderboardPage, ReferralPage, SupportPage, TradePage, TokenDetailPage, WhitelistCheckerPage } from '@/pages'
 import { BrowserRouter, Navigate, Route, Routes, useSearchParams } from 'react-router'
+import { getLiveAuctionRoute } from '@/config'
 
 // Component to handle /s redirect with query params
 function ShareRedirect() {
@@ -30,7 +31,7 @@ export function App() {
             />
             <Route
               path="/auction"
-              element={<Navigate to="/auction/T-SpaceX" replace />}
+              element={<Navigate to={`/auction/${getLiveAuctionRoute()}`} replace />}
             />
             <Route
               path="/auction/:tokenId"

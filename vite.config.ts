@@ -23,12 +23,12 @@ export default defineConfig({
     proxy: {
       // Proxy API endpoints to Cloudflare Workers local dev server
       '/api': {
-        target: 'http://localhost:8788',
+        target: `http://localhost:${process.env.VITE_API_PORT || '8788'}`,
         changeOrigin: true,
       },
       // Proxy geo-check endpoint
       '/geo-check.json': {
-        target: 'http://localhost:8788',
+        target: `http://localhost:${process.env.VITE_API_PORT || '8788'}`,
         changeOrigin: true,
       },
     },

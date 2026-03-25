@@ -26,6 +26,13 @@ const TOKEN_METADATA: Record<AppTokenId, TokenMetadata> = {
     underlyingAssetCompany: 'SpaceX',
     sharesPerToken: '1:1'
   },
+  'T-Kalshi': {
+    description: 'Kalshi is a CFTC-regulated financial exchange that allows users to trade on the outcome of real-world events. Kalshi is the first legal, regulated platform for event contracts in the United States, offering markets on economics, politics, finance, weather, and more.',
+    categories: ['Equities'],
+    underlyingAssetName: 'Kalshi Equity',
+    underlyingAssetCompany: 'Kalshi',
+    sharesPerToken: '1:1'
+  },
   'USDC': {
     description: 'USD Coin is a fully reserved digital dollar.',
     categories: ['Stablecoin'],

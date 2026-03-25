@@ -61,7 +61,7 @@ const exploreAssets: ExploreAsset[] = [
     category: 'Prediction Markets',
     headerColor: '#1a3a2e',
     headerImage: kalshiBg,
-    status: 'coming_soon',
+    status: 'auction',
   },
 ]
 
