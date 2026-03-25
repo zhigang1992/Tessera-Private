@@ -6,6 +6,7 @@ import TokenUsdcIcon from '@/pages/trade-page/components/_/token-usdc.svg?react'
 
 const ICON_MAP: Record<TokenIconKey, ComponentType<SVGProps<SVGSVGElement>>> = {
   't-spacex': TokenSpaceXIcon,
+  't-kalshi': TokenSpaceXIcon, // TODO: replace with Kalshi icon when available
   usdc: TokenUsdcIcon,
 }
 
