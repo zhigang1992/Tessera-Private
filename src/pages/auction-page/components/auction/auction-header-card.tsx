@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
+import { useNavigate, useParams } from 'react-router'
 import { Card } from '@/components/ui/card'
 import { AppTokenName } from '@/components/app-token-name'
 import { AppTokenIcon } from '@/components/app-token-icon'
@@ -11,6 +12,8 @@ import { BigNumber, math, mathIs } from 'math-literal'
 
 export function AuctionHeaderCard() {
   const wallet = useWallet()
+  const navigate = useNavigate()
+  const params = useParams<{ tokenId?: string }>()
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false)
   const token = useAuctionToken()
   const {
@@ -88,6 +91,12 @@ export function AuctionHeaderCard() {
                 {vaultStateDisplay.label}
               </span>
             )}
+            <button
+              onClick={() => navigate(`/auction/${params.tokenId}/whitelist`)}
+              className="text-xs font-medium text-[#06a800] hover:text-[#059000] underline transition-colors ml-auto"
+            >
+              Check Whitelist
+            </button>
           </div>
         </div>
 
