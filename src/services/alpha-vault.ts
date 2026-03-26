@@ -453,7 +453,7 @@ export class AlphaVaultClient {
         if (!merkleProof) {
           reason = 'Wallet not whitelisted'
         } else {
-          reason = 'Deposit quota exhausted'
+          reason = 'Exceed available quota'
         }
       }
 
