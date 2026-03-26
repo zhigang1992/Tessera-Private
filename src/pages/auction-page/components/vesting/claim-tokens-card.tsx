@@ -234,7 +234,7 @@ export function ClaimTokensCard() {
           </div>
         )}
 
-          {wallet.connected && !isLoading && isInitialized && (
+          {wallet.connected && !isLoading && isInitialized && vaultInfo?.mode === 'prorata' && (
               <Button
                 onClick={handleWithdrawRefund}
                 disabled={isLoading || escrowInfo?.refunded}
