@@ -334,6 +334,7 @@ export function DepositUSDCCard() {
               Deposits are only available to whitelisted wallets.
               {mathIs`${fromTokenAmount(depositQuota.maxDeposit, config.quoteDecimals)} > ${0}` && (
                 <>
+                  <br />
                   Maximum deposit per wallet: $
                   <AppTokenAmount
                     token={config.quoteToken}

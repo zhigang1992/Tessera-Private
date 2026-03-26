@@ -80,9 +80,6 @@ export function AuctionHeaderCard() {
             <h2 className="text-xl font-semibold text-foreground flex items-center gap-1">
               <AppTokenName token={token} /> Auction
             </h2>
-            {token.auctionLive && (
-              <span className="bg-[#06a800] text-white text-[10px] font-semibold px-2 py-1 rounded">AUCTION LIVE</span>
-            )}
             {!depositsNotStarted && vaultStateDisplay && (
               <span
                 className="text-[10px] font-semibold px-2 py-1 rounded"
@@ -130,17 +127,7 @@ export function AuctionHeaderCard() {
                     <span className="text-[#06a800] font-medium">{oversubscribedRatio}x Oversubscribed</span>
                   )}
                 </div>
-                <div className="flex items-center justify-between text-[10px] mt-1">
-                  <span className="text-[#71717a] dark:text-[#999]">
-                    {vaultInfo?.mode === 'fcfs' ? 'First Come First Served' : vaultInfo?.mode === 'prorata' ? 'Pro-Rata' : '-'}
-                  </span>
-                  {vaultInfo?.mode === 'fcfs' && mathIs`${maxIndividualDeposit} > ${0}` && (
-                    <span className="text-[#71717a] dark:text-[#999]">
-                      Max per wallet:{' '}
-                      <AppTokenAmount token={quoteToken} amount={maxIndividualDeposit} showSymbol className="font-mono" />
-                    </span>
-                  )}
-                </div>
+                
               </div>
             </div>
           </div>
@@ -166,6 +153,14 @@ export function AuctionHeaderCard() {
                   <span className="font-mono text-xl font-semibold text-foreground">-</span>
                 )}
               </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-[#71717a] dark:text-[#999]">Mode</span>
+              <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-[#71717a] dark:text-[#999]">
+                    {vaultInfo?.mode === 'fcfs' ? 'First Come First Served' : vaultInfo?.mode === 'prorata' ? 'Pro-Rata' : '-'}
+                  </span>
+                </div>
+                </div>
             </div>
           </div>
 
