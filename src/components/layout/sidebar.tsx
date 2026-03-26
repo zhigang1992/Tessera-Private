@@ -29,7 +29,7 @@ function ellipsify(str = '', len = 4, delimiter = '...') {
 
 const navItems = [
   { icon: ExploreIcon, label: 'Explore', path: '/explorer' },
-  { icon: AuctionIcon, label: 'Auction', path: '/auction', badge: 'Claimable' },
+  { icon: AuctionIcon, label: 'Auction', path: '/auction', badge: 'Live' },
   { icon: ReferralIcon, label: 'Referral', path: '/referral' },
   { icon: LeaderboardIcon, label: 'Leaderboard', path: '/leaderboard' },
   { icon: TradeIcon, label: 'Trade', path: '/trade' },
