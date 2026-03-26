@@ -35,6 +35,7 @@ export default function AuctionPage() {
         <h1 className="text-xl lg:text-2xl font-bold text-foreground dark:text-[#d2d2d2]">Auction</h1>
 
         <AuctionSwitcher activeTokenId={tokenId} />
+        <hr />
 
         <AuctionTabs activeTab={activeTab} onTabChange={setActiveTab} />
 

@@ -32,12 +32,6 @@ export function AuctionTabs({ activeTab, onTabChange }: AuctionTabsProps) {
           </button>
         ))}
       </div>
-      <button
-        onClick={() => navigate(`/auction/${params.tokenId}/whitelist`)}
-        className="ml-auto text-xs font-medium text-[#06a800] hover:text-[#059000] underline transition-colors"
-      >
-        Check Whitelist
-      </button>
     </div>
   )
 }
