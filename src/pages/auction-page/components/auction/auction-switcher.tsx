@@ -35,24 +35,14 @@ function AuctionSwitcherTab({
     <Link
       to={`/auction/${token.routeSegment}`}
       className={cn(
-        'flex items-center gap-3 rounded-2xl px-5 py-3 transition-colors min-w-fit',
+        'flex items-center gap-3 rounded-2xl border-2 px-6 py-3.5 transition-colors min-w-fit',
         isActive
-          ? 'bg-black text-white dark:bg-white dark:text-black'
-          : 'bg-white dark:bg-[#2a2b2c] text-foreground dark:text-[#d2d2d2] hover:bg-zinc-50 dark:hover:bg-[#323334]',
+          ? 'bg-[#D2FB95] border-[#2E7D32] text-black'
+          : 'bg-white dark:bg-[#2a2b2c] border-zinc-200 dark:border-zinc-700 text-foreground dark:text-[#d2d2d2] hover:bg-zinc-50 dark:hover:bg-[#323334]',
       )}
     >
-      <AppTokenIcon token={token.id} size={32} className="rounded-full" />
-      <span className="font-semibold text-sm whitespace-nowrap">{token.displayName}</span>
-      {token.auctionLive ? (
-        <span className="flex items-center gap-1 bg-[#D2FB95] text-black px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap">
-          <span className="w-1.5 h-1.5 bg-[#06a800] rounded-full" />
-          Auction Live
-        </span>
-      ) : (
-        <span className="bg-zinc-200 dark:bg-zinc-600 text-zinc-600 dark:text-zinc-300 px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap">
-          Complete
-        </span>
-      )}
+      <AppTokenIcon token={token.id} size={28} className="rounded-full" />
+      <span className="font-bold text-base whitespace-nowrap">{token.displayName}</span>
     </Link>
   )
 }
