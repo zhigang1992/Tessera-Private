@@ -27,6 +27,11 @@ export const PRODUCTION_MODE = (() => {
   return false
 })()
 
+/**
+ * Set to true to show the leaderboard maintenance page instead of live data.
+ */
+export const LEADERBOARD_MAINTENANCE = false
+
 export const CURRENT_NETWORK: SolanaNetwork = (() => {
   // Use environment variable if explicitly set
   if (import.meta.env.VITE_SOLANA_NETWORK) {
