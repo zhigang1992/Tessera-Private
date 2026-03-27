@@ -284,7 +284,7 @@ const TOKEN_NETWORK_CONFIGS: Record<AppTokenId, {
   },
   USDC: {
     mint: {
-      devnet: '6LPd6FuUknRZBSXDn8M9bJsmmTzyZEYaCGv1VTtb22MK',
+      devnet: 'GWD83pA1sjpwBXFN7G9DydoipDEDL9TffL9b9zSxZph5',
       'mainnet-beta': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
     },
     decimals: {
@@ -334,7 +334,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       id: 'T-SpaceX-USDC',
       quoteToken: 'USDC',
       address: network({
-        devnet: '3BiXVMQYcTCiGMePubJu79SoQACgxSrQiALv1GVLyYSp',
+        devnet: '6y7at3vWtZh8mzGYss7foEvCy5VctTPvfSspFDmD2vvk',
         'mainnet-beta': '8obGpjiUu7QTJHK58YHCoz5HxobmrVP2x5zpMZu3c4BT',
       }),
     },
@@ -343,8 +343,8 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       vaultType: 'prorata',
       hasVestingPeriod: false,
       devnet: {
-        vault: 'AFiS9aGDSbUUcaTeaTEfquHXVTAhnP1xP1qhQGtjLJv9',
-        dlmmPool: '3BiXVMQYcTCiGMePubJu79SoQACgxSrQiALv1GVLyYSp',
+        vault: 'GhCka6EdFTvXAZtgLgxY8c2jD4cqXHcvWfo523QGca1p',
+        dlmmPool: '6y7at3vWtZh8mzGYss7foEvCy5VctTPvfSspFDmD2vvk',
       },
       'mainnet-beta': {
         vault: 'Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5',
@@ -389,7 +389,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       id: 'T-Kalshi-USDC',
       quoteToken: 'USDC',
       address: network({
-        devnet: '3TMBsifVAUbTxgG5JnaRj72UXahsYqPZpk9EA6LAhtg3',
+        devnet: 'Gfz7SEmW9pJjpPLGVELgv45gG3Rtio9zu9xbady1nvji',
         'mainnet-beta': 'TODO_KALSHI_MAINNET_POOL', // TODO: set for mainnet launch
       }),
     },
@@ -398,8 +398,8 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       vaultType: 'fcfs',
       hasVestingPeriod: false,
       devnet: {
-        vault: '13LVswJqTkfsQjoJdD2wQaggkBix4xYH4qy68MS8xXHm',
-        dlmmPool: '3TMBsifVAUbTxgG5JnaRj72UXahsYqPZpk9EA6LAhtg3',
+        vault: '3Buxngd6WzbQkJbBBqfB97ZzqFTFjst2bg3NaLDWSWFJ',
+        dlmmPool: 'Gfz7SEmW9pJjpPLGVELgv45gG3Rtio9zu9xbady1nvji',
       },
       'mainnet-beta': {
         vault: 'TODO_KALSHI_MAINNET_VAULT', // TODO: set for mainnet launch
