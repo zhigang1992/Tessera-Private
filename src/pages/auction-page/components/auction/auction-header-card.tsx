@@ -88,12 +88,14 @@ export function AuctionHeaderCard() {
                 {vaultStateDisplay.label}
               </span>
             )}
-            <button
-              onClick={() => navigate(`/auction/${params.tokenId}/whitelist`)}
-              className="text-xs font-medium text-[#06a800] hover:text-[#059000] underline transition-colors ml-auto"
-            >
-              Check Whitelist
-            </button>
+            {vaultInfo && !vaultInfo.isPermissionless && (
+              <button
+                onClick={() => navigate(`/auction/${params.tokenId}/whitelist`)}
+                className="text-xs font-medium text-[#06a800] hover:text-[#059000] underline transition-colors ml-auto"
+              >
+                Check Whitelist
+              </button>
+            )}
           </div>
         </div>
 

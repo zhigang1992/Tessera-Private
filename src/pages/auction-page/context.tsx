@@ -2,11 +2,13 @@ import { createContext, useContext } from 'react'
 import type { ReactNode } from 'react'
 import type { AppToken, AppTokenId } from '@/config'
 import type { UseAlphaVaultReturn } from '@/hooks/use-alpha-vault'
+import type { UsePresaleVaultReturn } from '@/hooks/use-presale-vault'
 
 interface AuctionContextValue {
   tokenId: AppTokenId
   token: AppToken
   alphaVault: UseAlphaVaultReturn
+  presaleVault?: UsePresaleVaultReturn
 }
 
 const AuctionContext = createContext<AuctionContextValue | null>(null)
@@ -29,6 +31,10 @@ export function useAuctionToken(): AppToken {
 
 export function useAuctionAlphaVault(): UseAlphaVaultReturn {
   return useAuctionContext().alphaVault
+}
+
+export function useAuctionPresaleVault(): UsePresaleVaultReturn | undefined {
+  return useAuctionContext().presaleVault
 }
 
 export function useAuctionTokenId(): AppTokenId {
