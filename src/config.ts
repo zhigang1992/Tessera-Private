@@ -427,9 +427,9 @@ const TOKENS: Record<AppTokenId, AppToken> = {
     },
     presaleVault: {
       quoteToken: 'USDC',
-      vaultType: 'fcfs',
+      vaultType: 'fixed_price',
       devnet: {
-        presale: 'HzjX2gqfsooYTQEwQt19NdzdDy7u7f22mbu4ingA7xmx',
+        presale: 'CnJp42qEi2e1PPjs9Hzz9Kyv7aa35pEjsiCpkU4pWjcQ',
       },
       'mainnet-beta': {
         presale: '', // TODO: set for mainnet launch
