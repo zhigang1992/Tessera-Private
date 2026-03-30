@@ -35,6 +35,7 @@
     "@jup-ag/api": "^6.0.48",
     "@meteora-ag/alpha-vault": "^1.1.15",
     "@meteora-ag/dlmm": "^1.9.0",
+    "@meteora-ag/presale": "^0.1.0",
     "@noble/curves": "^1.4.2",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.15",

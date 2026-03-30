@@ -67,6 +67,7 @@ export interface VaultInfo {
   address: string
   mode: VaultMode
   state: VaultStateType
+  isPermissionless: boolean // true if vault allows deposits without whitelist
   // Timing
   activationType: 'slot' | 'timestamp' // How to interpret the time values below
   depositOpenSlot: number // Slot number OR Unix timestamp in seconds (depending on activationType)
@@ -169,6 +170,7 @@ export class AlphaVaultClient {
   private connection: Connection
   private vaultInstance: AlphaVaultInstance | null = null
   private vaultAddress: PublicKey
+  private _poolAddress: PublicKey | null = null
   readonly tokenId: AppTokenId
   readonly network: SolanaNetwork
   readonly config: ResolvedAlphaVaultConfig
@@ -184,6 +186,22 @@ export class AlphaVaultClient {
   }
 
   /**
+   * Get the DLMM pool address, preferring on-chain data over config.
+   * Falls back to config.dlmmPool if vault hasn't been initialized yet.
+   */
+  private getPoolAddress(): PublicKey | null {
+    if (this._poolAddress) return this._poolAddress
+    if (this.config.dlmmPool) {
+      try {
+        return new PublicKey(this.config.dlmmPool)
+      } catch {
+        return null
+      }
+    }
+    return null
+  }
+
+  /**
    * Initialize the Alpha Vault instance
    */
   async initialize(): Promise<AlphaVaultInstance> {
@@ -193,6 +211,17 @@ export class AlphaVaultClient {
       this.vaultInstance = await AlphaVault.create(this.connection, this.vaultAddress, {
         cluster,
       })
+
+      // Extract DLMM pool address from on-chain vault data
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const vaultData = this.vaultInstance.vault as any
+      if (vaultData.pool) {
+        try {
+          this._poolAddress = new PublicKey(vaultData.pool)
+        } catch {
+          // Pool address not available or invalid
+        }
+      }
     }
     return this.vaultInstance
   }
@@ -273,10 +302,14 @@ export class AlphaVaultClient {
       }
     }
 
+    // Check whitelist mode: 0 = Permissionless, 1 = MerkleProof, 2 = Authority
+    const isPermissionless = (vaultDataAny.whitelistMode ?? 0) === 0
+
     return {
       address: this.vaultAddress.toBase58(),
       mode,
       state,
+      isPermissionless,
       activationType,
       depositOpenSlot,
       depositCloseSlot,
@@ -394,7 +427,9 @@ export class AlphaVaultClient {
    */
   async getPoolTessReserve(): Promise<number> {
     try {
-      const poolAddress = new PublicKey(this.config.dlmmPool)
+      const poolAddress = this.getPoolAddress()
+      if (!poolAddress) return 0
+
       const cluster = this.network === 'mainnet-beta' ? 'mainnet-beta' : 'devnet'
       const dlmmPool = await DLMM.create(this.connection, poolAddress, { cluster })
 
@@ -413,7 +448,9 @@ export class AlphaVaultClient {
    */
   async getPoolPrice(): Promise<number> {
     try {
-      const poolAddress = new PublicKey(this.config.dlmmPool)
+      const poolAddress = this.getPoolAddress()
+      if (!poolAddress) return 0
+
       const cluster = this.network === 'mainnet-beta' ? 'mainnet-beta' : 'devnet'
       const dlmmPool = await DLMM.create(this.connection, poolAddress, { cluster })
       const bin = await dlmmPool.getActiveBin()
@@ -434,15 +471,20 @@ export class AlphaVaultClient {
     try {
       const escrow = await vault.getEscrow(owner)
 
+      // Check if vault is permissionless (whitelistMode === 0)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const vaultData = vault.vault as any
+      const isPermissionless = (vaultData.whitelistMode ?? 0) === 0
+
       // For permissioned vaults, we need to fetch the merkle proof to get correct quota
-      // Use our getMerkleProof method which falls back to local proofs
-      const merkleProof = await this.getMerkleProof(owner)
+      // For permissionless vaults, no proof is needed
+      const merkleProof = isPermissionless ? null : await this.getMerkleProof(owner)
 
       const quota = vault.getAvailableDepositQuota(escrow, merkleProof ?? undefined)
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      // const vaultData = vault.vault as any
-      const maxDeposit = merkleProof?.maxCap?.toString() ?? '0'
+      const maxDeposit = merkleProof?.maxCap?.toString()
+        ?? vaultData.individualDepositingCap?.toString()
+        ?? '0'
       const remainingQuota = quota?.toString() ?? '0'
 
       const canDeposit = parseFloat(remainingQuota) > 0
@@ -450,7 +492,9 @@ export class AlphaVaultClient {
       // Determine reason if can't deposit
       let reason: string | undefined
       if (!canDeposit) {
-        if (!merkleProof) {
+        if (isPermissionless) {
+          reason = 'Deposit cap reached'
+        } else if (!merkleProof) {
           reason = 'Wallet not whitelisted'
         } else {
           reason = 'Exceed available quota'
@@ -618,8 +662,9 @@ export class AlphaVaultClient {
    * Refresh vault state from chain
    */
   async refreshState(): Promise<void> {
-    // Re-initialize to get fresh state
+    // Re-initialize to get fresh state (pool address will be re-extracted)
     this.vaultInstance = null
+    this._poolAddress = null
     await this.initialize()
   }
 

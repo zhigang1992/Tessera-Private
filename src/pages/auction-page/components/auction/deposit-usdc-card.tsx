@@ -64,9 +64,8 @@ export function DepositUSDCCard() {
   const isDepositOpen = vaultInfo?.state === 'deposit_open'
   const canDeposit = isDepositActive && depositQuota?.canDeposit && isDepositOpen && wallet.connected
 
-  // Check if vault has whitelist enabled (merkle root config indicates whitelist)
-  // This is more efficient than fetching the entire whitelist
-  const isWhitelistEnabled = true
+  // Vault is whitelisted if it's NOT permissionless
+  const isWhitelistEnabled = vaultInfo ? !vaultInfo.isPermissionless : false
 
   // Calculate existing deposit (amount already deposited)
   const existingDepositAmount = useMemo(() => {

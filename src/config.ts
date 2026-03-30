@@ -222,6 +222,19 @@ export interface AlphaVaultConfig {
   'mainnet-beta': AlphaVaultNetworkConfig
 }
 
+export interface PresaleVaultNetworkConfig {
+  presale: string // presale account address
+}
+
+export type PresaleVaultType = 'fcfs' | 'prorata' | 'fixed_price'
+
+export interface PresaleVaultConfig {
+  quoteToken: Extract<AppTokenId, 'USDC'>
+  vaultType: PresaleVaultType
+  devnet: PresaleVaultNetworkConfig
+  'mainnet-beta': PresaleVaultNetworkConfig
+}
+
 export interface AppTokenMetadata {
   name?: string
   code?: string
@@ -248,6 +261,7 @@ export interface AppToken {
   metadata?: AppTokenMetadata
   dlmmPool?: DlmmPoolConfig
   alphaVault?: AlphaVaultConfig
+  presaleVault?: PresaleVaultConfig
   auctionLive?: boolean
   impliedValuation?: {
     valuation: string
@@ -395,7 +409,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       quoteToken: 'USDC',
       address: network({
         devnet: 'Gfz7SEmW9pJjpPLGVELgv45gG3Rtio9zu9xbady1nvji',
-        'mainnet-beta': 'TODO_KALSHI_MAINNET_POOL', // TODO: set for mainnet launch
+        'mainnet-beta': '', // Derived from vault on-chain data after initialization
       }),
     },
     alphaVault: {
@@ -407,8 +421,18 @@ const TOKENS: Record<AppTokenId, AppToken> = {
         dlmmPool: 'Gfz7SEmW9pJjpPLGVELgv45gG3Rtio9zu9xbady1nvji',
       },
       'mainnet-beta': {
-        vault: 'TODO_KALSHI_MAINNET_VAULT', // TODO: set for mainnet launch
-        dlmmPool: 'TODO_KALSHI_MAINNET_POOL',
+        vault: 'HzjX2gqfsooYTQEwQt19NdzdDy7u7f22mbu4ingA7xmx',
+        dlmmPool: '', // Derived from vault on-chain data after initialization
+      },
+    },
+    presaleVault: {
+      quoteToken: 'USDC',
+      vaultType: 'fixed_price',
+      devnet: {
+        presale: 'CnJp42qEi2e1PPjs9Hzz9Kyv7aa35pEjsiCpkU4pWjcQ',
+      },
+      'mainnet-beta': {
+        presale: '', // TODO: set for mainnet launch
       },
     },
   },
@@ -591,6 +615,35 @@ export function getTokenAlphaVaultConfig(
   }
 }
 
+export interface ResolvedPresaleVaultConfig {
+  token: AppToken
+  quoteToken: AppToken
+  presaleAddress: string
+  baseDecimals: number
+  quoteDecimals: number
+}
+
+export function getTokenPresaleVaultConfig(
+  tokenId: AppTokenId,
+  net: SolanaNetwork = getCurrentNetwork()
+): ResolvedPresaleVaultConfig | null {
+  const token = getAppToken(tokenId)
+  if (!token.presaleVault) return null
+
+  const envConfig = token.presaleVault[net]
+  if (!envConfig.presale) return null
+
+  const quoteToken = getAppToken(token.presaleVault.quoteToken)
+
+  return {
+    token,
+    quoteToken,
+    presaleAddress: envConfig.presale,
+    baseDecimals: getTokenDecimals(tokenId, net),
+    quoteDecimals: getTokenDecimals(token.presaleVault.quoteToken, net),
+  }
+}
+
 export function getTesseraMintAddress(): PublicKey {
   return getTokenMintPublicKey('T-SpaceX')
 }
@@ -646,7 +699,7 @@ export const DEVNET_POOLS = buildDevnetPools()
  */
 export function getAuctionTokens(): AppToken[] {
   return Object.values(APP_TOKENS)
-    .filter((t) => t.alphaVault != null)
+    .filter((t) => t.alphaVault != null || t.presaleVault != null)
     .sort((a, b) => (a.auctionLive === b.auctionLive ? 0 : a.auctionLive ? -1 : 1))
 }
 
