@@ -1,5 +1,4 @@
-import { useNavigate, useParams } from 'react-router'
-import { useAuctionAlphaVault } from '../../context'
+import { useAuctionAlphaVault, useAuctionPresaleVaultConfigs, useAuctionToken } from '../../context'
 
 interface AuctionTabsProps {
   activeTab: string
@@ -8,10 +7,15 @@ interface AuctionTabsProps {
 
 export function AuctionTabs({ activeTab, onTabChange }: AuctionTabsProps) {
   const { config } = useAuctionAlphaVault()
-  const navigate = useNavigate()
-  const params = useParams<{ tokenId?: string }>()
+  const token = useAuctionToken()
+  const presaleConfigs = useAuctionPresaleVaultConfigs()
+
   const tabs = [
-    { id: 'auction', label: 'Auction' },
+    ...presaleConfigs.map((pc) => ({
+      id: `presale-${pc.id}`,
+      label: pc.label,
+    })),
+    { id: 'auction', label: token.auctionTabLabel ?? 'Auction' },
     { id: 'vesting', label: config.hasVestingPeriod ? 'Vesting' : 'Claim' },
   ]
 

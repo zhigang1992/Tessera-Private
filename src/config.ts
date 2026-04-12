@@ -228,7 +228,9 @@ export interface PresaleVaultNetworkConfig {
 
 export type PresaleVaultType = 'fcfs' | 'prorata' | 'fixed_price'
 
-export interface PresaleVaultConfig {
+export interface PresaleVaultEntryConfig {
+  id: string                              // stable key, e.g. "early-bird"
+  label: string                           // tab display name, e.g. "Early Bird"
   quoteToken: Extract<AppTokenId, 'USDC'>
   vaultType: PresaleVaultType
   devnet: PresaleVaultNetworkConfig
@@ -261,7 +263,8 @@ export interface AppToken {
   metadata?: AppTokenMetadata
   dlmmPool?: DlmmPoolConfig
   alphaVault?: AlphaVaultConfig
-  presaleVault?: PresaleVaultConfig
+  presaleVaults?: PresaleVaultEntryConfig[]
+  auctionTabLabel?: string
   auctionLive?: boolean
   impliedValuation?: {
     valuation: string
@@ -425,16 +428,20 @@ const TOKENS: Record<AppTokenId, AppToken> = {
         dlmmPool: '', // Derived from vault on-chain data after initialization
       },
     },
-    presaleVault: {
-      quoteToken: 'USDC',
-      vaultType: 'fixed_price',
-      devnet: {
-        presale: 'CnJp42qEi2e1PPjs9Hzz9Kyv7aa35pEjsiCpkU4pWjcQ',
+    presaleVaults: [
+      {
+        id: 'presale-1',
+        label: 'Pre-Sale',
+        quoteToken: 'USDC',
+        vaultType: 'fixed_price',
+        devnet: {
+          presale: 'CnJp42qEi2e1PPjs9Hzz9Kyv7aa35pEjsiCpkU4pWjcQ',
+        },
+        'mainnet-beta': {
+          presale: '', // TODO: set for mainnet launch
+        },
       },
-      'mainnet-beta': {
-        presale: '', // TODO: set for mainnet launch
-      },
-    },
+    ],
   },
   USDC: {
     id: 'USDC',
@@ -615,7 +622,9 @@ export function getTokenAlphaVaultConfig(
   }
 }
 
-export interface ResolvedPresaleVaultConfig {
+export interface ResolvedPresaleVaultEntry {
+  id: string
+  label: string
   token: AppToken
   quoteToken: AppToken
   presaleAddress: string
@@ -623,25 +632,27 @@ export interface ResolvedPresaleVaultConfig {
   quoteDecimals: number
 }
 
-export function getTokenPresaleVaultConfig(
+export function getTokenPresaleVaultConfigs(
   tokenId: AppTokenId,
   net: SolanaNetwork = getCurrentNetwork()
-): ResolvedPresaleVaultConfig | null {
+): ResolvedPresaleVaultEntry[] {
   const token = getAppToken(tokenId)
-  if (!token.presaleVault) return null
+  if (!token.presaleVaults?.length) return []
 
-  const envConfig = token.presaleVault[net]
-  if (!envConfig.presale) return null
-
-  const quoteToken = getAppToken(token.presaleVault.quoteToken)
-
-  return {
-    token,
-    quoteToken,
-    presaleAddress: envConfig.presale,
-    baseDecimals: getTokenDecimals(tokenId, net),
-    quoteDecimals: getTokenDecimals(token.presaleVault.quoteToken, net),
-  }
+  return token.presaleVaults
+    .filter((entry) => entry[net].presale !== '')
+    .map((entry) => {
+      const quoteToken = getAppToken(entry.quoteToken)
+      return {
+        id: entry.id,
+        label: entry.label,
+        token,
+        quoteToken,
+        presaleAddress: entry[net].presale,
+        baseDecimals: getTokenDecimals(tokenId, net),
+        quoteDecimals: getTokenDecimals(entry.quoteToken, net),
+      }
+    })
 }
 
 export function getTesseraMintAddress(): PublicKey {
@@ -699,7 +710,7 @@ export const DEVNET_POOLS = buildDevnetPools()
  */
 export function getAuctionTokens(): AppToken[] {
   return Object.values(APP_TOKENS)
-    .filter((t) => t.alphaVault != null || t.presaleVault != null)
+    .filter((t) => t.alphaVault != null || (t.presaleVaults != null && t.presaleVaults.length > 0))
     .sort((a, b) => (a.auctionLive === b.auctionLive ? 0 : a.auctionLive ? -1 : 1))
 }
 

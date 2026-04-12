@@ -10,12 +10,10 @@ import { VestingHeaderCard } from './components/vesting/vesting-header-card'
 import { VestingChartCard } from './components/vesting/vesting-chart-card'
 import { ClaimHeaderCard } from './components/vesting/claim-header-card'
 import { ClaimTokensCard } from './components/vesting/claim-tokens-card'
-import { PresaleHeaderCard } from './components/presale/presale-header-card'
-import { PresaleDepositCard } from './components/presale/presale-deposit-card'
+import { PresaleTabContent } from './components/presale/presale-tab-content'
 import { AuctionProvider } from './context'
-import { DEFAULT_BASE_TOKEN_ID, getAppToken, resolveTokenIdFromParam } from '@/config'
+import { DEFAULT_BASE_TOKEN_ID, getAppToken, getTokenPresaleVaultConfigs, resolveTokenIdFromParam } from '@/config'
 import { useAlphaVault } from '@/hooks/use-alpha-vault'
-import { usePresaleVault } from '@/hooks/use-presale-vault'
 
 export default function AuctionPage() {
   const params = useParams<{ tokenId?: string }>()
@@ -25,17 +23,24 @@ export default function AuctionPage() {
 
   const token = useMemo(() => getAppToken(tokenId), [tokenId])
   const alphaVault = useAlphaVault(tokenId)
-  const presaleVault = usePresaleVault(tokenId)
-  const [activeTab, setActiveTab] = useState(token.auctionLive ? 'auction' : 'vesting')
+  const presaleVaultConfigs = useMemo(() => getTokenPresaleVaultConfigs(tokenId), [tokenId])
   const hasVestingPeriod = alphaVault.config.hasVestingPeriod
-  const hasPresaleVault = presaleVault.available
+
+  const getDefaultTab = () => {
+    if (token.auctionLive) {
+      return presaleVaultConfigs.length > 0 ? `presale-${presaleVaultConfigs[0].id}` : 'auction'
+    }
+    return 'vesting'
+  }
+
+  const [activeTab, setActiveTab] = useState(getDefaultTab)
 
   useEffect(() => {
-    setActiveTab(token.auctionLive ? 'auction' : 'vesting')
+    setActiveTab(getDefaultTab())
   }, [token.id])
 
   return (
-    <AuctionProvider value={{ tokenId, token, alphaVault, presaleVault }}>
+    <AuctionProvider value={{ tokenId, token, alphaVault, presaleVaultConfigs }}>
       <div className="flex flex-col gap-4 lg:gap-6">
         <h1 className="text-xl lg:text-2xl font-bold text-foreground dark:text-[#d2d2d2]">Auction</h1>
 
@@ -43,6 +48,13 @@ export default function AuctionPage() {
         <hr />
 
         <AuctionTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
+        {/* Presale tabs */}
+        {presaleVaultConfigs.map((pc) =>
+          activeTab === `presale-${pc.id}` ? (
+            <PresaleTabContent key={pc.id} presaleConfig={pc} />
+          ) : null
+        )}
 
         {activeTab === 'auction' && (
           <div className="flex flex-col gap-4 lg:gap-6">
@@ -56,22 +68,6 @@ export default function AuctionPage() {
                 <DepositUSDCCard />
               </div>
             </div>
-
-            {/* Pre-Sale Vault Section */}
-            {hasPresaleVault && (
-              <>
-                <hr />
-                <PresaleHeaderCard />
-                <div className="flex flex-col md:flex-row gap-4 lg:gap-6">
-                  <div className="w-full md:basis-0 md:grow md:min-w-0 order-2 md:order-1">
-                    {/* Placeholder for presale progress/info - can be expanded later */}
-                  </div>
-                  <div className="w-full md:w-[400px] md:flex-shrink-0 order-1 md:order-2">
-                    <PresaleDepositCard />
-                  </div>
-                </div>
-              </>
-            )}
 
             <TokenInfoCard />
           </div>

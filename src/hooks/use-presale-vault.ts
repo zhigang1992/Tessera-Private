@@ -19,9 +19,8 @@ import {
 } from '@/services/presale-vault'
 import {
   type AppTokenId,
-  type ResolvedPresaleVaultConfig as ConfigResolvedPresaleVaultConfig,
+  type ResolvedPresaleVaultEntry,
   getRpcEndpoint,
-  getTokenPresaleVaultConfig,
 } from '@/config'
 import { getTimeRemaining } from '@/services/alpha-vault-helpers'
 import { getAccount, getAssociatedTokenAddress } from '@solana/spl-token'
@@ -32,7 +31,7 @@ const DEFAULT_RPC_URL = import.meta.env.VITE_SOLANA_RPC_URL || getRpcEndpoint()
 
 export interface UsePresaleVaultReturn {
   tokenId: AppTokenId
-  config: ConfigResolvedPresaleVaultConfig
+  config: ResolvedPresaleVaultEntry
 
   // State
   isLoading: boolean
@@ -75,7 +74,7 @@ export interface UsePresaleVaultReturn {
   clearError: () => void
 }
 
-export function usePresaleVault(tokenId: AppTokenId): UsePresaleVaultReturn {
+export function usePresaleVault(tokenId: AppTokenId, presaleConfig: ResolvedPresaleVaultEntry | null): UsePresaleVaultReturn {
   const wallet = useWallet()
 
   const [isLoading, setIsLoading] = useState(false)
@@ -93,17 +92,16 @@ export function usePresaleVault(tokenId: AppTokenId): UsePresaleVaultReturn {
     return new Connection(rpcEndpoint, 'confirmed')
   }, [rpcEndpoint])
 
-  const presaleConfig = useMemo(() => getTokenPresaleVaultConfig(tokenId), [tokenId])
   const available = presaleConfig != null && presaleConfig.presaleAddress !== ''
 
   const client = useMemo(() => {
-    if (!available) return null
+    if (!available || !presaleConfig) return null
     try {
-      return new PresaleVaultClient({ tokenId, connection })
+      return new PresaleVaultClient({ tokenId, presaleConfig, connection })
     } catch {
       return null
     }
-  }, [connection, tokenId, available])
+  }, [connection, tokenId, presaleConfig, available])
 
   const quoteDecimals = presaleConfig?.quoteDecimals ?? 6
   const baseDecimals = presaleConfig?.baseDecimals ?? 6

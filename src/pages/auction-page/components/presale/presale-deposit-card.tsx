@@ -8,16 +8,20 @@ import { AppTokenAmount } from '@/components/app-token-amount'
 import { getExplorerUrl } from '@/config'
 import { toast } from 'sonner'
 import { BigNumber, math, fromTokenAmount, mathIs } from '@/lib/bignumber'
-import { useAuctionPresaleVault, useAuctionToken } from '../../context'
+import { useAuctionToken } from '../../context'
+import type { UsePresaleVaultReturn } from '@/hooks/use-presale-vault'
 
-export function PresaleDepositCard() {
+interface PresaleDepositCardProps {
+  presaleVault: UsePresaleVaultReturn
+}
+
+export function PresaleDepositCard({ presaleVault }: PresaleDepositCardProps) {
   const wallet = useWallet()
   const { setVisible } = useWalletModal()
   const [depositAmount, setDepositAmount] = useState('')
   const token = useAuctionToken()
-  const presaleVault = useAuctionPresaleVault()
 
-  if (!presaleVault?.available) return null
+  if (!presaleVault.available) return null
 
   const {
     config,
@@ -34,6 +38,7 @@ export function PresaleDepositCard() {
     clearError,
   } = presaleVault
 
+  const presaleLabel = config.label
   const quoteDecimals = config?.quoteDecimals ?? 6
 
   const quoteToken = config?.quoteToken ?? null
@@ -94,7 +99,7 @@ export function PresaleDepositCard() {
     })
 
     if (signature) {
-      toast.success('Pre-sale deposit successful!', {
+      toast.success(`${presaleLabel} deposit successful!`, {
         description: `Transaction: ${signature.slice(0, 8)}...`,
         action: {
           label: 'View',
@@ -121,7 +126,7 @@ export function PresaleDepositCard() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <h3 className="text-base font-semibold text-black">
-            Pre-Sale Deposit {quoteToken && <AppTokenName token={quoteToken} variant="symbol" />}
+            {presaleLabel} Deposit {quoteToken && <AppTokenName token={quoteToken} variant="symbol" />}
           </h3>
         </div>
         {vaultStateDisplay ? (
@@ -262,14 +267,14 @@ export function PresaleDepositCard() {
                       {!vaultInfo
                         ? 'Loading...'
                         : depositsNotStarted
-                          ? 'Pre-Sale Not Started'
+                          ? `${presaleLabel} Not Started`
                           : !isDepositOpen
                             ? vaultInfo.state === 'completed'
-                              ? 'Pre-Sale Complete'
-                              : 'Pre-Sale Ended'
+                              ? `${presaleLabel} Complete`
+                              : `${presaleLabel} Ended`
                             : !depositQuota?.canDeposit
                               ? (depositQuota?.reason ?? 'Cannot Deposit')
-                              : 'Confirm Pre-Sale Deposit'}
+                              : `Confirm ${presaleLabel} Deposit`}
                     </p>
                   )}
                 </div>
@@ -292,7 +297,7 @@ export function PresaleDepositCard() {
             <div className="bg-[rgba(255,255,255,0.5)] flex gap-2.5 items-center p-3 rounded-lg w-full">
               <Info className="w-3 h-3 text-[#666666] shrink-0" />
               <p className="flex-1 font-normal leading-[16.5px] text-[10px] text-black tracking-[0.0645px]">
-                You have an active position in this pre-sale. Check the "My Position" card for details.
+                You have an active position in this {presaleLabel.toLowerCase()}. Check the "My Position" card for details.
               </p>
             </div>
           )}
@@ -305,7 +310,7 @@ export function PresaleDepositCard() {
             className="absolute border-t border-[rgba(210,210,210,0.1)] inset-x-0 top-0 pointer-events-none"
           />
           <div className="flex items-center w-full">
-            <p className="font-semibold leading-[15px] text-[10px] text-black tracking-[0.1172px]">PRE-SALE DETAILS</p>
+            <p className="font-semibold leading-[15px] text-[10px] text-black tracking-[0.1172px]">{presaleLabel.toUpperCase()} DETAILS</p>
           </div>
           <div className="flex flex-col gap-2.5 items-start w-full">
             <div className="flex h-[15px] items-start justify-between w-full">
