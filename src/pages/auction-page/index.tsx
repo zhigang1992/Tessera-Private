@@ -42,7 +42,14 @@ export default function AuctionPage() {
     return hasVestingPeriod ? 'vesting' : 'claim'
   }
 
-  const activeTab = params.tab ?? getDefaultTab()
+  // Validate the URL tab param against known valid tabs for this token
+  const validTabs = useMemo(() => {
+    const ids = new Set<string>(['auction', 'vesting', 'claim'])
+    for (const pc of presaleVaultConfigs) ids.add(pc.id)
+    return ids
+  }, [presaleVaultConfigs])
+
+  const activeTab = params.tab && validTabs.has(params.tab) ? params.tab : getDefaultTab()
 
   const setActiveTab = (tab: string) => {
     navigate(`/auction/${params.tokenId}/${tab}`, { replace: true })
@@ -60,12 +67,12 @@ export default function AuctionPage() {
 
         <AuctionTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Presale tab content */}
-        {presaleVaultConfigs.map((pc) =>
-          activeTab === pc.id ? (
-            <PresaleTabContent key={pc.id} presaleConfig={pc} phaseNav={phaseNav} />
-          ) : null
-        )}
+        {/* Presale tab content — all tabs stay mounted to preserve hook/form state */}
+        {presaleVaultConfigs.map((pc) => (
+          <div key={pc.id} className={activeTab === pc.id ? undefined : 'hidden'}>
+            <PresaleTabContent presaleConfig={pc} phaseNav={phaseNav} />
+          </div>
+        ))}
 
         {activeTab === 'auction' && (
           <div className="flex flex-col gap-4 lg:gap-6">
