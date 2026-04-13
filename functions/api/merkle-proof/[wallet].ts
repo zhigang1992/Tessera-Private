@@ -1,16 +1,12 @@
 import type { PagesFunction } from '@cloudflare/workers-types'
 
 // Static imports for merkle proof files — Alpha Vaults
-import devnetSpacexMerkleProofs from '../../data/merkle-proofs-GhCka6EdFTvXAZtgLgxY8c2jD4cqXHcvWfo523QGca1p.json'
 import devnetKalshiAlphaMerkleProofs from '../../data/merkle-proofs-9viFcLBqJkYGVuNVsZWmi28xNG8BKeFUrLSx9HNcyq3f.json'
 import mainnetMerkleProofs from '../../data/merkle-proofs-Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5.json'
 
 // Static imports for merkle proof files — Presale Vaults
 import devnetKalshiPresale1MerkleProofs from '../../data/merkle-proofs-GiYeT2HnPq8Hf4mFukEJL1Q33tRXZdX7F1ZHw5b8369.json'
 import devnetKalshiPresale2MerkleProofs from '../../data/merkle-proofs-7zNPVD91t1vf8iMmSQveK4mtEc3u6BgwCnKWDFPvSje2.json'
-
-// Legacy alpha vault (kept for backwards compat)
-import devnetKalshiLegacyMerkleProofs from '../../data/merkle-proofs-3Buxngd6WzbQkJbBBqfB97ZzqFTFjst2bg3NaLDWSWFJ.json'
 
 // ---------- Types ----------
 
@@ -40,10 +36,8 @@ interface VaultEntry {
 
 const VAULT_REGISTRY: Record<string, VaultEntry> = {
   // Alpha Vaults
-  'GhCka6EdFTvXAZtgLgxY8c2jD4cqXHcvWfo523QGca1p': { type: 'alpha', proofs: devnetSpacexMerkleProofs as AlphaVaultProofsDB },
   '9viFcLBqJkYGVuNVsZWmi28xNG8BKeFUrLSx9HNcyq3f': { type: 'alpha', proofs: devnetKalshiAlphaMerkleProofs as AlphaVaultProofsDB },
   'Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5': { type: 'alpha', proofs: mainnetMerkleProofs as AlphaVaultProofsDB },
-  '3Buxngd6WzbQkJbBBqfB97ZzqFTFjst2bg3NaLDWSWFJ': { type: 'alpha', proofs: devnetKalshiLegacyMerkleProofs as AlphaVaultProofsDB },
   // Presale Vaults
   'GiYeT2HnPq8Hf4mFukEJL1Q33tRXZdX7F1ZHw5b8369': { type: 'presale', proofs: devnetKalshiPresale1MerkleProofs as PresaleProofsDB },
   '7zNPVD91t1vf8iMmSQveK4mtEc3u6BgwCnKWDFPvSje2': { type: 'presale', proofs: devnetKalshiPresale2MerkleProofs as PresaleProofsDB },
