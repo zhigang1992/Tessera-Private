@@ -7,12 +7,14 @@ import { AppTokenAmount } from '@/components/app-token-amount'
 import { useAuctionToken } from '../../context'
 import { mathIs } from 'math-literal'
 import type { UsePresaleVaultReturn } from '@/hooks/use-presale-vault'
+import { AuctionPhaseNav, type AuctionPhaseNavProps } from '../auction/auction-phase-nav'
 
 interface PresaleHeaderCardProps {
   presaleVault: UsePresaleVaultReturn
+  phaseNav: AuctionPhaseNavProps
 }
 
-export function PresaleHeaderCard({ presaleVault }: PresaleHeaderCardProps) {
+export function PresaleHeaderCard({ presaleVault, phaseNav }: PresaleHeaderCardProps) {
   const wallet = useWallet()
   const token = useAuctionToken()
 
@@ -63,11 +65,12 @@ export function PresaleHeaderCard({ presaleVault }: PresaleHeaderCardProps) {
   return (
     <Card className="p-6 bg-white dark:bg-[#323334]">
       <div className="flex flex-col gap-6">
+        {/* Shared title */}
         <div className="flex items-center gap-3">
           <AppTokenIcon token={token} size={40} className="w-10 h-10" />
           <div className="flex items-center gap-3">
             <h2 className="text-xl font-semibold text-foreground flex items-center gap-1">
-              <AppTokenName token={token} /> {presaleLabel}
+              <AppTokenName token={token} /> Liquidity Auction
             </h2>
             {!depositsNotStarted && vaultStateDisplay && (
               <span
@@ -79,6 +82,9 @@ export function PresaleHeaderCard({ presaleVault }: PresaleHeaderCardProps) {
             )}
           </div>
         </div>
+
+        {/* Phase sub-tabs */}
+        <AuctionPhaseNav {...phaseNav} />
 
         <div className="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Raised */}

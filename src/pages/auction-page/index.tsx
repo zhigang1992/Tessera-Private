@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router'
+import { useMemo } from 'react'
+import { useNavigate, useParams } from 'react-router'
 import { AuctionSwitcher } from './components/auction/auction-switcher'
 import { AuctionTabs } from './components/auction/auction-tabs'
 import { AuctionHeaderCard } from './components/auction/auction-header-card'
@@ -15,8 +15,14 @@ import { AuctionProvider } from './context'
 import { DEFAULT_BASE_TOKEN_ID, getAppToken, getTokenPresaleVaultConfigs, resolveTokenIdFromParam } from '@/config'
 import { useAlphaVault } from '@/hooks/use-alpha-vault'
 
+/** Tab belongs to the "Auction" top-level group (not claim/vesting) */
+function isAuctionGroup(tab: string) {
+  return tab !== 'vesting' && tab !== 'claim'
+}
+
 export default function AuctionPage() {
-  const params = useParams<{ tokenId?: string }>()
+  const params = useParams<{ tokenId?: string; tab?: string }>()
+  const navigate = useNavigate()
   const tokenId = useMemo(() => {
     return resolveTokenIdFromParam(params.tokenId) ?? DEFAULT_BASE_TOKEN_ID
   }, [params.tokenId])
@@ -28,16 +34,19 @@ export default function AuctionPage() {
 
   const getDefaultTab = () => {
     if (token.auctionLive) {
-      return presaleVaultConfigs.length > 0 ? `presale-${presaleVaultConfigs[0].id}` : 'auction'
+      return presaleVaultConfigs.length > 0 ? presaleVaultConfigs[0].id : 'auction'
     }
-    return 'vesting'
+    return hasVestingPeriod ? 'vesting' : 'claim'
   }
 
-  const [activeTab, setActiveTab] = useState(getDefaultTab)
+  const activeTab = params.tab ?? getDefaultTab()
 
-  useEffect(() => {
-    setActiveTab(getDefaultTab())
-  }, [token.id])
+  const setActiveTab = (tab: string) => {
+    navigate(`/auction/${params.tokenId}/${tab}`, { replace: true })
+  }
+
+  const showAuctionGroup = isAuctionGroup(activeTab)
+  const phaseNav = { activeTab, onTabChange: setActiveTab }
 
   return (
     <AuctionProvider value={{ tokenId, token, alphaVault, presaleVaultConfigs }}>
@@ -45,20 +54,19 @@ export default function AuctionPage() {
         <h1 className="text-xl lg:text-2xl font-bold text-foreground dark:text-[#d2d2d2]">Auction</h1>
 
         <AuctionSwitcher activeTokenId={tokenId} />
-        <hr />
 
         <AuctionTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Presale tabs */}
+        {/* Presale tab content */}
         {presaleVaultConfigs.map((pc) =>
-          activeTab === `presale-${pc.id}` ? (
-            <PresaleTabContent key={pc.id} presaleConfig={pc} />
+          activeTab === pc.id ? (
+            <PresaleTabContent key={pc.id} presaleConfig={pc} phaseNav={phaseNav} />
           ) : null
         )}
 
         {activeTab === 'auction' && (
           <div className="flex flex-col gap-4 lg:gap-6">
-            <AuctionHeaderCard />
+            <AuctionHeaderCard phaseNav={phaseNav} />
 
             <div className="flex flex-col md:flex-row gap-4 lg:gap-6">
               <div className="w-full md:basis-0 md:grow md:min-w-0 order-2 md:order-1">
@@ -73,7 +81,7 @@ export default function AuctionPage() {
           </div>
         )}
 
-        {activeTab === 'vesting' && (
+        {(activeTab === 'vesting' || activeTab === 'claim') && (
           <>
             {hasVestingPeriod ? (
               <div className="flex flex-col gap-4 lg:gap-6">
