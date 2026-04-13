@@ -306,7 +306,7 @@ const TOKEN_NETWORK_CONFIGS: Record<AppTokenId, {
   },
   USDC: {
     mint: {
-      devnet: 'GWD83pA1sjpwBXFN7G9DydoipDEDL9TffL9b9zSxZph5',
+      devnet: 'DdiaoA1ypWCdkvUSvYxoWzi6MLgf1yVT11rFad5iy7w4',
       'mainnet-beta': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
     },
     decimals: {
@@ -412,7 +412,7 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       id: 'T-Kalshi-USDC',
       quoteToken: 'USDC',
       address: network({
-        devnet: 'Gfz7SEmW9pJjpPLGVELgv45gG3Rtio9zu9xbady1nvji',
+        devnet: '9nDjHb4x4FzJx3h8Zoey5inXyCd25comLCfchuQmQwJR',
         'mainnet-beta': '', // Derived from vault on-chain data after initialization
       }),
     },
@@ -421,8 +421,8 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       vaultType: 'fcfs',
       hasVestingPeriod: false,
       devnet: {
-        vault: '3Buxngd6WzbQkJbBBqfB97ZzqFTFjst2bg3NaLDWSWFJ',
-        dlmmPool: 'Gfz7SEmW9pJjpPLGVELgv45gG3Rtio9zu9xbady1nvji',
+        vault: '9viFcLBqJkYGVuNVsZWmi28xNG8BKeFUrLSx9HNcyq3f',
+        dlmmPool: '9nDjHb4x4FzJx3h8Zoey5inXyCd25comLCfchuQmQwJR',
       },
       'mainnet-beta': {
         vault: 'HzjX2gqfsooYTQEwQt19NdzdDy7u7f22mbu4ingA7xmx',
@@ -436,7 +436,19 @@ const TOKENS: Record<AppTokenId, AppToken> = {
         quoteToken: 'USDC',
         vaultType: 'fixed_price',
         devnet: {
-          presale: 'CnJp42qEi2e1PPjs9Hzz9Kyv7aa35pEjsiCpkU4pWjcQ',
+          presale: 'GiYeT2HnPq8Hf4mFukEJL1Q33tRXZdX7F1ZHw5b8369',
+        },
+        'mainnet-beta': {
+          presale: '', // TODO: set for mainnet launch
+        },
+      },
+      {
+        id: 'presale-2',
+        label: 'Pre-sale 2',
+        quoteToken: 'USDC',
+        vaultType: 'fixed_price',
+        devnet: {
+          presale: '7zNPVD91t1vf8iMmSQveK4mtEc3u6BgwCnKWDFPvSje2',
         },
         'mainnet-beta': {
           presale: '', // TODO: set for mainnet launch
