@@ -1,12 +1,6 @@
 import type { PagesFunction } from '@cloudflare/workers-types'
 
-// Static imports for merkle proof files — Alpha Vaults
-import devnetKalshiAlphaMerkleProofs from '../../data/merkle-proofs-9viFcLBqJkYGVuNVsZWmi28xNG8BKeFUrLSx9HNcyq3f.json'
-import mainnetMerkleProofs from '../../data/merkle-proofs-Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5.json'
-
-// Static imports for merkle proof files — Presale Vaults
-import devnetKalshiPresale1MerkleProofs from '../../data/merkle-proofs-GiYeT2HnPq8Hf4mFukEJL1Q33tRXZdX7F1ZHw5b8369.json'
-import devnetKalshiPresale2MerkleProofs from '../../data/merkle-proofs-7zNPVD91t1vf8iMmSQveK4mtEc3u6BgwCnKWDFPvSje2.json'
+const R2_BASE_URL = 'https://r2.tessera.fun/tessera-auctions'
 
 // ---------- Types ----------
 
@@ -29,19 +23,22 @@ type PresaleProofsDB = Record<string, PresaleProofData>
 
 type VaultType = 'alpha' | 'presale'
 
-interface VaultEntry {
+interface VaultRegistryEntry {
   type: VaultType
-  proofs: AlphaVaultProofsDB | PresaleProofsDB
+  file: string // filename in R2
 }
 
-const VAULT_REGISTRY: Record<string, VaultEntry> = {
+const VAULT_REGISTRY: Record<string, VaultRegistryEntry> = {
   // Alpha Vaults
-  '9viFcLBqJkYGVuNVsZWmi28xNG8BKeFUrLSx9HNcyq3f': { type: 'alpha', proofs: devnetKalshiAlphaMerkleProofs as AlphaVaultProofsDB },
-  'Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5': { type: 'alpha', proofs: mainnetMerkleProofs as AlphaVaultProofsDB },
+  '9viFcLBqJkYGVuNVsZWmi28xNG8BKeFUrLSx9HNcyq3f': { type: 'alpha', file: 'merkle-proofs-9viFcLBqJkYGVuNVsZWmi28xNG8BKeFUrLSx9HNcyq3f.json' },
+  'Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5': { type: 'alpha', file: 'merkle-proofs-Gu1onXKo8XxCZbXbJj8jG3GVDL9JrL1Qs6yRo9JknRQ5.json' },
   // Presale Vaults
-  'GiYeT2HnPq8Hf4mFukEJL1Q33tRXZdX7F1ZHw5b8369': { type: 'presale', proofs: devnetKalshiPresale1MerkleProofs as PresaleProofsDB },
-  '7zNPVD91t1vf8iMmSQveK4mtEc3u6BgwCnKWDFPvSje2': { type: 'presale', proofs: devnetKalshiPresale2MerkleProofs as PresaleProofsDB },
+  'GiYeT2HnPq8Hf4mFukEJL1Q33tRXZdX7F1ZHw5b8369': { type: 'presale', file: 'merkle-proofs-GiYeT2HnPq8Hf4mFukEJL1Q33tRXZdX7F1ZHw5b8369.json' },
+  '7zNPVD91t1vf8iMmSQveK4mtEc3u6BgwCnKWDFPvSje2': { type: 'presale', file: 'merkle-proofs-7zNPVD91t1vf8iMmSQveK4mtEc3u6BgwCnKWDFPvSje2.json' },
 }
+
+// In-memory cache: vault proofs loaded from R2 on first request
+const proofCache = new Map<string, AlphaVaultProofsDB | PresaleProofsDB>()
 
 // ---------- Helpers ----------
 
@@ -49,6 +46,21 @@ function isValidSolanaAddress(address: string): boolean {
   if (address.length < 32 || address.length > 44) return false
   const base58Regex = /^[1-9A-HJ-NP-Za-km-z]+$/
   return base58Regex.test(address)
+}
+
+async function loadProofs(vaultId: string, entry: VaultRegistryEntry): Promise<AlphaVaultProofsDB | PresaleProofsDB> {
+  const cached = proofCache.get(vaultId)
+  if (cached) return cached
+
+  const url = `${R2_BASE_URL}/${entry.file}`
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch proofs from R2: ${response.status} ${response.statusText}`)
+  }
+
+  const proofs = await response.json() as AlphaVaultProofsDB | PresaleProofsDB
+  proofCache.set(vaultId, proofs)
+  return proofs
 }
 
 function lookupAlphaVaultProof(proofs: AlphaVaultProofsDB, wallet: string) {
@@ -62,7 +74,6 @@ function lookupAlphaVaultProof(proofs: AlphaVaultProofsDB, wallet: string) {
 }
 
 function lookupPresaleProof(proofs: PresaleProofsDB, wallet: string, registryIndex: number) {
-  // Presale proof keys use format: {wallet}-{registryIndex}
   const key = `${wallet}-${registryIndex}`
   const data = proofs[key]
   if (!data) return null
@@ -79,9 +90,7 @@ function lookupPresaleProof(proofs: PresaleProofsDB, wallet: string, registryInd
 /**
  * GET /api/merkle-proof/{wallet}?vaultId={vaultId}&registryIndex={registryIndex}
  *
- * Query Parameters:
- *   - vaultId: The vault address (required)
- *   - registryIndex: Registry index for presale vaults (optional, defaults to 0)
+ * Fetches merkle proof data from R2 storage (cached in-memory after first load).
  *
  * For alpha vaults: returns { wallet, vaultId, vaultType, proof, maxCap, merkleRootConfig }
  * For presale vaults: returns { wallet, vaultId, vaultType, proof, depositCap, merkleRootConfig, registryIndex }
@@ -131,9 +140,20 @@ export const onRequest: PagesFunction = async ({ request, params }) => {
     )
   }
 
+  // Load proofs from R2 (cached after first request)
+  let proofs: AlphaVaultProofsDB | PresaleProofsDB
+  try {
+    proofs = await loadProofs(vaultId, vaultEntry)
+  } catch (err) {
+    return Response.json(
+      { error: 'Failed to load proof data', detail: err instanceof Error ? err.message : String(err) },
+      { status: 502, headers: { 'Cache-Control': 'no-store' } }
+    )
+  }
+
   // Lookup proof based on vault type
   if (vaultEntry.type === 'alpha') {
-    const result = lookupAlphaVaultProof(vaultEntry.proofs as AlphaVaultProofsDB, wallet)
+    const result = lookupAlphaVaultProof(proofs as AlphaVaultProofsDB, wallet)
     if (!result) {
       return Response.json(
         { error: 'Wallet not whitelisted for this vault', wallet, vaultId },
@@ -146,9 +166,9 @@ export const onRequest: PagesFunction = async ({ request, params }) => {
     )
   }
 
-  // Presale vault — use registryIndex param (defaults to 0)
+  // Presale vault
   const registryIndex = parseInt(url.searchParams.get('registryIndex') ?? '0', 10)
-  const result = lookupPresaleProof(vaultEntry.proofs as PresaleProofsDB, wallet, registryIndex)
+  const result = lookupPresaleProof(proofs as PresaleProofsDB, wallet, registryIndex)
   if (!result) {
     return Response.json(
       { error: 'Wallet not whitelisted for this vault', wallet, vaultId, registryIndex },
