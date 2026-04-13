@@ -1,19 +1,27 @@
 import { useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
+import { useNavigate, useParams } from 'react-router'
 import { Card } from '@/components/ui/card'
 import { AppTokenName } from '@/components/app-token-name'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenAmount } from '@/components/app-token-amount'
-import { useAuctionPresaleVault, useAuctionToken } from '../../context'
-import { fromTokenAmount } from '@/lib/bignumber'
-import { BigNumber, math, mathIs } from 'math-literal'
+import { useAuctionToken } from '../../context'
+import { mathIs } from 'math-literal'
+import type { UsePresaleVaultReturn } from '@/hooks/use-presale-vault'
+import { AuctionPhaseNav, type AuctionPhaseNavProps } from '../auction/auction-phase-nav'
 
-export function PresaleHeaderCard() {
+interface PresaleHeaderCardProps {
+  presaleVault: UsePresaleVaultReturn
+  phaseNav: AuctionPhaseNavProps
+}
+
+export function PresaleHeaderCard({ presaleVault, phaseNav }: PresaleHeaderCardProps) {
   const wallet = useWallet()
+  const navigate = useNavigate()
+  const params = useParams<{ tokenId?: string }>()
   const token = useAuctionToken()
-  const presaleVault = useAuctionPresaleVault()
 
-  if (!presaleVault?.available) return null
+  if (!presaleVault.available) return null
 
   const {
     config,
@@ -29,6 +37,8 @@ export function PresaleHeaderCard() {
     progressPercentage,
     refreshVaultInfo,
   } = presaleVault
+
+  const presaleLabel = config.label
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
@@ -47,22 +57,23 @@ export function PresaleHeaderCard() {
     ? 'Loading...'
     : vaultInfo.state === 'deposit_open'
       ? depositsNotStarted
-        ? 'Pre-Sale Opens in'
-        : 'Pre-Sale Ends in'
+        ? `${presaleLabel} Opens in`
+        : `${presaleLabel} Ends in`
       : vaultInfo.state === 'completed'
-        ? 'Pre-Sale Complete'
+        ? `${presaleLabel} Complete`
         : vaultInfo.state === 'not_started'
-          ? 'Pre-Sale Starting Soon'
-          : 'Pre-Sale Ended'
+          ? `${presaleLabel} Starting Soon`
+          : `${presaleLabel} Ended`
 
   return (
     <Card className="p-6 bg-white dark:bg-[#323334]">
       <div className="flex flex-col gap-6">
+        {/* Shared title */}
         <div className="flex items-center gap-3">
           <AppTokenIcon token={token} size={40} className="w-10 h-10" />
           <div className="flex items-center gap-3">
             <h2 className="text-xl font-semibold text-foreground flex items-center gap-1">
-              <AppTokenName token={token} /> Pre-Sale
+              <AppTokenName token={token} /> Liquidity Auction
             </h2>
             {!depositsNotStarted && vaultStateDisplay && (
               <span
@@ -72,8 +83,19 @@ export function PresaleHeaderCard() {
                 {vaultStateDisplay.label}
               </span>
             )}
+            {vaultInfo && !vaultInfo.isPermissionless && (
+              <button
+                onClick={() => navigate(`/auction/${params.tokenId}/whitelist?vault=${config.id}`)}
+                className="text-xs font-medium text-[#06a800] hover:text-[#059000] underline transition-colors ml-auto"
+              >
+                Check Whitelist
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Phase sub-tabs */}
+        <AuctionPhaseNav {...phaseNav} />
 
         <div className="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Raised */}
@@ -188,7 +210,7 @@ export function PresaleHeaderCard() {
 
           {/* Presale Info */}
           <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col justify-between gap-4">
-            <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">PRE-SALE INFO</span>
+            <span className="text-[10px] font-medium text-[#71717a] dark:text-[#999] tracking-wider">{presaleLabel.toUpperCase()} INFO</span>
             <div className="flex flex-col gap-2.5">
               {vaultInfo?.averageTokenPrice != null && vaultInfo.averageTokenPrice > 0 ? (
                 <>

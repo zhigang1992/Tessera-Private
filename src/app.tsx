@@ -38,6 +38,10 @@ export function App() {
               element={<AuctionPage />}
             />
             <Route
+              path="/auction/:tokenId/:tab"
+              element={<AuctionPage />}
+            />
+            <Route
               path="/auction/:auctionId/whitelist"
               element={<WhitelistCheckerPage />}
             />

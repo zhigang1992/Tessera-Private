@@ -21,16 +21,22 @@ import {
 import BN from 'bn.js'
 import {
   type AppTokenId,
-  type ResolvedPresaleVaultConfig,
+  type ResolvedPresaleVaultEntry,
   type SolanaNetwork,
   getCurrentNetwork,
   getRpcEndpoint,
-  getTokenPresaleVaultConfig,
 } from '@/config'
 import { fromTokenAmount, type BigNumberValue } from '@/lib/bignumber'
 import { BigNumber, math, mathIs } from 'math-literal'
 
 // ============ Types ============
+
+export interface PresaleMerkleProofParams {
+  merkleRootConfig: PublicKey
+  depositCap: BN
+  proof: number[][]
+  registryIndex: BN
+}
 
 export type PresaleStateType =
   | 'not_started'
@@ -107,6 +113,7 @@ function mapPresaleProgress(progress: PresaleProgress): PresaleStateType {
 
 export interface PresaleVaultClientOptions {
   tokenId: AppTokenId
+  presaleConfig: ResolvedPresaleVaultEntry
   connection?: Connection
   network?: SolanaNetwork
 }
@@ -121,22 +128,16 @@ export class PresaleVaultClient {
   private presaleAddress: PublicKey
   readonly tokenId: AppTokenId
   readonly network: SolanaNetwork
-  readonly config: ResolvedPresaleVaultConfig
+  readonly config: ResolvedPresaleVaultEntry
 
   constructor(options: PresaleVaultClientOptions) {
-    const { tokenId, connection, network = getCurrentNetwork() } = options
+    const { tokenId, presaleConfig, connection, network = getCurrentNetwork() } = options
 
     this.tokenId = tokenId
     this.network = network
-
-    const resolved = getTokenPresaleVaultConfig(tokenId, network)
-    if (!resolved) {
-      throw new Error(`Presale vault configuration missing for token ${tokenId} on ${network}`)
-    }
-
-    this.config = resolved
+    this.config = presaleConfig
     this.connection = connection || new Connection(getRpcEndpoint(), 'confirmed')
-    this.presaleAddress = new PublicKey(resolved.presaleAddress)
+    this.presaleAddress = new PublicKey(presaleConfig.presaleAddress)
   }
 
   async initialize(): Promise<Presale> {
@@ -337,12 +338,66 @@ export class PresaleVaultClient {
     }
   }
 
+  /**
+   * Fetch merkle proof for a wallet from the worker API.
+   * Returns null if the vault is permissionless or the wallet is not whitelisted.
+   */
+  async getMerkleProof(owner: PublicKey): Promise<PresaleMerkleProofParams | null> {
+    const vaultId = this.presaleAddress.toBase58()
+    const ownerStr = owner.toBase58()
+
+    try {
+      const response = await fetch(`/api/merkle-proof/${ownerStr}?vaultId=${vaultId}&registryIndex=0`)
+      if (!response.ok) return null
+
+      const result = await response.json() as {
+        proof: number[][]
+        depositCap: number
+        merkleRootConfig: string
+        registryIndex: number
+      }
+
+      return {
+        merkleRootConfig: new PublicKey(result.merkleRootConfig),
+        depositCap: new BN(result.depositCap),
+        proof: result.proof.map((p: number[]) => Array.from(p)),
+        registryIndex: new BN(result.registryIndex),
+      }
+    } catch {
+      return null
+    }
+  }
+
   async createDepositTransaction(
     owner: PublicKey,
     amount: BN,
+    merkleProof?: PresaleMerkleProofParams,
   ): Promise<Transaction> {
     const presale = await this.initialize()
 
+    if (merkleProof) {
+      // For permissioned vaults: create escrow with merkle proof, then deposit
+      const escrowIx = await presale.createPermissionedEscrowWithMerkleProof({
+        owner,
+        payer: owner,
+        merkleRootConfig: merkleProof.merkleRootConfig,
+        registryIndex: merkleProof.registryIndex,
+        depositCap: merkleProof.depositCap,
+        proof: merkleProof.proof,
+      })
+
+      const depositTx = await presale.deposit({
+        owner,
+        amount,
+        registryIndex: merkleProof.registryIndex,
+      })
+
+      // Prepend the escrow init instruction to the deposit tx
+      depositTx.instructions.unshift(...escrowIx.instructions)
+      return depositTx
+    }
+
+    // Permissionless deposit
     const tx = await presale.deposit({
       owner,
       amount,
@@ -355,35 +410,36 @@ export class PresaleVaultClient {
   async createWithdrawTransaction(
     owner: PublicKey,
     amount: BN,
+    registryIndex?: BN,
   ): Promise<Transaction> {
     const presale = await this.initialize()
 
     const tx = await presale.withdraw({
       owner,
       amount,
-      registryIndex: DEFAULT_PERMISSIONLESS_REGISTRY_INDEX,
+      registryIndex: registryIndex ?? DEFAULT_PERMISSIONLESS_REGISTRY_INDEX,
     })
 
     return tx
   }
 
-  async createClaimTransaction(owner: PublicKey): Promise<Transaction> {
+  async createClaimTransaction(owner: PublicKey, registryIndex?: BN): Promise<Transaction> {
     const presale = await this.initialize()
 
     const tx = await presale.claim({
       owner,
-      registryIndex: DEFAULT_PERMISSIONLESS_REGISTRY_INDEX,
+      registryIndex: registryIndex ?? DEFAULT_PERMISSIONLESS_REGISTRY_INDEX,
     })
 
     return tx
   }
 
-  async createWithdrawRemainingTransaction(owner: PublicKey): Promise<Transaction> {
+  async createWithdrawRemainingTransaction(owner: PublicKey, registryIndex?: BN): Promise<Transaction> {
     const presale = await this.initialize()
 
     const tx = await presale.withdrawRemainingQuote({
       owner,
-      registryIndex: DEFAULT_PERMISSIONLESS_REGISTRY_INDEX,
+      registryIndex: registryIndex ?? DEFAULT_PERMISSIONLESS_REGISTRY_INDEX,
     })
 
     return tx
@@ -405,13 +461,14 @@ const presaleVaultClients = new Map<string, PresaleVaultClient>()
 
 export function getPresaleVaultClient(
   tokenId: AppTokenId,
-  options: Omit<PresaleVaultClientOptions, 'tokenId'> = {}
+  presaleConfig: ResolvedPresaleVaultEntry,
+  options: Omit<PresaleVaultClientOptions, 'tokenId' | 'presaleConfig'> = {}
 ): PresaleVaultClient {
   const network = options.network ?? getCurrentNetwork()
-  const key = `presale:${tokenId}:${network}`
+  const key = `presale:${tokenId}:${presaleConfig.id}:${network}`
 
   if (!presaleVaultClients.has(key)) {
-    presaleVaultClients.set(key, new PresaleVaultClient({ tokenId, ...options, network }))
+    presaleVaultClients.set(key, new PresaleVaultClient({ tokenId, presaleConfig, ...options, network }))
   }
 
   return presaleVaultClients.get(key)!

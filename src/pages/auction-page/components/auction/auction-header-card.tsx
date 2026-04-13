@@ -9,8 +9,13 @@ import { WithdrawModal } from './withdraw-modal'
 import { useAuctionAlphaVault, useAuctionToken } from '../../context'
 import { fromTokenAmount } from '@/lib/bignumber'
 import { BigNumber, math, mathIs } from 'math-literal'
+import { AuctionPhaseNav, type AuctionPhaseNavProps } from './auction-phase-nav'
 
-export function AuctionHeaderCard() {
+interface AuctionHeaderCardProps {
+  phaseNav: AuctionPhaseNavProps
+}
+
+export function AuctionHeaderCard({ phaseNav }: AuctionHeaderCardProps) {
   const wallet = useWallet()
   const navigate = useNavigate()
   const params = useParams<{ tokenId?: string }>()
@@ -74,11 +79,12 @@ export function AuctionHeaderCard() {
   return (
     <Card className="p-6 bg-white dark:bg-[#323334]">
       <div className="flex flex-col gap-6">
+        {/* Shared title */}
         <div className="flex items-center gap-3">
           <AppTokenIcon token={token} size={40} className="w-10 h-10" />
           <div className="flex items-center gap-3">
             <h2 className="text-xl font-semibold text-foreground flex items-center gap-1">
-              <AppTokenName token={token} /> Auction
+              <AppTokenName token={token} /> Liquidity Auction
             </h2>
             {!depositsNotStarted && vaultStateDisplay && (
               <span
@@ -90,7 +96,7 @@ export function AuctionHeaderCard() {
             )}
             {vaultInfo && !vaultInfo.isPermissionless && (
               <button
-                onClick={() => navigate(`/auction/${params.tokenId}/whitelist`)}
+                onClick={() => navigate(`/auction/${params.tokenId}/whitelist?vault=auction`)}
                 className="text-xs font-medium text-[#06a800] hover:text-[#059000] underline transition-colors ml-auto"
               >
                 Check Whitelist
@@ -98,6 +104,9 @@ export function AuctionHeaderCard() {
             )}
           </div>
         </div>
+
+        {/* Phase sub-tabs */}
+        <AuctionPhaseNav {...phaseNav} />
 
         <div className="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-[#f6f6f6] dark:bg-[rgba(255,255,255,0.03)] rounded-lg p-4 flex flex-col gap-4">
