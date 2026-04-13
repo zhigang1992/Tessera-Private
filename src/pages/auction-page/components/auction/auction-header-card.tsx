@@ -96,7 +96,7 @@ export function AuctionHeaderCard({ phaseNav }: AuctionHeaderCardProps) {
             )}
             {vaultInfo && !vaultInfo.isPermissionless && (
               <button
-                onClick={() => navigate(`/auction/${params.tokenId}/whitelist`)}
+                onClick={() => navigate(`/auction/${params.tokenId}/whitelist?vault=auction`)}
                 className="text-xs font-medium text-[#06a800] hover:text-[#059000] underline transition-colors ml-auto"
               >
                 Check Whitelist

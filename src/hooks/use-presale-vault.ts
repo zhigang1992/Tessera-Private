@@ -16,6 +16,7 @@ import {
   type PresaleEscrowInfo,
   type PresaleDepositQuota,
   type PresaleClaimInfo,
+  type PresaleMerkleProofParams,
 } from '@/services/presale-vault'
 import {
   type AppTokenId,
@@ -253,7 +254,12 @@ export function usePresaleVault(tokenId: AppTokenId, presaleConfig: ResolvedPres
       try {
         const amountBN = parsePresaleAmount(amount, quoteDecimals)
 
-        const tx = await client.createDepositTransaction(wallet.publicKey, amountBN)
+        // Fetch merkle proof if vault is permissioned
+        const merkleProof = vaultInfo?.isPermissionless === false
+          ? await client.getMerkleProof(wallet.publicKey)
+          : null
+
+        const tx = await client.createDepositTransaction(wallet.publicKey, amountBN, merkleProof ?? undefined)
 
         addTermsAcceptanceMemo(tx, wallet.publicKey, MemoType.VAULT_DEPOSIT)
 

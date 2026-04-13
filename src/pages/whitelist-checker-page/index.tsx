@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
+import { useParams, useSearchParams } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { checkWhitelistStatus } from '@/lib/whitelist'
+import { checkWhitelistStatus, resolveVaultAddress } from '@/lib/whitelist'
+import { resolveTokenIdFromParam, DEFAULT_BASE_TOKEN_ID } from '@/config'
 import TesseraLogo from '@/assets/Terrera Logo.svg?react'
 import CheckCircleIcon from './components/check-circle.svg?react'
 import CancelIcon from './components/cancel.svg?react'
@@ -15,10 +17,23 @@ type CheckStatus = 'idle' | 'checking' | 'whitelisted' | 'not_whitelisted' | 'er
 
 export default function WhitelistCheckerPage() {
   const { publicKey, connected } = useWallet()
+  const params = useParams<{ auctionId?: string }>()
+  const [searchParams] = useSearchParams()
   const [walletAddress, setWalletAddress] = useState('')
   const [status, setStatus] = useState<CheckStatus>('idle')
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
+
+  // Resolve which vault to check: ?vault=presale-1 | ?vault=auction | (default)
+  const vaultTab = searchParams.get('vault')
+  const tokenId = useMemo(
+    () => resolveTokenIdFromParam(params.auctionId) ?? DEFAULT_BASE_TOKEN_ID,
+    [params.auctionId]
+  )
+  const vaultAddress = useMemo(
+    () => resolveVaultAddress(tokenId, vaultTab),
+    [tokenId, vaultTab]
+  )
 
   // Update input when wallet connects
   useEffect(() => {
@@ -35,7 +50,7 @@ export default function WhitelistCheckerPage() {
     setErrorMessage('')
 
     try {
-      const isWhitelisted = await checkWhitelistStatus(walletAddress)
+      const isWhitelisted = await checkWhitelistStatus(walletAddress, vaultAddress)
 
       if (isWhitelisted) {
         setStatus('whitelisted')

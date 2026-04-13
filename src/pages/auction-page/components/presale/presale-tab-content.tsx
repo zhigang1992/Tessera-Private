@@ -3,6 +3,7 @@ import { usePresaleVault } from '@/hooks/use-presale-vault'
 import { useAuctionTokenId } from '../../context'
 import { PresaleHeaderCard } from './presale-header-card'
 import { PresaleDepositCard } from './presale-deposit-card'
+import { PresaleProgressPlaceholder } from './presale-progress-placeholder'
 import type { AuctionPhaseNavProps } from '../auction/auction-phase-nav'
 
 interface PresaleTabContentProps {
@@ -19,7 +20,7 @@ export function PresaleTabContent({ presaleConfig, phaseNav }: PresaleTabContent
       <PresaleHeaderCard presaleVault={presaleVault} phaseNav={phaseNav} />
       <div className="flex flex-col md:flex-row gap-4 lg:gap-6">
         <div className="w-full md:basis-0 md:grow md:min-w-0 order-2 md:order-1">
-          {/* Placeholder for presale progress/info */}
+          <PresaleProgressPlaceholder label={presaleConfig.label} />
         </div>
         <div className="w-full md:w-[400px] md:flex-shrink-0 order-1 md:order-2">
           <PresaleDepositCard presaleVault={presaleVault} />

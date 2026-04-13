@@ -31,6 +31,13 @@ import { BigNumber, math, mathIs } from 'math-literal'
 
 // ============ Types ============
 
+export interface PresaleMerkleProofParams {
+  merkleRootConfig: PublicKey
+  depositCap: BN
+  proof: number[][]
+  registryIndex: BN
+}
+
 export type PresaleStateType =
   | 'not_started'
   | 'deposit_open'
@@ -331,12 +338,66 @@ export class PresaleVaultClient {
     }
   }
 
+  /**
+   * Fetch merkle proof for a wallet from the worker API.
+   * Returns null if the vault is permissionless or the wallet is not whitelisted.
+   */
+  async getMerkleProof(owner: PublicKey): Promise<PresaleMerkleProofParams | null> {
+    const vaultId = this.presaleAddress.toBase58()
+    const ownerStr = owner.toBase58()
+
+    try {
+      const response = await fetch(`/api/merkle-proof/${ownerStr}?vaultId=${vaultId}&registryIndex=0`)
+      if (!response.ok) return null
+
+      const result = await response.json() as {
+        proof: number[][]
+        depositCap: number
+        merkleRootConfig: string
+        registryIndex: number
+      }
+
+      return {
+        merkleRootConfig: new PublicKey(result.merkleRootConfig),
+        depositCap: new BN(result.depositCap),
+        proof: result.proof.map((p: number[]) => Array.from(p)),
+        registryIndex: new BN(result.registryIndex),
+      }
+    } catch {
+      return null
+    }
+  }
+
   async createDepositTransaction(
     owner: PublicKey,
     amount: BN,
+    merkleProof?: PresaleMerkleProofParams,
   ): Promise<Transaction> {
     const presale = await this.initialize()
 
+    if (merkleProof) {
+      // For permissioned vaults: create escrow with merkle proof, then deposit
+      const escrowIx = await presale.createPermissionedEscrowWithMerkleProof({
+        owner,
+        payer: owner,
+        merkleRootConfig: merkleProof.merkleRootConfig,
+        registryIndex: merkleProof.registryIndex,
+        depositCap: merkleProof.depositCap,
+        proof: merkleProof.proof,
+      })
+
+      const depositTx = await presale.deposit({
+        owner,
+        amount,
+        registryIndex: merkleProof.registryIndex,
+      })
+
+      // Prepend the escrow init instruction to the deposit tx
+      depositTx.instructions.unshift(...escrowIx.instructions)
+      return depositTx
+    }
+
+    // Permissionless deposit
     const tx = await presale.deposit({
       owner,
       amount,
@@ -349,35 +410,36 @@ export class PresaleVaultClient {
   async createWithdrawTransaction(
     owner: PublicKey,
     amount: BN,
+    registryIndex?: BN,
   ): Promise<Transaction> {
     const presale = await this.initialize()
 
     const tx = await presale.withdraw({
       owner,
       amount,
-      registryIndex: DEFAULT_PERMISSIONLESS_REGISTRY_INDEX,
+      registryIndex: registryIndex ?? DEFAULT_PERMISSIONLESS_REGISTRY_INDEX,
     })
 
     return tx
   }
 
-  async createClaimTransaction(owner: PublicKey): Promise<Transaction> {
+  async createClaimTransaction(owner: PublicKey, registryIndex?: BN): Promise<Transaction> {
     const presale = await this.initialize()
 
     const tx = await presale.claim({
       owner,
-      registryIndex: DEFAULT_PERMISSIONLESS_REGISTRY_INDEX,
+      registryIndex: registryIndex ?? DEFAULT_PERMISSIONLESS_REGISTRY_INDEX,
     })
 
     return tx
   }
 
-  async createWithdrawRemainingTransaction(owner: PublicKey): Promise<Transaction> {
+  async createWithdrawRemainingTransaction(owner: PublicKey, registryIndex?: BN): Promise<Transaction> {
     const presale = await this.initialize()
 
     const tx = await presale.withdrawRemainingQuote({
       owner,
-      registryIndex: DEFAULT_PERMISSIONLESS_REGISTRY_INDEX,
+      registryIndex: registryIndex ?? DEFAULT_PERMISSIONLESS_REGISTRY_INDEX,
     })
 
     return tx
