@@ -8,10 +8,9 @@ export interface AuctionPhaseNavProps {
   summaries: AuctionPhaseSummaryMap
 }
 
-function formatCountdown(endTime: Date): string {
-  const now = Date.now()
-  const diff = endTime.getTime() - now
-  if (diff <= 0) return 'Ended'
+function formatDuration(startTime: Date, endTime: Date): string {
+  const diff = endTime.getTime() - startTime.getTime()
+  if (diff <= 0) return '0h'
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
   if (days > 0) return `${days}d  ${hours}h`
@@ -43,7 +42,7 @@ export function AuctionPhaseNav({ activeTab, onTabChange, summaries }: AuctionPh
       {subTabs.map((tab) => {
         const isActive = activeTab === tab.id
         const summary = summaries[tab.id]
-        const countdown = summary?.endTime ? formatCountdown(summary.endTime) : null
+        const duration = summary?.startTime && summary?.endTime ? formatDuration(summary.startTime, summary.endTime) : null
         const allocation = summary?.allocation ? formatAllocation(summary.allocation) : null
         return (
           <button
@@ -57,7 +56,7 @@ export function AuctionPhaseNav({ activeTab, onTabChange, summaries }: AuctionPh
           >
             <div className="flex items-center justify-between">
               <span className="font-semibold">{tab.label}</span>
-              {countdown && (
+              {duration && (
                 <span
                   className={`text-xs font-mono px-2 py-0.5 rounded ${
                     isActive
@@ -65,7 +64,7 @@ export function AuctionPhaseNav({ activeTab, onTabChange, summaries }: AuctionPh
                       : 'bg-zinc-100 dark:bg-[#404040] text-[#71717a] dark:text-[#999]'
                   }`}
                 >
-                  {countdown}
+                  {duration}
                 </span>
               )}
             </div>
