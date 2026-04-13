@@ -1,16 +1,11 @@
-import { useMemo } from 'react'
-import { useAuctionPresaleVaultConfigs, useAuctionToken, useAuctionTokenId } from '../../context'
-import { type AuctionPhaseSchedule, getAlphaVaultSchedule } from '@/config'
+import { useAuctionPresaleVaultConfigs, useAuctionToken } from '../../context'
+import type { AuctionPhaseSummaryMap } from '@/hooks/use-auction-phase-summaries'
+import { formatBigNumber, type BigNumberValue } from '@/lib/bignumber'
 
 export interface AuctionPhaseNavProps {
   activeTab: string
   onTabChange: (tab: string) => void
-}
-
-interface PhaseTab {
-  id: string
-  label: string
-  schedule: AuctionPhaseSchedule | null
+  summaries: AuctionPhaseSummaryMap
 }
 
 function formatCountdown(endTime: Date): string {
@@ -24,24 +19,20 @@ function formatCountdown(endTime: Date): string {
   return `${hours}h  ${minutes}m`
 }
 
-export function AuctionPhaseNav({ activeTab, onTabChange }: AuctionPhaseNavProps) {
+function formatAllocation(amount: BigNumberValue): string {
+  return formatBigNumber(amount, { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+}
+
+export function AuctionPhaseNav({ activeTab, onTabChange, summaries }: AuctionPhaseNavProps) {
   const token = useAuctionToken()
-  const tokenId = useAuctionTokenId()
   const presaleConfigs = useAuctionPresaleVaultConfigs()
 
-  const alphaSchedule = useMemo(() => getAlphaVaultSchedule(tokenId), [tokenId])
-
-  const subTabs: PhaseTab[] = [
+  const subTabs = [
     ...presaleConfigs.map((pc) => ({
       id: pc.id,
       label: pc.label,
-      schedule: pc.schedule,
     })),
-    {
-      id: 'auction',
-      label: token.auctionTabLabel ?? 'Public',
-      schedule: alphaSchedule,
-    },
+    { id: 'auction', label: token.auctionTabLabel ?? 'Public' },
   ]
 
   // Don't render if only one tab
@@ -51,7 +42,9 @@ export function AuctionPhaseNav({ activeTab, onTabChange }: AuctionPhaseNavProps
     <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${subTabs.length}, 1fr)` }}>
       {subTabs.map((tab) => {
         const isActive = activeTab === tab.id
-        const countdown = tab.schedule ? formatCountdown(tab.schedule.endTime) : null
+        const summary = summaries[tab.id]
+        const countdown = summary?.endTime ? formatCountdown(summary.endTime) : null
+        const allocation = summary?.allocation ? formatAllocation(summary.allocation) : null
         return (
           <button
             key={tab.id}
@@ -76,10 +69,10 @@ export function AuctionPhaseNav({ activeTab, onTabChange }: AuctionPhaseNavProps
                 </span>
               )}
             </div>
-            {tab.schedule && (
+            {allocation && (
               <div className="flex items-center justify-between mt-1">
                 <span className="text-xs text-current opacity-60">Allocation</span>
-                <span className="text-sm font-semibold">{tab.schedule.allocation}</span>
+                <span className="text-sm font-semibold">{allocation}</span>
               </div>
             )}
           </button>

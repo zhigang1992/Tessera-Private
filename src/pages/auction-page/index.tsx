@@ -14,6 +14,7 @@ import { PresaleTabContent } from './components/presale/presale-tab-content'
 import { AuctionProvider } from './context'
 import { DEFAULT_BASE_TOKEN_ID, getAppToken, getTokenPresaleVaultConfigs, resolveTokenIdFromParam } from '@/config'
 import { useAlphaVault } from '@/hooks/use-alpha-vault'
+import { useAuctionPhaseSummaries } from '@/hooks/use-auction-phase-summaries'
 
 /** Tab belongs to the "Auction" top-level group (not claim/vesting) */
 function isAuctionGroup(tab: string) {
@@ -32,6 +33,8 @@ export default function AuctionPage() {
   const presaleVaultConfigs = useMemo(() => getTokenPresaleVaultConfigs(tokenId), [tokenId])
   const hasVestingPeriod = alphaVault.config.hasVestingPeriod
 
+  const phaseSummaries = useAuctionPhaseSummaries(tokenId, presaleVaultConfigs, alphaVault)
+
   const getDefaultTab = () => {
     if (token.auctionLive) {
       return presaleVaultConfigs.length > 0 ? presaleVaultConfigs[0].id : 'auction'
@@ -46,7 +49,7 @@ export default function AuctionPage() {
   }
 
   const showAuctionGroup = isAuctionGroup(activeTab)
-  const phaseNav = { activeTab, onTabChange: setActiveTab }
+  const phaseNav = { activeTab, onTabChange: setActiveTab, summaries: phaseSummaries }
 
   return (
     <AuctionProvider value={{ tokenId, token, alphaVault, presaleVaultConfigs }}>

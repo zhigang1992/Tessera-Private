@@ -210,9 +210,6 @@ export interface DlmmPoolConfig {
 export interface AlphaVaultNetworkConfig {
   vault: string
   dlmmPool: string
-  allocation?: number // max allocation for this phase
-  startTime?: string  // ISO 8601 datetime
-  endTime?: string    // ISO 8601 datetime
 }
 
 export type AlphaVaultType = 'fcfs' | 'prorata'
@@ -227,9 +224,6 @@ export interface AlphaVaultConfig {
 
 export interface PresaleVaultNetworkConfig {
   presale: string // presale account address
-  allocation: number // max allocation for this phase
-  startTime: string // ISO 8601 datetime
-  endTime: string   // ISO 8601 datetime
 }
 
 export type PresaleVaultType = 'fcfs' | 'prorata' | 'fixed_price'
@@ -429,16 +423,10 @@ const TOKENS: Record<AppTokenId, AppToken> = {
       devnet: {
         vault: '3Buxngd6WzbQkJbBBqfB97ZzqFTFjst2bg3NaLDWSWFJ',
         dlmmPool: 'Gfz7SEmW9pJjpPLGVELgv45gG3Rtio9zu9xbady1nvji',
-        allocation: 400,
-        startTime: '2026-04-24T00:00:00Z',
-        endTime: '2026-05-01T00:00:00Z',
       },
       'mainnet-beta': {
         vault: 'HzjX2gqfsooYTQEwQt19NdzdDy7u7f22mbu4ingA7xmx',
         dlmmPool: '', // Derived from vault on-chain data after initialization
-        allocation: 400,
-        startTime: '2026-04-24T00:00:00Z',
-        endTime: '2026-05-01T00:00:00Z',
       },
     },
     presaleVaults: [
@@ -449,15 +437,9 @@ const TOKENS: Record<AppTokenId, AppToken> = {
         vaultType: 'fixed_price',
         devnet: {
           presale: 'CnJp42qEi2e1PPjs9Hzz9Kyv7aa35pEjsiCpkU4pWjcQ',
-          allocation: 380,
-          startTime: '2026-04-10T00:00:00Z',
-          endTime: '2026-04-17T00:00:00Z',
         },
         'mainnet-beta': {
           presale: '', // TODO: set for mainnet launch
-          allocation: 380,
-          startTime: '2026-04-10T00:00:00Z',
-          endTime: '2026-04-17T00:00:00Z',
         },
       },
     ],
@@ -641,12 +623,6 @@ export function getTokenAlphaVaultConfig(
   }
 }
 
-export interface AuctionPhaseSchedule {
-  allocation: number
-  startTime: Date
-  endTime: Date
-}
-
 export interface ResolvedPresaleVaultEntry {
   id: string
   label: string
@@ -655,7 +631,6 @@ export interface ResolvedPresaleVaultEntry {
   presaleAddress: string
   baseDecimals: number
   quoteDecimals: number
-  schedule: AuctionPhaseSchedule
 }
 
 export function getTokenPresaleVaultConfigs(
@@ -668,38 +643,17 @@ export function getTokenPresaleVaultConfigs(
   return token.presaleVaults
     .filter((entry) => entry[net].presale !== '')
     .map((entry) => {
-      const envConfig = entry[net]
       const quoteToken = getAppToken(entry.quoteToken)
       return {
         id: entry.id,
         label: entry.label,
         token,
         quoteToken,
-        presaleAddress: envConfig.presale,
+        presaleAddress: entry[net].presale,
         baseDecimals: getTokenDecimals(tokenId, net),
         quoteDecimals: getTokenDecimals(entry.quoteToken, net),
-        schedule: {
-          allocation: envConfig.allocation,
-          startTime: new Date(envConfig.startTime),
-          endTime: new Date(envConfig.endTime),
-        },
       }
     })
-}
-
-export function getAlphaVaultSchedule(
-  tokenId: AppTokenId,
-  net: SolanaNetwork = getCurrentNetwork()
-): AuctionPhaseSchedule | null {
-  const token = getAppToken(tokenId)
-  if (!token.alphaVault) return null
-  const envConfig = token.alphaVault[net]
-  if (!envConfig.allocation || !envConfig.startTime || !envConfig.endTime) return null
-  return {
-    allocation: envConfig.allocation,
-    startTime: new Date(envConfig.startTime),
-    endTime: new Date(envConfig.endTime),
-  }
 }
 
 export function getTesseraMintAddress(): PublicKey {
