@@ -12,11 +12,16 @@
  * and distributes base tokens after the presale ends.
  */
 
-import { Connection, PublicKey, Transaction } from '@solana/web3.js'
+import { Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js'
 import {
   Presale,
   PresaleProgress,
   DEFAULT_PERMISSIONLESS_REGISTRY_INDEX,
+  deriveEscrow,
+  createPermissionedEscrowWithMerkleProofIx,
+  createDepositIx,
+  type ICreatePermissionedEscrowWithMerkleProofParams,
+  type IDepositParams,
 } from '@meteora-ag/presale'
 import BN from 'bn.js'
 import {
@@ -374,30 +379,59 @@ export class PresaleVaultClient {
     merkleProof?: PresaleMerkleProofParams,
   ): Promise<Transaction> {
     const presale = await this.initialize()
+    const registryIndex = merkleProof?.registryIndex ?? DEFAULT_PERMISSIONLESS_REGISTRY_INDEX
 
     if (merkleProof) {
-      // For permissioned vaults: create escrow with merkle proof, then deposit
-      const escrowIx = await presale.createPermissionedEscrowWithMerkleProof({
-        owner,
-        payer: owner,
-        merkleRootConfig: merkleProof.merkleRootConfig,
-        registryIndex: merkleProof.registryIndex,
-        depositCap: merkleProof.depositCap,
-        proof: merkleProof.proof,
-      })
+      // For permissioned vaults we bypass the SDK's deposit() wrapper entirely
+      // because it auto-fetches proofs from Meteora's server (unreliable on devnet).
+      // Instead we build the transaction manually using our own proof from the worker API.
+      const instructions: TransactionInstruction[] = []
 
-      const depositTx = await presale.deposit({
+      // 1. Check if escrow already exists (idempotent — skip if already created)
+      const escrowPda = deriveEscrow(
+        this.presaleAddress,
+        owner,
+        registryIndex,
+        presale.program.programId,
+      )
+      const escrowAccount = await presale.program.account.escrow.fetchNullable(escrowPda)
+
+      if (!escrowAccount) {
+        const initEscrowIx = await createPermissionedEscrowWithMerkleProofIx({
+          presaleProgram: presale.program,
+          presaleAddress: this.presaleAddress,
+          owner,
+          payer: owner,
+          merkleRootConfig: merkleProof.merkleRootConfig,
+          registryIndex,
+          depositCap: merkleProof.depositCap,
+          proof: merkleProof.proof,
+        } as ICreatePermissionedEscrowWithMerkleProofParams)
+        instructions.push(initEscrowIx)
+      }
+
+      // 2. Build raw deposit instruction (bypasses SDK auto-fetch)
+      const depositIxs = await createDepositIx({
+        presaleProgram: presale.program,
+        presaleAddress: this.presaleAddress,
+        presaleAccount: presale.presaleAccount,
+        transferHookAccountInfo: presale.quoteTransferHookAccountInfo,
         owner,
         amount,
-        registryIndex: merkleProof.registryIndex,
-      })
+        registryIndex,
+      } as IDepositParams)
+      instructions.push(...depositIxs)
 
-      // Prepend the escrow init instruction to the deposit tx
-      depositTx.instructions.unshift(...escrowIx.instructions)
-      return depositTx
+      // 3. Build transaction
+      const { blockhash } = await this.connection.getLatestBlockhash()
+      const tx = new Transaction()
+      tx.recentBlockhash = blockhash
+      tx.feePayer = owner
+      tx.add(...instructions)
+      return tx
     }
 
-    // Permissionless deposit
+    // Permissionless deposit — SDK handles escrow creation internally
     const tx = await presale.deposit({
       owner,
       amount,

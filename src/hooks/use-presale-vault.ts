@@ -295,7 +295,7 @@ export function usePresaleVault(tokenId: AppTokenId, presaleConfig: ResolvedPres
         setIsLoading(false)
       }
     },
-    [client, connection, wallet, refreshUserPosition, refreshVaultInfo, quoteDecimals]
+    [client, connection, wallet, refreshUserPosition, refreshVaultInfo, quoteDecimals, vaultInfo]
   )
 
   const withdraw = useCallback(
