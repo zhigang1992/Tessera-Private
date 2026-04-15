@@ -139,19 +139,21 @@ export function ClaimTokensCard() {
   }
 
   const proceedWithClaim = async () => {
-    const signature = await claim()
+    try {
+      const signature = await claim()
 
-    if (signature) {
-      toast.success('Claim successful!', {
-        description: `Transaction: ${signature.slice(0, 8)}...`,
-        action: {
-          label: 'View',
-          onClick: () => window.open(getExplorerUrl(signature), '_blank'),
-        },
-      })
-    } else if (error) {
-      toast.error('Claim failed', { description: error })
-      clearError()
+      if (signature) {
+        toast.success('Claim successful!', {
+          description: `Transaction: ${signature.slice(0, 8)}...`,
+          action: {
+            label: 'View',
+            onClick: () => window.open(getExplorerUrl(signature), '_blank'),
+          },
+        })
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Claim failed'
+      toast.error('Claim failed', { description: message })
     }
   }
 
@@ -167,19 +169,21 @@ export function ClaimTokensCard() {
       return
     }
 
-    const signature = await withdrawRemaining()
+    try {
+      const signature = await withdrawRemaining()
 
-    if (signature) {
-      toast.success('Refund withdrawn!', {
-        description: `Transaction: ${signature.slice(0, 8)}...`,
-        action: {
-          label: 'View',
-          onClick: () => window.open(getExplorerUrl(signature), '_blank'),
-        },
-      })
-    } else if (error) {
-      toast.error('Withdraw failed', { description: error })
-      clearError()
+      if (signature) {
+        toast.success('Refund withdrawn!', {
+          description: `Transaction: ${signature.slice(0, 8)}...`,
+          action: {
+            label: 'View',
+            onClick: () => window.open(getExplorerUrl(signature), '_blank'),
+          },
+        })
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Withdraw failed'
+      toast.error('Withdraw failed', { description: message })
     }
   }
 

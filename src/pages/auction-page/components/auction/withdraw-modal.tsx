@@ -50,22 +50,24 @@ export function WithdrawModal({ open, onOpenChange }: WithdrawModalProps) {
       return
     }
 
-    const signature = await withdraw(withdrawAmount)
+    try {
+      const signature = await withdraw(withdrawAmount)
 
-    if (signature) {
-      toast.success('Withdrawal successful!', {
-        description: `Transaction: ${signature.slice(0, 8)}...`,
-        action: {
-          label: 'View',
-          onClick: () =>
-            window.open(getExplorerUrl(signature), '_blank'),
-        },
-      })
-      setWithdrawAmount('')
-      onOpenChange(false)
-    } else if (error) {
-      toast.error('Withdrawal failed', { description: error })
-      clearError()
+      if (signature) {
+        toast.success('Withdrawal successful!', {
+          description: `Transaction: ${signature.slice(0, 8)}...`,
+          action: {
+            label: 'View',
+            onClick: () =>
+              window.open(getExplorerUrl(signature), '_blank'),
+          },
+        })
+        setWithdrawAmount('')
+        onOpenChange(false)
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Withdrawal failed'
+      toast.error('Withdrawal failed', { description: message })
     }
   }
 

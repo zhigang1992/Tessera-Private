@@ -369,7 +369,7 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
         }
 
         setError(message)
-        return null
+        throw new Error(message)
       } finally {
         setIsLoading(false)
       }
@@ -416,7 +416,7 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Withdrawal failed'
         setError(message)
-        return null
+        throw new Error(message)
       } finally {
         setIsLoading(false)
       }
@@ -460,7 +460,7 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Claim failed'
       setError(message)
-      return null
+      throw new Error(message)
     } finally {
       setIsLoading(false)
     }
@@ -502,7 +502,7 @@ export function useAlphaVault(tokenId: AppTokenId = DEFAULT_ALPHA_VAULT_TOKEN_ID
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Withdraw remaining failed'
       setError(message)
-      return null
+      throw new Error(message)
     } finally {
       setIsLoading(false)
     }

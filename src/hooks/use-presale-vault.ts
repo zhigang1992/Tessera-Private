@@ -330,7 +330,7 @@ export function usePresaleVault(tokenId: AppTokenId, presaleConfig: ResolvedPres
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Withdrawal failed'
         setError(message)
-        return null
+        throw new Error(message)
       } finally {
         setIsLoading(false)
       }
@@ -368,7 +368,7 @@ export function usePresaleVault(tokenId: AppTokenId, presaleConfig: ResolvedPres
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Claim failed'
       setError(message)
-      return null
+      throw new Error(message)
     } finally {
       setIsLoading(false)
     }
@@ -404,7 +404,7 @@ export function usePresaleVault(tokenId: AppTokenId, presaleConfig: ResolvedPres
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Withdraw remaining failed'
       setError(message)
-      return null
+      throw new Error(message)
     } finally {
       setIsLoading(false)
     }
