@@ -290,7 +290,7 @@ export function usePresaleVault(tokenId: AppTokenId, presaleConfig: ResolvedPres
         }
 
         setError(message)
-        return null
+        throw new Error(message)
       } finally {
         setIsLoading(false)
       }
