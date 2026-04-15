@@ -94,21 +94,25 @@ export function PresaleDepositCard({ presaleVault }: PresaleDepositCardProps) {
       return
     }
 
-    const signature = await deposit(depositAmount, () => {
-      setDepositAmount('')
-    })
+    clearError()
 
-    if (signature) {
-      toast.success(`${presaleLabel} deposit successful!`, {
-        description: `Transaction: ${signature.slice(0, 8)}...`,
-        action: {
-          label: 'View',
-          onClick: () => window.open(getExplorerUrl(signature), '_blank'),
-        },
+    try {
+      const signature = await deposit(depositAmount, () => {
+        setDepositAmount('')
       })
-    } else if (error) {
-      toast.error('Deposit failed', { description: error })
-      clearError()
+
+      if (signature) {
+        toast.success(`${presaleLabel} deposit successful!`, {
+          description: `Transaction: ${signature.slice(0, 8)}...`,
+          action: {
+            label: 'View',
+            onClick: () => window.open(getExplorerUrl(signature), '_blank'),
+          },
+        })
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Deposit failed'
+      toast.error('Deposit failed', { description: message })
     }
   }
 
