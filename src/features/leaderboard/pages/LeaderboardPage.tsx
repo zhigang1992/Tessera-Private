@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useWallet } from '@/hooks/use-wallet'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { ThemeToggleButton } from '@/components/theme-toggle-button'

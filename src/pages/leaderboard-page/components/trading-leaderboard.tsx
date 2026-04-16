@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useWallet } from '@/hooks/use-wallet'
 import { cn } from '@/lib/utils'
 import { useLeaderboard } from '@/features/leaderboard/hooks/use-leaderboard'
 import { Pagination } from '@/components/ui/pagination'

@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useWallet } from '@/hooks/use-wallet'
 import { WalletDropdown } from '@/components/wallet-dropdown'
 import personIcon from '@/assets/person.png'
 

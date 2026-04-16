@@ -1,5 +1,6 @@
 import { ThemeProvider } from '@/components/theme-provider'
 import { ReactQueryProvider } from './react-query-provider'
+import { DynamicProvider } from '@/components/dynamic/dynamic-provider'
 import { SolanaProvider } from '@/components/solana/solana-provider'
 import { SlotProvider } from '@/contexts/slot-context'
 import { HeaderProvider } from '@/contexts/header-context'
@@ -12,16 +13,18 @@ export function AppProviders({ children }: Readonly<{ children: React.ReactNode 
   return (
     <ReactQueryProvider>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-        <SolanaProvider>
-          <SlotProvider>
-            <HeaderProvider>
-              {children}
-              <Toaster position="bottom-left" />
-              <GeoBlockModal />
-              <FirstTimeUserModal />
-            </HeaderProvider>
-          </SlotProvider>
-        </SolanaProvider>
+        <DynamicProvider>
+          <SolanaProvider>
+            <SlotProvider>
+              <HeaderProvider>
+                {children}
+                <Toaster position="bottom-left" />
+                <GeoBlockModal />
+                <FirstTimeUserModal />
+              </HeaderProvider>
+            </SlotProvider>
+          </SolanaProvider>
+        </DynamicProvider>
       </ThemeProvider>
     </ReactQueryProvider>
   )

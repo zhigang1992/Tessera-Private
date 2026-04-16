@@ -1,6 +1,6 @@
 import { FormEvent, useMemo, useState } from 'react'
 import { useAffiliateData, useCreateReferralCode } from '../hooks/use-referral-onchain'
-import { useWallet, useConnection } from '@solana/wallet-adapter-react'
+import { useWallet, useConnection } from '@/hooks/use-wallet'
 import { findReferralCodeByString } from '@/lib/solana/on-chain-client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'

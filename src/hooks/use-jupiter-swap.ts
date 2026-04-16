@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useWallet } from '@/hooks/use-wallet'
 import { Connection, PublicKey } from '@solana/web3.js'
 import { getAccount, getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {

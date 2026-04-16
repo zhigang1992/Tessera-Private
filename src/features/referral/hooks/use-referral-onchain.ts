@@ -7,7 +7,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useWallet } from '@/hooks/use-wallet'
 import { PublicKey } from '@solana/web3.js'
 import { toast } from 'sonner'
 import type { ReferralCode as ReferralCodeRecord, AffiliateData as AffiliateDataRecord } from '../lib/api-client'

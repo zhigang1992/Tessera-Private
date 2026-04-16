@@ -7,7 +7,7 @@
 
 import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useWallet, useConnection } from '@solana/wallet-adapter-react'
+import { useWallet, useConnection } from '@/hooks/use-wallet'
 import { PublicKey } from '@solana/web3.js'
 import { toast } from 'sonner'
 import {

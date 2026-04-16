@@ -1,6 +1,5 @@
 import { useState, useMemo, useRef } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
-import { useWalletModal } from '@solana/wallet-adapter-react-ui'
+import { useWallet, useWalletModal } from '@/hooks/use-wallet'
 import { Info, Loader2, AlertCircle } from 'lucide-react'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'

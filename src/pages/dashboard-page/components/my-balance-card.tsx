@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useWallet } from '@/hooks/use-wallet'
 import { getUserDashboard, getTradersOverview } from '@/services'
 import { AppTokenIcon } from '@/components/app-token-icon'
 import { AppTokenName } from '@/components/app-token-name'

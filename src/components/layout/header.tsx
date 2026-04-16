@@ -1,7 +1,7 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
 import { Check } from 'lucide-react'
-import { useWallet } from '@solana/wallet-adapter-react'
-import { useWalletModal } from '@solana/wallet-adapter-react-ui'
+import { useWallet } from '@/hooks/use-wallet'
+import { DynamicWidget } from '@dynamic-labs/sdk-react-core'
 import { useTheme } from 'next-themes'
 import TesseraLogoIcon from './_/tessera-logo-icon.svg?react'
 import MenuIcon from './_/menu.svg?react'
@@ -12,7 +12,6 @@ import SunIcon from './_/sun.svg?react'
 import MoonIcon from './_/moon.svg?react'
 import ChevronRightIcon from './_/chevron-right.svg?react'
 import { Link } from 'react-router'
-import { Button } from '@/components/ui/button'
 import { clsx } from 'clsx'
 
 function ellipsify(str = '', len = 4, delimiter = '...') {
@@ -32,7 +31,6 @@ interface HeaderProps {
 
 export function Header({ onMenuClick, backButton }: HeaderProps) {
   const { connected, publicKey, disconnect } = useWallet()
-  const { setVisible } = useWalletModal()
   const { theme, setTheme } = useTheme()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isThemeSubmenuOpen, setIsThemeSubmenuOpen] = useState(false)
@@ -63,10 +61,6 @@ export function Header({ onMenuClick, backButton }: HeaderProps) {
       console.error('Failed to disconnect wallet', error)
     }
   }, [disconnect])
-
-  const handleOpenModal = useCallback(() => {
-    setVisible(true)
-  }, [setVisible])
 
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme)
@@ -198,12 +192,9 @@ export function Header({ onMenuClick, backButton }: HeaderProps) {
           )}
         </div>
       ) : (
-        <Button
-          onClick={handleOpenModal}
-          className="hidden lg:flex h-9 rounded-full bg-black px-4 text-sm font-medium text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
-        >
-          Select Wallet
-        </Button>
+        <div className="hidden lg:block">
+          <DynamicWidget />
+        </div>
       )}
     </header>
   )

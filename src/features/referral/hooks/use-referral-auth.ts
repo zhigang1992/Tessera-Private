@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
-import type { MessageSignerWalletAdapterProps } from '@solana/wallet-adapter-base'
+import { useWallet } from '@/hooks/use-wallet'
+
+type SignMessageFn = (message: Uint8Array) => Promise<Uint8Array>
 import { useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../lib/api-client'
 import { toast } from 'sonner'
@@ -95,7 +96,7 @@ export function useReferralAuth() {
 
     async function performAuthentication(
       address: string,
-      signMessageFn: MessageSignerWalletAdapterProps['signMessage'],
+      signMessageFn: SignMessageFn,
     ) {
       setIsAuthenticating(true)
       try {

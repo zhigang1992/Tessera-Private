@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useConnection } from '@solana/wallet-adapter-react'
+import { useConnection } from '@/hooks/use-wallet'
 import { useSearchParams } from 'react-router'
 import { PriceChart } from './components/price-chart'
 import { TokenSwapPanel } from './components/token-swap-panel'
