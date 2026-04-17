@@ -7,7 +7,7 @@
 
 import { Program, AnchorProvider } from '@coral-xyz/anchor'
 import { Connection, PublicKey, SystemProgram } from '@solana/web3.js'
-import type { WalletContextState } from '@solana/wallet-adapter-react'
+import type { WalletContextStateCompat as WalletContextState } from '@/hooks/use-wallet'
 import TesseraReferralsIDL from '../idl/tessera_referrals.json'
 import type { TesseraReferrals } from '@/generated/tessera-referrals/types'
 import {

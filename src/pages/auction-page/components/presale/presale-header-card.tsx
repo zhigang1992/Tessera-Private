@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useWallet } from '@/hooks/use-wallet'
 import { useNavigate, useParams } from 'react-router'
 import { Card } from '@/components/ui/card'
 import { AppTokenName } from '@/components/app-token-name'

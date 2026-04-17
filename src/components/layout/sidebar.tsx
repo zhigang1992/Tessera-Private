@@ -1,6 +1,5 @@
 import { cn } from '@/lib/utils'
-import { useWallet } from '@solana/wallet-adapter-react'
-import { useWalletModal } from '@solana/wallet-adapter-react-ui'
+import { useWallet, useWalletModal } from '@/hooks/use-wallet'
 import { Check } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useCallback, useEffect, useState } from 'react'

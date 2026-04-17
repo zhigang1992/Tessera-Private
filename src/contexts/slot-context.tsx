@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
-import { useConnection } from '@solana/wallet-adapter-react'
+import { useConnection } from '@/hooks/use-wallet'
 
 interface SlotContextValue {
   currentSlot: number | null

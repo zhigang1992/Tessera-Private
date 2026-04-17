@@ -1,4 +1,4 @@
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useWallet } from '@/hooks/use-wallet'
 import { Card } from '@/components/ui/card'
 import { AppTokenName } from '@/components/app-token-name'
 import { AppTokenAmount } from '@/components/app-token-amount'

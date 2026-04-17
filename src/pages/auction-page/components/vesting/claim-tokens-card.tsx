@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
-import { useWalletModal } from '@solana/wallet-adapter-react-ui'
+import { useWallet, useWalletModal } from '@/hooks/use-wallet'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Loader2, Lock, ArrowRight, AlertCircle } from 'lucide-react'

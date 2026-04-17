@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useWallet } from '@/hooks/use-wallet'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Card, CardContent } from '@/components/ui/card'
@@ -7,7 +7,7 @@ import { WalletDropdown } from '@/components/wallet-dropdown'
 import { Loader2, UserIcon } from 'lucide-react'
 import { useBindReferralCode } from '../hooks/use-referral-onchain'
 import { toast } from 'sonner'
-import { useWalletModal } from '@solana/wallet-adapter-react-ui'
+import { useWalletModal } from '@/hooks/use-wallet'
 
 interface ReferralCodeModalProps {
   isOpen: boolean

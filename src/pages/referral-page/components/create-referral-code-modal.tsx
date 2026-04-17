@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
 import { useCreateReferralCode } from '@/features/referral/hooks/use-referral-onchain'
-import { useConnection } from '@solana/wallet-adapter-react'
+import { useConnection } from '@/hooks/use-wallet'
 import { findReferralCodeByString } from '@/lib/solana/on-chain-client'
 
 interface CreateReferralCodeModalProps {

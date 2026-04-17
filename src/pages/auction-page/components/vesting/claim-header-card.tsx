@@ -1,7 +1,7 @@
 import { AppTokenAmount } from '@/components/app-token-amount'
 import { AppTokenName } from '@/components/app-token-name'
 import { mathIs } from '@/lib/bignumber'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useWallet } from '@/hooks/use-wallet'
 import { CheckCircle, Clock } from 'lucide-react'
 import { useAuctionAlphaVault, useAuctionToken } from '../../context'
 
