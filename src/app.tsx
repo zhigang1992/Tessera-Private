@@ -1,6 +1,6 @@
 import { AppProviders } from '@/components/app-providers.tsx'
 import { MainLayout } from '@/components/layout'
-import { AuctionPage, DashboardPage, ExplorePage, LeaderboardPage, ReferralPage, SupportPage, TradePage, TokenDetailPage, WhitelistCheckerPage } from '@/pages'
+import { AuctionPage, DashboardPage, ExplorePage, LeaderboardPage, ReferralPage, SettingsPage, SupportPage, TradePage, TokenDetailPage, WhitelistCheckerPage } from '@/pages'
 import { BrowserRouter, Navigate, Route, Routes, useSearchParams } from 'react-router'
 import { getLiveAuctionRoute } from '@/config'
 
@@ -46,6 +46,7 @@ export function App() {
               element={<WhitelistCheckerPage />}
             />
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/support" element={<SupportPage />} />
           </Routes>
         </MainLayout>
