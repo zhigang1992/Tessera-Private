@@ -1,5 +1,6 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
-import { Check } from 'lucide-react'
+import { Check, Settings } from 'lucide-react'
+import { useNavigate } from 'react-router'
 import { useWallet } from '@/hooks/use-wallet'
 import { DynamicWidget } from '@dynamic-labs/sdk-react-core'
 import { useTheme } from 'next-themes'
@@ -32,6 +33,7 @@ interface HeaderProps {
 export function Header({ onMenuClick, backButton }: HeaderProps) {
   const { connected, publicKey, disconnect } = useWallet()
   const { theme, setTheme } = useTheme()
+  const navigate = useNavigate()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isThemeSubmenuOpen, setIsThemeSubmenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -121,6 +123,18 @@ export function Header({ onMenuClick, backButton }: HeaderProps) {
           {/* Dropdown Menu */}
           {isDropdownOpen && (
             <div className="absolute right-0 top-full mt-1 w-60 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg overflow-hidden z-50">
+              {/* Settings */}
+              <button
+                onClick={() => {
+                  setIsDropdownOpen(false)
+                  navigate('/settings')
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <Settings className="size-5" />
+                <span>Settings</span>
+              </button>
+
               {/* Disconnect */}
               <button
                 onClick={handleDisconnect}
