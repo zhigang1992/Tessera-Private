@@ -6,6 +6,7 @@ import { SlotProvider } from '@/contexts/slot-context'
 import { HeaderProvider } from '@/contexts/header-context'
 import { GeoBlockModal } from '@/components/geo-block-modal'
 import { FirstTimeUserModal } from '@/components/first-time-user-modal'
+import { PwaUpdatePrompt } from '@/components/pwa-update-prompt'
 import { Toaster } from 'sonner'
 import React from 'react'
 
@@ -19,6 +20,7 @@ export function AppProviders({ children }: Readonly<{ children: React.ReactNode 
               <HeaderProvider>
                 {children}
                 <Toaster position="bottom-left" />
+                <PwaUpdatePrompt />
                 <GeoBlockModal />
                 <FirstTimeUserModal />
               </HeaderProvider>

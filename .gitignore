@@ -29,6 +29,7 @@ dist-ssr
 .wrangler/
 
 # Environment variables
+.mise.local.toml
 .envrc
 .env
 
@@ -43,3 +44,7 @@ data/logs/
 
 # Export outputs
 referral-export.*
+
+# Code agent
+.claude/settings.local.json
+.alca*

@@ -1,0 +1,56 @@
+publisher:
+  name: <<[REQUIRED] YOUR_PUBLISHER_NAME>>
+  website: <<[REQUIRED] URL_OF_PUBLISHER_WEBSITE>>
+  email: <<[REQUIRED] EMAIL_ADDRESS_TO_CONTACT_PUBLISHER>>
+  support_email: <<[Optional] SUPPORT_EMAIL_ADDRESS_FOR_END_USERS>>
+app:
+  name: Tessera
+  address: ''
+  android_package: pe.tessera.app
+  urls:
+    license_url: <<[REQUIRED] URL For App's T&C. Don't put placeholder urls.>>
+    copyright_url: <<[REQUIRED] URL For App's Copyright. Don't put placeholder urls.>>
+    privacy_policy_url: <<[REQUIRED] URL For App's Privacy Policy. Don't put placeholder urls.>>
+    website: https://app.tessera.pe
+  media:
+    - purpose: icon
+      uri: ./media/icon.png
+release:
+  address: ''
+  media:
+    - purpose: icon
+      uri: ./media/icon.png
+    - purpose: banner
+      uri: ./media/banner.png
+    - purpose: featureGraphic
+      uri: ./media/feature-graphic.png
+    - purpose: screenshot
+      uri: ./media/screenshot-1.png
+    - purpose: screenshot
+      uri: ./media/screenshot-2.png
+    - purpose: screenshot
+      uri: ./media/screenshot-3.png
+    - purpose: screenshot
+      uri: ./media/screenshot-4.png
+  files:
+    - purpose: install
+      uri: ../android/app-release-signed.apk
+  catalog:
+    en-US:
+      name: Tessera
+      short_description: Private Equity for Everyone
+      long_description: >-
+        Tessera brings private equity to everyone on Solana Mobile. Discover and
+        invest in vaults, trade on Meteora DLMM, and manage your Solana wallet
+        from one mobile-first app.
+      new_in_version: Initial release on the Solana dApp Store.
+      saga_features: <<[Optional.] ANY_FEATURES_ONLY_AVAILBLE_WHEN_RUNNING_ON_SAGA>>
+  android_details:
+    locales:
+      - en-US
+solana_mobile_dapp_publisher_portal:
+  google_store_package: <<[Optional] ANDROID_PACKAGE_NAME_OF_GOOGLE_PLAY_STORE_VERSION>>
+  testing_instructions: >-
+    <<[REQUIRED] TESTING_INSTRUCTIONS. Please provide any test account details
+    if applicable>>
+  alpha_testers: []

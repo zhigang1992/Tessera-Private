@@ -6,12 +6,10 @@ import {
 } from '@solana-mobile/wallet-standard-mobile'
 import type { SolanaCluster } from './solana-cluster-context'
 
+let registered = false
+
 export function solanaMobileWalletAdapter({
-  appIdentity = {
-    name: 'Tessera',
-    uri: 'https://app.tessera.pe',
-    icon: 'https://app.tessera.pe/favicon.ico'
-  },
+  appIdentity,
   clusters,
 }: {
   appIdentity?: { uri?: string; icon?: string; name?: string }
@@ -29,12 +27,22 @@ export function solanaMobileWalletAdapter({
     console.warn(`Solana Mobile Wallet Adapter not loaded: no clusters provided`)
     return
   }
+  if (registered) {
+    return
+  }
+  const origin = window.location.origin
+  const resolvedIdentity = {
+    name: appIdentity?.name ?? 'Tessera',
+    uri: appIdentity?.uri ?? origin,
+    icon: appIdentity?.icon ?? `${origin}/favicon.ico`,
+  }
   registerMwa({
-    appIdentity,
+    appIdentity: resolvedIdentity,
     authorizationCache: createDefaultAuthorizationCache(),
     chains,
     chainSelector: createDefaultChainSelector(),
     onWalletNotFound: createDefaultWalletNotFoundHandler(),
   })
+  registered = true
   console.log(`Loaded Solana Mobile Wallet Adapter`)
 }
