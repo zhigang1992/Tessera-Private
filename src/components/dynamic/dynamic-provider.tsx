@@ -3,14 +3,11 @@ import { SolanaWalletConnectors } from '@dynamic-labs/solana'
 import { useTheme } from 'next-themes'
 import React from 'react'
 
-const ENVIRONMENT_ID = import.meta.env.VITE_DYNAMIC_ENVIRONMENT_ID || ''
+const FALLBACK_ENVIRONMENT_ID = '28958007-e672-4e24-bd56-abadc9d639e9'
+const ENVIRONMENT_ID = import.meta.env.VITE_DYNAMIC_ENVIRONMENT_ID || FALLBACK_ENVIRONMENT_ID
 
 export function DynamicProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const { resolvedTheme } = useTheme()
-
-  if (!ENVIRONMENT_ID) {
-    console.warn('VITE_DYNAMIC_ENVIRONMENT_ID is not set. Dynamic wallet integration will not work.')
-  }
 
   return (
     <DynamicContextProvider
