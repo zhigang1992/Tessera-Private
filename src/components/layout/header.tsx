@@ -207,7 +207,7 @@ export function Header({ onMenuClick, backButton }: HeaderProps) {
         </div>
       ) : (
         <div className="hidden lg:block">
-          <DynamicWidget />
+          <DynamicWidget innerButtonComponent={<>Connect wallet</>} />
         </div>
       )}
     </header>
