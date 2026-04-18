@@ -8,6 +8,7 @@ export type CheckStatus = 'idle' | 'checking' | 'pass' | 'fail' | 'error'
 export type VolumeState = {
   status: CheckStatus
   volumeUsd: number | null
+  linkedWalletCount: number
   error: string | null
 }
 
@@ -28,14 +29,14 @@ type RunArgs = {
 }
 
 export function useEligibilityChecks() {
-  const [volume, setVolume] = useState<VolumeState>({ status: 'idle', volumeUsd: null, error: null })
+  const [volume, setVolume] = useState<VolumeState>({ status: 'idle', volumeUsd: null, linkedWalletCount: 0, error: null })
   const [twitter, setTwitter] = useState<TwitterState>({ status: 'idle', handle: null })
   const [post, setPost] = useState<PostState>({ status: 'idle', tweetUrl: null, error: null })
   const [isRunning, setIsRunning] = useState(false)
 
   const run = useCallback(async ({ wallet, twitterHandle }: RunArgs) => {
     setIsRunning(true)
-    setVolume({ status: 'checking', volumeUsd: null, error: null })
+    setVolume({ status: 'checking', volumeUsd: null, linkedWalletCount: 0, error: null })
     setTwitter({
       status: twitterHandle ? 'pass' : 'fail',
       handle: twitterHandle,
@@ -49,6 +50,7 @@ export function useEligibilityChecks() {
         setVolume({
           status: res.volumeUsd >= VOLUME_THRESHOLD_USD ? 'pass' : 'fail',
           volumeUsd: res.volumeUsd,
+          linkedWalletCount: res.linkedWalletCount ?? 0,
           error: null,
         })
       })
@@ -56,6 +58,7 @@ export function useEligibilityChecks() {
         setVolume({
           status: 'error',
           volumeUsd: null,
+          linkedWalletCount: 0,
           error: err instanceof Error ? err.message : 'Failed to check trading volume',
         })
       })
