@@ -1,5 +1,7 @@
 export type TradingVolumeResponse = {
   volumeUsd: number
+  linkedWalletCount: number
+  wallets: string[]
 }
 
 export type SocialPostResponse = {

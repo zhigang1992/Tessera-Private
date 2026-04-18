@@ -97,13 +97,16 @@ function EligibilityContent({ walletAddress }: { walletAddress: string }) {
       <div className="flex flex-col gap-2.5">
         <CriterionRow
           title="Trading volume"
-          description={`Your lifetime trading volume must be at least ${USD_FORMATTER.format(VOLUME_THRESHOLD_USD)}.`}
+          description={`Your lifetime trading volume must be at least ${USD_FORMATTER.format(VOLUME_THRESHOLD_USD)}. Volume from linked child wallets is included.`}
           status={volume.status}
           detail={
             volume.status === 'pass' || volume.status === 'fail'
               ? (
                 <span className="text-[#71717a] dark:text-[#999]">
                   Current volume: {USD_FORMATTER.format(volume.volumeUsd ?? 0)}
+                  {volume.linkedWalletCount > 0
+                    ? ` (across ${volume.linkedWalletCount + 1} wallets)`
+                    : null}
                 </span>
               )
               : volume.status === 'error'
@@ -116,11 +119,9 @@ function EligibilityContent({ walletAddress }: { walletAddress: string }) {
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled
-                  title="Coming soon"
-                  className="cursor-not-allowed"
+                  onClick={() => window.open(`/wallet-link?parent=${encodeURIComponent(walletAddress)}`, '_blank', 'noopener')}
                 >
-                  Connect extra accounts
+                  Link another wallet
                 </Button>
               )
               : null
