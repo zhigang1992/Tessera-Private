@@ -22,6 +22,10 @@ export default function ExplorePage() {
     }
   }
 
+  const handleAssetEligibility = (asset: ExploreAsset) => {
+    navigate(`/auction/${asset.ticker}/eligibility`)
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -47,6 +51,7 @@ export default function ExplorePage() {
                 key={asset.id}
                 asset={asset}
                 onAction={handleAssetAction}
+                onEligibility={handleAssetEligibility}
                 onClick={asset.appTokenId ? () => navigate(`/explorer/${asset.id}`) : undefined}
               />
             ))}

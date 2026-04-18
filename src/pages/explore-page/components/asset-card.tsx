@@ -8,13 +8,18 @@ import HourglassIcon from './_/hourglass.svg?react'
 interface AssetCardProps {
   asset: ExploreAsset
   onAction?: (asset: ExploreAsset) => void
+  onEligibility?: (asset: ExploreAsset) => void
   onClick?: () => void
 }
 
-export function AssetCard({ asset, onAction, onClick }: AssetCardProps) {
+export function AssetCard({ asset, onAction, onEligibility, onClick }: AssetCardProps) {
   const handleAction = (e: React.MouseEvent) => {
     e.stopPropagation()
     onAction?.(asset)
+  }
+  const handleEligibility = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onEligibility?.(asset)
   }
 
   return (
@@ -69,12 +74,23 @@ export function AssetCard({ asset, onAction, onClick }: AssetCardProps) {
           </Button>
         )}
         {asset.status === 'whitelisting' && (
-          <Button
-            onClick={handleAction}
-            className="w-full rounded-lg py-2.5 px-4 bg-[#d2fb95] text-[#18181b] hover:bg-[#c5ed88] text-[13px] font-medium leading-normal flex items-center justify-center gap-1.5 relative z-10"
-          >
-            Check Whitelist
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              onClick={handleAction}
+              className="w-full rounded-lg py-2.5 px-4 bg-[#d2fb95] text-[#18181b] hover:bg-[#c5ed88] text-[13px] font-medium leading-normal flex items-center justify-center gap-1.5 relative z-10"
+            >
+              Check Whitelist
+            </Button>
+            {asset.ticker === 'T-Kalshi' && (
+              <Button
+                onClick={handleEligibility}
+                variant="outline"
+                className="w-full rounded-lg py-2.5 px-4 text-[13px] font-medium leading-normal flex items-center justify-center gap-1.5 relative z-10"
+              >
+                Check Eligibility
+              </Button>
+            )}
+          </div>
         )}
         {asset.status === 'coming_soon' && (
           <Button
