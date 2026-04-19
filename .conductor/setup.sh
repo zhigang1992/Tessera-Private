@@ -4,8 +4,13 @@ set -euo pipefail
 # Install dependencies
 bun install
 
-# Link .env from root project
+# Link env files from the root project so secrets (API tokens, Cloudflare
+# creds, etc.) stay in one place. .env is for Vite, .dev.vars is what
+# `wrangler pages dev` reads to inject secrets into the function env, and
+# .envrc is for direnv at the shell level.
 ln -sf "$CONDUCTOR_ROOT_PATH/.env" .env
+[ -f "$CONDUCTOR_ROOT_PATH/.dev.vars" ] && ln -sf "$CONDUCTOR_ROOT_PATH/.dev.vars" .dev.vars
+[ -f "$CONDUCTOR_ROOT_PATH/.envrc" ] && ln -sf "$CONDUCTOR_ROOT_PATH/.envrc" .envrc
 
 # Calculate API port (Wrangler runs on CONDUCTOR_PORT + 1)
 API_PORT=$((CONDUCTOR_PORT + 1))
