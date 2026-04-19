@@ -10,6 +10,7 @@ import { useWallet } from '@/hooks/use-wallet'
 import { resolveTokenIdFromParam, getAppToken } from '@/config'
 import { CriterionRow } from './components/criterion-row'
 import { useEligibilityChecks, VOLUME_THRESHOLD_USD } from './hooks/use-eligibility-checks'
+import { isSocialCardTokenId, shareSocialCardOnTwitter } from './utils/share'
 
 const USD_FORMATTER = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -46,13 +47,25 @@ export default function EligibilityPage() {
           </CardContent>
         </Card>
       ) : (
-        <EligibilityContent walletAddress={walletAddress} />
+        <EligibilityContent
+          walletAddress={walletAddress}
+          tokenId={tokenId}
+          tokenDisplayName={token?.displayName ?? 'the auction'}
+        />
       )}
     </div>
   )
 }
 
-function EligibilityContent({ walletAddress }: { walletAddress: string }) {
+function EligibilityContent({
+  walletAddress,
+  tokenId,
+  tokenDisplayName,
+}: {
+  walletAddress: string
+  tokenId: string | null
+  tokenDisplayName: string
+}) {
   const { getLinkedAccounts, linkSocialAccount, isProcessingForProvider } = useSocialAccounts({
     onError: (err) => {
       console.error('Social account error:', err)
@@ -182,14 +195,11 @@ function EligibilityContent({ walletAddress }: { walletAddress: string }) {
                   : null
           }
           action={
-            post.status === 'fail'
+            post.status === 'fail' && twitter && isSocialCardTokenId(tokenId)
               ? (
                 <Button
                   size="sm"
-                  variant="outline"
-                  disabled
-                  title="Coming soon"
-                  className="cursor-not-allowed"
+                  onClick={() => shareSocialCardOnTwitter(walletAddress, tokenId, tokenDisplayName)}
                 >
                   Post social card
                 </Button>
