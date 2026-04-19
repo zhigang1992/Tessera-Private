@@ -27,3 +27,7 @@ bucket_name = "tessera-referral-images"
 # Browser Rendering API credentials (set these in production via wrangler secret)
 # CLOUDFLARE_ACCOUNT_ID = "your-account-id"
 # CLOUDFLARE_API_TOKEN = "your-api-token"
+
+# twitterapi.io key used by /api/social/check-referral-tweet.
+# Set via: wrangler secret put TWITTERAPI_IO_KEY
+# For local dev, add TWITTERAPI_IO_KEY=... to .dev.vars (gitignored). Never commit the key.
