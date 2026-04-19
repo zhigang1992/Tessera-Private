@@ -1,0 +1,6 @@
+[tools]
+android-sdk = "latest"
+java = "17"
+
+[env]
+JAVA_HOME = { value = "{{ tools.java.path }}", tools = true }

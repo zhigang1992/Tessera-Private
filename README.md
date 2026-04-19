@@ -28,6 +28,15 @@ npm install
 npm run dev
 ```
 
+## Mobile App Packaging
+
+The web app is also packaged as a Trusted Web Activity (TWA) Android APK, with two flavors that coexist on the same device:
+
+- [`docs/MOBILE_APP_DEV.md`](docs/MOBILE_APP_DEV.md) — build + install the dev-flavor APK (`pe.tessera.app.dev`, committed keystore, deployed via Cloudflare Pages preview branch).
+- [`docs/MOBILE_APP_PROD.md`](docs/MOBILE_APP_PROD.md) — build the prod-flavor APK (`pe.tessera.app`, keystore in 1Password) and publish to the Solana dApp Store.
+
+Common npm scripts live under `mobile:*` in `package.json`.
+
 ## Dev Wallet via URL Hash (Testing Only)
 
 - Purpose: Quickly test wallet-connected flows without installing a Chrome extension.

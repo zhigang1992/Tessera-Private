@@ -1,0 +1,15 @@
+# Ignore bubblewrap-generated Android project files in dev/
+# (bubblewrap update regenerates everything from twa-manifest.json).
+# Exceptions: keep the manifest + dev keystore tracked so any developer
+# can rebuild the dev APK without re-running init.
+dev/*
+!dev/twa-manifest.json
+!dev/android.keystore
+!dev/android.keystore.README.md
+
+# Prod is fully ignored — prod keystore MUST live in 1Password, not here.
+prod/
+
+# Build outputs
+*.apk
+*.aab

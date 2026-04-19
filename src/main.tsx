@@ -1,10 +1,17 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { registerSW } from 'virtual:pwa-register'
 import './index.css'
 import { App } from './app.tsx'
 import { WalletLinkApp } from './pages/wallet-link-page/wallet-link-app'
 // Bootstrap URL-hash wallet for testing (registers a Wallet Standard wallet if a private key is present in the URL hash)
 import './dev/url-key-wallet'
+
+const updateSW = registerSW({
+  onNeedRefresh() {
+    window.dispatchEvent(new CustomEvent('pwa:need-refresh', { detail: { updateSW } }))
+  },
+})
 
 // `/wallet-link` is a self-contained mini-app with its own wallet-adapter
 // context; it mounts *without* the Dynamic provider tree so its connection

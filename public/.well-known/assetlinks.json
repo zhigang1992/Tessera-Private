@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "pe.tessera.app.dev",
+      "sha256_cert_fingerprints": [
+        "B0:A1:88:BB:36:D9:C4:85:17:6E:B4:2C:EB:49:BB:63:D8:6D:51:C3:55:DF:93:36:5E:82:75:1F:55:82:66:05"
+      ]
+    }
+  }
+]

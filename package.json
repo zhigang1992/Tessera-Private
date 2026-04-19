@@ -7,6 +7,7 @@
     "cf:dev": "wrangler pages dev dist --compatibility-date=2025-03-01",
     "cf:pages:build": "bun run build",
     "cf:deploy": "wrangler pages deploy dist",
+    "cf:deploy:apk-dev": "wrangler pages deploy dist --project-name tesserapoc --branch apk-dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -15,7 +16,17 @@
     "test:watch": "bun test --watch",
     "migrate:export": "bun run scripts/export-production-data.ts",
     "migrate:devnet": "bun run scripts/migrate-to-devnet.ts",
-    "test:wallets": "bun run scripts/generate-test-wallets.ts"
+    "test:wallets": "bun run scripts/generate-test-wallets.ts",
+    "mobile:icons": "pwa-assets-generator",
+    "mobile:bubblewrap:init:dev": "mkdir -p android/dev && cd android/dev && bubblewrap init --manifest=\"https://${TESSERA_APK_HOST:-apk-dev.tesserapoc.pages.dev}/manifest.webmanifest\"",
+    "mobile:bubblewrap:update:dev": "cd android/dev && BUBBLEWRAP_KEYSTORE_PASSWORD=tessera-dev BUBBLEWRAP_KEY_PASSWORD=tessera-dev bubblewrap update",
+    "mobile:bubblewrap:build:dev": "cd android/dev && BUBBLEWRAP_KEYSTORE_PASSWORD=tessera-dev BUBBLEWRAP_KEY_PASSWORD=tessera-dev bubblewrap build",
+    "mobile:bubblewrap:init:prod": "mkdir -p android/prod && cd android/prod && bubblewrap init --manifest=\"https://${TESSERA_APK_HOST:-app.tessera.pe}/manifest.webmanifest\"",
+    "mobile:bubblewrap:update:prod": "cd android/prod && bubblewrap update",
+    "mobile:bubblewrap:build:prod": "cd android/prod && bubblewrap build",
+    "mobile:dappstore:init": "cd dapp-store && dapp-store init",
+    "mobile:dappstore:validate": "cd dapp-store && dapp-store validate -b ../android/prod/app-release-signed.apk",
+    "mobile:dappstore:publish": "cd dapp-store && dapp-store publish submit --requestor-is-authorized"
   },
   "description": "React+Vite, Tailwind, gill (based on @solana/kit), Wallet UI",
   "keywords": [
@@ -79,13 +90,16 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@bubblewrap/cli": "1.24.1",
     "@cloudflare/workers-types": "^4.20250927.0",
     "@eslint/js": "^9.35.0",
+    "@solana-mobile/dapp-store-cli": "0.16.0",
     "@types/bn.js": "^5.2.0",
     "@types/bs58": "^5.0.0",
     "@types/node": "^24.5.2",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "@vite-pwa/assets-generator": "1.0.2",
     "@vitejs/plugin-react": "^5.0.3",
     "bs58": "^6.0.0",
     "eslint": "^9.35.0",
@@ -99,6 +113,7 @@
     "typescript-eslint": "^8.44.0",
     "vite": "^7.1.6",
     "vite-plugin-node-polyfills": "^0.24.0",
+    "vite-plugin-pwa": "1.2.0",
     "vite-plugin-svgr": "^4.5.0",
     "vite-tsconfig-paths": "^5.1.4",
     "wrangler": "^4.40.2"

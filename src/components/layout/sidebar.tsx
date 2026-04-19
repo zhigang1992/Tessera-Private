@@ -17,7 +17,7 @@ import MoonIcon from './_/moon.svg?react'
 import PersonIcon from './_/person.svg?react'
 import ReferralIcon from './_/referral.svg?react'
 import SunIcon from './_/sun.svg?react'
-import TesseraLogo from './_/terrera-logo.svg?react'
+import TesseraLogo from './_/tessera-logo.svg?react'
 import TradeIcon from './_/trade.svg?react'
 
 function ellipsify(str = '', len = 4, delimiter = '...') {
