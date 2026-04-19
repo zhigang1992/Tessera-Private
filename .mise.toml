@@ -4,3 +4,6 @@ java = "17"
 
 [env]
 JAVA_HOME = { value = "{{ tools.java.path }}", tools = true }
+# android-sdk plugin exports both ANDROID_HOME and ANDROID_SDK_ROOT; we only
+# want ANDROID_HOME. Setting to `false` tells mise to unset after the plugin.
+ANDROID_SDK_ROOT = ""
