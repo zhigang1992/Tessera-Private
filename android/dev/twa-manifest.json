@@ -1,6 +1,6 @@
 {
   "packageId": "pe.tessera.app.dev",
-  "host": "apk-dev.tesserapoc.pages.dev",
+  "host": "dev.tessera.fun",
   "name": "Tessera Dev",
   "launcherName": "Tessera Dev",
   "display": "standalone",
@@ -13,18 +13,18 @@
   "backgroundColor": "#131314",
   "enableNotifications": true,
   "startUrl": "/",
-  "iconUrl": "https://apk-dev.tesserapoc.pages.dev/pwa-512x512.png",
-  "maskableIconUrl": "https://apk-dev.tesserapoc.pages.dev/maskable-icon-512x512.png",
+  "iconUrl": "https://dev.tessera.fun/pwa-512x512.png",
+  "maskableIconUrl": "https://dev.tessera.fun/maskable-icon-512x512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "/Users/c4605/alex/TesseraPOC/android/dev/android.keystore",
     "alias": "android"
   },
-  "appVersionName": "2",
-  "appVersionCode": 2,
+  "appVersionName": "3",
+  "appVersionCode": 3,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://apk-dev.tesserapoc.pages.dev/manifest.webmanifest",
+  "webManifestUrl": "https://dev.tessera.fun/manifest.webmanifest",
   "fallbackType": "customtabs",
   "features": {},
   "alphaDependencies": {
@@ -33,7 +33,7 @@
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
-  "fullScopeUrl": "https://apk-dev.tesserapoc.pages.dev/",
+  "fullScopeUrl": "https://dev.tessera.fun/",
   "minSdkVersion": 21,
   "orientation": "portrait",
   "fingerprints": [],
@@ -43,5 +43,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": [],
-  "appVersion": "2"
+  "appVersion": "3"
 }

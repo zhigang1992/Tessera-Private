@@ -5,7 +5,7 @@ This guide builds the **dev flavor** of the Tessera Android app — a test APK s
 | | Value |
 | --- | --- |
 | Package ID | `pe.tessera.app.dev` |
-| Host | `apk-dev.tesserapoc.pages.dev` (Cloudflare Pages preview) |
+| Host | `dev.tessera.fun` (Cloudflare Pages preview) |
 | App name on device | `Tessera Dev` |
 | Keystore | `android/dev/android.keystore` (tracked) |
 | Keystore password | `tessera-dev` (both store and key) |
@@ -31,23 +31,18 @@ Bubblewrap + dApp Store CLI + PWA asset generator are already in `devDependencie
 
 > Bubblewrap's SDK validator rejects mise's `cmdline-tools/<version>/` layout. During init we'll answer **Yes** to "Install the Android SDK?" so Bubblewrap downloads its own SDK into `~/.bubblewrap/`. The two SDKs don't conflict.
 
-## 2. Verify the preview URL is serving the PWA
+## 2. Verify the dev URL is serving the PWA
 
-Bubblewrap reads the live web manifest at init time. In practice the `apk-dev` preview branch is usually already deployed from an earlier session, so **you only need to verify it's alive**, not redeploy:
+Bubblewrap reads the live web manifest at init time. `dev.tessera.fun` auto-deploys from the `main` branch via Cloudflare Pages, so you only need to verify it's alive:
 
 ```bash
-curl -I https://apk-dev.tesserapoc.pages.dev/manifest.webmanifest
+curl -I https://dev.tessera.fun/manifest.webmanifest
 # Expect 200, Content-Type: application/manifest+json
 ```
 
-If that returns 200, skip to step 3. Deploy only when you've made web changes that need to land before rebuilding the APK (new manifest fields, new icons, new `assetlinks.json`):
+If it's not 200 yet, or you've just pushed PWA-related changes (new manifest fields, icons, `assetlinks.json`), push the commit to `main` and wait for Cloudflare Pages to finish the build before continuing.
 
-```bash
-bun run build
-bun run cf:deploy:apk-dev
-```
-
-Override the host via env var if you use a different branch alias:
+Override the host with an env var if you want to point the APK at a different host (e.g., a short-lived preview alias):
 
 ```bash
 TESSERA_APK_HOST=some-branch.tesserapoc.pages.dev bun run mobile:bubblewrap:init:dev
@@ -118,19 +113,19 @@ Init prints a `assetlinks.json` snippet with the SHA-256 fingerprint of the dev 
 First check whether the fingerprint is already live on the preview URL:
 
 ```bash
-curl -s https://apk-dev.tesserapoc.pages.dev/.well-known/assetlinks.json | grep -i "$(keytool -list -v -keystore android/dev/android.keystore -storepass tessera-dev -alias android 2>/dev/null | grep SHA256 | awk '{print $2}')"
+curl -s https://dev.tessera.fun/.well-known/assetlinks.json | grep -i "$(keytool -list -v -keystore android/dev/android.keystore -storepass tessera-dev -alias android 2>/dev/null | grep SHA256 | awk '{print $2}')"
 ```
 
 If that prints the fingerprint, skip ahead to step 5 — nothing to deploy.
 
-If it doesn't (just changed `assetlinks.json`, or first time), commit and redeploy before installing the APK — without this, Android launches the app with the Chrome URL bar instead of full-screen TWA:
+If it doesn't (just changed `assetlinks.json`, or first time), commit to `main`, push, wait for Cloudflare Pages to redeploy `dev.tessera.fun`, then:
 
 ```bash
-bun run build
-bun run cf:deploy:apk-dev
-curl -I https://apk-dev.tesserapoc.pages.dev/.well-known/assetlinks.json
+curl -I https://dev.tessera.fun/.well-known/assetlinks.json
 # Expect 200, Content-Type: application/json
 ```
+
+Without this, Android launches the APK with the Chrome URL bar instead of full-screen TWA.
 
 ## 5. Build + install the APK
 
@@ -154,14 +149,7 @@ Launch **Tessera Dev** from the home screen. Checks:
 
 ## 6. Iterating
 
-**Web code changes don't need a new APK.** The TWA is a thin wrapper; every launch loads the latest web assets from `apk-dev.tesserapoc.pages.dev`. Just redeploy:
-
-```bash
-bun run build
-bun run cf:deploy:apk-dev
-```
-
-Next time the TWA opens (or after a pull-to-refresh), the new SW takes over.
+**Web code changes don't need a new APK.** The TWA is a thin wrapper; every launch loads the latest web assets from `dev.tessera.fun`. Just push to `main` — Cloudflare Pages rebuilds `dev.tessera.fun`, and next time the TWA opens (or after a pull-to-refresh) the new content takes over.
 
 Rebuild the APK **only** when:
 

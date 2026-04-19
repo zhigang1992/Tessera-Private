@@ -52,7 +52,7 @@ Common npm scripts live under `mobile:*` in `package.json`.
 
 | Variable                       | Used by                                       | Default                                                        | Purpose                                                                                              |
 | ------------------------------ | --------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `TESSERA_APK_HOST`             | `mobile:bubblewrap:init:{dev,prod}`           | `apk-dev.tesserapoc.pages.dev` (dev) / `app.tessera.pe` (prod) | Overrides the host that Bubblewrap fetches the PWA manifest from at init time.                       |
+| `TESSERA_APK_HOST`             | `mobile:bubblewrap:init:{dev,prod}`           | `dev.tessera.fun` (dev) / `app.tessera.pe` (prod) | Overrides the host that Bubblewrap fetches the PWA manifest from at init time.                       |
 | `BUBBLEWRAP_KEYSTORE_PASSWORD` | `mobile:bubblewrap:{update,build}:{dev,prod}` | `tessera-dev` (dev, baked into script) / — (prod, must export) | Keystore password. The dev scripts bake `tessera-dev`; prod requires explicit export from 1Password. |
 | `BUBBLEWRAP_KEY_PASSWORD`      | same as above                                 | same as above                                                  | Key password. In our setup the key password equals the keystore password.                            |
 
