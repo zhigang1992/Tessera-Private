@@ -7,6 +7,7 @@ import { HeaderProvider } from '@/contexts/header-context'
 import { GeoBlockModal } from '@/components/geo-block-modal'
 import { FirstTimeUserModal } from '@/components/first-time-user-modal'
 import { PwaUpdatePrompt } from '@/components/pwa-update-prompt'
+import { WalletProvisioningToast } from '@/components/wallet-provisioning-toast'
 import { Toaster } from 'sonner'
 import React from 'react'
 
@@ -21,6 +22,7 @@ export function AppProviders({ children }: Readonly<{ children: React.ReactNode 
                 {children}
                 <Toaster position="bottom-left" />
                 <PwaUpdatePrompt />
+                <WalletProvisioningToast />
                 <GeoBlockModal />
                 <FirstTimeUserModal />
               </HeaderProvider>

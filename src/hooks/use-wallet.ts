@@ -14,7 +14,7 @@
  */
 
 import { useCallback, useMemo } from 'react'
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { useDynamicContext, useIsLoggedIn } from '@dynamic-labs/sdk-react-core'
 import { isSolanaWallet } from '@dynamic-labs/solana'
 import { Connection, PublicKey, type SendOptions, type Transaction, type TransactionSignature, type VersionedTransaction } from '@solana/web3.js'
 import { useConnection as useConnectionOriginal } from '@solana/wallet-adapter-react'
@@ -69,6 +69,7 @@ async function getSolanaSigner(primaryWallet: unknown): Promise<DynamicSigner> {
 
 export function useWallet(): WalletContextStateCompat {
   const { primaryWallet, handleLogOut, sdkHasLoaded } = useDynamicContext()
+  const isLoggedIn = useIsLoggedIn()
   const impersonationAddress = getImpersonationAddress()
 
   return useMemo<WalletContextStateCompat>(() => {
@@ -86,7 +87,8 @@ export function useWallet(): WalletContextStateCompat {
     if (!primaryWallet) {
       return {
         connected: false,
-        connecting: !sdkHasLoaded,
+        // User is authenticated but Dynamic is still provisioning the embedded wallet.
+        connecting: !sdkHasLoaded || isLoggedIn,
         publicKey: null,
         wallet: null,
         disconnect: async () => {
@@ -139,7 +141,7 @@ export function useWallet(): WalletContextStateCompat {
       sendTransaction,
       signMessage,
     }
-  }, [primaryWallet, handleLogOut, sdkHasLoaded, impersonationAddress])
+  }, [primaryWallet, handleLogOut, sdkHasLoaded, isLoggedIn, impersonationAddress])
 }
 
 export type AnchorWalletCompat = {
