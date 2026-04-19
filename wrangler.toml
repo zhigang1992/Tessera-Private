@@ -5,6 +5,7 @@ pages_build_output_dir = "dist"
 
 [vars]
 APP_ENV = "development"
+DYNAMIC_ENVIRONMENT_ID = "28958007-e672-4e24-bd56-abadc9d639e9"
 
 [[d1_databases]]
 binding = "DB"
