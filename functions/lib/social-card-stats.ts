@@ -49,24 +49,30 @@ const STATS_QUERY = `
   }
 `
 
+// Hasura numeric columns arrive as string or (for values within the JS safe
+// integer range) number — depending on the column and the client. Accept both.
+type HasuraNumeric = string | number | null | undefined
+
 type StatsQueryResponse = {
   facts_meteora_token_swap_events: Array<{
     type: string
-    amount_x: string
-    amount_y: string
+    amount_x: HasuraNumeric
+    amount_y: HasuraNumeric
     block_time: number
   }>
-  public_marts_token_details: Array<{ price: string }>
+  public_marts_token_details: Array<{ price: HasuraNumeric }>
 }
 
 const DASH = '—'
 
-// Hasura numeric values carry an 18-decimal scale. Convert a fixed-scale string
-// (e.g. "1500000000000000000000" or "1500.000000000000000000") to a float, then
-// divide by 10^18. This is lossy but fine for display values we format anyway.
-function hasura18ToNumber(raw: string | null | undefined): number {
-  if (!raw) return 0
-  const cleaned = raw.split('.')[0]
+// Hasura numeric values carry an 18-decimal scale. Accept either fixed-scale
+// strings ("1500000000000000000000", "1500.000000000000000000") or JSON numbers
+// and return a plain USD-scale float. Lossy for huge magnitudes, which is fine
+// for display values we format to 2dp anyway.
+function hasura18ToNumber(raw: HasuraNumeric): number {
+  if (raw === null || raw === undefined) return 0
+  const asString = typeof raw === 'number' ? raw.toString() : raw
+  const cleaned = asString.split('.')[0]
   let asBigInt: bigint
   try {
     asBigInt = BigInt(cleaned)
