@@ -26,6 +26,8 @@ function ellipsify(str = '', len = 4, delimiter = '...') {
   return strLen >= limit ? `${str.substring(0, len)}${delimiter}${str.substring(strLen - len, strLen)}` : str
 }
 
+const COMMIT_SHA_SHORT = __COMMIT_SHA__.slice(0, 7)
+
 const navItems = [
   { icon: ExploreIcon, label: 'Explore', path: '/explorer' },
   { icon: AuctionIcon, label: 'Auction', path: '/auction', badge: 'Live' },
@@ -219,6 +221,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 ),
               )}
             </div>
+            {COMMIT_SHA_SHORT && (
+              <p className="mt-4 text-[10px] font-mono text-gray-400/60">build {COMMIT_SHA_SHORT}</p>
+            )}
           </div>
         </div>
       </aside>
@@ -378,6 +383,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 ),
               )}
             </div>
+            {COMMIT_SHA_SHORT && (
+              <p className="mt-3 text-center text-[10px] font-mono text-gray-400/60">build {COMMIT_SHA_SHORT}</p>
+            )}
           </div>
         </div>
       </aside>
