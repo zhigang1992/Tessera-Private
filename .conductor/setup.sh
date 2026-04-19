@@ -21,4 +21,10 @@ cat > .env.local <<EOF
 VITE_API_PORT=${API_PORT}
 EOF
 
+# Apply D1 migrations to this workspace's local database. Each conductor
+# workspace gets its own .wrangler/state/v3/d1 SQLite file, so migrations
+# need to be run once per workspace. Idempotent — wrangler tracks what's
+# been applied.
+bunx wrangler d1 migrations apply tessera-referral-db --local
+
 echo "Setup complete. Vite on port ${CONDUCTOR_PORT}, Wrangler on port ${API_PORT}"
