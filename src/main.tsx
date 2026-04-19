@@ -7,9 +7,15 @@ import { WalletLinkApp } from './pages/wallet-link-page/wallet-link-app'
 // Bootstrap URL-hash wallet for testing (registers a Wallet Standard wallet if a private key is present in the URL hash)
 import './dev/url-key-wallet'
 
+// Set `VITE_SW_ENABLED=true` at build time to ship a real service worker.
+// Without it, VitePWA emits a self-destroying SW that unregisters itself, and
+// we still call registerSW() once so existing installs get cleaned up.
+// The web manifest (and PWA install prompt) is unaffected — it's always shipped.
 const updateSW = registerSW({
   onNeedRefresh() {
-    window.dispatchEvent(new CustomEvent('pwa:need-refresh', { detail: { updateSW } }))
+    if (import.meta.env.VITE_SW_ENABLED === 'true') {
+      window.dispatchEvent(new CustomEvent('pwa:need-refresh', { detail: { updateSW } }))
+    }
   },
 })
 

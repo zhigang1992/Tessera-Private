@@ -6,22 +6,16 @@ import viteTsconfigPaths from 'vite-tsconfig-paths'
 import svgr from 'vite-plugin-svgr'
 import { VitePWA } from 'vite-plugin-pwa'
 import { resolve } from 'node:path'
-import { execSync } from 'node:child_process'
 
-function resolveCommitSha(): string {
-  if (process.env.CF_PAGES_COMMIT_SHA) return process.env.CF_PAGES_COMMIT_SHA
-  try {
-    return execSync('git rev-parse HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
-  } catch {
-    return ''
-  }
-}
+// Opt in to a real service worker with `VITE_SW_ENABLED=true`. When unset
+// (the default), VitePWA still emits the web manifest + icons (the PWA
+// identity — Bubblewrap reads the manifest at init time) but generates a
+// self-destroying SW that unregisters itself on users who previously had one,
+// so flipping this off is safe for existing installs.
+const swEnabled = process.env.VITE_SW_ENABLED === 'true'
 
 // https://vite.dev/config/
 export default defineConfig({
-  define: {
-    __COMMIT_SHA__: JSON.stringify(resolveCommitSha()),
-  },
   plugins: [
     nodePolyfills({}),
     react(),
@@ -34,6 +28,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       injectRegister: false,
+      selfDestroying: !swEnabled,
       includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'pwa-source-icon.svg'],
       manifest: {
         id: '/',

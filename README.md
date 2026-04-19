@@ -37,6 +37,32 @@ The web app is also packaged as a Trusted Web Activity (TWA) Android APK, with t
 
 Common npm scripts live under `mobile:*` in `package.json`.
 
+## Environment Variables
+
+**Build time** (read by Vite, must be set before `bun run build`):
+
+| Variable                      | Default | Purpose                                                                                                                                                                                                            |
+| ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `VITE_SW_ENABLED`             | `false` | When `true`, ships a real service worker with precache + offline + update-toast. Default builds emit a self-destroying SW so existing installs clean themselves up; the web manifest and PWA icons are unaffected. |
+| `VITE_DYNAMIC_ENVIRONMENT_ID` | —       | Dynamic.xyz environment ID. Required for wallet flows. Put in `.env.local`.                                                                                                                                        |
+| `PORT`                        | `6173`  | Vite dev server port.                                                                                                                                                                                              |
+| `VITE_API_PORT`               | `8788`  | Local Cloudflare Workers dev port that Vite proxies `/api/*` and `/geo-check.json` to.                                                                                                                             |
+
+**Mobile packaging** (read by the `mobile:*` npm scripts):
+
+| Variable                       | Used by                                       | Default                                                        | Purpose                                                                                              |
+| ------------------------------ | --------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `TESSERA_APK_HOST`             | `mobile:bubblewrap:init:{dev,prod}`           | `apk-dev.tesserapoc.pages.dev` (dev) / `app.tessera.pe` (prod) | Overrides the host that Bubblewrap fetches the PWA manifest from at init time.                       |
+| `BUBBLEWRAP_KEYSTORE_PASSWORD` | `mobile:bubblewrap:{update,build}:{dev,prod}` | `tessera-dev` (dev, baked into script) / — (prod, must export) | Keystore password. The dev scripts bake `tessera-dev`; prod requires explicit export from 1Password. |
+| `BUBBLEWRAP_KEY_PASSWORD`      | same as above                                 | same as above                                                  | Key password. In our setup the key password equals the keystore password.                            |
+
+**Solana dApp Store publish** (only for prod releases):
+
+| Variable            | Purpose                                                                                            |
+| ------------------- | -------------------------------------------------------------------------------------------------- |
+| `PUBLISHER_KEYPAIR` | Absolute path to the publisher's Solana keypair JSON file (outside the repo, stored in 1Password). |
+| `SOLANA_RPC`        | Solana RPC endpoint. Use `https://api.mainnet-beta.solana.com` for actual dApp Store submissions.  |
+
 ## Dev Wallet via URL Hash (Testing Only)
 
 - Purpose: Quickly test wallet-connected flows without installing a Chrome extension.
