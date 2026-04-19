@@ -8,16 +8,28 @@ import { WalletLinkApp } from './pages/wallet-link-page/wallet-link-app'
 import './dev/url-key-wallet'
 
 // Set `VITE_SW_ENABLED=true` at build time to ship a real service worker.
-// Without it, VitePWA emits a self-destroying SW that unregisters itself, and
-// we still call registerSW() once so existing installs get cleaned up.
-// The web manifest (and PWA install prompt) is unaffected — it's always shipped.
-const updateSW = registerSW({
-  onNeedRefresh() {
-    if (import.meta.env.VITE_SW_ENABLED === 'true') {
+// When the toggle is off we must NOT call registerSW() — vite-plugin-pwa would
+// install a self-destroying SW that reloads the page on activate, creating an
+// infinite reload loop (each load re-registers the SW). Instead, manually
+// unregister any pre-existing SW so users who opted in previously get cleaned
+// up on their next visit. The web manifest (and PWA install prompt) is always
+// shipped and unaffected by this toggle.
+if (import.meta.env.VITE_SW_ENABLED === 'true') {
+  const updateSW = registerSW({
+    onNeedRefresh() {
       window.dispatchEvent(new CustomEvent('pwa:need-refresh', { detail: { updateSW } }))
+    },
+  })
+} else if ('serviceWorker' in navigator) {
+  void navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      void registration.unregister()
     }
-  },
-})
+    if (registrations.length > 0 && 'caches' in window) {
+      void caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+    }
+  })
+}
 
 // `/wallet-link` is a self-contained mini-app with its own wallet-adapter
 // context; it mounts *without* the Dynamic provider tree so its connection
