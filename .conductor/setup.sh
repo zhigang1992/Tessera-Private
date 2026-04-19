@@ -25,6 +25,7 @@ EOF
 # workspace gets its own .wrangler/state/v3/d1 SQLite file, so migrations
 # need to be run once per workspace. Idempotent — wrangler tracks what's
 # been applied.
-bunx wrangler d1 migrations apply tessera-referral-db --local
+# This will get stuck
+# bunx wrangler d1 migrations apply tessera-referral-db --local
 
 echo "Setup complete. Vite on port ${CONDUCTOR_PORT}, Wrangler on port ${API_PORT}"
