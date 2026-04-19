@@ -72,3 +72,10 @@ Notes
 - Clearing: Use the UI Disconnect button or clear `localStorage["wallet-ui:account"]` to reset selection.
 - Disable this behavior: remove the import in `src/main.tsx`:
   `import './dev/url-key-wallet'`
+
+## Cloudflare secrets
+
+`/api/social/check-referral-tweet` reads `TWITTERAPI_IO_KEY` — a twitterapi.io API key — to search for referral tweets.
+
+- Production: `wrangler secret put TWITTERAPI_IO_KEY`
+- Local dev: add `TWITTERAPI_IO_KEY=...` to `.dev.vars` (gitignored). Never commit the key.
