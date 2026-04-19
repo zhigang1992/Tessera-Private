@@ -6,9 +6,22 @@ import viteTsconfigPaths from 'vite-tsconfig-paths'
 import svgr from 'vite-plugin-svgr'
 import { VitePWA } from 'vite-plugin-pwa'
 import { resolve } from 'node:path'
+import { execSync } from 'node:child_process'
+
+function resolveCommitSha(): string {
+  if (process.env.CF_PAGES_COMMIT_SHA) return process.env.CF_PAGES_COMMIT_SHA
+  try {
+    return execSync('git rev-parse HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+  } catch {
+    return ''
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __COMMIT_SHA__: JSON.stringify(resolveCommitSha()),
+  },
   plugins: [
     nodePolyfills({}),
     react(),
