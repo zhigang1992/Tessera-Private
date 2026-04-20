@@ -4,6 +4,7 @@ export type TradingVolumeResponse = {
   volumeUsd: number
   linkedWalletCount: number
   wallets: string[]
+  mockedWalletCount?: number
 }
 
 export type SocialPostResponse = {

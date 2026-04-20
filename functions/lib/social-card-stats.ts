@@ -104,6 +104,22 @@ export async function getSocialCardStats(
   wallet: string,
   tokenId: SocialCardTokenId,
 ): Promise<SocialCardStats> {
+  // If this wallet is linked as a child, its position rolls up to the parent.
+  // Returning its own stats here would let a child wallet render a card for
+  // swaps that are already attributed to the parent.
+  try {
+    const linkedAs = await env.DB
+      .prepare('SELECT 1 AS found FROM wallet_links WHERE child_wallet = ? LIMIT 1')
+      .bind(wallet)
+      .first<{ found: number }>()
+    if (linkedAs) {
+      return { entry: DASH, gain: DASH, held: DASH }
+    }
+  } catch (err) {
+    console.error('Failed to check wallet_links child status for social card stats', err)
+    return { entry: DASH, gain: DASH, held: DASH }
+  }
+
   // Include child wallets in the query so linked wallets contribute to the position.
   let children: string[] = []
   try {

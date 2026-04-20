@@ -1,0 +1,293 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router'
+import { Loader2, Lock, Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+
+type MockRow = {
+  walletAddress: string
+  volumeUsd: number
+  note: string | null
+  createdAt: string
+}
+
+const API = '/api/admin/mock-trading-volumes'
+
+export default function AdminMockVolumesPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const secretFromUrl = searchParams.get('secret') ?? ''
+  const [secret, setSecret] = useState(secretFromUrl)
+  const [authed, setAuthed] = useState(false)
+  const [rows, setRows] = useState<MockRow[]>([])
+  const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [form, setForm] = useState({ walletAddress: '', volumeUsd: '', note: '' })
+
+  const fetchRows = useCallback(
+    async (secretValue: string) => {
+      setLoading(true)
+      try {
+        const res = await fetch(API, {
+          headers: { 'x-admin-secret': secretValue },
+        })
+        if (res.status === 401) {
+          setAuthed(false)
+          throw new Error('Invalid secret')
+        }
+        if (!res.ok) {
+          const detail = await res.json().catch(() => ({}))
+          throw new Error((detail as { error?: string }).error ?? `Request failed (${res.status})`)
+        }
+        const data = (await res.json()) as { rows: MockRow[] }
+        setRows(data.rows)
+        setAuthed(true)
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Failed to load mocks')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [],
+  )
+
+  useEffect(() => {
+    if (secretFromUrl && !authed) {
+      void fetchRows(secretFromUrl)
+    }
+  }, [secretFromUrl, authed, fetchRows])
+
+  const handleUnlock = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault()
+      if (!secret) {
+        toast.error('Enter the admin secret')
+        return
+      }
+      // Persist the secret in the URL so a refresh keeps you signed in.
+      if (searchParams.get('secret') !== secret) {
+        const next = new URLSearchParams(searchParams)
+        next.set('secret', secret)
+        setSearchParams(next, { replace: true })
+      }
+      void fetchRows(secret)
+    },
+    [secret, searchParams, setSearchParams, fetchRows],
+  )
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+      const volume = Number(form.volumeUsd)
+      if (!form.walletAddress.trim()) {
+        toast.error('Wallet address is required')
+        return
+      }
+      if (!Number.isFinite(volume) || volume < 0) {
+        toast.error('Volume must be a non-negative number')
+        return
+      }
+      setSubmitting(true)
+      try {
+        const res = await fetch(API, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-secret': secret,
+          },
+          body: JSON.stringify({
+            walletAddress: form.walletAddress.trim(),
+            volumeUsd: volume,
+            note: form.note.trim() || null,
+          }),
+        })
+        if (!res.ok) {
+          const detail = (await res.json().catch(() => ({}))) as { error?: string; detail?: string }
+          throw new Error(detail.detail ?? detail.error ?? `Request failed (${res.status})`)
+        }
+        toast.success('Mock volume saved')
+        setForm({ walletAddress: '', volumeUsd: '', note: '' })
+        await fetchRows(secret)
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Failed to save')
+      } finally {
+        setSubmitting(false)
+      }
+    },
+    [form, secret, fetchRows],
+  )
+
+  const handleDelete = useCallback(
+    async (walletAddress: string) => {
+      try {
+        const res = await fetch(`${API}?wallet=${encodeURIComponent(walletAddress)}`, {
+          method: 'DELETE',
+          headers: { 'x-admin-secret': secret },
+        })
+        if (!res.ok) {
+          const detail = (await res.json().catch(() => ({}))) as { error?: string }
+          throw new Error(detail.error ?? `Request failed (${res.status})`)
+        }
+        toast.success('Removed')
+        await fetchRows(secret)
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Failed to delete')
+      }
+    },
+    [secret, fetchRows],
+  )
+
+  const sortedRows = useMemo(
+    () => [...rows].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [rows],
+  )
+
+  if (!authed) {
+    return (
+      <div className="mx-auto w-full max-w-md px-6 pt-16 pb-12">
+        <h1 className="text-2xl font-semibold mb-2">Mock trading volumes</h1>
+        <p className="text-sm text-muted-foreground mb-6">
+          Enter the admin secret to manage mock volumes for eligibility testing.
+        </p>
+        <Card>
+          <CardContent className="p-6">
+            <form onSubmit={handleUnlock} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="secret">Admin secret</Label>
+                <Input
+                  id="secret"
+                  type="password"
+                  autoComplete="off"
+                  value={secret}
+                  onChange={(e) => setSecret(e.target.value)}
+                  placeholder="Paste secret"
+                />
+              </div>
+              <Button type="submit" disabled={loading}>
+                {loading ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}
+                <span className="ml-2">Unlock</span>
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-4xl px-6 pt-6 pb-12 sm:px-10">
+      <h1 className="text-2xl font-semibold mb-2">Mock trading volumes</h1>
+      <p className="text-sm text-muted-foreground mb-6">
+        Seeded rows override the live Hasura aggregation in the eligibility check only.
+        Set a wallet's volume above $5,000 to mark it eligible without on-chain activity.
+      </p>
+
+      <Card className="mb-8">
+        <CardContent className="p-6">
+          <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-[2fr_1fr_2fr_auto] sm:items-end">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="wallet">Wallet address</Label>
+              <Input
+                id="wallet"
+                autoComplete="off"
+                value={form.walletAddress}
+                onChange={(e) => setForm((f) => ({ ...f, walletAddress: e.target.value }))}
+                placeholder="Solana base58"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="volume">Volume (USD)</Label>
+              <Input
+                id="volume"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
+                value={form.volumeUsd}
+                onChange={(e) => setForm((f) => ({ ...f, volumeUsd: e.target.value }))}
+                placeholder="6000"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="note">Note (optional)</Label>
+              <Input
+                id="note"
+                value={form.note}
+                onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
+                placeholder="QA, partner demo, etc."
+              />
+            </div>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+              <span className="ml-2">Save</span>
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Wallet</TableHead>
+                <TableHead className="text-right">Volume (USD)</TableHead>
+                <TableHead>Note</TableHead>
+                <TableHead>Updated</TableHead>
+                <TableHead className="w-12" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading && rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    <Loader2 className="inline size-4 animate-spin" />
+                  </TableCell>
+                </TableRow>
+              ) : sortedRows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    No mock volumes seeded yet.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                sortedRows.map((row) => (
+                  <TableRow key={row.walletAddress}>
+                    <TableCell className="font-mono text-xs">{row.walletAddress}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {row.volumeUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{row.note ?? '—'}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
+                      {new Date(row.createdAt.replace(' ', 'T') + 'Z').toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(row.walletAddress)}
+                        aria-label="Remove mock"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

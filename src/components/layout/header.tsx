@@ -1,9 +1,10 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
-import { Check, Settings } from 'lucide-react'
+import { Check, Copy, Settings } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { useWallet } from '@/hooks/use-wallet'
 import { DynamicWidget } from '@dynamic-labs/sdk-react-core'
 import { useTheme } from 'next-themes'
+import { toast } from 'sonner'
 import TesseraLogoIcon from './_/tessera-logo-icon.svg?react'
 import MenuIcon from './_/menu.svg?react'
 import PersonIcon from './_/person.svg?react'
@@ -64,6 +65,17 @@ export function Header({ onMenuClick, backButton }: HeaderProps) {
     }
   }, [disconnect])
 
+  const handleCopyAddress = useCallback(async () => {
+    if (!address) return
+    try {
+      await navigator.clipboard.writeText(address)
+      toast.success('Address copied to clipboard')
+    } catch (error) {
+      console.error('Failed to copy address', error)
+    }
+    setIsDropdownOpen(false)
+  }, [address])
+
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme)
   }
@@ -123,6 +135,15 @@ export function Header({ onMenuClick, backButton }: HeaderProps) {
           {/* Dropdown Menu */}
           {isDropdownOpen && (
             <div className="absolute right-0 top-full mt-1 w-60 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg overflow-hidden z-50">
+              {/* Copy Address */}
+              <button
+                onClick={handleCopyAddress}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <Copy className="size-5" />
+                <span>Copy address</span>
+              </button>
+
               {/* Settings */}
               <button
                 onClick={() => {

@@ -1,6 +1,6 @@
 import { AppProviders } from '@/components/app-providers.tsx'
 import { MainLayout } from '@/components/layout'
-import { AuctionPage, DashboardPage, EligibilityPage, ExplorePage, LeaderboardPage, ReferralPage, SettingsPage, SupportPage, TradePage, TokenDetailPage, WhitelistCheckerPage } from '@/pages'
+import { AdminMockVolumesPage, AuctionPage, DashboardPage, EligibilityPage, ExplorePage, LeaderboardPage, ReferralPage, SettingsPage, SupportPage, TradePage, TokenDetailPage, WhitelistCheckerPage } from '@/pages'
 import { BrowserRouter, Navigate, Route, Routes, useSearchParams } from 'react-router'
 import { getLiveAuctionRoute } from '@/config'
 
@@ -49,6 +49,7 @@ export function App() {
               path="/auction/:auctionId/eligibility"
               element={<EligibilityPage />}
             />
+            <Route path="/admin/mock-volumes" element={<AdminMockVolumesPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/support" element={<SupportPage />} />

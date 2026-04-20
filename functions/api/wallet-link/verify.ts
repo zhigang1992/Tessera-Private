@@ -142,7 +142,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   // Re-check conflicts before write (another request could have beaten us).
-  const [existingLink, isParentElsewhere] = await Promise.all([
+  const [existingLink, isParentElsewhere, parentIsAlreadyChild] = await Promise.all([
     db
       .prepare('SELECT parent_wallet FROM wallet_links WHERE child_wallet = ?')
       .bind(child)
@@ -150,6 +150,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     db
       .prepare('SELECT 1 AS found FROM wallet_links WHERE parent_wallet = ? LIMIT 1')
       .bind(child)
+      .first<{ found: number }>(),
+    db
+      .prepare('SELECT 1 AS found FROM wallet_links WHERE child_wallet = ? LIMIT 1')
+      .bind(parent)
       .first<{ found: number }>(),
   ])
 
@@ -159,6 +163,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (isParentElsewhere) {
     return Response.json(
       { error: 'Wallet cannot be a child — it is already a parent of other linked wallets' },
+      { status: 409 },
+    )
+  }
+  if (parentIsAlreadyChild) {
+    return Response.json(
+      { error: 'Parent wallet is already linked as a child — nested wallet links are not supported' },
       { status: 409 },
     )
   }
