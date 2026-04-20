@@ -1,9 +1,11 @@
 /**
  * Admin API for seeding mock trading volumes used by the eligibility check.
  *
- * Auth: `ADMIN_MOCK_SECRET` env var. Provide via the `x-admin-secret` header
- * (preferred) or `?secret=` query param (so ops can receive a prefilled link).
- * The secret is compared with a constant-time check.
+ * Auth: `ADMIN_MOCK_SECRET` env var, compared constant-time against the
+ * `x-admin-secret` request header. The frontend carries the secret in a URL
+ * hash fragment (never sent over the wire) and attaches this header on each
+ * request, so the secret never reaches server logs, CDN caches, or the
+ * Referer header.
  *
  * Endpoints:
  *   GET    /api/admin/mock-trading-volumes           → list all rows
@@ -45,9 +47,7 @@ function authorize(request: Request, env: Env): Response | null {
       { status: 503 },
     )
   }
-  const url = new URL(request.url)
-  const provided =
-    request.headers.get('x-admin-secret') ?? url.searchParams.get('secret') ?? ''
+  const provided = request.headers.get('x-admin-secret') ?? ''
   if (!provided || !timingSafeEqual(provided, expected)) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }

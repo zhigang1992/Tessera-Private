@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router'
 import { Loader2, Lock, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -24,9 +23,32 @@ type MockRow = {
 
 const API = '/api/admin/mock-trading-volumes'
 
+// The secret lives in the URL hash (#secret=…) rather than the query string so
+// it never reaches the server, CDN, or access logs. Changing the hash does not
+// reload the page, so updating it in place is cheap.
+function readSecretFromHash(): string {
+  const hash = window.location.hash.startsWith('#')
+    ? window.location.hash.slice(1)
+    : window.location.hash
+  return new URLSearchParams(hash).get('secret') ?? ''
+}
+
+function writeSecretToHash(value: string) {
+  const params = new URLSearchParams(
+    window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash,
+  )
+  if (value) {
+    params.set('secret', value)
+  } else {
+    params.delete('secret')
+  }
+  const next = params.toString()
+  const url = `${window.location.pathname}${window.location.search}${next ? `#${next}` : ''}`
+  window.history.replaceState(null, '', url)
+}
+
 export default function AdminMockVolumesPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const secretFromUrl = searchParams.get('secret') ?? ''
+  const secretFromUrl = useMemo(readSecretFromHash, [])
   const [secret, setSecret] = useState(secretFromUrl)
   const [authed, setAuthed] = useState(false)
   const [rows, setRows] = useState<MockRow[]>([])
@@ -74,15 +96,12 @@ export default function AdminMockVolumesPage() {
         toast.error('Enter the admin secret')
         return
       }
-      // Persist the secret in the URL so a refresh keeps you signed in.
-      if (searchParams.get('secret') !== secret) {
-        const next = new URLSearchParams(searchParams)
-        next.set('secret', secret)
-        setSearchParams(next, { replace: true })
-      }
+      // Persist in the hash so a refresh keeps you signed in without leaking
+      // the secret into server-visible URLs.
+      writeSecretToHash(secret)
       void fetchRows(secret)
     },
-    [secret, searchParams, setSearchParams, fetchRows],
+    [secret, fetchRows],
   )
 
   const handleSubmit = useCallback(
