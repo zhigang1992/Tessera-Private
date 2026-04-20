@@ -8,6 +8,7 @@ import { GeoBlockModal } from '@/components/geo-block-modal'
 import { FirstTimeUserModal } from '@/components/first-time-user-modal'
 import { PwaUpdatePrompt } from '@/components/pwa-update-prompt'
 import { WalletProvisioningToast } from '@/components/wallet-provisioning-toast'
+import { TwitterAutoSync } from '@/components/twitter-auto-sync'
 import { Toaster } from 'sonner'
 import React from 'react'
 
@@ -20,6 +21,7 @@ export function AppProviders({ children }: Readonly<{ children: React.ReactNode 
             <SlotProvider>
               <HeaderProvider>
                 {children}
+                <TwitterAutoSync />
                 <Toaster position="bottom-left" />
                 <PwaUpdatePrompt />
                 <WalletProvisioningToast />

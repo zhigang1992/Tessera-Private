@@ -1,10 +1,6 @@
 import type { D1Database, KVNamespace, PagesFunction } from '@cloudflare/workers-types'
 
-import {
-  findTwitterCredential,
-  resolveDynamicEnvironmentId,
-  verifyDynamicJwt,
-} from '../../lib/dynamic-jwt'
+import { findTwitterCredential, resolveDynamicEnvironmentId, verifyDynamicJwt } from '../../lib/dynamic-jwt'
 import { authenticateRequest, ensureUserExists } from '../../lib/middleware'
 
 type Env = {
@@ -42,18 +38,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     claims = await verifyDynamicJwt(token, environmentId)
   } catch (error) {
     console.error('Dynamic JWT verification failed', error)
-    return Response.json(
-      { error: 'Invalid Dynamic auth token', detail: (error as Error).message },
-      { status: 401 },
-    )
+    return Response.json({ error: 'Invalid Dynamic auth token', detail: (error as Error).message }, { status: 401 })
   }
 
   const twitter = findTwitterCredential(claims)
   if (!twitter) {
-    return Response.json(
-      { verified: false, error: 'No verified Twitter credential on this account' },
-      { status: 404 },
-    )
+    return Response.json({ verified: false, error: 'No verified Twitter credential on this account' }, { status: 404 })
   }
 
   const twitterId = twitter.oauth_account_id ?? twitter.id ?? null
@@ -62,32 +52,50 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const avatar = twitter.oauth_account_photos?.[0] ?? null
 
   if (!twitterId || !twitterHandle) {
-    return Response.json(
-      { verified: false, error: 'Twitter credential missing id or handle' },
-      { status: 422 },
-    )
+    return Response.json({ verified: false, error: 'Twitter credential missing id or handle' }, { status: 422 })
   }
 
   const { walletAddress } = auth.context
 
   await ensureUserExists(walletAddress, env.DB)
 
-  await env.DB.prepare(
-    `INSERT INTO user_twitter_accounts (wallet_address, twitter_id, twitter_handle, display_name, avatar_url)
-     VALUES (?, ?, ?, ?, ?)
-     ON CONFLICT(wallet_address) DO UPDATE SET
-       twitter_id = excluded.twitter_id,
-       twitter_handle = excluded.twitter_handle,
-       display_name = excluded.display_name,
-       avatar_url = excluded.avatar_url,
-       updated_at = datetime('now')`,
+  const existing = await env.DB.prepare(
+    'SELECT twitter_id, twitter_handle, display_name, avatar_url FROM user_twitter_accounts WHERE wallet_address = ?',
   )
-    .bind(walletAddress, twitterId, twitterHandle, displayName, avatar)
-    .run()
+    .bind(walletAddress)
+    .first<{
+      twitter_id: string
+      twitter_handle: string
+      display_name: string | null
+      avatar_url: string | null
+    }>()
+
+  const unchanged =
+    existing &&
+    existing.twitter_id === twitterId &&
+    existing.twitter_handle === twitterHandle &&
+    (existing.display_name ?? null) === (displayName ?? null) &&
+    (existing.avatar_url ?? null) === (avatar ?? null)
+
+  if (!unchanged) {
+    await env.DB.prepare(
+      `INSERT INTO user_twitter_accounts (wallet_address, twitter_id, twitter_handle, display_name, avatar_url)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(wallet_address) DO UPDATE SET
+         twitter_id = excluded.twitter_id,
+         twitter_handle = excluded.twitter_handle,
+         display_name = excluded.display_name,
+         avatar_url = excluded.avatar_url,
+         updated_at = datetime('now')`,
+    )
+      .bind(walletAddress, twitterId, twitterHandle, displayName, avatar)
+      .run()
+  }
 
   return Response.json(
     {
       verified: true,
+      noop: !!unchanged,
       dynamicUserId: claims.sub ?? null,
       twitter: {
         id: twitterId,

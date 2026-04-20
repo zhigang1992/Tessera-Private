@@ -80,8 +80,8 @@ function EligibilityContent({
   const { volume, twitter: twitterState, post, isRunning, run } = useEligibilityChecks()
 
   const handleRun = useCallback(() => {
-    run({ wallet: walletAddress, twitterHandle })
-  }, [run, walletAddress, twitterHandle])
+    run({ wallet: walletAddress, twitterHandle, tokenId })
+  }, [run, walletAddress, twitterHandle, tokenId])
 
   const handleConnectTwitter = useCallback(async () => {
     try {

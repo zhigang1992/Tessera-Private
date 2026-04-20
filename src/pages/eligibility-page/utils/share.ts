@@ -1,8 +1,6 @@
-export type SocialCardTokenId = 'T-SpaceX' | 'T-Kalshi'
+import { buildSocialCardShareText, isSocialCardTokenId, type SocialCardTokenId } from '@/lib/social-card'
 
-export function isSocialCardTokenId(value: string | null | undefined): value is SocialCardTokenId {
-  return value === 'T-SpaceX' || value === 'T-Kalshi'
-}
+export { isSocialCardTokenId, type SocialCardTokenId }
 
 export function getSocialCardShareLink(wallet: string, tokenId: SocialCardTokenId): string {
   if (typeof window === 'undefined') return ''
@@ -15,14 +13,10 @@ export function getSocialCardImageUrl(wallet: string, tokenId: SocialCardTokenId
   return `/api/social/card?${params.toString()}`
 }
 
-export function shareSocialCardOnTwitter(
-  wallet: string,
-  tokenId: SocialCardTokenId,
-  tokenName: string,
-): void {
+export function shareSocialCardOnTwitter(wallet: string, tokenId: SocialCardTokenId, tokenName: string): void {
   const shareLink = getSocialCardShareLink(wallet, tokenId)
   if (!shareLink) return
-  const text = `I'm in on ${tokenName} via @Tessera_PE — private equity for everyone, on-chain, no KYC.`
+  const text = buildSocialCardShareText(tokenName)
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareLink)}`
   window.open(twitterUrl, '_blank', 'noopener,noreferrer')
 }

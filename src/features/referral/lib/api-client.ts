@@ -145,6 +145,7 @@ export class ReferralApiClient {
         localStorage.removeItem('referral_session_expires_at')
         localStorage.removeItem('referral_session_wallet_address')
       }
+      window.dispatchEvent(new CustomEvent('referral-session-changed'))
     }
   }
 

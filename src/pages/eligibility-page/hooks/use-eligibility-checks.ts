@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { fetchSocialPost, fetchTradingVolume } from '../api'
+import { fetchSocialPost, fetchTradingVolume, SocialPostError } from '../api'
 
 export const VOLUME_THRESHOLD_USD = 5000
 
@@ -26,24 +26,32 @@ export type PostState = {
 type RunArgs = {
   wallet: string
   twitterHandle: string | null
+  tokenId: string | null
 }
 
 export function useEligibilityChecks() {
-  const [volume, setVolume] = useState<VolumeState>({ status: 'idle', volumeUsd: null, linkedWalletCount: 0, error: null })
+  const [volume, setVolume] = useState<VolumeState>({
+    status: 'idle',
+    volumeUsd: null,
+    linkedWalletCount: 0,
+    error: null,
+  })
   const [twitter, setTwitter] = useState<TwitterState>({ status: 'idle', handle: null })
   const [post, setPost] = useState<PostState>({ status: 'idle', tweetUrl: null, error: null })
   const [isRunning, setIsRunning] = useState(false)
 
-  const run = useCallback(async ({ wallet, twitterHandle }: RunArgs) => {
+  const run = useCallback(async ({ wallet, twitterHandle, tokenId }: RunArgs) => {
     setIsRunning(true)
     setVolume({ status: 'checking', volumeUsd: null, linkedWalletCount: 0, error: null })
     setTwitter({
       status: twitterHandle ? 'pass' : 'fail',
       handle: twitterHandle,
     })
-    setPost(twitterHandle
-      ? { status: 'checking', tweetUrl: null, error: null }
-      : { status: 'idle', tweetUrl: null, error: null })
+    setPost(
+      twitterHandle && tokenId
+        ? { status: 'checking', tweetUrl: null, error: null }
+        : { status: 'idle', tweetUrl: null, error: null },
+    )
 
     const volumePromise = fetchTradingVolume(wallet)
       .then((res) => {
@@ -63,23 +71,29 @@ export function useEligibilityChecks() {
         })
       })
 
-    const postPromise = twitterHandle
-      ? fetchSocialPost(twitterHandle)
-          .then((res) => {
-            setPost({
-              status: res.hasPosted ? 'pass' : 'fail',
-              tweetUrl: res.tweetUrl,
-              error: null,
+    const postPromise =
+      twitterHandle && tokenId
+        ? fetchSocialPost(tokenId)
+            .then((res) => {
+              setPost({
+                status: res.hasPosted ? 'pass' : 'fail',
+                tweetUrl: res.tweetUrl,
+                error: null,
+              })
             })
-          })
-          .catch((err: unknown) => {
-            setPost({
-              status: 'error',
-              tweetUrl: null,
-              error: err instanceof Error ? err.message : 'Failed to check social post',
+            .catch((err: unknown) => {
+              setPost({
+                status: 'error',
+                tweetUrl: null,
+                error:
+                  err instanceof SocialPostError
+                    ? err.message
+                    : err instanceof Error
+                      ? err.message
+                      : 'Failed to check social post',
+              })
             })
-          })
-      : Promise.resolve()
+        : Promise.resolve()
 
     await Promise.allSettled([volumePromise, postPromise])
     setIsRunning(false)
