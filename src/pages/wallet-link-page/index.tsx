@@ -64,10 +64,19 @@ export function WalletLinkPage() {
 
   const handleSelectWallet = useCallback(
     (name: WalletName) => {
+      // If the wallet is already selected (e.g. persisted in localStorage from
+      // a prior visit), select() is a no-op and the connect effect never fires.
+      // Trigger connect() directly in that case.
+      if (wallet?.adapter.name === name && !connected && !connecting) {
+        connect().catch((err: unknown) => {
+          toast.error(err instanceof Error ? err.message : 'Failed to connect wallet')
+        })
+        return
+      }
       pendingConnectName.current = name
       select(name)
     },
-    [select],
+    [wallet, connected, connecting, select, connect],
   )
 
   const handleFetchNonce = useCallback(async () => {
@@ -161,37 +170,42 @@ export function WalletLinkPage() {
               </CardContent>
             </Card>
 
-            {!connected ? (
-              <WalletPicker
-                wallets={wallets.map((w) => ({ name: w.adapter.name, icon: w.adapter.icon }))}
-                onSelect={handleSelectWallet}
-                connecting={connecting}
-              />
+            {status.kind === 'linked' ? (
+              <LinkedCard />
             ) : (
-              <ConnectedCard
-                address={childAddress ?? ''}
-                walletName={wallet?.adapter.name ?? ''}
-                onDisconnect={() => {
-                  disconnect().catch(() => {})
-                  setStatus({ kind: 'idle' })
-                }}
-              />
-            )}
+              <>
+                {!connected ? (
+                  <WalletPicker
+                    wallets={wallets.map((w) => ({ name: w.adapter.name, icon: w.adapter.icon }))}
+                    onSelect={handleSelectWallet}
+                    connecting={connecting}
+                  />
+                ) : (
+                  <ConnectedCard
+                    address={childAddress ?? ''}
+                    walletName={wallet?.adapter.name ?? ''}
+                    onDisconnect={() => {
+                      disconnect().catch(() => {})
+                      setStatus({ kind: 'idle' })
+                    }}
+                  />
+                )}
 
-            {connected && childAddress && childAddress === parentParam && (
-              <ErrorBanner message="You connected the parent wallet. Connect a different wallet to link." />
-            )}
+                {connected && childAddress && childAddress === parentParam && (
+                  <ErrorBanner message="You connected the parent wallet. Connect a different wallet to link." />
+                )}
 
-            {connected && childAddress && childAddress !== parentParam && status.kind !== 'linked' && (
-              <ActionPanel
-                status={status}
-                onFetchNonce={handleFetchNonce}
-                onSignAndSubmit={handleSignAndSubmit}
-              />
-            )}
+                {connected && childAddress && childAddress !== parentParam && (
+                  <ActionPanel
+                    status={status}
+                    onFetchNonce={handleFetchNonce}
+                    onSignAndSubmit={handleSignAndSubmit}
+                  />
+                )}
 
-            {status.kind === 'linked' && <LinkedCard />}
-            {status.kind === 'error' && <ErrorBanner message={status.message} />}
+                {status.kind === 'error' && <ErrorBanner message={status.message} />}
+              </>
+            )}
           </div>
         )}
       </div>

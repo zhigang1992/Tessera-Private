@@ -70,6 +70,19 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     )
   }
 
+  // Parent must not itself be a child of someone else — no nested relationships.
+  const parentIsAlreadyChild = await db
+    .prepare('SELECT 1 AS found FROM wallet_links WHERE child_wallet = ? LIMIT 1')
+    .bind(parent)
+    .first<{ found: number }>()
+
+  if (parentIsAlreadyChild) {
+    return Response.json(
+      { error: 'Parent wallet is already linked as a child — nested wallet links are not supported' },
+      { status: 409 },
+    )
+  }
+
   // Ensure both wallets exist in the users table so auth_nonces FK is satisfied.
   // We use ON CONFLICT to be idempotent.
   await db.batch([
