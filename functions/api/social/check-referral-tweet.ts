@@ -26,7 +26,7 @@ type TweetCheckRow = {
 }
 
 const RATE_LIMIT_SECONDS = 30
-const NEGATIVE_TTL_SECONDS = 10 * 60
+const POSITIVE_TTL_SECONDS = 24 * 60 * 60
 
 function secondsSince(iso: string): number {
   const t = Date.parse(iso.replace(' ', 'T') + 'Z')
@@ -89,17 +89,14 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 
   if (cached) {
     const age = secondsSince(cached.checked_at)
-    if (cached.found === 1) {
+    if (cached.found === 1 && age < POSITIVE_TTL_SECONDS) {
       return Response.json(respond(cached))
     }
-    if (age < RATE_LIMIT_SECONDS) {
+    if (cached.found === 0 && age < RATE_LIMIT_SECONDS) {
       return Response.json(
         { error: 'rate_limited', retryAfterSeconds: Math.ceil(RATE_LIMIT_SECONDS - age) },
         { status: 429 },
       )
-    }
-    if (age < NEGATIVE_TTL_SECONDS) {
-      return Response.json(respond(cached))
     }
   }
 
