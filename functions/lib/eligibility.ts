@@ -14,37 +14,31 @@ import type { D1Database } from '@cloudflare/workers-types'
 import { graphqlRequest, resolveGraphQLEndpoint } from './graphql'
 import { searchTweetsByUser, TwitterApiError } from './twitter-api'
 import { isSocialCardTokenId, SOCIAL_CARD_SEARCH_QUERY } from '../../src/lib/social-card'
+import { BigNumber, fromHasuraToNative, type BigNumberSource } from '../../src/lib/bignumber'
 
 // ── Trading volume ────────────────────────────────────────────────────────────
 
 type VolumeEnv = { DB: D1Database; APP_ENV?: string }
 
 type VolumeAggregateResponse = {
-  facts_meteora_token_swap_events_aggregate: {
-    aggregate: { sum: { amount_y: string | null } }
+  public_marts_total_trading_volume_by_account_aggregate: {
+    aggregate: { sum: { total_volume: BigNumberSource | null } }
   }
 }
 
 const VOLUME_QUERY = `
-  query GetTradingVolume($senders: [String!]!) {
-    facts_meteora_token_swap_events_aggregate(where: { sender: { _in: $senders } }) {
-      aggregate { sum { amount_y } }
+  query GetTradingVolume($accounts: [String!]!) {
+    public_marts_total_trading_volume_by_account_aggregate(
+      where: { account: { _in: $accounts } }
+    ) {
+      aggregate {
+        sum {
+          total_volume
+        }
+      }
     }
   }
 `
-
-function hasura18ToUsd(raw: string | null): number {
-  if (!raw) return 0
-  const cleaned = raw.split('.')[0]
-  let asBigInt: bigint
-  try {
-    asBigInt = BigInt(cleaned)
-  } catch {
-    return 0
-  }
-  const cents = asBigInt / 10n ** 16n
-  return Number(cents) / 100
-}
 
 export type TradingVolumeResult =
   | {
@@ -119,11 +113,11 @@ export async function computeTradingVolume(
     try {
       const endpoint = resolveGraphQLEndpoint(env)
       const data = await graphqlRequest<VolumeAggregateResponse>(endpoint, VOLUME_QUERY, {
-        senders: hasuraSenders,
+        accounts: hasuraSenders,
       })
-      hasuraVolume = hasura18ToUsd(
-        data.facts_meteora_token_swap_events_aggregate.aggregate.sum.amount_y,
-      )
+      const rawSum =
+        data.public_marts_total_trading_volume_by_account_aggregate.aggregate.sum.total_volume
+      hasuraVolume = rawSum == null ? 0 : BigNumber.toNumber(fromHasuraToNative(rawSum))
     } catch (err) {
       console.error('Failed to fetch trading volume from GraphQL', err)
       return { kind: 'error', reason: 'graphql_failed', detail: (err as Error).message }
