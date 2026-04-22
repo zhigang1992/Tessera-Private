@@ -36,16 +36,6 @@ type OptionStatus = 'met' | 'unmet' | 'pending'
 type Option1State = { status: CheckStatus; volumeUsd: number }
 type Option2State = { status: CheckStatus }
 
-type MockOverride = {
-  option1: Option1State
-  option2: OptionStatus
-  option3: {
-    volume: { status: CheckStatus; volumeUsd: number }
-    twitter: { status: CheckStatus; handle: string | null }
-    post: { status: CheckStatus }
-  }
-}
-
 function optionFromChecks(...statuses: CheckStatus[]): OptionStatus {
   if (statuses.length === 0) return 'pending'
   if (statuses.every((s) => s === 'pass')) return 'met'
@@ -216,10 +206,8 @@ function EligibilityContent({
 
   const [option1, setOption1] = useState<Option1State>({ status: 'idle', volumeUsd: 0 })
   const [option2, setOption2] = useState<Option2State>({ status: 'idle' })
-  const [mockOverride, setMockOverride] = useState<MockOverride | null>(null)
 
   const handleRun = useCallback(async () => {
-    setMockOverride(null)
     if (!isAuthenticated) {
       const ok = await authenticate()
       if (!ok) return
@@ -270,50 +258,32 @@ function EligibilityContent({
     }
   }
 
-  const effectiveOption1 = mockOverride ? mockOverride.option1 : option1
-  const effectiveOption2Status: OptionStatus = mockOverride
-    ? mockOverride.option2
-    : option2.status === 'pass'
+  const option2Status: OptionStatus =
+    option2.status === 'pass'
       ? 'met'
       : option2.status === 'fail' || option2.status === 'error'
         ? 'unmet'
         : 'pending'
 
-  const effectiveVolume = mockOverride
-    ? {
-        status: mockOverride.option3.volume.status,
-        volumeUsd: mockOverride.option3.volume.volumeUsd,
-        linkedWalletCount: 0,
-        error: null,
-      }
-    : volume
-  const effectiveTwitter = mockOverride
-    ? { status: mockOverride.option3.twitter.status, handle: mockOverride.option3.twitter.handle }
-    : twitterState
-  const effectiveTwitterHandle = mockOverride
-    ? mockOverride.option3.twitter.handle
-    : twitter?.username ?? null
-  const twitterLinked = mockOverride ? !!mockOverride.option3.twitter.handle : !!twitter
-  const effectivePost = mockOverride
-    ? { status: mockOverride.option3.post.status, tweetUrl: null, error: null }
-    : post
+  const twitterLinked = !!twitter
+  const twitterHandleDisplay = twitter?.username ?? null
 
   const hasChecked =
-    effectiveOption1.status !== 'idle' ||
-    effectiveOption2Status !== 'pending' ||
-    effectiveVolume.status !== 'idle' ||
-    effectivePost.status !== 'idle' ||
-    effectiveTwitter.status !== 'idle'
+    option1.status !== 'idle' ||
+    option2Status !== 'pending' ||
+    volume.status !== 'idle' ||
+    post.status !== 'idle' ||
+    twitterState.status !== 'idle'
 
-  const option1Status: OptionStatus = optionFromChecks(effectiveOption1.status)
+  const option1Status: OptionStatus = optionFromChecks(option1.status)
   const option3Status: OptionStatus = optionFromChecks(
-    effectiveVolume.status,
-    effectiveTwitter.status,
-    effectivePost.status,
+    volume.status,
+    twitterState.status,
+    post.status,
   )
 
   const isEligible =
-    option1Status === 'met' || effectiveOption2Status === 'met' || option3Status === 'met'
+    option1Status === 'met' || option2Status === 'met' || option3Status === 'met'
 
   const statusColor = hasChecked ? (isEligible ? '#06a800' : '#d4183d') : '#999'
   const statusText = hasChecked
@@ -331,97 +301,8 @@ function EligibilityContent({
         ? 'Re-verify Status'
         : 'Verify Status'
 
-  const testOption1Pass = () => {
-    setMockOverride({
-      option1: { status: 'pass', volumeUsd: 2500 },
-      option2: 'unmet',
-      option3: {
-        volume: { status: 'fail', volumeUsd: 2500 },
-        twitter: { status: 'fail', handle: null },
-        post: { status: 'fail' },
-      },
-    })
-  }
-  const testOption1Fail = () => {
-    setMockOverride({
-      option1: { status: 'fail', volumeUsd: 200 },
-      option2: 'unmet',
-      option3: {
-        volume: { status: 'fail', volumeUsd: 200 },
-        twitter: { status: 'fail', handle: null },
-        post: { status: 'fail' },
-      },
-    })
-  }
-  const testAllPass = () => {
-    setMockOverride({
-      option1: { status: 'pass', volumeUsd: 6000 },
-      option2: 'met',
-      option3: {
-        volume: { status: 'pass', volumeUsd: 6000 },
-        twitter: { status: 'pass', handle: 'CryptonianXY' },
-        post: { status: 'pass' },
-      },
-    })
-  }
-  const testAllFail = () => {
-    setMockOverride({
-      option1: { status: 'fail', volumeUsd: 0 },
-      option2: 'unmet',
-      option3: {
-        volume: { status: 'fail', volumeUsd: 0 },
-        twitter: { status: 'fail', handle: null },
-        post: { status: 'fail' },
-      },
-    })
-  }
-  const testXConnected = () => {
-    setMockOverride({
-      option1: { status: 'fail', volumeUsd: 200 },
-      option2: 'unmet',
-      option3: {
-        volume: { status: 'pass', volumeUsd: 6000 },
-        twitter: { status: 'pass', handle: 'CryptonianXY' },
-        post: { status: 'fail' },
-      },
-    })
-  }
-
   return (
     <>
-      <div className="flex gap-2 flex-wrap">
-        <button
-          onClick={testOption1Pass}
-          className="px-3 py-1.5 rounded-md bg-[#06a800] text-white text-[12px] font-medium hover:bg-[#058700] transition-colors"
-        >
-          Test Option1 Pass
-        </button>
-        <button
-          onClick={testOption1Fail}
-          className="px-3 py-1.5 rounded-md bg-[#d4183d] text-white text-[12px] font-medium hover:bg-[#b81535] transition-colors"
-        >
-          Test Option1 Fail
-        </button>
-        <button
-          onClick={testAllPass}
-          className="px-3 py-1.5 rounded-md bg-[#06a800] text-white text-[12px] font-medium hover:bg-[#058700] transition-colors"
-        >
-          Test All Pass
-        </button>
-        <button
-          onClick={testAllFail}
-          className="px-3 py-1.5 rounded-md bg-[#d4183d] text-white text-[12px] font-medium hover:bg-[#b81535] transition-colors"
-        >
-          Test All Fail
-        </button>
-        <button
-          onClick={testXConnected}
-          className="px-3 py-1.5 rounded-md bg-[#0ea5e9] text-white text-[12px] font-medium hover:bg-[#0284c7] transition-colors"
-        >
-          Test X connected
-        </button>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-[10px] items-start">
         <div className="lg:col-span-4 flex flex-col gap-6">
           <div className="p-[30px] rounded-[16px] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#1a1a1b] shadow-sm">
@@ -491,8 +372,8 @@ function EligibilityContent({
             description={`Trade ${USD_FORMATTER.format(OPTION1_VOLUME_THRESHOLD_USD)}+ of ${tokenDisplayName} before ${PRESALE2_SNAPSHOT_DATE} snapshot`}
             status={option1Status}
             additionalInfo={
-              effectiveOption1.status === 'pass' || effectiveOption1.status === 'fail' ? (
-                <>Trading volume: {USD_FORMATTER.format(effectiveOption1.volumeUsd)}</>
+              option1.status === 'pass' || option1.status === 'fail' ? (
+                <>Trading volume: {USD_FORMATTER.format(option1.volumeUsd)}</>
               ) : null
             }
             extraActionLabel={option1Status === 'unmet' ? 'Link another wallet' : undefined}
@@ -504,7 +385,7 @@ function EligibilityContent({
           <RequirementOption
             label="Option 2"
             description="Connect to Tessera using a Solana mobile device"
-            status={effectiveOption2Status}
+            status={option2Status}
           />
 
           <RequirementOption
@@ -515,21 +396,21 @@ function EligibilityContent({
             <CriterionRow
               title="Trading volume"
               description={`Your lifetime trading volume must be at least ${USD_FORMATTER.format(VOLUME_THRESHOLD_USD)}. Volume from linked child wallets is included.`}
-              status={effectiveVolume.status}
+              status={volume.status}
               additionalInfo={
-                effectiveVolume.status === 'pass' || effectiveVolume.status === 'fail' ? (
+                volume.status === 'pass' || volume.status === 'fail' ? (
                   <>
-                    Current volume: {USD_FORMATTER.format(effectiveVolume.volumeUsd ?? 0)}
-                    {!mockOverride && volume.linkedWalletCount > 0
+                    Current volume: {USD_FORMATTER.format(volume.volumeUsd ?? 0)}
+                    {volume.linkedWalletCount > 0
                       ? ` (across ${volume.linkedWalletCount + 1} wallets)`
                       : null}
                   </>
-                ) : !mockOverride && volume.status === 'error' ? (
+                ) : volume.status === 'error' ? (
                   <span className="text-red-600">{volume.error}</span>
                 ) : null
               }
               action={
-                !mockOverride && volume.status === 'fail' ? (
+                volume.status === 'fail' ? (
                   <Button
                     size="sm"
                     variant="outline"
@@ -546,14 +427,14 @@ function EligibilityContent({
             <CriterionRow
               title={twitterLinked ? 'X connected' : 'Connect your X'}
               description="Link your X account in Settings to qualify."
-              status={effectiveTwitter.status}
+              status={twitterState.status}
               additionalInfo={
-                twitterLinked && effectiveTwitterHandle ? (
-                  <>Connected as @{effectiveTwitterHandle}</>
+                twitterLinked && twitterHandleDisplay ? (
+                  <>Connected as @{twitterHandleDisplay}</>
                 ) : null
               }
               action={
-                !mockOverride && !twitter ? (
+                !twitter ? (
                   <Button size="sm" onClick={handleConnectTwitter} disabled={isLinkingTwitter}>
                     {isLinkingTwitter ? (
                       <Loader2 className="size-4 animate-spin mr-2" />
@@ -567,11 +448,11 @@ function EligibilityContent({
             />
 
             <CriterionRow
-              title={effectivePost.status === 'pass' ? 'Social card posted' : 'Post social card'}
+              title={post.status === 'pass' ? 'Social card posted' : 'Post social card'}
               description="Post a Tessera social card from your X account."
-              status={effectivePost.status}
+              status={post.status}
               additionalInfo={
-                !mockOverride && post.status === 'pass' && post.tweetUrl ? (
+                post.status === 'pass' && post.tweetUrl ? (
                   <a
                     href={post.tweetUrl}
                     target="_blank"
@@ -580,14 +461,14 @@ function EligibilityContent({
                   >
                     View your post
                   </a>
-                ) : !mockOverride && post.status === 'error' ? (
+                ) : post.status === 'error' ? (
                   <span className="text-red-600">{post.error}</span>
                 ) : !twitterLinked ? (
                   <>Connect X first.</>
                 ) : null
               }
               action={
-                !mockOverride && post.status === 'fail' && twitter && isSocialCardTokenId(tokenId) ? (
+                post.status === 'fail' && twitter && isSocialCardTokenId(tokenId) ? (
                   <Button size="sm" onClick={() => shareSocialCardOnTwitter(walletAddress, tokenId, tokenDisplayName)}>
                     Post social card
                   </Button>
