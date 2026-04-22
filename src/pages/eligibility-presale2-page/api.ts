@@ -1,24 +1,46 @@
 import type { AppTokenId } from '@/config'
 
-// Mock services for Pre-Sale 2 eligibility. Replace with real APIs once
-// snapshot volume + Solana mobile device checks are wired up on the backend.
-
 export const PRESALE2_SNAPSHOT_DATE = '2026-04-27'
 
 export type PresaleSnapshotVolume = {
   volumeUsd: number
   snapshotDate: string
+  linkedWalletCount?: number
+  mockedWalletCount?: number
 }
 
 export type SolanaMobileStatus = 'met' | 'unmet'
 
 export async function fetchPresaleSnapshotVolume(
-  _wallet: string,
+  wallet: string,
   _tokenId: AppTokenId,
 ): Promise<PresaleSnapshotVolume> {
-  return { volumeUsd: 0, snapshotDate: PRESALE2_SNAPSHOT_DATE }
+  const res = await fetch(
+    `/api/eligibility/snapshot-volume?wallet=${encodeURIComponent(wallet)}`,
+  )
+  if (!res.ok) {
+    throw new Error(`snapshot-volume request failed: ${res.status}`)
+  }
+  const data = (await res.json()) as {
+    volumeUsd: number
+    linkedWalletCount?: number
+    mockedWalletCount?: number
+  }
+  return {
+    volumeUsd: data.volumeUsd,
+    snapshotDate: PRESALE2_SNAPSHOT_DATE,
+    linkedWalletCount: data.linkedWalletCount,
+    mockedWalletCount: data.mockedWalletCount,
+  }
 }
 
-export async function fetchSolanaMobileEligibility(_wallet: string): Promise<SolanaMobileStatus> {
-  return 'unmet'
+export async function fetchSolanaMobileEligibility(wallet: string): Promise<SolanaMobileStatus> {
+  const res = await fetch(
+    `/api/eligibility/solana-mobile?wallet=${encodeURIComponent(wallet)}`,
+  )
+  if (!res.ok) {
+    throw new Error(`solana-mobile request failed: ${res.status}`)
+  }
+  const data = (await res.json()) as { status: SolanaMobileStatus }
+  return data.status
 }

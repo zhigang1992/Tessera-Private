@@ -17,17 +17,13 @@ import { AdminNav } from '../admin-shared/admin-nav'
 
 type MockRow = {
   walletAddress: string
-  volumeUsd: number
-  snapshotVolumeUsd: number | null
+  eligible: boolean
   note: string | null
   createdAt: string
 }
 
-const API = '/api/admin/mock-trading-volumes'
+const API = '/api/admin/mock-solana-mobile'
 
-// The secret lives in the URL hash (#secret=…) rather than the query string so
-// it never reaches the server, CDN, or access logs. Changing the hash does not
-// reload the page, so updating it in place is cheap.
 function readSecretFromHash(): string {
   const hash = window.location.hash.startsWith('#')
     ? window.location.hash.slice(1)
@@ -49,27 +45,20 @@ function writeSecretToHash(value: string) {
   window.history.replaceState(null, '', url)
 }
 
-export default function AdminMockVolumesPage() {
+export default function AdminMockSolanaMobilePage() {
   const secretFromUrl = useMemo(readSecretFromHash, [])
   const [secret, setSecret] = useState(secretFromUrl)
   const [authed, setAuthed] = useState(false)
   const [rows, setRows] = useState<MockRow[]>([])
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [form, setForm] = useState({
-    walletAddress: '',
-    volumeUsd: '',
-    snapshotVolumeUsd: '',
-    note: '',
-  })
+  const [form, setForm] = useState({ walletAddress: '', eligible: true, note: '' })
 
   const fetchRows = useCallback(
     async (secretValue: string) => {
       setLoading(true)
       try {
-        const res = await fetch(API, {
-          headers: { 'x-admin-secret': secretValue },
-        })
+        const res = await fetch(API, { headers: { 'x-admin-secret': secretValue } })
         if (res.status === 401) {
           setAuthed(false)
           throw new Error('Invalid secret')
@@ -103,8 +92,6 @@ export default function AdminMockVolumesPage() {
         toast.error('Enter the admin secret')
         return
       }
-      // Persist in the hash so a refresh keeps you signed in without leaking
-      // the secret into server-visible URLs.
       writeSecretToHash(secret)
       void fetchRows(secret)
     },
@@ -114,23 +101,9 @@ export default function AdminMockVolumesPage() {
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
-      const volume = Number(form.volumeUsd)
       if (!form.walletAddress.trim()) {
         toast.error('Wallet address is required')
         return
-      }
-      if (!Number.isFinite(volume) || volume < 0) {
-        toast.error('Volume must be a non-negative number')
-        return
-      }
-      let snapshotVolumeUsd: number | null = null
-      if (form.snapshotVolumeUsd.trim() !== '') {
-        const n = Number(form.snapshotVolumeUsd)
-        if (!Number.isFinite(n) || n < 0) {
-          toast.error('Snapshot volume must be a non-negative number')
-          return
-        }
-        snapshotVolumeUsd = n
       }
       setSubmitting(true)
       try {
@@ -142,8 +115,7 @@ export default function AdminMockVolumesPage() {
           },
           body: JSON.stringify({
             walletAddress: form.walletAddress.trim(),
-            volumeUsd: volume,
-            snapshotVolumeUsd,
+            eligible: form.eligible,
             note: form.note.trim() || null,
           }),
         })
@@ -151,8 +123,8 @@ export default function AdminMockVolumesPage() {
           const detail = (await res.json().catch(() => ({}))) as { error?: string; detail?: string }
           throw new Error(detail.detail ?? detail.error ?? `Request failed (${res.status})`)
         }
-        toast.success('Mock volume saved')
-        setForm({ walletAddress: '', volumeUsd: '', snapshotVolumeUsd: '', note: '' })
+        toast.success('Mock saved')
+        setForm({ walletAddress: '', eligible: true, note: '' })
         await fetchRows(secret)
       } catch (err) {
         toast.error(err instanceof Error ? err.message : 'Failed to save')
@@ -192,9 +164,9 @@ export default function AdminMockVolumesPage() {
     return (
       <div className="mx-auto w-full max-w-md px-6 pt-16 pb-12">
         <AdminNav />
-        <h1 className="text-2xl font-semibold mb-2">Mock trading volumes</h1>
+        <h1 className="text-2xl font-semibold mb-2">Mock Solana Mobile</h1>
         <p className="text-sm text-muted-foreground mb-6">
-          Enter the admin secret to manage mock volumes for eligibility testing.
+          Enter the admin secret to manage mock Solana Mobile eligibility.
         </p>
         <Card>
           <CardContent className="p-6">
@@ -224,18 +196,18 @@ export default function AdminMockVolumesPage() {
   return (
     <div className="mx-auto w-full max-w-4xl px-6 pt-6 pb-12 sm:px-10">
       <AdminNav />
-      <h1 className="text-2xl font-semibold mb-2">Mock trading volumes</h1>
+      <h1 className="text-2xl font-semibold mb-2">Mock Solana Mobile eligibility</h1>
       <p className="text-sm text-muted-foreground mb-6">
-        Seeded rows override the live Hasura aggregation in the eligibility check only.
-        Lifetime volume is used by Pre-Sale 1 (≥$5,000). Snapshot volume is used by
-        Pre-Sale 2 Option 1 (≥$1,000 before the snapshot date).
+        Seeded rows short-circuit the on-chain Saga / Chapter 2 Preorder / Seeker Genesis Token
+        check for Pre-Sale 2 Option 2. Use this to simulate Solana Mobile ownership
+        without holding a real device NFT.
       </p>
 
       <Card className="mb-8">
         <CardContent className="p-6">
           <form
             onSubmit={handleSubmit}
-            className="grid gap-4 sm:grid-cols-[2fr_1fr_1fr_2fr_auto] sm:items-end"
+            className="grid gap-4 sm:grid-cols-[2fr_1fr_2fr_auto] sm:items-end"
           >
             <div className="flex flex-col gap-2">
               <Label htmlFor="wallet">Wallet address</Label>
@@ -248,30 +220,16 @@ export default function AdminMockVolumesPage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="volume">Lifetime (USD)</Label>
-              <Input
-                id="volume"
-                type="number"
-                inputMode="decimal"
-                min="0"
-                step="0.01"
-                value={form.volumeUsd}
-                onChange={(e) => setForm((f) => ({ ...f, volumeUsd: e.target.value }))}
-                placeholder="6000"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="snapshot-volume">Snapshot (USD)</Label>
-              <Input
-                id="snapshot-volume"
-                type="number"
-                inputMode="decimal"
-                min="0"
-                step="0.01"
-                value={form.snapshotVolumeUsd}
-                onChange={(e) => setForm((f) => ({ ...f, snapshotVolumeUsd: e.target.value }))}
-                placeholder="1500 (optional)"
-              />
+              <Label htmlFor="eligible">Eligible</Label>
+              <select
+                id="eligible"
+                value={form.eligible ? 'yes' : 'no'}
+                onChange={(e) => setForm((f) => ({ ...f, eligible: e.target.value === 'yes' }))}
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="note">Note (optional)</Label>
@@ -296,8 +254,7 @@ export default function AdminMockVolumesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Wallet</TableHead>
-                <TableHead className="text-right">Lifetime (USD)</TableHead>
-                <TableHead className="text-right">Snapshot (USD)</TableHead>
+                <TableHead>Eligible</TableHead>
                 <TableHead>Note</TableHead>
                 <TableHead>Updated</TableHead>
                 <TableHead className="w-12" />
@@ -306,34 +263,21 @@ export default function AdminMockVolumesPage() {
             <TableBody>
               {loading && rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     <Loader2 className="inline size-4 animate-spin" />
                   </TableCell>
                 </TableRow>
               ) : sortedRows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    No mock volumes seeded yet.
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    No Solana Mobile mocks seeded yet.
                   </TableCell>
                 </TableRow>
               ) : (
                 sortedRows.map((row) => (
                   <TableRow key={row.walletAddress}>
                     <TableCell className="font-mono text-xs">{row.walletAddress}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {row.volumeUsd.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {row.snapshotVolumeUsd === null
-                        ? '—'
-                        : row.snapshotVolumeUsd.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                    </TableCell>
+                    <TableCell>{row.eligible ? 'Yes' : 'No'}</TableCell>
                     <TableCell className="text-muted-foreground">{row.note ?? '—'}</TableCell>
                     <TableCell className="text-muted-foreground text-xs">
                       {new Date(row.createdAt.replace(' ', 'T') + 'Z').toLocaleString()}

@@ -1,18 +1,14 @@
 /**
- * Admin API for seeding mock trading volumes used by the eligibility check.
- *
- * Auth: `ADMIN_MOCK_SECRET` env var, compared constant-time against the
- * `x-admin-secret` request header. The frontend carries the secret in a URL
- * hash fragment (never sent over the wire) and attaches this header on each
- * request, so the secret never reaches server logs, CDN caches, or the
- * Referer header.
+ * Admin API for seeding mock Solana Mobile eligibility used by the Pre-Sale 2
+ * eligibility check. Same auth model as mock-trading-volumes: ADMIN_MOCK_SECRET
+ * compared constant-time against `x-admin-secret` header.
  *
  * Endpoints:
- *   GET    /api/admin/mock-trading-volumes           → list all rows
- *   POST   /api/admin/mock-trading-volumes           → upsert { walletAddress, volumeUsd, note? }
- *   DELETE /api/admin/mock-trading-volumes?wallet=…  → delete one row
+ *   GET    /api/admin/mock-solana-mobile           → list all rows
+ *   POST   /api/admin/mock-solana-mobile           → upsert { walletAddress, eligible, note? }
+ *   DELETE /api/admin/mock-solana-mobile?wallet=…  → delete one row
  *
- * The underlying table is read ONLY by functions/api/eligibility/trading-volume.ts.
+ * The underlying table is read ONLY by functions/api/eligibility/solana-mobile.ts.
  */
 
 import type { D1Database, PagesFunction } from '@cloudflare/workers-types'
@@ -25,8 +21,7 @@ type Env = {
 
 type MockRow = {
   wallet_address: string
-  volume_usd: number
-  snapshot_volume_usd: number | null
+  eligible: number
   note: string | null
   created_at: string
 }
@@ -63,7 +58,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 
   const { results } = await env.DB
     .prepare(
-      'SELECT wallet_address, volume_usd, snapshot_volume_usd, note, created_at FROM mock_trading_volumes ORDER BY created_at DESC',
+      'SELECT wallet_address, eligible, note, created_at FROM mock_solana_mobile ORDER BY created_at DESC',
     )
     .all<MockRow>()
 
@@ -71,8 +66,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     {
       rows: (results ?? []).map((r) => ({
         walletAddress: r.wallet_address,
-        volumeUsd: r.volume_usd,
-        snapshotVolumeUsd: r.snapshot_volume_usd,
+        eligible: r.eligible === 1,
         note: r.note,
         createdAt: r.created_at,
       })),
@@ -85,12 +79,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const unauthorized = authorize(request, env)
   if (unauthorized) return unauthorized
 
-  let body: {
-    walletAddress?: string
-    volumeUsd?: number
-    snapshotVolumeUsd?: number | null
-    note?: string | null
-  }
+  let body: { walletAddress?: string; eligible?: boolean; note?: string | null }
   try {
     body = (await request.json()) as typeof body
   } catch {
@@ -107,44 +96,23 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     )
   }
 
-  const volumeUsd = Number(body.volumeUsd)
-  if (!Number.isFinite(volumeUsd) || volumeUsd < 0) {
-    return Response.json(
-      { error: 'volumeUsd must be a non-negative finite number' },
-      { status: 400 },
-    )
-  }
-
-  // snapshotVolumeUsd is optional — null/undefined leaves it unset (0 in check).
-  let snapshotVolumeUsd: number | null = null
-  if (body.snapshotVolumeUsd !== undefined && body.snapshotVolumeUsd !== null) {
-    const n = Number(body.snapshotVolumeUsd)
-    if (!Number.isFinite(n) || n < 0) {
-      return Response.json(
-        { error: 'snapshotVolumeUsd must be a non-negative finite number' },
-        { status: 400 },
-      )
-    }
-    snapshotVolumeUsd = n
-  }
-
+  const eligible = body.eligible === false ? 0 : 1
   const note = typeof body.note === 'string' && body.note.trim() ? body.note.trim() : null
 
   await env.DB
     .prepare(
-      `INSERT INTO mock_trading_volumes (wallet_address, volume_usd, snapshot_volume_usd, note)
-       VALUES (?1, ?2, ?3, ?4)
+      `INSERT INTO mock_solana_mobile (wallet_address, eligible, note)
+       VALUES (?1, ?2, ?3)
        ON CONFLICT(wallet_address) DO UPDATE SET
-         volume_usd = excluded.volume_usd,
-         snapshot_volume_usd = excluded.snapshot_volume_usd,
+         eligible = excluded.eligible,
          note = excluded.note,
          created_at = datetime('now')`,
     )
-    .bind(walletAddress, volumeUsd, snapshotVolumeUsd, note)
+    .bind(walletAddress, eligible, note)
     .run()
 
   return Response.json(
-    { ok: true, walletAddress, volumeUsd, snapshotVolumeUsd, note },
+    { ok: true, walletAddress, eligible: eligible === 1, note },
     { headers: NO_STORE },
   )
 }
@@ -165,7 +133,7 @@ export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   const result = await env.DB
-    .prepare('DELETE FROM mock_trading_volumes WHERE wallet_address = ?')
+    .prepare('DELETE FROM mock_solana_mobile WHERE wallet_address = ?')
     .bind(walletAddress)
     .run()
 

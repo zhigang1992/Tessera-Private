@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { AdminNav } from '../admin-shared/admin-nav'
 
 type ApplicationRow = {
   walletAddress: string
@@ -200,6 +201,7 @@ export default function AdminWhitelistApplicationsPage() {
   if (!authed) {
     return (
       <div className="mx-auto w-full max-w-md px-6 pt-16 pb-12">
+        <AdminNav />
         <h1 className="text-2xl font-semibold mb-2">Pre-Sale 1 whitelist applications</h1>
         <p className="text-sm text-muted-foreground mb-6">
           Enter the admin secret to review whitelist applications.
@@ -231,6 +233,7 @@ export default function AdminWhitelistApplicationsPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 pt-6 pb-12 sm:px-10">
+      <AdminNav />
       <h1 className="text-2xl font-semibold mb-2">Pre-Sale 1 whitelist applications</h1>
       <p className="text-sm text-muted-foreground mb-6">
         Applications are created when a user who passes all eligibility checks clicks
