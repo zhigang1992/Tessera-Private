@@ -34,8 +34,9 @@ export function AuctionPhaseNav({ activeTab, onTabChange, summaries }: AuctionPh
       id: pc.id,
       label: pc.label,
       isPresale: true,
+      presaleId: pc.id,
     })),
-    { id: 'auction', label: token.auctionTabLabel ?? 'Public', isPresale: false },
+    { id: 'auction', label: token.auctionTabLabel ?? 'Public', isPresale: false, presaleId: null as string | null },
   ]
 
   // Don't render if only one tab
@@ -96,7 +97,8 @@ export function AuctionPhaseNav({ activeTab, onTabChange, summaries }: AuctionPh
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation()
-                  navigate(`/auction/${tokenId}/eligibility`)
+                  const path = tab.presaleId === 'presale-2' ? 'eligibility-presale2' : 'eligibility'
+                  navigate(`/auction/${tokenId}/${path}`)
                 }}
                 className="mt-1 bg-[#111] hover:bg-[#333] rounded text-white text-xs font-medium px-3 py-1.5 transition-colors whitespace-nowrap"
               >
