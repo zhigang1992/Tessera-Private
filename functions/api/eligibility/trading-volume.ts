@@ -1,6 +1,11 @@
 import type { D1Database, PagesFunction } from '@cloudflare/workers-types'
 import { graphqlRequest, resolveGraphQLEndpoint } from '../../lib/graphql'
 import { parseWalletAddress } from '../../lib/wallet-link'
+import {
+  BigNumber,
+  fromHasuraToNative,
+  type BigNumberSource,
+} from '../../../src/lib/bignumber'
 
 type Env = {
   DB: D1Database
@@ -8,44 +13,28 @@ type Env = {
 }
 
 type VolumeAggregateResponse = {
-  facts_meteora_token_swap_events_aggregate: {
+  public_marts_total_trading_volume_by_account_aggregate: {
     aggregate: {
       sum: {
-        amount_y: string | null
+        total_volume: BigNumberSource | null
       }
     }
   }
 }
 
 const VOLUME_QUERY = `
-  query GetTradingVolume($senders: [String!]!) {
-    facts_meteora_token_swap_events_aggregate(where: { sender: { _in: $senders } }) {
+  query GetTradingVolume($accounts: [String!]!) {
+    public_marts_total_trading_volume_by_account_aggregate(
+      where: { account: { _in: $accounts } }
+    ) {
       aggregate {
         sum {
-          amount_y
+          total_volume
         }
       }
     }
   }
 `
-
-// Hasura returns numeric(38, 18) as a decimal string. Convert to a plain USD
-// number with 2dp precision using BigInt to avoid decimal.js on the server.
-function hasura18ToUsd(raw: string | null): number {
-  if (!raw) return 0
-  // Input can be like "1500000000000000000000" or "1500.000000000000000000"; both are valid Hasura serialisations.
-  // Normalise by stripping any fractional ".xxx" tail (Hasura occasionally emits it) — we already know the scale is 18.
-  const cleaned = raw.split('.')[0]
-  let asBigInt: bigint
-  try {
-    asBigInt = BigInt(cleaned)
-  } catch {
-    return 0
-  }
-  // Divide by 10^16 to get cents, then to USD with 2dp.
-  const cents = asBigInt / 10n ** 16n
-  return Number(cents) / 100
-}
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const walletParam = new URL(request.url).searchParams.get('wallet')
@@ -130,11 +119,11 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     try {
       const endpoint = resolveGraphQLEndpoint(env)
       const data = await graphqlRequest<VolumeAggregateResponse>(endpoint, VOLUME_QUERY, {
-        senders: hasuraSenders,
+        accounts: hasuraSenders,
       })
-      hasuraVolume = hasura18ToUsd(
-        data.facts_meteora_token_swap_events_aggregate.aggregate.sum.amount_y,
-      )
+      const rawSum =
+        data.public_marts_total_trading_volume_by_account_aggregate.aggregate.sum.total_volume
+      hasuraVolume = rawSum == null ? 0 : BigNumber.toNumber(fromHasuraToNative(rawSum))
     } catch (err) {
       console.error('Failed to fetch trading volume from GraphQL', err)
       return Response.json(
