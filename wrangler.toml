@@ -31,3 +31,10 @@ bucket_name = "tessera-referral-images"
 # twitterapi.io key used by /api/social/check-referral-tweet.
 # Set via: wrangler secret put TWITTERAPI_IO_KEY
 # For local dev, add TWITTERAPI_IO_KEY=... to .dev.vars (gitignored). Never commit the key.
+
+# Solana mainnet RPC used by /api/eligibility/solana-mobile to check Saga /
+# Chapter 2 / Seeker Genesis Token ownership. SOLANA_MAINNET_RPC_URL wins if
+# set; otherwise a Helius URL is derived from HELIUS_API_KEY. If neither is
+# configured, the endpoint responds with 'unavailable' and the check falls
+# back to 'unmet' (so a mock row in mock_solana_mobile is required for QA).
+# Set via: wrangler secret put HELIUS_API_KEY  (or SOLANA_MAINNET_RPC_URL)
