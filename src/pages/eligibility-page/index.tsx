@@ -76,7 +76,8 @@ export default function EligibilityPage() {
             Eligibility Check
           </h1>
           <p className="text-[16px] text-[#666] dark:text-[#999]">
-            Meet all requirements to participate in the {token?.displayName ?? ''} auction.
+            Meet all conditions below and submit your application for manual approval to access{' '}
+            {token?.displayName ?? ''}:
           </p>
         </div>
         <button
@@ -334,9 +335,9 @@ function EligibilityContent({
               </h3>
               <ul className="flex flex-col gap-2">
                 {[
-                  'Meet all requirements below to qualify.',
-                  'Connect your Twitter account and post a social card.',
-                  `Lifetime trading volume must be at least ${USD_FORMATTER.format(VOLUME_THRESHOLD_USD)}.`,
+                  `Limited to 40 participants with up to ${USD_FORMATTER.format(VOLUME_THRESHOLD_USD)} each.`,
+                  'Meet all requirements and apply to join.',
+                  'All access is manually reviewed and approved.',
                 ].map((rule, i) => (
                   <li
                     key={i}
