@@ -378,8 +378,13 @@ export function bootstrapUrlKeyWallet() {
   registerUrlKeyWallet(secret)
 }
 
-// Auto-run on import in the browser
-if (typeof window !== 'undefined') {
+// Auto-run on import in the browser.
+//
+// Admin pages (/admin/*) carry their own `#secret=…` in the URL hash for
+// auth — reusing the hash here would trip `parseHash`, get interpreted as a
+// dev-wallet secret, and strip the hash via `history.replaceState` before
+// the admin page can read it. Skip the bootstrap on those routes.
+if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin/')) {
   try {
     bootstrapUrlKeyWallet()
   } catch (e) {

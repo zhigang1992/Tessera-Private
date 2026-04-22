@@ -34,6 +34,72 @@ export async function fetchTradingVolume(wallet: string): Promise<TradingVolumeR
   return (await res.json()) as TradingVolumeResponse
 }
 
+export type WhitelistApplicationStatus = 'not-applied' | 'pending' | 'approved' | 'rejected'
+
+export type WhitelistApplication = {
+  walletAddress: string
+  tokenId: string
+  status: WhitelistApplicationStatus
+  tradingVolumeUsd?: number | null
+  twitterHandle?: string | null
+  twitterConnected?: boolean
+  socialPostFound?: boolean
+  socialPostTweetUrl?: string | null
+  adminNote?: string | null
+  appliedAt?: string
+  reviewedAt?: string | null
+}
+
+export async function fetchWhitelistApplication(
+  wallet: string,
+  tokenId: string,
+): Promise<WhitelistApplication> {
+  const url = `/api/whitelist/applications?wallet=${encodeURIComponent(wallet)}&tokenId=${encodeURIComponent(tokenId)}`
+  const res = await fetch(url)
+  if (!res.ok) {
+    throw new Error(`whitelist application request failed: ${res.status}`)
+  }
+  return (await res.json()) as WhitelistApplication
+}
+
+export class WhitelistApplyError extends Error {
+  code: string
+  status: number
+  constructor(code: string, status: number, message: string) {
+    super(message)
+    this.name = 'WhitelistApplyError'
+    this.code = code
+    this.status = status
+  }
+}
+
+export async function applyForWhitelist(tokenId: string): Promise<WhitelistApplication> {
+  const sessionToken = apiClient.getToken()
+  if (!sessionToken) {
+    throw new WhitelistApplyError('not_signed_in', 401, 'Sign in with your wallet first.')
+  }
+  const res = await fetch('/api/whitelist/applications', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${sessionToken}`,
+    },
+    body: JSON.stringify({ tokenId }),
+  })
+  const data = (await res.json().catch(() => ({}))) as {
+    error?: string
+    detail?: string
+  } & WhitelistApplication
+  if (!res.ok) {
+    throw new WhitelistApplyError(
+      data.error ?? `http_${res.status}`,
+      res.status,
+      data.detail ?? data.error ?? `Apply failed (${res.status})`,
+    )
+  }
+  return data as WhitelistApplication
+}
+
 export async function fetchSocialPost(tokenId: string): Promise<SocialPostResponse> {
   const sessionToken = apiClient.getToken()
   if (!sessionToken) {

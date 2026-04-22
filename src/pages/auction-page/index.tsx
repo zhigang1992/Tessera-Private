@@ -75,10 +75,10 @@ export default function AuctionPage() {
         ))}
 
         {activeTab === 'auction' && (
-          <div className="flex flex-col gap-4 lg:gap-6">
+          <div className="flex flex-col gap-6">
             <AuctionHeaderCard phaseNav={phaseNav} />
 
-            <div className="flex flex-col md:flex-row gap-4 lg:gap-6">
+            <div className="flex flex-col md:flex-row gap-6">
               <div className="w-full md:basis-0 md:grow md:min-w-0 order-2 md:order-1">
                 <AuctionProgressCard />
               </div>
