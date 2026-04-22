@@ -13,6 +13,12 @@ import { syncTwitterToBackend } from '@/lib/twitter-sync'
 import { CriterionRow } from './components/criterion-row'
 import { useEligibilityChecks, VOLUME_THRESHOLD_USD, type CheckStatus } from './hooks/use-eligibility-checks'
 import { isSocialCardTokenId, shareSocialCardOnTwitter } from './utils/share'
+import {
+  applyForWhitelist,
+  fetchWhitelistApplication,
+  WhitelistApplyError,
+  type WhitelistApplicationStatus,
+} from './api'
 
 const USD_FORMATTER = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -22,6 +28,10 @@ const USD_FORMATTER = new Intl.NumberFormat('en-US', {
 
 type AggregateStatus = 'met' | 'unmet' | 'pending'
 type ApplicationStatus = 'not-applied' | 'pending' | 'approved' | 'unapproved'
+
+function toApplicationStatus(apiStatus: WhitelistApplicationStatus): ApplicationStatus {
+  return apiStatus === 'rejected' ? 'unapproved' : apiStatus
+}
 
 function aggregateStatus(...statuses: CheckStatus[]): AggregateStatus {
   if (statuses.every((s) => s === 'pass')) return 'met'
@@ -122,9 +132,28 @@ function EligibilityContent({
   const { volume, twitter: twitterState, post, isRunning, run } = useEligibilityChecks()
 
   const [applicationStatus, setApplicationStatus] = useState<ApplicationStatus>('not-applied')
+  const [isApplying, setIsApplying] = useState(false)
+
+  // Hydrate application status on mount from the D1-backed whitelist table.
+  // If the admin has already approved/rejected, skip straight to the decided
+  // UI state without requiring the user to re-run the checks.
+  useEffect(() => {
+    if (!tokenId) return
+    let cancelled = false
+    fetchWhitelistApplication(walletAddress, tokenId)
+      .then((app) => {
+        if (cancelled) return
+        setApplicationStatus(toApplicationStatus(app.status))
+      })
+      .catch(() => {
+        /* Leave default 'not-applied' — a transient fetch failure shouldn't block apply. */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [walletAddress, tokenId])
 
   const handleRun = useCallback(async () => {
-    setApplicationStatus('not-applied')
     if (!isAuthenticated) {
       const ok = await authenticate()
       if (!ok) return
@@ -137,6 +166,25 @@ function EligibilityContent({
     }
     run({ wallet: walletAddress, twitterHandle, tokenId })
   }, [isAuthenticated, authenticate, twitterId, twitterHandle, walletAddress, tokenId, run])
+
+  const handleApply = useCallback(async () => {
+    if (!tokenId) return
+    setIsApplying(true)
+    try {
+      if (!isAuthenticated) {
+        const ok = await authenticate()
+        if (!ok) return
+      }
+      const app = await applyForWhitelist(tokenId)
+      setApplicationStatus(toApplicationStatus(app.status))
+    } catch (err) {
+      const message =
+        err instanceof WhitelistApplyError ? err.message : 'Failed to submit application.'
+      toast.error(message)
+    } finally {
+      setIsApplying(false)
+    }
+  }, [tokenId, isAuthenticated, authenticate])
 
   const handleConnectTwitter = useCallback(async () => {
     try {
@@ -175,21 +223,26 @@ function EligibilityContent({
       ? '#06a800'
       : applicationStatus === 'unapproved'
         ? '#999'
-        : hasChecked
-          ? isEligible
-            ? '#06a800'
-            : '#d4183d'
-          : '#999'
+        : applicationStatus === 'pending'
+          ? '#d4a017'
+          : hasChecked
+            ? isEligible
+              ? '#06a800'
+              : '#d4183d'
+            : '#999'
 
-  const statusText = hasChecked
-    ? applicationStatus === 'approved'
+  const statusText =
+    applicationStatus === 'approved'
       ? "You're Whitelisted for Pre-Sale1."
       : applicationStatus === 'unapproved'
         ? "You're not Whitelisted for Pre-Sale1."
-        : isEligible
-          ? "You're Eligible to Apply Pre-Sale1 Whitelist."
-          : "You're not Eligible Yet!"
-    : null
+        : applicationStatus === 'pending'
+          ? "Your Pre-Sale1 Whitelist application is under review."
+          : hasChecked
+            ? isEligible
+              ? "You're Eligible to Apply Pre-Sale1 Whitelist."
+              : "You're not Eligible Yet!"
+            : null
 
   const optionStyles = {
     met: 'bg-[#06a80008] dark:bg-[#06a80010] border-[#06a80020] dark:border-[#06a80030]',
@@ -249,15 +302,16 @@ function EligibilityContent({
               {hasChecked && applicationStatus === 'not-applied' ? (
                 <button
                   type="button"
-                  onClick={() => setApplicationStatus('pending')}
-                  disabled={!isEligible}
-                  className={`w-full py-3.5 rounded-[10px] font-bold text-[16px] transition-colors ${
+                  onClick={handleApply}
+                  disabled={!isEligible || isApplying}
+                  className={`w-full py-3.5 rounded-[10px] font-bold text-[16px] transition-colors flex items-center justify-center gap-2 ${
                     isEligible
-                      ? 'bg-[#111] text-white hover:bg-[#333] cursor-pointer'
+                      ? 'bg-[#111] text-white hover:bg-[#333] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed'
                       : 'bg-[#999] text-white opacity-50 cursor-not-allowed'
                   }`}
                 >
-                  Apply Whitelist
+                  {isApplying ? <Loader2 className="size-4 animate-spin" /> : null}
+                  {isApplying ? 'Applying…' : 'Apply Whitelist'}
                 </button>
               ) : null}
 
