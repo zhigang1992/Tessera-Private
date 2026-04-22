@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useWallet } from '@/hooks/use-wallet'
-import { useNavigate, useParams } from 'react-router'
 import { Card } from '@/components/ui/card'
 import { AppTokenName } from '@/components/app-token-name'
 import { AppTokenIcon } from '@/components/app-token-icon'
@@ -17,8 +16,6 @@ interface AuctionHeaderCardProps {
 
 export function AuctionHeaderCard({ phaseNav }: AuctionHeaderCardProps) {
   const wallet = useWallet()
-  const navigate = useNavigate()
-  const params = useParams<{ tokenId?: string }>()
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false)
   const token = useAuctionToken()
   const {
@@ -93,14 +90,6 @@ export function AuctionHeaderCard({ phaseNav }: AuctionHeaderCardProps) {
               >
                 {vaultStateDisplay.label}
               </span>
-            )}
-            {vaultInfo && !vaultInfo.isPermissionless && (
-              <button
-                onClick={() => navigate(`/auction/${params.tokenId}/whitelist?vault=auction`)}
-                className="text-xs font-medium text-[#06a800] hover:text-[#059000] underline transition-colors ml-auto"
-              >
-                Check Whitelist
-              </button>
             )}
           </div>
         </div>
