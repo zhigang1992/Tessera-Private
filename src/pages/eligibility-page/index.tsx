@@ -1,12 +1,13 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { getAuthToken, useDynamicContext, useSocialAccounts } from '@dynamic-labs/sdk-react-core'
 import { ProviderEnum } from '@dynamic-labs/sdk-api-core'
-import { ChevronLeft, Copy, Loader2, Twitter } from 'lucide-react'
+import { Copy, Loader2, Twitter } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useWallet } from '@/hooks/use-wallet'
 import { resolveTokenIdFromParam, getAppToken } from '@/config'
+import { useHeader } from '@/contexts/header-context'
 import { useReferralAuth } from '@/features/referral/hooks/use-referral-auth'
 import { syncTwitterToBackend } from '@/lib/twitter-sync'
 import { CriterionRow } from './components/criterion-row'
@@ -44,30 +45,27 @@ export default function EligibilityPage() {
   const navigate = useNavigate()
   const { user, sdkHasLoaded } = useDynamicContext()
   const { publicKey, connected } = useWallet()
+  const { setBackButton } = useHeader()
 
   const tokenId = useMemo(() => resolveTokenIdFromParam(params.auctionId), [params.auctionId])
   const token = tokenId ? getAppToken(tokenId) : null
   const walletAddress = connected && publicKey ? publicKey.toBase58() : null
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (params.auctionId) {
       navigate(`/auction/${params.auctionId}`)
     } else {
       navigate(-1)
     }
-  }
+  }, [navigate, params.auctionId])
+
+  useEffect(() => {
+    setBackButton({ show: true, text: 'Back to Auction', onClick: handleBack })
+    return () => setBackButton(undefined)
+  }, [setBackButton, handleBack])
 
   return (
     <div className="mx-auto w-full max-w-[1200px] p-6 flex flex-col gap-4">
-      <button
-        type="button"
-        onClick={handleBack}
-        className="self-start flex items-center gap-1 text-[14px] font-medium text-black dark:text-[#d2d2d2] hover:opacity-70 transition-opacity"
-      >
-        <ChevronLeft className="size-4" />
-        Back to Auction
-      </button>
-
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="flex flex-col gap-2">
           <h1 className="text-[20px] md:text-[24px] font-semibold text-black dark:text-[#d2d2d2]">
