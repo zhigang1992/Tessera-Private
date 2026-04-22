@@ -66,29 +66,6 @@ export async function getAuctionProgress(tokenId: AppTokenId = DEFAULT_BASE_TOKE
   }
 }
 
-// Mock services for Pre-Sale 2 eligibility. Replace with real APIs once
-// snapshot volume + Solana mobile device checks are wired up on the backend.
-
-export const PRESALE2_SNAPSHOT_DATE = '2026-04-27'
-
-export interface PresaleSnapshotVolume {
-  volumeUsd: number
-  snapshotDate: string
-}
-
-export async function getPresaleSnapshotVolume(
-  _wallet: string,
-  _tokenId: AppTokenId,
-): Promise<PresaleSnapshotVolume> {
-  return { volumeUsd: 0, snapshotDate: PRESALE2_SNAPSHOT_DATE }
-}
-
-export type SolanaMobileStatus = 'met' | 'unmet'
-
-export async function getSolanaMobileEligibility(_wallet: string): Promise<SolanaMobileStatus> {
-  return 'unmet'
-}
-
 export async function getAuctionChartData(tokenId: AppTokenId = DEFAULT_BASE_TOKEN_ID): Promise<AuctionChartDataWithStartTime> {
   const { poolAddress } = requireAuctionConfig(tokenId)
   const { deposits, withdrawals } = await fetchAuctionDepositEvents(poolAddress)

@@ -11,10 +11,10 @@ import { useHeader } from '@/contexts/header-context'
 import { useReferralAuth } from '@/features/referral/hooks/use-referral-auth'
 import { syncTwitterToBackend } from '@/lib/twitter-sync'
 import {
-  getPresaleSnapshotVolume,
-  getSolanaMobileEligibility,
+  fetchPresaleSnapshotVolume,
+  fetchSolanaMobileEligibility,
   PRESALE2_SNAPSHOT_DATE,
-} from '@/services/auction'
+} from './api'
 import { CriterionRow } from '../eligibility-page/components/criterion-row'
 import {
   useEligibilityChecks,
@@ -223,7 +223,7 @@ function EligibilityContent({
     setOption2({ status: 'checking' })
 
     const option1Promise = tokenId
-      ? getPresaleSnapshotVolume(walletAddress, tokenId as AppTokenId)
+      ? fetchPresaleSnapshotVolume(walletAddress, tokenId as AppTokenId)
           .then((res) => {
             setOption1({
               status: res.volumeUsd >= OPTION1_VOLUME_THRESHOLD_USD ? 'pass' : 'fail',
@@ -233,7 +233,7 @@ function EligibilityContent({
           .catch(() => setOption1({ status: 'error', volumeUsd: 0 }))
       : Promise.resolve(setOption1({ status: 'fail', volumeUsd: 0 }))
 
-    const option2Promise = getSolanaMobileEligibility(walletAddress)
+    const option2Promise = fetchSolanaMobileEligibility(walletAddress)
       .then((res) => setOption2({ status: res === 'met' ? 'pass' : 'fail' }))
       .catch(() => setOption2({ status: 'error' }))
 
