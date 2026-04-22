@@ -1,4 +1,5 @@
-import { useAuctionPresaleVaultConfigs, useAuctionToken } from '../../context'
+import { useNavigate } from 'react-router'
+import { useAuctionPresaleVaultConfigs, useAuctionToken, useAuctionTokenId } from '../../context'
 import type { AuctionPhaseSummaryMap } from '@/hooks/use-auction-phase-summaries'
 import { formatBigNumber, type BigNumberValue } from '@/lib/bignumber'
 
@@ -24,44 +25,57 @@ function formatAllocation(amount: BigNumberValue): string {
 
 export function AuctionPhaseNav({ activeTab, onTabChange, summaries }: AuctionPhaseNavProps) {
   const token = useAuctionToken()
+  const tokenId = useAuctionTokenId()
   const presaleConfigs = useAuctionPresaleVaultConfigs()
+  const navigate = useNavigate()
 
   const subTabs = [
     ...presaleConfigs.map((pc) => ({
       id: pc.id,
       label: pc.label,
+      isPresale: true,
     })),
-    { id: 'auction', label: token.auctionTabLabel ?? 'Public' },
+    { id: 'auction', label: token.auctionTabLabel ?? 'Public', isPresale: false },
   ]
 
   // Don't render if only one tab
   if (subTabs.length <= 1) return null
 
+  const showEligibility = tokenId === 'T-Kalshi'
+
   return (
-    <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${subTabs.length}, 1fr)` }}>
+    <div className="flex flex-col sm:flex-row gap-1 sm:gap-4">
       {subTabs.map((tab) => {
         const isActive = activeTab === tab.id
         const summary = summaries[tab.id]
         const duration = summary?.startTime && summary?.endTime ? formatDuration(summary.startTime, summary.endTime) : null
         const allocation = summary?.allocation ? formatAllocation(summary.allocation) : null
         return (
-          <button
+          <div
             key={tab.id}
+            role="button"
+            tabIndex={0}
             onClick={() => onTabChange(tab.id)}
-            className={`px-4 py-3 rounded-lg text-left text-sm transition-all border ${
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onTabChange(tab.id)
+              }
+            }}
+            className={`relative w-full sm:flex-1 sm:min-w-[160px] rounded-lg px-[18px] py-[10px] flex flex-col gap-2 items-start text-left transition-all border-2 cursor-pointer ${
               isActive
-                ? 'bg-[#d2fb95] dark:bg-[#2a4a1a] border-[#d2fb95] dark:border-[#4ade80] text-black dark:text-[#d2d2d2]'
-                : 'bg-white dark:bg-[#2a2a2b] border-[#e4e4e7] dark:border-[#404040] text-[#71717a] dark:text-[#d2d2d2]/50 hover:border-[#a1a1aa] dark:hover:border-[#666]'
+                ? 'bg-[#d2fb95] border-[#111] text-black'
+                : 'bg-[#f6f6f6] dark:bg-white/[0.03] border-transparent text-black dark:text-[#d2d2d2] hover:bg-[#ececec] dark:hover:bg-white/[0.05]'
             }`}
           >
-            <div className="flex items-center justify-between">
-              <span className="font-semibold">{tab.label}</span>
+            <div className="flex items-center justify-between w-full">
+              <span className="text-sm font-bold leading-[21px]">{tab.label}</span>
               {duration && (
                 <span
-                  className={`text-xs font-mono px-2 py-0.5 rounded ${
+                  className={`text-[10px] font-mono leading-[15px] px-2 py-1 rounded-full ${
                     isActive
-                      ? 'bg-[#06a800]/20 text-[#06a800]'
-                      : 'bg-zinc-100 dark:bg-[#404040] text-[#71717a] dark:text-[#999]'
+                      ? 'bg-black/10 text-black'
+                      : 'bg-black/[0.05] dark:bg-white/10 text-black dark:text-[#d2d2d2]'
                   }`}
                 >
                   {duration}
@@ -69,12 +83,27 @@ export function AuctionPhaseNav({ activeTab, onTabChange, summaries }: AuctionPh
               )}
             </div>
             {allocation && (
-              <div className="flex items-center justify-between mt-1">
-                <span className="text-xs text-current opacity-60">Allocation</span>
-                <span className="text-sm font-semibold">{allocation}</span>
-              </div>
+              <>
+                <div className={`h-px w-full ${isActive ? 'bg-black/20' : 'bg-black/20 dark:bg-white/10'}`} />
+                <div className="flex items-center justify-between w-full">
+                  <span className={`text-sm ${isActive ? 'text-[#666]' : 'text-[#666] dark:text-[#999]'}`}>Allocation</span>
+                  <span className="text-sm font-semibold leading-6">{allocation}</span>
+                </div>
+              </>
             )}
-          </button>
+            {showEligibility && tab.isPresale && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  navigate(`/auction/${tokenId}/eligibility`)
+                }}
+                className="mt-1 bg-[#111] hover:bg-[#333] rounded text-white text-xs font-medium px-3 py-1.5 transition-colors whitespace-nowrap"
+              >
+                Check Eligibility
+              </button>
+            )}
+          </div>
         )
       })}
     </div>

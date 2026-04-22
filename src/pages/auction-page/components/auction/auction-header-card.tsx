@@ -102,14 +102,6 @@ export function AuctionHeaderCard({ phaseNav }: AuctionHeaderCardProps) {
                 Check Whitelist
               </button>
             )}
-            {params.tokenId === 'T-Kalshi' && (
-              <button
-                onClick={() => navigate(`/auction/${params.tokenId}/eligibility`)}
-                className={`text-xs font-medium text-[#06a800] hover:text-[#059000] underline transition-colors ${vaultInfo && !vaultInfo.isPermissionless ? '' : 'ml-auto'}`}
-              >
-                Check Eligibility
-              </button>
-            )}
           </div>
         </div>
 
