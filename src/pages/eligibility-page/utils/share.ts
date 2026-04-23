@@ -15,8 +15,15 @@ export function getSocialCardShareLink(
   return `${window.location.origin}/sc?${params.toString()}`
 }
 
-export function getSocialCardImageUrl(wallet: string, tokenId: SocialCardTokenId): string {
+export function getSocialCardImageUrl(
+  wallet: string,
+  tokenId: SocialCardTokenId,
+  twitterHandle?: string | null,
+): string {
   const params = new URLSearchParams({ wallet, tokenId })
+  if (twitterHandle) {
+    params.set('handle', twitterHandle)
+  }
   return `/api/social/card?${params.toString()}`
 }
 

@@ -23,6 +23,13 @@ interface BrowserRenderingResponse {
   errors?: Array<{ message: string }>
 }
 
+function normalizeCacheHandle(value: string | null): string | null {
+  if (!value) return null
+  const cleaned = value.trim().replace(/^@+/, '').toLowerCase()
+  if (!cleaned) return null
+  return /^[a-z0-9_]{1,15}$/.test(cleaned) ? cleaned : null
+}
+
 const CARD_WIDTH = 1361
 const CARD_HEIGHT = 766
 
@@ -128,7 +135,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   }
   const tokenId: SocialCardTokenId = tokenIdParam
 
-  const cacheKey = `social-card-${wallet}-${tokenId}.png`
+  const cacheHandle = normalizeCacheHandle(handleParam)
+  const cacheKey = cacheHandle
+    ? `social-card-${wallet}-${tokenId}-${cacheHandle}.png`
+    : `social-card-${wallet}-${tokenId}.png`
 
   if (!refresh) {
     const existing = await env.REFERRAL_IMAGES.get(cacheKey)
