@@ -7,6 +7,7 @@ import svgr from 'vite-plugin-svgr'
 import { VitePWA } from 'vite-plugin-pwa'
 import { resolve } from 'node:path'
 import { execSync } from 'node:child_process'
+import { pwaManifest } from './shared/pwa-manifest'
 
 // Opt in to a real service worker with `VITE_SW_ENABLED=true`. When unset
 // (the default), VitePWA still emits the web manifest + icons (the PWA
@@ -43,31 +44,10 @@ export default defineConfig({
       injectRegister: false,
       selfDestroying: !swEnabled,
       includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'pwa-source-icon.svg'],
-      manifest: {
-        id: '/',
-        name: 'Tessera',
-        short_name: 'Tessera',
-        description: 'Tessera, Private Equity for Everyone',
-        start_url: '/',
-        scope: '/',
-        display: 'standalone',
-        orientation: 'portrait',
-        theme_color: '#131314',
-        background_color: '#131314',
-        lang: 'en',
-        categories: ['finance'],
-        icons: [
-          { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
-          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
-          {
-            src: 'maskable-icon-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable',
-          },
-        ],
-      },
+      // manifest is served by functions/manifest.webmanifest.ts; disable VitePWA's
+      // static emission and the auto-injected <link> (we add that to index.html
+      // ourselves so the source of truth stays in shared/pwa-manifest.ts).
+      manifest: false,
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf}'],
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
