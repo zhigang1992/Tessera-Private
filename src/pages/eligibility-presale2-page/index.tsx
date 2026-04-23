@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router'
 import { getAuthToken, useDynamicContext, useSocialAccounts } from '@dynamic-labs/sdk-react-core'
 import { ProviderEnum } from '@dynamic-labs/sdk-api-core'
 import { CheckCircle2, Copy, HelpCircle, Loader2, Twitter, XCircle } from 'lucide-react'
+import { clsx } from 'clsx'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useWallet } from '@/hooks/use-wallet'
@@ -88,7 +89,7 @@ function RequirementOption({
           }
   const { Icon, color, container } = style
   return (
-    <div className={`flex flex-col rounded-[10px] border transition-all ${container}`}>
+    <div className={clsx('flex flex-col rounded-[10px] border transition-all', container)}>
       <div className="p-5 flex flex-col gap-4">
         <div className="flex items-start gap-4">
           <Icon className="size-6 shrink-0 mt-1" style={{ color }} />
@@ -143,12 +144,12 @@ export default function EligibilityPresale2Page() {
 
   return (
     <div className="mx-auto w-full max-w-[1200px] p-6 flex flex-col gap-4">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
         <div className="flex flex-col gap-2">
           <h1 className="text-[20px] md:text-[24px] font-semibold text-black dark:text-[#d2d2d2]">
             Eligibility Check
           </h1>
-          <p className="text-[16px] text-[#666] dark:text-[#999]">
+          <p className="font-normal text-[16px] text-[#666] dark:text-[#999]">
             You qualify for Pre-Sale 2 access if you meet any one of the following:
           </p>
         </div>
@@ -367,115 +368,117 @@ function EligibilityContent({
             Qualification Options
           </h3>
 
-          <RequirementOption
-            label="Option 1"
-            description={`Trade ${USD_FORMATTER.format(OPTION1_VOLUME_THRESHOLD_USD)}+ of ${tokenDisplayName} before ${PRESALE2_SNAPSHOT_DATE} snapshot`}
-            status={option1Status}
-            additionalInfo={
-              option1.status === 'pass' || option1.status === 'fail' ? (
-                <>Trading volume: {USD_FORMATTER.format(option1.volumeUsd)}</>
-              ) : null
-            }
-            extraActionLabel={option1Status === 'unmet' ? 'Link another wallet' : undefined}
-            onExtraAction={() =>
-              window.open(`/wallet-link?parent=${encodeURIComponent(walletAddress)}`, '_blank', 'noopener')
-            }
-          />
-
-          <RequirementOption
-            label="Option 2"
-            description="Connect to Tessera using a Solana mobile device"
-            status={option2Status}
-          />
-
-          <RequirementOption
-            label="Option 3"
-            description="Complete all of the following:"
-            status={option3Status}
-          >
-            <CriterionRow
-              title="Trading volume"
-              description={`Your lifetime trading volume must be at least ${USD_FORMATTER.format(VOLUME_THRESHOLD_USD)}. Volume from linked child wallets is included.`}
-              status={volume.status}
+          <div className="flex flex-col gap-3">
+            <RequirementOption
+              label="Option 1"
+              description={`Trade ${USD_FORMATTER.format(OPTION1_VOLUME_THRESHOLD_USD)}+ of ${tokenDisplayName} before ${PRESALE2_SNAPSHOT_DATE} snapshot`}
+              status={option1Status}
               additionalInfo={
-                volume.status === 'pass' || volume.status === 'fail' ? (
-                  <>
-                    Current volume: {USD_FORMATTER.format(volume.volumeUsd ?? 0)}
-                    {volume.linkedWalletCount > 0
-                      ? ` (across ${volume.linkedWalletCount + 1} wallets)`
-                      : null}
-                  </>
-                ) : volume.status === 'error' ? (
-                  <span className="text-red-600">{volume.error}</span>
+                option1.status === 'pass' || option1.status === 'fail' ? (
+                  <>Trading volume: {USD_FORMATTER.format(option1.volumeUsd)}</>
                 ) : null
               }
-              action={
-                volume.status === 'fail' ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      window.open(`/wallet-link?parent=${encodeURIComponent(walletAddress)}`, '_blank', 'noopener')
-                    }
-                  >
-                    Link another wallet
-                  </Button>
-                ) : null
+              extraActionLabel={option1Status === 'unmet' ? 'Link another wallet' : undefined}
+              onExtraAction={() =>
+                window.open(`/wallet-link?parent=${encodeURIComponent(walletAddress)}`, '_blank', 'noopener')
               }
             />
 
-            <CriterionRow
-              title={twitterLinked ? 'X connected' : 'Connect your X'}
-              description="Link your X account in Settings to qualify."
-              status={twitterState.status}
-              additionalInfo={
-                twitterLinked && twitterHandleDisplay ? (
-                  <>Connected as @{twitterHandleDisplay}</>
-                ) : null
-              }
-              action={
-                !twitter ? (
-                  <Button size="sm" onClick={handleConnectTwitter} disabled={isLinkingTwitter}>
-                    {isLinkingTwitter ? (
-                      <Loader2 className="size-4 animate-spin mr-2" />
-                    ) : (
-                      <Twitter className="size-4 mr-2" />
-                    )}
-                    Connect X
-                  </Button>
-                ) : null
-              }
+            <RequirementOption
+              label="Option 2"
+              description="Connect to Tessera using a Solana mobile device"
+              status={option2Status}
             />
 
-            <CriterionRow
-              title={post.status === 'pass' ? 'Social card posted' : 'Post social card'}
-              description="Post a Tessera social card from your X account."
-              status={post.status}
-              additionalInfo={
-                post.status === 'pass' && post.tweetUrl ? (
-                  <a
-                    href={post.tweetUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#06a800] underline"
-                  >
-                    View your post
-                  </a>
-                ) : post.status === 'error' ? (
-                  <span className="text-red-600">{post.error}</span>
-                ) : !twitterLinked ? (
-                  <>Connect X first.</>
-                ) : null
-              }
-              action={
-                post.status === 'fail' && twitter && isSocialCardTokenId(tokenId) ? (
-                  <Button size="sm" onClick={() => shareSocialCardOnTwitter(walletAddress, tokenId, tokenDisplayName)}>
-                    Post social card
-                  </Button>
-                ) : null
-              }
-            />
-          </RequirementOption>
+            <RequirementOption
+              label="Option 3"
+              description="Complete all of the following:"
+              status={option3Status}
+            >
+              <CriterionRow
+                title="Trading volume"
+                description={`Your lifetime trading volume must be at least ${USD_FORMATTER.format(VOLUME_THRESHOLD_USD)}. Volume from linked child wallets is included.`}
+                status={volume.status}
+                additionalInfo={
+                  volume.status === 'pass' || volume.status === 'fail' ? (
+                    <>
+                      Current volume: {USD_FORMATTER.format(volume.volumeUsd ?? 0)}
+                      {volume.linkedWalletCount > 0
+                        ? ` (across ${volume.linkedWalletCount + 1} wallets)`
+                        : null}
+                    </>
+                  ) : volume.status === 'error' ? (
+                    <span className="text-red-600">{volume.error}</span>
+                  ) : null
+                }
+                action={
+                  volume.status === 'fail' ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        window.open(`/wallet-link?parent=${encodeURIComponent(walletAddress)}`, '_blank', 'noopener')
+                      }
+                    >
+                      Link another wallet
+                    </Button>
+                  ) : null
+                }
+              />
+
+              <CriterionRow
+                title={twitterLinked ? 'X connected' : 'Connect your X'}
+                description="Link your X account in Settings to qualify."
+                status={twitterState.status}
+                additionalInfo={
+                  twitterLinked && twitterHandleDisplay ? (
+                    <>Connected as @{twitterHandleDisplay}</>
+                  ) : null
+                }
+                action={
+                  !twitter ? (
+                    <Button size="sm" onClick={handleConnectTwitter} disabled={isLinkingTwitter}>
+                      {isLinkingTwitter ? (
+                        <Loader2 className="size-4 animate-spin mr-2" />
+                      ) : (
+                        <Twitter className="size-4 mr-2" />
+                      )}
+                      Connect X
+                    </Button>
+                  ) : null
+                }
+              />
+
+              <CriterionRow
+                title={post.status === 'pass' ? 'Social card posted' : 'Post social card'}
+                description="Post a Tessera social card from your X account."
+                status={post.status}
+                additionalInfo={
+                  post.status === 'pass' && post.tweetUrl ? (
+                    <a
+                      href={post.tweetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#06a800] underline"
+                    >
+                      View your post
+                    </a>
+                  ) : post.status === 'error' ? (
+                    <span className="text-red-600">{post.error}</span>
+                  ) : !twitterLinked ? (
+                    <>Connect X first.</>
+                  ) : null
+                }
+                action={
+                  post.status === 'fail' && twitter && isSocialCardTokenId(tokenId) ? (
+                    <Button size="sm" onClick={() => shareSocialCardOnTwitter(walletAddress, tokenId, tokenDisplayName)}>
+                      Post social card
+                    </Button>
+                  ) : null
+                }
+              />
+            </RequirementOption>
+          </div>
         </div>
       </div>
     </>

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router'
 import { getAuthToken, useDynamicContext, useSocialAccounts } from '@dynamic-labs/sdk-react-core'
 import { ProviderEnum } from '@dynamic-labs/sdk-api-core'
 import { Copy, Loader2, Twitter } from 'lucide-react'
+import { clsx } from 'clsx'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useWallet } from '@/hooks/use-wallet'
@@ -70,12 +71,12 @@ export default function EligibilityPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1200px] p-6 flex flex-col gap-4">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
         <div className="flex flex-col gap-2">
           <h1 className="text-[20px] md:text-[24px] font-semibold text-black dark:text-[#d2d2d2]">
             Eligibility Check
           </h1>
-          <p className="text-[16px] text-[#666] dark:text-[#999]">
+          <p className="font-normal text-[16px] text-[#666] dark:text-[#999]">
             Meet all conditions below and submit your application for manual approval to access{' '}
             {token?.displayName ?? ''}:
           </p>
@@ -305,11 +306,12 @@ function EligibilityContent({
                   type="button"
                   onClick={handleApply}
                   disabled={!isEligible || isApplying}
-                  className={`w-full py-3.5 rounded-[10px] font-bold text-[16px] transition-colors flex items-center justify-center gap-2 ${
+                  className={clsx(
+                    'w-full py-3.5 rounded-[10px] font-bold text-[16px] transition-colors flex items-center justify-center gap-2',
                     isEligible
                       ? 'bg-[#111] text-white hover:bg-[#333] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed'
-                      : 'bg-[#999] text-white opacity-50 cursor-not-allowed'
-                  }`}
+                      : 'bg-[#999] text-white opacity-50 cursor-not-allowed',
+                  )}
                 >
                   {isApplying ? <Loader2 className="size-4 animate-spin" /> : null}
                   {isApplying ? 'Applying…' : 'Apply Whitelist'}
@@ -355,7 +357,7 @@ function EligibilityContent({
         <div className="lg:col-span-8 p-[30px] rounded-[16px] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#1a1a1b] shadow-sm flex flex-col gap-5">
           <h3 className="font-semibold text-[20px] text-black dark:text-[#d2d2d2]">Qualification Conditions</h3>
 
-          <div className={`flex flex-col rounded-[10px] border transition-all ${optionStyles}`}>
+          <div className={clsx('flex flex-col rounded-[10px] border transition-all', optionStyles)}>
             <div className="p-5 pb-0">
               <h4 className="font-semibold text-[16px] text-black dark:text-[#d2d2d2]">
                 {tokenDisplayName} application conditions
