@@ -5,7 +5,7 @@
 // verifier (functions/api/eligibility/social-post.ts) so the text we post
 // and the phrase we search for stay in sync.
 
-export const SOCIAL_CARD_TOKEN_IDS = ['T-Kalshi', 'T-SpaceX'] as const
+export const SOCIAL_CARD_TOKEN_IDS = ['T-Kalshi'] as const
 export type SocialCardTokenId = (typeof SOCIAL_CARD_TOKEN_IDS)[number]
 
 export function isSocialCardTokenId(value: string | null | undefined): value is SocialCardTokenId {

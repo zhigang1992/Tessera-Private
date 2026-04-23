@@ -107,8 +107,7 @@ export function AuctionPhaseNav({ activeTab, onTabChange, summaries }: AuctionPh
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation()
-                  const path = tab.presaleId === 'presale-2' ? 'eligibility-presale2' : 'eligibility'
-                  navigate(`/auction/${tokenId}/${path}`)
+                  navigate(`/auction/${tokenId}/eligibility`)
                 }}
                 className="mt-1 bg-[#111] hover:bg-[#333] rounded text-white text-xs font-medium px-3 py-1.5 transition-colors whitespace-nowrap"
               >

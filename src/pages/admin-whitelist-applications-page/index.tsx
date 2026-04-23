@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Check, Loader2, Lock, RotateCcw, Trash2, X } from 'lucide-react'
+import { Loader2, Lock, Plus, Trash2, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -14,26 +14,40 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { AdminNav } from '../admin-shared/admin-nav'
+import { CsvUploadDialog } from './components/csv-upload-dialog'
+import { ManualAddDialog } from './components/manual-add-dialog'
+
+type QualifiedVia =
+  | 'snapshot_volume'
+  | 'solana_mobile'
+  | 'volume_twitter'
+  | 'admin_manual'
+  | 'admin_csv'
 
 type ApplicationRow = {
   walletAddress: string
-  tokenId: string
-  status: 'pending' | 'approved' | 'rejected'
+  qualifiedVia: QualifiedVia
   tradingVolumeUsd: number | null
+  snapshotVolumeUsd: number | null
+  solanaMobileEligible: boolean | null
   twitterHandle: string | null
   twitterConnected: boolean
   socialPostFound: boolean
   socialPostTweetUrl: string | null
+  presale1Selected: boolean
   adminNote: string | null
-  appliedAt: string
-  reviewedAt: string | null
+  qualifiedAt: string
+  selectedAt: string | null
+}
+
+type ListResponse = {
+  rows: ApplicationRow[]
+  totalCount: number
+  presale1SelectedCount: number
 }
 
 const API = '/api/admin/whitelist-applications'
 
-// Match the mock-volumes admin page: the secret lives in the URL hash
-// (#secret=…) rather than the query string, so it never reaches the server,
-// CDN, or access logs.
 function readSecretFromHash(): string {
   const hash = window.location.hash.startsWith('#')
     ? window.location.hash.slice(1)
@@ -45,20 +59,27 @@ function writeSecretToHash(value: string) {
   const params = new URLSearchParams(
     window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash,
   )
-  if (value) {
-    params.set('secret', value)
-  } else {
-    params.delete('secret')
-  }
+  if (value) params.set('secret', value)
+  else params.delete('secret')
   const next = params.toString()
   const url = `${window.location.pathname}${window.location.search}${next ? `#${next}` : ''}`
   window.history.replaceState(null, '', url)
 }
 
-const STATUS_STYLE: Record<ApplicationRow['status'], string> = {
-  pending: 'text-[#d4a017]',
-  approved: 'text-[#06a800]',
-  rejected: 'text-[#d4183d]',
+const VIA_LABEL: Record<QualifiedVia, string> = {
+  snapshot_volume: 'Snapshot',
+  solana_mobile: 'Solana Mobile',
+  volume_twitter: 'Volume + X',
+  admin_manual: 'Manual',
+  admin_csv: 'CSV',
+}
+
+const VIA_STYLE: Record<QualifiedVia, string> = {
+  snapshot_volume: 'bg-[#06a80015] text-[#06a800]',
+  solana_mobile: 'bg-[#7a5cff15] text-[#7a5cff]',
+  volume_twitter: 'bg-[#d4a01715] text-[#b8860b]',
+  admin_manual: 'bg-[#66666615] text-[#666]',
+  admin_csv: 'bg-[#66666615] text-[#666]',
 }
 
 export default function AdminWhitelistApplicationsPage() {
@@ -66,42 +87,37 @@ export default function AdminWhitelistApplicationsPage() {
   const [secret, setSecret] = useState(secretFromUrl)
   const [authed, setAuthed] = useState(false)
   const [rows, setRows] = useState<ApplicationRow[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [selectedCount, setSelectedCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const [pending, setPending] = useState<Record<string, boolean>>({})
   const [noteDraft, setNoteDraft] = useState<Record<string, string>>({})
+  const [csvOpen, setCsvOpen] = useState(false)
+  const [manualOpen, setManualOpen] = useState(false)
 
-  const rowKey = useCallback(
-    (row: Pick<ApplicationRow, 'walletAddress' | 'tokenId'>) =>
-      `${row.walletAddress}:${row.tokenId}`,
-    [],
-  )
-
-  const fetchRows = useCallback(
-    async (secretValue: string) => {
-      setLoading(true)
-      try {
-        const res = await fetch(API, {
-          headers: { 'x-admin-secret': secretValue },
-        })
-        if (res.status === 401) {
-          setAuthed(false)
-          throw new Error('Invalid secret')
-        }
-        if (!res.ok) {
-          const detail = await res.json().catch(() => ({}))
-          throw new Error((detail as { error?: string }).error ?? `Request failed (${res.status})`)
-        }
-        const data = (await res.json()) as { rows: ApplicationRow[] }
-        setRows(data.rows)
-        setAuthed(true)
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Failed to load applications')
-      } finally {
-        setLoading(false)
+  const fetchRows = useCallback(async (secretValue: string) => {
+    setLoading(true)
+    try {
+      const res = await fetch(API, { headers: { 'x-admin-secret': secretValue } })
+      if (res.status === 401) {
+        setAuthed(false)
+        throw new Error('Invalid secret')
       }
-    },
-    [],
-  )
+      if (!res.ok) {
+        const detail = await res.json().catch(() => ({}))
+        throw new Error((detail as { error?: string }).error ?? `Request failed (${res.status})`)
+      }
+      const data = (await res.json()) as ListResponse
+      setRows(data.rows)
+      setTotalCount(data.totalCount)
+      setSelectedCount(data.presale1SelectedCount)
+      setAuthed(true)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load applications')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (secretFromUrl && !authed) {
@@ -122,51 +138,57 @@ export default function AdminWhitelistApplicationsPage() {
     [secret, fetchRows],
   )
 
-  const updateStatus = useCallback(
-    async (row: ApplicationRow, status: ApplicationRow['status']) => {
-      const key = rowKey(row)
-      setPending((p) => ({ ...p, [key]: true }))
+  const updateRow = useCallback(
+    async (
+      walletAddress: string,
+      body: { presale1Selected?: boolean; adminNote?: string | null },
+    ) => {
+      setPending((p) => ({ ...p, [walletAddress]: true }))
       try {
-        const note = noteDraft[key] !== undefined ? noteDraft[key] : row.adminNote ?? ''
         const res = await fetch(API, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-admin-secret': secret,
-          },
-          body: JSON.stringify({
-            walletAddress: row.walletAddress,
-            tokenId: row.tokenId,
-            status,
-            note: note.trim() || null,
-          }),
+          headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret },
+          body: JSON.stringify({ walletAddress, ...body }),
         })
         if (!res.ok) {
           const detail = (await res.json().catch(() => ({}))) as { error?: string; detail?: string }
           throw new Error(detail.detail ?? detail.error ?? `Request failed (${res.status})`)
         }
-        toast.success(`Set to ${status}`)
         await fetchRows(secret)
       } catch (err) {
         toast.error(err instanceof Error ? err.message : 'Failed to update')
       } finally {
-        setPending((p) => ({ ...p, [key]: false }))
+        setPending((p) => ({ ...p, [walletAddress]: false }))
       }
     },
-    [rowKey, noteDraft, secret, fetchRows],
+    [secret, fetchRows],
+  )
+
+  const handleToggleSelected = useCallback(
+    (row: ApplicationRow) => {
+      void updateRow(row.walletAddress, { presale1Selected: !row.presale1Selected })
+    },
+    [updateRow],
+  )
+
+  const handleSaveNote = useCallback(
+    (row: ApplicationRow) => {
+      const draft = noteDraft[row.walletAddress]
+      if (draft === undefined) return
+      const next = draft.trim() ? draft.trim() : null
+      if (next === (row.adminNote ?? null)) return
+      void updateRow(row.walletAddress, { adminNote: next })
+    },
+    [noteDraft, updateRow],
   )
 
   const handleDelete = useCallback(
     async (row: ApplicationRow) => {
-      const key = rowKey(row)
-      setPending((p) => ({ ...p, [key]: true }))
+      setPending((p) => ({ ...p, [row.walletAddress]: true }))
       try {
         const res = await fetch(
-          `${API}?wallet=${encodeURIComponent(row.walletAddress)}&tokenId=${encodeURIComponent(row.tokenId)}`,
-          {
-            method: 'DELETE',
-            headers: { 'x-admin-secret': secret },
-          },
+          `${API}?wallet=${encodeURIComponent(row.walletAddress)}`,
+          { method: 'DELETE', headers: { 'x-admin-secret': secret } },
         )
         if (!res.ok) {
           const detail = (await res.json().catch(() => ({}))) as { error?: string }
@@ -177,34 +199,19 @@ export default function AdminWhitelistApplicationsPage() {
       } catch (err) {
         toast.error(err instanceof Error ? err.message : 'Failed to delete')
       } finally {
-        setPending((p) => ({ ...p, [key]: false }))
+        setPending((p) => ({ ...p, [row.walletAddress]: false }))
       }
     },
-    [rowKey, secret, fetchRows],
-  )
-
-  const sortedRows = useMemo(
-    () =>
-      [...rows].sort((a, b) => {
-        const statusOrder: Record<ApplicationRow['status'], number> = {
-          pending: 0,
-          approved: 1,
-          rejected: 2,
-        }
-        const diff = statusOrder[a.status] - statusOrder[b.status]
-        if (diff !== 0) return diff
-        return b.appliedAt.localeCompare(a.appliedAt)
-      }),
-    [rows],
+    [secret, fetchRows],
   )
 
   if (!authed) {
     return (
       <div className="mx-auto w-full max-w-md px-6 pt-16 pb-12">
         <AdminNav />
-        <h1 className="text-2xl font-semibold mb-2">Pre-Sale 1 whitelist applications</h1>
+        <h1 className="text-2xl font-semibold mb-2">Whitelist applications</h1>
         <p className="text-sm text-muted-foreground mb-6">
-          Enter the admin secret to review whitelist applications.
+          Enter the admin secret to review whitelist candidates and manage Pre-Sale 1 selection.
         </p>
         <Card>
           <CardContent className="p-6">
@@ -232,67 +239,89 @@ export default function AdminWhitelistApplicationsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 pt-6 pb-12 sm:px-10">
+    <div className="mx-auto w-full max-w-7xl px-6 pt-6 pb-12 sm:px-10">
       <AdminNav />
-      <h1 className="text-2xl font-semibold mb-2">Pre-Sale 1 whitelist applications</h1>
-      <p className="text-sm text-muted-foreground mb-6">
-        Applications are created when a user who passes all eligibility checks clicks
-        "Apply Whitelist" on the Pre-Sale 1 eligibility page. Pending applications wait
-        on your review. Pre-Sale 2 has no manual application — it is automatic.
-      </p>
+      <div className="flex items-start justify-between flex-wrap gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold mb-2">Whitelist applications</h1>
+          <p className="text-sm text-muted-foreground">
+            Records are created when a qualifying user clicks Check Eligibility, or via admin
+            CSV / manual entry. Toggle the Pre-Sale 1 switch to select a wallet for the final
+            whitelist.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-sm font-medium px-3 py-1.5 rounded-full bg-[#06a80015] text-[#06a800]">
+            Pre-Sale 1 selected: {selectedCount} / {totalCount} qualified
+          </span>
+          <Button variant="outline" size="sm" onClick={() => setCsvOpen(true)}>
+            <Upload className="size-4 mr-2" /> CSV upload
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setManualOpen(true)}>
+            <Plus className="size-4 mr-2" /> Add record
+          </Button>
+        </div>
+      </div>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Wallet</TableHead>
-                <TableHead>Token</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Volume (USD)</TableHead>
+                <TableHead>Qualified via</TableHead>
+                <TableHead className="text-right">Volume</TableHead>
+                <TableHead className="text-right">Snapshot</TableHead>
+                <TableHead>Mobile</TableHead>
                 <TableHead>X handle</TableHead>
                 <TableHead>Post</TableHead>
-                <TableHead>Applied</TableHead>
+                <TableHead>Qualified</TableHead>
+                <TableHead>Selected for P1</TableHead>
                 <TableHead>Note</TableHead>
-                <TableHead className="w-64 text-right">Actions</TableHead>
+                <TableHead className="w-10 text-right">…</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading && rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
                     <Loader2 className="inline size-4 animate-spin" />
                   </TableCell>
                 </TableRow>
-              ) : sortedRows.length === 0 ? (
+              ) : rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
                     No applications yet.
                   </TableCell>
                 </TableRow>
               ) : (
-                sortedRows.map((row) => {
-                  const key = rowKey(row)
-                  const busy = !!pending[key]
-                  const noteValue = noteDraft[key] ?? row.adminNote ?? ''
+                rows.map((row) => {
+                  const busy = !!pending[row.walletAddress]
+                  const noteValue = noteDraft[row.walletAddress] ?? row.adminNote ?? ''
                   return (
-                    <TableRow key={key}>
+                    <TableRow key={row.walletAddress}>
                       <TableCell className="font-mono text-xs">
                         {row.walletAddress.slice(0, 6)}…{row.walletAddress.slice(-4)}
                       </TableCell>
-                      <TableCell>{row.tokenId}</TableCell>
                       <TableCell>
-                        <span className={`font-semibold capitalize ${STATUS_STYLE[row.status]}`}>
-                          {row.status}
+                        <span
+                          className={`text-xs font-medium px-2 py-0.5 rounded-full ${VIA_STYLE[row.qualifiedVia]}`}
+                        >
+                          {VIA_LABEL[row.qualifiedVia]}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {row.tradingVolumeUsd !== null
-                          ? row.tradingVolumeUsd.toLocaleString(undefined, {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })
+                      <TableCell className="text-right tabular-nums text-xs">
+                        {row.tradingVolumeUsd != null
+                          ? row.tradingVolumeUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })
                           : '—'}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums text-xs">
+                        {row.snapshotVolumeUsd != null
+                          ? row.snapshotVolumeUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })
+                          : '—'}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {row.solanaMobileEligible == null ? '—' : row.solanaMobileEligible ? '✓' : '✗'}
                       </TableCell>
                       <TableCell className="text-xs">
                         {row.twitterHandle ? `@${row.twitterHandle}` : '—'}
@@ -314,63 +343,48 @@ export default function AdminWhitelistApplicationsPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
-                        {new Date(row.appliedAt.replace(' ', 'T') + 'Z').toLocaleString()}
+                        {new Date(row.qualifiedAt.replace(' ', 'T') + 'Z').toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={row.presale1Selected}
+                          onClick={() => handleToggleSelected(row)}
+                          disabled={busy}
+                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors disabled:opacity-50 ${
+                            row.presale1Selected ? 'bg-[#06a800]' : 'bg-[#d4d4d4] dark:bg-[#404040]'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block size-4 transform rounded-full bg-white transition-transform ${
+                              row.presale1Selected ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                            }`}
+                          />
+                        </button>
                       </TableCell>
                       <TableCell>
                         <Input
                           value={noteValue}
                           onChange={(e) =>
-                            setNoteDraft((d) => ({ ...d, [key]: e.target.value }))
+                            setNoteDraft((d) => ({ ...d, [row.walletAddress]: e.target.value }))
                           }
-                          placeholder="Add note (optional)"
+                          onBlur={() => handleSaveNote(row)}
+                          placeholder="Add note"
                           className="h-8 text-xs min-w-[160px]"
+                          disabled={busy}
                         />
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          {row.status !== 'approved' ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={busy}
-                              onClick={() => updateStatus(row, 'approved')}
-                              aria-label="Approve"
-                            >
-                              <Check className="size-4" />
-                            </Button>
-                          ) : null}
-                          {row.status !== 'rejected' ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={busy}
-                              onClick={() => updateStatus(row, 'rejected')}
-                              aria-label="Reject"
-                            >
-                              <X className="size-4" />
-                            </Button>
-                          ) : null}
-                          {row.status !== 'pending' ? (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              disabled={busy}
-                              onClick={() => updateStatus(row, 'pending')}
-                              aria-label="Reset to pending"
-                            >
-                              <RotateCcw className="size-4" />
-                            </Button>
-                          ) : null}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            disabled={busy}
-                            onClick={() => handleDelete(row)}
-                            aria-label="Delete"
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={busy}
+                          onClick={() => handleDelete(row)}
+                          aria-label="Delete"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   )
@@ -380,6 +394,19 @@ export default function AdminWhitelistApplicationsPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <CsvUploadDialog
+        open={csvOpen}
+        onOpenChange={setCsvOpen}
+        secret={secret}
+        onComplete={() => void fetchRows(secret)}
+      />
+      <ManualAddDialog
+        open={manualOpen}
+        onOpenChange={setManualOpen}
+        secret={secret}
+        onComplete={() => void fetchRows(secret)}
+      />
     </div>
   )
 }

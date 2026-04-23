@@ -1,7 +1,7 @@
 import { AppProviders } from '@/components/app-providers.tsx'
 import { MainLayout } from '@/components/layout'
-import { AdminMockSolanaMobilePage, AdminMockVolumesPage, AdminWhitelistApplicationsPage, AuctionPage, DashboardPage, EligibilityPage, EligibilityPresale2Page, ExplorePage, LeaderboardPage, ReferralPage, SettingsPage, SupportPage, TradePage, TokenDetailPage, WhitelistCheckerPage } from '@/pages'
-import { BrowserRouter, Navigate, Route, Routes, useSearchParams } from 'react-router'
+import { AdminMockSolanaMobilePage, AdminMockVolumesPage, AdminWhitelistApplicationsPage, AuctionPage, DashboardPage, EligibilityPage, ExplorePage, LeaderboardPage, ReferralPage, SettingsPage, SupportPage, TradePage, TokenDetailPage, WhitelistCheckerPage } from '@/pages'
+import { BrowserRouter, Navigate, Route, Routes, useParams, useSearchParams } from 'react-router'
 import { getLiveAuctionRoute } from '@/config'
 
 // Component to handle /s redirect with query params
@@ -9,6 +9,12 @@ function ShareRedirect() {
   const [searchParams] = useSearchParams()
   const queryString = searchParams.toString()
   return <Navigate to={`/referral${queryString ? `?${queryString}` : ''}`} replace />
+}
+
+// Legacy Pre-Sale 2 URL — redirects to the unified eligibility page.
+function Presale2Redirect() {
+  const { auctionId } = useParams<{ auctionId?: string }>()
+  return <Navigate to={`/auction/${auctionId}/eligibility`} replace />
 }
 
 export function App() {
@@ -51,7 +57,7 @@ export function App() {
             />
             <Route
               path="/auction/:auctionId/eligibility-presale2"
-              element={<EligibilityPresale2Page />}
+              element={<Presale2Redirect />}
             />
             <Route path="/admin/mock-volumes" element={<AdminMockVolumesPage />} />
             <Route path="/admin/mock-solana-mobile" element={<AdminMockSolanaMobilePage />} />

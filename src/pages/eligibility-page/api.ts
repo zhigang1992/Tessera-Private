@@ -1,11 +1,24 @@
 import { apiClient } from '@/features/referral/lib/api-client'
 
+export const PRESALE_SNAPSHOT_DATE = '2026-04-27'
+export const LIFETIME_VOLUME_THRESHOLD_USD = 5000
+export const SNAPSHOT_VOLUME_THRESHOLD_USD = 1000
+
 export type TradingVolumeResponse = {
   volumeUsd: number
   linkedWalletCount: number
   wallets: string[]
   mockedWalletCount?: number
 }
+
+export type SnapshotVolumeResponse = {
+  volumeUsd: number
+  snapshotDate: string
+  linkedWalletCount?: number
+  mockedWalletCount?: number
+}
+
+export type SolanaMobileStatus = 'met' | 'unmet'
 
 export type SocialPostResponse = {
   hasPosted: boolean
@@ -28,55 +41,96 @@ export class SocialPostError extends Error {
 
 export async function fetchTradingVolume(wallet: string): Promise<TradingVolumeResponse> {
   const res = await fetch(`/api/eligibility/trading-volume?wallet=${encodeURIComponent(wallet)}`)
-  if (!res.ok) {
-    throw new Error(`trading-volume request failed: ${res.status}`)
-  }
+  if (!res.ok) throw new Error(`trading-volume request failed: ${res.status}`)
   return (await res.json()) as TradingVolumeResponse
 }
 
-export type WhitelistApplicationStatus = 'not-applied' | 'pending' | 'approved' | 'rejected'
+export async function fetchSnapshotVolume(wallet: string): Promise<SnapshotVolumeResponse> {
+  const res = await fetch(`/api/eligibility/snapshot-volume?wallet=${encodeURIComponent(wallet)}`)
+  if (!res.ok) throw new Error(`snapshot-volume request failed: ${res.status}`)
+  const data = (await res.json()) as {
+    volumeUsd: number
+    linkedWalletCount?: number
+    mockedWalletCount?: number
+  }
+  return {
+    volumeUsd: data.volumeUsd,
+    snapshotDate: PRESALE_SNAPSHOT_DATE,
+    linkedWalletCount: data.linkedWalletCount,
+    mockedWalletCount: data.mockedWalletCount,
+  }
+}
+
+export async function fetchSolanaMobileEligibility(wallet: string): Promise<SolanaMobileStatus> {
+  const res = await fetch(`/api/eligibility/solana-mobile?wallet=${encodeURIComponent(wallet)}`)
+  if (!res.ok) throw new Error(`solana-mobile request failed: ${res.status}`)
+  const data = (await res.json()) as { status: SolanaMobileStatus }
+  return data.status
+}
+
+export type QualifiedVia =
+  | 'snapshot_volume'
+  | 'solana_mobile'
+  | 'volume_twitter'
+  | 'admin_manual'
+  | 'admin_csv'
 
 export type WhitelistApplication = {
-  walletAddress: string
-  tokenId: string
-  status: WhitelistApplicationStatus
+  qualified: boolean
+  walletAddress?: string
+  qualifiedVia?: QualifiedVia
   tradingVolumeUsd?: number | null
+  snapshotVolumeUsd?: number | null
+  solanaMobileEligible?: boolean | null
   twitterHandle?: string | null
   twitterConnected?: boolean
   socialPostFound?: boolean
   socialPostTweetUrl?: string | null
+  presale1Selected: boolean
   adminNote?: string | null
-  appliedAt?: string
-  reviewedAt?: string | null
+  qualifiedAt?: string
+  selectedAt?: string | null
 }
 
-export async function fetchWhitelistApplication(
-  wallet: string,
-  tokenId: string,
-): Promise<WhitelistApplication> {
-  const url = `/api/whitelist/applications?wallet=${encodeURIComponent(wallet)}&tokenId=${encodeURIComponent(tokenId)}`
-  const res = await fetch(url)
-  if (!res.ok) {
-    throw new Error(`whitelist application request failed: ${res.status}`)
-  }
+export async function fetchWhitelistApplication(wallet: string): Promise<WhitelistApplication> {
+  const res = await fetch(`/api/whitelist/applications?wallet=${encodeURIComponent(wallet)}`)
+  if (!res.ok) throw new Error(`whitelist application request failed: ${res.status}`)
   return (await res.json()) as WhitelistApplication
 }
 
-export class WhitelistApplyError extends Error {
+export class WhitelistAutoWriteError extends Error {
   code: string
   status: number
   constructor(code: string, status: number, message: string) {
     super(message)
-    this.name = 'WhitelistApplyError'
+    this.name = 'WhitelistAutoWriteError'
     this.code = code
     this.status = status
   }
 }
 
-export async function applyForWhitelist(tokenId: string): Promise<WhitelistApplication> {
+export type WhitelistAutoWriteResult =
+  | { kind: 'qualified'; application: WhitelistApplication }
+  | {
+      kind: 'not_eligible'
+      details?: {
+        tradingVolumeUsd?: number | null
+        snapshotVolumeUsd?: number | null
+        solanaMobileEligible?: boolean | null
+        twitterConnected?: boolean
+      }
+    }
+
+/**
+ * Called immediately after the user clicks "Check Eligibility" and the client
+ * has run the three checks. The server re-runs the checks and upserts the
+ * application row if any option passes. Passing `tokenId` lets the server
+ * also refresh social-card state on the same row without a separate call.
+ */
+export async function qualifyWhitelist(tokenId: string | null): Promise<WhitelistAutoWriteResult> {
   const sessionToken = apiClient.getToken()
   if (!sessionToken) {
-    throw new WhitelistApplyError('not_signed_in', 401, 'Sign in with your wallet first.')
+    throw new WhitelistAutoWriteError('not_signed_in', 401, 'Sign in with your wallet first.')
   }
   const res = await fetch('/api/whitelist/applications', {
     method: 'POST',
@@ -84,20 +138,25 @@ export async function applyForWhitelist(tokenId: string): Promise<WhitelistAppli
       'Content-Type': 'application/json',
       Authorization: `Bearer ${sessionToken}`,
     },
-    body: JSON.stringify({ tokenId }),
+    body: JSON.stringify(tokenId ? { tokenId } : {}),
   })
-  const data = (await res.json().catch(() => ({}))) as {
+  const data = (await res.json().catch(() => ({}))) as WhitelistApplication & {
     error?: string
     detail?: string
-  } & WhitelistApplication
+    reason?: string
+    details?: WhitelistAutoWriteResult extends { kind: 'not_eligible'; details: infer D } ? D : never
+  }
   if (!res.ok) {
-    throw new WhitelistApplyError(
+    throw new WhitelistAutoWriteError(
       data.error ?? `http_${res.status}`,
       res.status,
-      data.detail ?? data.error ?? `Apply failed (${res.status})`,
+      data.detail ?? data.error ?? `Check failed (${res.status})`,
     )
   }
-  return data as WhitelistApplication
+  if (data.qualified === false) {
+    return { kind: 'not_eligible', details: data.details }
+  }
+  return { kind: 'qualified', application: data as WhitelistApplication }
 }
 
 export async function fetchSocialPost(tokenId: string): Promise<SocialPostResponse> {

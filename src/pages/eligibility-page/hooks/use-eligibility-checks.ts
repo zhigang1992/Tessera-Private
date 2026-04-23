@@ -1,7 +1,22 @@
 import { useCallback, useState } from 'react'
-import { fetchSocialPost, fetchTradingVolume, SocialPostError } from '../api'
+import {
+  fetchSnapshotVolume,
+  fetchSocialPost,
+  fetchSolanaMobileEligibility,
+  fetchTradingVolume,
+  LIFETIME_VOLUME_THRESHOLD_USD,
+  SNAPSHOT_VOLUME_THRESHOLD_USD,
+  SocialPostError,
+} from '../api'
 
-export const VOLUME_THRESHOLD_USD = 5000
+export {
+  LIFETIME_VOLUME_THRESHOLD_USD,
+  SNAPSHOT_VOLUME_THRESHOLD_USD,
+  PRESALE_SNAPSHOT_DATE,
+} from '../api'
+
+// Legacy export kept for any callers still importing the old name.
+export const VOLUME_THRESHOLD_USD = LIFETIME_VOLUME_THRESHOLD_USD
 
 export type CheckStatus = 'idle' | 'checking' | 'pass' | 'fail' | 'error'
 
@@ -9,6 +24,17 @@ export type VolumeState = {
   status: CheckStatus
   volumeUsd: number | null
   linkedWalletCount: number
+  error: string | null
+}
+
+export type SnapshotState = {
+  status: CheckStatus
+  volumeUsd: number | null
+  error: string | null
+}
+
+export type SolanaMobileState = {
+  status: CheckStatus
   error: string | null
 }
 
@@ -27,36 +53,44 @@ type RunArgs = {
   wallet: string
   twitterHandle: string | null
   tokenId: string | null
+  checkSocialPost: boolean
 }
 
+const IDLE_VOLUME: VolumeState = {
+  status: 'idle',
+  volumeUsd: null,
+  linkedWalletCount: 0,
+  error: null,
+}
+const IDLE_SNAPSHOT: SnapshotState = { status: 'idle', volumeUsd: null, error: null }
+const IDLE_SOLANA: SolanaMobileState = { status: 'idle', error: null }
+const IDLE_TWITTER: TwitterState = { status: 'idle', handle: null }
+const IDLE_POST: PostState = { status: 'idle', tweetUrl: null, error: null }
+
 export function useEligibilityChecks() {
-  const [volume, setVolume] = useState<VolumeState>({
-    status: 'idle',
-    volumeUsd: null,
-    linkedWalletCount: 0,
-    error: null,
-  })
-  const [twitter, setTwitter] = useState<TwitterState>({ status: 'idle', handle: null })
-  const [post, setPost] = useState<PostState>({ status: 'idle', tweetUrl: null, error: null })
+  const [volume, setVolume] = useState<VolumeState>(IDLE_VOLUME)
+  const [snapshot, setSnapshot] = useState<SnapshotState>(IDLE_SNAPSHOT)
+  const [solana, setSolana] = useState<SolanaMobileState>(IDLE_SOLANA)
+  const [twitter, setTwitter] = useState<TwitterState>(IDLE_TWITTER)
+  const [post, setPost] = useState<PostState>(IDLE_POST)
   const [isRunning, setIsRunning] = useState(false)
 
-  const run = useCallback(async ({ wallet, twitterHandle, tokenId }: RunArgs) => {
+  const run = useCallback(async ({ wallet, twitterHandle, tokenId, checkSocialPost }: RunArgs) => {
     setIsRunning(true)
-    setVolume({ status: 'checking', volumeUsd: null, linkedWalletCount: 0, error: null })
-    setTwitter({
-      status: twitterHandle ? 'pass' : 'fail',
-      handle: twitterHandle,
-    })
+    setVolume({ ...IDLE_VOLUME, status: 'checking' })
+    setSnapshot({ ...IDLE_SNAPSHOT, status: 'checking' })
+    setSolana({ ...IDLE_SOLANA, status: 'checking' })
+    setTwitter({ status: twitterHandle ? 'pass' : 'fail', handle: twitterHandle })
     setPost(
-      twitterHandle && tokenId
-        ? { status: 'checking', tweetUrl: null, error: null }
-        : { status: 'idle', tweetUrl: null, error: null },
+      checkSocialPost && twitterHandle && tokenId
+        ? { ...IDLE_POST, status: 'checking' }
+        : IDLE_POST,
     )
 
     const volumePromise = fetchTradingVolume(wallet)
       .then((res) => {
         setVolume({
-          status: res.volumeUsd >= VOLUME_THRESHOLD_USD ? 'pass' : 'fail',
+          status: res.volumeUsd >= LIFETIME_VOLUME_THRESHOLD_USD ? 'pass' : 'fail',
           volumeUsd: res.volumeUsd,
           linkedWalletCount: res.linkedWalletCount ?? 0,
           error: null,
@@ -71,8 +105,33 @@ export function useEligibilityChecks() {
         })
       })
 
+    const snapshotPromise = fetchSnapshotVolume(wallet)
+      .then((res) => {
+        setSnapshot({
+          status: res.volumeUsd >= SNAPSHOT_VOLUME_THRESHOLD_USD ? 'pass' : 'fail',
+          volumeUsd: res.volumeUsd,
+          error: null,
+        })
+      })
+      .catch((err: unknown) => {
+        setSnapshot({
+          status: 'error',
+          volumeUsd: null,
+          error: err instanceof Error ? err.message : 'Failed to check snapshot volume',
+        })
+      })
+
+    const solanaPromise = fetchSolanaMobileEligibility(wallet)
+      .then((res) => setSolana({ status: res === 'met' ? 'pass' : 'fail', error: null }))
+      .catch((err: unknown) => {
+        setSolana({
+          status: 'error',
+          error: err instanceof Error ? err.message : 'Failed to check Solana Mobile',
+        })
+      })
+
     const postPromise =
-      twitterHandle && tokenId
+      checkSocialPost && twitterHandle && tokenId
         ? fetchSocialPost(tokenId)
             .then((res) => {
               setPost({
@@ -95,9 +154,9 @@ export function useEligibilityChecks() {
             })
         : Promise.resolve()
 
-    await Promise.allSettled([volumePromise, postPromise])
+    await Promise.allSettled([volumePromise, snapshotPromise, solanaPromise, postPromise])
     setIsRunning(false)
   }, [])
 
-  return { volume, twitter, post, isRunning, run }
+  return { volume, snapshot, solana, twitter, post, isRunning, run }
 }

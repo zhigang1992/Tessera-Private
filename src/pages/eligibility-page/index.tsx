@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { getAuthToken, useDynamicContext, useSocialAccounts } from '@dynamic-labs/sdk-react-core'
 import { ProviderEnum } from '@dynamic-labs/sdk-api-core'
-import { Copy, Loader2, Twitter } from 'lucide-react'
-import { clsx } from 'clsx'
+import { Copy, HelpCircle, Loader2, Twitter } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useWallet } from '@/hooks/use-wallet'
@@ -11,14 +10,23 @@ import { resolveTokenIdFromParam, getAppToken } from '@/config'
 import { useHeader } from '@/contexts/header-context'
 import { useReferralAuth } from '@/features/referral/hooks/use-referral-auth'
 import { syncTwitterToBackend } from '@/lib/twitter-sync'
+import { isSocialCardTokenId } from '@/lib/social-card'
 import { CriterionRow } from './components/criterion-row'
-import { useEligibilityChecks, VOLUME_THRESHOLD_USD, type CheckStatus } from './hooks/use-eligibility-checks'
-import { isSocialCardTokenId, shareSocialCardOnTwitter } from './utils/share'
+import { RequirementOption, type OptionStatus } from './components/requirement-option'
 import {
-  applyForWhitelist,
+  useEligibilityChecks,
+  LIFETIME_VOLUME_THRESHOLD_USD,
+  SNAPSHOT_VOLUME_THRESHOLD_USD,
+  PRESALE_SNAPSHOT_DATE,
+  type CheckStatus,
+} from './hooks/use-eligibility-checks'
+import { shareSocialCardOnTwitter } from './utils/share'
+import {
   fetchWhitelistApplication,
-  WhitelistApplyError,
-  type WhitelistApplicationStatus,
+  qualifyWhitelist,
+  WhitelistAutoWriteError,
+  type QualifiedVia,
+  type WhitelistApplication,
 } from './api'
 
 const USD_FORMATTER = new Intl.NumberFormat('en-US', {
@@ -27,14 +35,8 @@ const USD_FORMATTER = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0,
 })
 
-type AggregateStatus = 'met' | 'unmet' | 'pending'
-type ApplicationStatus = 'not-applied' | 'pending' | 'approved' | 'unapproved'
-
-function toApplicationStatus(apiStatus: WhitelistApplicationStatus): ApplicationStatus {
-  return apiStatus === 'rejected' ? 'unapproved' : apiStatus
-}
-
-function aggregateStatus(...statuses: CheckStatus[]): AggregateStatus {
+function optionFromChecks(...statuses: CheckStatus[]): OptionStatus {
+  if (statuses.length === 0) return 'pending'
   if (statuses.every((s) => s === 'pass')) return 'met'
   if (statuses.some((s) => s === 'fail' || s === 'error')) return 'unmet'
   return 'pending'
@@ -43,6 +45,21 @@ function aggregateStatus(...statuses: CheckStatus[]): AggregateStatus {
 function truncateAddress(address: string): string {
   if (address.length <= 12) return address
   return `${address.slice(0, 6)}...${address.slice(-4)}`
+}
+
+function describeQualifiedVia(via: QualifiedVia): string {
+  switch (via) {
+    case 'snapshot_volume':
+      return 'snapshot trading volume'
+    case 'solana_mobile':
+      return 'Solana Mobile device'
+    case 'volume_twitter':
+      return 'trading volume + X connection'
+    case 'admin_manual':
+      return 'manual admin entry'
+    case 'admin_csv':
+      return 'admin batch import'
+  }
 }
 
 export default function EligibilityPage() {
@@ -77,8 +94,7 @@ export default function EligibilityPage() {
             Eligibility Check
           </h1>
           <p className="font-normal text-[16px] text-[#666] dark:text-[#999]">
-            Meet all conditions below and submit your application for manual approval to access{' '}
-            {token?.displayName ?? ''}:
+            You qualify if you meet any one of the following:
           </p>
         </div>
         <button
@@ -129,31 +145,31 @@ function EligibilityContent({
   const twitterId = twitter?.id ?? null
   const twitterHandle = twitter?.username ?? null
   const isLinkingTwitter = isProcessingForProvider(ProviderEnum.Twitter)
+  const twitterLinked = !!twitter
+  const socialCardSupported = isSocialCardTokenId(tokenId)
 
   const { isAuthenticated, isAuthenticating, authenticate } = useReferralAuth()
-  const { volume, twitter: twitterState, post, isRunning, run } = useEligibilityChecks()
+  const { volume, snapshot, solana, twitter: twitterState, post, isRunning, run } =
+    useEligibilityChecks()
 
-  const [applicationStatus, setApplicationStatus] = useState<ApplicationStatus>('not-applied')
-  const [isApplying, setIsApplying] = useState(false)
+  const [existing, setExisting] = useState<WhitelistApplication | null>(null)
 
-  // Hydrate application status on mount from the D1-backed whitelist table.
-  // If the admin has already approved/rejected, skip straight to the decided
-  // UI state without requiring the user to re-run the checks.
+  // Hydrate existing application (if any) so returning users see their state
+  // without having to re-run Check Eligibility.
   useEffect(() => {
-    if (!tokenId) return
     let cancelled = false
-    fetchWhitelistApplication(walletAddress, tokenId)
+    fetchWhitelistApplication(walletAddress)
       .then((app) => {
         if (cancelled) return
-        setApplicationStatus(toApplicationStatus(app.status))
+        setExisting(app.qualified ? app : null)
       })
       .catch(() => {
-        /* Leave default 'not-applied' — a transient fetch failure shouldn't block apply. */
+        /* Transient fetch failure shouldn't block the check flow. */
       })
     return () => {
       cancelled = true
     }
-  }, [walletAddress, tokenId])
+  }, [walletAddress])
 
   const handleRun = useCallback(async () => {
     if (!isAuthenticated) {
@@ -166,27 +182,39 @@ function EligibilityContent({
         await syncTwitterToBackend({ dynamicToken, twitterId, twitterHandle })
       }
     }
-    run({ wallet: walletAddress, twitterHandle, tokenId })
-  }, [isAuthenticated, authenticate, twitterId, twitterHandle, walletAddress, tokenId, run])
 
-  const handleApply = useCallback(async () => {
-    if (!tokenId) return
-    setIsApplying(true)
+    await run({
+      wallet: walletAddress,
+      twitterHandle,
+      tokenId,
+      checkSocialPost: socialCardSupported && twitterLinked,
+    })
+
+    // Auto-write per D4: the click is the consent, and any passing option
+    // upserts the application row server-side (re-validated server-side).
     try {
-      if (!isAuthenticated) {
-        const ok = await authenticate()
-        if (!ok) return
+      const result = await qualifyWhitelist(tokenId)
+      if (result.kind === 'qualified') {
+        setExisting(result.application)
       }
-      const app = await applyForWhitelist(tokenId)
-      setApplicationStatus(toApplicationStatus(app.status))
     } catch (err) {
       const message =
-        err instanceof WhitelistApplyError ? err.message : 'Failed to submit application.'
+        err instanceof WhitelistAutoWriteError
+          ? err.message
+          : 'Failed to record whitelist eligibility.'
       toast.error(message)
-    } finally {
-      setIsApplying(false)
     }
-  }, [tokenId, isAuthenticated, authenticate])
+  }, [
+    isAuthenticated,
+    authenticate,
+    twitterId,
+    twitterHandle,
+    twitterLinked,
+    walletAddress,
+    tokenId,
+    socialCardSupported,
+    run,
+  ])
 
   const handleConnectTwitter = useCallback(async () => {
     try {
@@ -195,6 +223,11 @@ function EligibilityContent({
       console.error('Failed to link Twitter:', err)
     }
   }, [linkSocialAccount])
+
+  const handlePostSocialCard = useCallback(() => {
+    if (!tokenId || !isSocialCardTokenId(tokenId)) return
+    shareSocialCardOnTwitter(walletAddress, tokenId, tokenDisplayName)
+  }, [tokenId, walletAddress, tokenDisplayName])
 
   const handleCopyAddress = async () => {
     try {
@@ -205,53 +238,50 @@ function EligibilityContent({
     }
   }
 
-  const twitterLinked = !!twitter
-  const twitterHandleDisplay = twitter?.username ?? null
+  const snapshotStatus = optionFromChecks(snapshot.status)
+  const solanaStatus = optionFromChecks(solana.status)
+  const volumeTwitterStatus = optionFromChecks(volume.status, twitterState.status)
 
   const hasChecked =
+    snapshot.status !== 'idle' ||
+    solana.status !== 'idle' ||
     volume.status !== 'idle' ||
-    post.status !== 'idle' ||
     twitterState.status !== 'idle'
 
-  const aggregate = aggregateStatus(
-    volume.status,
-    twitterState.status,
-    post.status,
-  )
-  const isEligible = aggregate === 'met'
+  const isEligible =
+    snapshotStatus === 'met' || solanaStatus === 'met' || volumeTwitterStatus === 'met'
 
-  const statusColor =
-    applicationStatus === 'approved'
-      ? '#06a800'
-      : applicationStatus === 'unapproved'
-        ? '#999'
-        : applicationStatus === 'pending'
-          ? '#d4a017'
-          : hasChecked
-            ? isEligible
-              ? '#06a800'
-              : '#d4183d'
-            : '#999'
+  const qualifiedOnRecord = existing?.qualified === true
 
-  const statusText =
-    applicationStatus === 'approved'
-      ? "You're Whitelisted for Pre-Sale1."
-      : applicationStatus === 'unapproved'
-        ? "You're not Whitelisted for Pre-Sale1."
-        : applicationStatus === 'pending'
-          ? "Your Pre-Sale1 Whitelist application is under review."
-          : hasChecked
-            ? isEligible
-              ? "You're Eligible to Apply Pre-Sale1 Whitelist."
-              : "You're not Eligible Yet!"
-            : null
+  const statusColor = qualifiedOnRecord
+    ? '#06a800'
+    : hasChecked
+      ? isEligible
+        ? '#06a800'
+        : '#d4183d'
+      : '#999'
 
-  const optionStyles = {
-    met: 'bg-[#06a80008] dark:bg-[#06a80010] border-[#06a80020] dark:border-[#06a80030]',
-    unmet: 'bg-[#d4183d08] dark:bg-[#d4183d10] border-[#d4183d20] dark:border-[#d4183d30]',
-    pending:
-      'bg-[#f5f5f5] dark:bg-[#ffffff05] border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)]',
-  }[aggregate]
+  const statusText = qualifiedOnRecord
+    ? existing?.presale1Selected
+      ? "You're selected for Pre-Sale 1."
+      : "You're on the whitelist candidate list."
+    : hasChecked
+      ? isEligible
+        ? "You're Eligible — checking you in…"
+        : "You're not Eligible Yet!"
+      : null
+
+  const subText = qualifiedOnRecord && existing?.qualifiedVia
+    ? `Qualified via ${describeQualifiedVia(existing.qualifiedVia)}.`
+    : null
+
+  const verifyLabel = isAuthenticating
+    ? 'Signing in…'
+    : isRunning
+      ? 'Checking…'
+      : hasChecked
+        ? 'Re-check Eligibility'
+        : 'Check Eligibility'
 
   return (
     <>
@@ -270,11 +300,10 @@ function EligibilityContent({
                   {statusText}
                 </h2>
               ) : null}
-              {applicationStatus === 'unapproved' ? (
-                <p className="font-medium text-[14px] text-[#06a800]">
-                  You are now automatically whitelisted for Pre-Sale2.
-                </p>
+              {subText ? (
+                <p className="font-medium text-[14px] text-[#666] dark:text-[#999]">{subText}</p>
               ) : null}
+
               <div className="flex items-center gap-2.5 px-3 py-2 rounded-md bg-[rgba(210,210,210,0.05)] border border-[rgba(210,210,210,0.1)]">
                 <span className="font-mono text-[12px] text-[#666] dark:text-[#999] flex-1">
                   {truncateAddress(walletAddress)}
@@ -289,139 +318,152 @@ function EligibilityContent({
                 </button>
               </div>
 
-              {!hasChecked && applicationStatus === 'not-applied' ? (
-                <button
-                  type="button"
-                  onClick={handleRun}
-                  disabled={isRunning || isAuthenticating}
-                  className="w-full py-3.5 rounded-[10px] font-bold text-[16px] bg-[#111] text-white hover:bg-[#333] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isRunning || isAuthenticating ? <Loader2 className="size-4 animate-spin" /> : null}
-                  {isAuthenticating ? 'Signing in…' : isRunning ? 'Checking…' : 'Check Eligibility'}
-                </button>
-              ) : null}
-
-              {hasChecked && applicationStatus === 'not-applied' ? (
-                <button
-                  type="button"
-                  onClick={handleApply}
-                  disabled={!isEligible || isApplying}
-                  className={clsx(
-                    'w-full py-3.5 rounded-[10px] font-bold text-[16px] transition-colors flex items-center justify-center gap-2',
-                    isEligible
-                      ? 'bg-[#111] text-white hover:bg-[#333] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed'
-                      : 'bg-[#999] text-white opacity-50 cursor-not-allowed',
-                  )}
-                >
-                  {isApplying ? <Loader2 className="size-4 animate-spin" /> : null}
-                  {isApplying ? 'Applying…' : 'Apply Whitelist'}
-                </button>
-              ) : null}
-
-              {applicationStatus === 'pending' ? (
-                <button
-                  type="button"
-                  disabled
-                  className="w-full py-3.5 rounded-[10px] font-bold text-[16px] bg-[#111] text-white opacity-50 cursor-not-allowed"
-                >
-                  Whitelist Applied
-                </button>
-              ) : null}
+              <button
+                type="button"
+                onClick={handleRun}
+                disabled={isRunning || isAuthenticating}
+                className="w-full py-3.5 rounded-[10px] font-bold text-[16px] bg-[#111] text-white hover:bg-[#333] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isRunning || isAuthenticating ? <Loader2 className="size-4 animate-spin" /> : null}
+                {verifyLabel}
+              </button>
             </div>
           </div>
 
           <div className="p-6 rounded-[16px] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#1a1a1b] shadow-sm">
-            <div className="flex flex-col gap-3">
-              <h3 className="font-semibold text-[16px] text-black dark:text-[#d2d2d2]">
-                {tokenDisplayName} Rules
-              </h3>
-              <ul className="flex flex-col gap-2">
-                {[
-                  `Limited to 40 participants with up to ${USD_FORMATTER.format(VOLUME_THRESHOLD_USD)} each.`,
-                  'Meet all requirements and apply to join.',
-                  'All access is manually reviewed and approved.',
-                ].map((rule, i) => (
-                  <li
-                    key={i}
-                    className="font-normal text-[14px] leading-relaxed flex items-start gap-2 text-[#666] dark:text-[#999]"
-                  >
-                    <span className="shrink-0 mt-1.5 size-1 rounded-full bg-current opacity-50" />
-                    <span>{rule}</span>
-                  </li>
-                ))}
-              </ul>
+            <div className="flex gap-4 items-start">
+              <HelpCircle className="size-6 shrink-0 text-[#AAD36D]" />
+              <div className="flex flex-col gap-2">
+                <p className="font-medium text-[15px] text-[#6c8b40] dark:text-[#AAD36D]">
+                  Why do I need to be eligible?
+                </p>
+                <p className="font-normal text-[14px] leading-relaxed text-[#666] dark:text-[#999]">
+                  To ensure a fair distribution and prevent sybil attacks, we require participants
+                  to meet certain activity milestones.
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="lg:col-span-8 p-[30px] rounded-[16px] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#1a1a1b] shadow-sm flex flex-col gap-5">
-          <h3 className="font-semibold text-[20px] text-black dark:text-[#d2d2d2]">Qualification Conditions</h3>
+        <div className="lg:col-span-8 flex flex-col gap-5">
+          <div className="p-[30px] rounded-[16px] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#1a1a1b] shadow-sm flex flex-col gap-5">
+            <h3 className="font-semibold text-[20px] text-black dark:text-[#d2d2d2]">
+              Qualify with any ONE of the following
+            </h3>
 
-          <div className={clsx('flex flex-col rounded-[10px] border transition-all', optionStyles)}>
-            <div className="p-5 pb-0">
-              <h4 className="font-semibold text-[16px] text-black dark:text-[#d2d2d2]">
-                {tokenDisplayName} application conditions
-              </h4>
+            <div className="flex flex-col gap-3">
+              <RequirementOption
+                label="Option 1"
+                description={`Trade ${USD_FORMATTER.format(SNAPSHOT_VOLUME_THRESHOLD_USD)}+ of ${tokenDisplayName} before ${PRESALE_SNAPSHOT_DATE} snapshot`}
+                status={snapshotStatus}
+                additionalInfo={
+                  snapshot.status === 'pass' || snapshot.status === 'fail' ? (
+                    <>Snapshot volume: {USD_FORMATTER.format(snapshot.volumeUsd ?? 0)}</>
+                  ) : snapshot.status === 'error' ? (
+                    <span className="text-red-600">{snapshot.error}</span>
+                  ) : null
+                }
+                extraActionLabel={snapshotStatus === 'unmet' ? 'Link another wallet' : undefined}
+                onExtraAction={() =>
+                  window.open(
+                    `/wallet-link?parent=${encodeURIComponent(walletAddress)}`,
+                    '_blank',
+                    'noopener',
+                  )
+                }
+              />
+
+              <RequirementOption
+                label="Option 2"
+                description="Connect to Tessera using a Solana mobile device"
+                status={solanaStatus}
+                additionalInfo={
+                  solana.status === 'error' ? (
+                    <span className="text-red-600">{solana.error}</span>
+                  ) : null
+                }
+              />
+
+              <RequirementOption
+                label="Option 3"
+                description="Complete all of the following:"
+                status={volumeTwitterStatus}
+              >
+                <CriterionRow
+                  title="Trading volume"
+                  description={`Your lifetime trading volume must be at least ${USD_FORMATTER.format(LIFETIME_VOLUME_THRESHOLD_USD)}. Volume from linked child wallets is included.`}
+                  status={volume.status}
+                  additionalInfo={
+                    volume.status === 'pass' || volume.status === 'fail' ? (
+                      <>
+                        Current volume: {USD_FORMATTER.format(volume.volumeUsd ?? 0)}
+                        {volume.linkedWalletCount > 0
+                          ? ` (across ${volume.linkedWalletCount + 1} wallets)`
+                          : null}
+                      </>
+                    ) : volume.status === 'error' ? (
+                      <span className="text-red-600">{volume.error}</span>
+                    ) : null
+                  }
+                  action={
+                    volume.status === 'fail' ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          window.open(
+                            `/wallet-link?parent=${encodeURIComponent(walletAddress)}`,
+                            '_blank',
+                            'noopener',
+                          )
+                        }
+                      >
+                        Link another wallet
+                      </Button>
+                    ) : null
+                  }
+                />
+
+                <CriterionRow
+                  title={twitterLinked ? 'X connected' : 'Connect your X'}
+                  description="Link your X account in Settings to qualify."
+                  status={twitterState.status}
+                  additionalInfo={
+                    twitterLinked && twitterHandle ? <>Connected as @{twitterHandle}</> : null
+                  }
+                  action={
+                    !twitter ? (
+                      <Button size="sm" onClick={handleConnectTwitter} disabled={isLinkingTwitter}>
+                        {isLinkingTwitter ? (
+                          <Loader2 className="size-4 animate-spin mr-2" />
+                        ) : (
+                          <Twitter className="size-4 mr-2" />
+                        )}
+                        Connect X
+                      </Button>
+                    ) : null
+                  }
+                />
+              </RequirementOption>
             </div>
-            <div className="p-5 flex flex-col gap-3">
-              <CriterionRow
-                title="Trading volume"
-                description={`Your lifetime trading volume must be at least ${USD_FORMATTER.format(VOLUME_THRESHOLD_USD)}. Volume from linked child wallets is included.`}
-                status={volume.status}
-                additionalInfo={
-                  volume.status === 'pass' || volume.status === 'fail' ? (
-                    <>
-                      Current volume: {USD_FORMATTER.format(volume.volumeUsd ?? 0)}
-                      {volume.linkedWalletCount > 0
-                        ? ` (across ${volume.linkedWalletCount + 1} wallets)`
-                        : null}
-                    </>
-                  ) : volume.status === 'error' ? (
-                    <span className="text-red-600">{volume.error}</span>
-                  ) : null
-                }
-                action={
-                  volume.status === 'fail' ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        window.open(`/wallet-link?parent=${encodeURIComponent(walletAddress)}`, '_blank', 'noopener')
-                      }
-                    >
-                      Link another wallet
-                    </Button>
-                  ) : null
-                }
-              />
+          </div>
 
-              <CriterionRow
-                title={twitterLinked ? 'X connected' : 'Connect your X'}
-                description="Link your X account in Settings to qualify."
-                status={twitterState.status}
-                additionalInfo={
-                  twitterLinked && twitterHandleDisplay ? (
-                    <>Connected as @{twitterHandleDisplay}</>
-                  ) : null
-                }
-                action={
-                  !twitter ? (
-                    <Button size="sm" onClick={handleConnectTwitter} disabled={isLinkingTwitter}>
-                      {isLinkingTwitter ? (
-                        <Loader2 className="size-4 animate-spin mr-2" />
-                      ) : (
-                        <Twitter className="size-4 mr-2" />
-                      )}
-                      Connect X
-                    </Button>
-                  ) : null
-                }
-              />
+          {socialCardSupported ? (
+            <div className="p-[30px] rounded-[16px] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#1a1a1b] shadow-sm flex flex-col gap-4">
+              <div>
+                <h3 className="font-semibold text-[20px] text-black dark:text-[#d2d2d2]">
+                  Optional — boost your profile
+                </h3>
+                <p className="text-[14px] text-[#666] dark:text-[#999] mt-1">
+                  Not required for eligibility. Posting helps us spread the word.
+                </p>
+              </div>
 
               <CriterionRow
                 title={post.status === 'pass' ? 'Social card posted' : 'Post social card'}
                 description="Post a Tessera social card from your X account."
-                status={post.status}
+                status={post.status === 'idle' ? 'idle' : post.status}
                 additionalInfo={
                   post.status === 'pass' && post.tweetUrl ? (
                     <a
@@ -435,19 +477,19 @@ function EligibilityContent({
                   ) : post.status === 'error' ? (
                     <span className="text-red-600">{post.error}</span>
                   ) : !twitterLinked ? (
-                    <>Connect X first.</>
+                    <>Connect X first (see Option 3 above).</>
                   ) : null
                 }
                 action={
-                  post.status === 'fail' && twitter && isSocialCardTokenId(tokenId) ? (
-                    <Button size="sm" onClick={() => shareSocialCardOnTwitter(walletAddress, tokenId, tokenDisplayName)}>
+                  twitterLinked && post.status !== 'pass' ? (
+                    <Button size="sm" onClick={handlePostSocialCard}>
                       Post social card
                     </Button>
                   ) : null
                 }
               />
             </div>
-          </div>
+          ) : null}
         </div>
       </div>
     </>
