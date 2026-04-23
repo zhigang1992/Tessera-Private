@@ -324,9 +324,6 @@ function EligibilityContent({
                   {statusText}
                 </h2>
               ) : null}
-              {subText ? (
-                <p className="font-medium text-[14px] text-[#666] dark:text-[#999]">{subText}</p>
-              ) : null}
 
               <div className="flex items-center gap-2.5 px-3 py-2 rounded-md bg-[rgba(210,210,210,0.05)] border border-[rgba(210,210,210,0.1)]">
                 <span className="font-mono text-[12px] text-[#666] dark:text-[#999] flex-1">
@@ -342,15 +339,19 @@ function EligibilityContent({
                 </button>
               </div>
 
-              <button
-                type="button"
-                onClick={handleRun}
-                disabled={isRunning || isAuthenticating}
-                className="w-full py-3.5 rounded-[10px] font-bold text-[16px] bg-[#111] text-white hover:bg-[#333] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isRunning || isAuthenticating ? <Loader2 className="size-4 animate-spin" /> : null}
-                {verifyLabel}
-              </button>
+              {qualifiedOnRecord || (hasChecked && isEligible) ? null : (
+                <button
+                  type="button"
+                  onClick={handleRun}
+                  disabled={isRunning || isAuthenticating}
+                  className="w-full py-3.5 rounded-[10px] font-bold text-[16px] bg-[#111] text-white hover:bg-[#333] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isRunning || isAuthenticating ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : null}
+                  {verifyLabel}
+                </button>
+              )}
             </div>
           </div>
 
@@ -456,11 +457,7 @@ function EligibilityContent({
                 }
               />
 
-              <RequirementOption
-                label="Option 3"
-                description="Complete all of the following:"
-                status={volumeTwitterStatus}
-              >
+              <RequirementOption label="Option 3" status={volumeTwitterStatus}>
                 <CriterionRow
                   title="Trading volume"
                   description={`Your lifetime trading volume must be at least ${USD_FORMATTER.format(LIFETIME_VOLUME_THRESHOLD_USD)}. Volume from linked child wallets is included.`}
