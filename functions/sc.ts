@@ -15,6 +15,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request }) => {
   const url = new URL(request.url)
   const walletParam = url.searchParams.get('wallet')
   const tokenIdParam = url.searchParams.get('tokenId')
+  const handleParam = url.searchParams.get('handle')
 
   let wallet: string
   try {
@@ -28,7 +29,14 @@ export const onRequestGet: PagesFunction<Env> = async ({ request }) => {
   }
 
   const origin = url.origin
-  const imageUrl = `${origin}/api/social/card?wallet=${encodeURIComponent(wallet)}&tokenId=${encodeURIComponent(tokenIdParam)}`
+  const imageParams = new URLSearchParams({
+    wallet,
+    tokenId: tokenIdParam,
+  })
+  if (handleParam) {
+    imageParams.set('handle', handleParam)
+  }
+  const imageUrl = `${origin}/api/social/card?${imageParams.toString()}`
   const redirectUrl = `${origin}/auction/${encodeURIComponent(tokenIdParam)}/eligibility`
 
   const html = `<!doctype html>

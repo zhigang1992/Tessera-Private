@@ -34,12 +34,6 @@ function bgUrl(variant: 'a' | 'b' | 'c'): string {
 // and the ENTRY/GAIN/HELD labels are all baked into the bg image — we only
 // paint the dynamic bits on top.
 function generateSocialCardHTML(stats: SocialCardStats): string {
-  const gainColor = stats.gain.startsWith('+')
-    ? '#AAD36D'
-    : stats.gain.startsWith('-')
-      ? '#ff5c5c'
-      : '#ffffff'
-
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -65,8 +59,8 @@ function generateSocialCardHTML(stats: SocialCardStats): string {
   }
   .valuation {
     position: absolute;
-    left: 164px; top: 320px;
-    font-size: 64px; font-weight: 600; line-height: 1;
+    left: 164px; top: 328px;
+    font-size: 64px; font-weight: 500; line-height: 1;
     letter-spacing: -0.02em;
     color: #AAD36D;
     z-index: 2;
@@ -99,7 +93,7 @@ function generateSocialCardHTML(stats: SocialCardStats): string {
   <div class="handle">${escapeHtml(stats.handle)}</div>
   <div class="stats">
     <div class="stat-value">${escapeHtml(stats.entry)}</div>
-    <div class="stat-value" style="color:${gainColor}">${escapeHtml(stats.gain)}</div>
+    <div class="stat-value">${escapeHtml(stats.gain)}</div>
     <div class="stat-value">${escapeHtml(stats.held)}</div>
   </div>
 </body>
@@ -119,6 +113,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const url = new URL(request.url)
   const walletParam = url.searchParams.get('wallet')
   const tokenIdParam = url.searchParams.get('tokenId')
+  const handleParam = url.searchParams.get('handle')
   const refresh = url.searchParams.get('refresh') === '1'
 
   let wallet: string
@@ -152,7 +147,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     return Response.json({ error: 'Server configuration error' }, { status: 500 })
   }
 
-  const stats = await getSocialCardStats(env, wallet, tokenId)
+  const stats = await getSocialCardStats(env, wallet, tokenId, handleParam)
   const html = generateSocialCardHTML(stats)
 
   const renderUrl = `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/browser-rendering/snapshot`

@@ -3,6 +3,7 @@ import type { D1Database } from '@cloudflare/workers-types'
 import { graphqlRequest, resolveGraphQLEndpoint } from './graphql'
 
 type AppEnvVars = { DB: D1Database; APP_ENV?: string }
+const MAINNET_GRAPHQL_ENDPOINT = 'https://tracker-gql.tessera.fun/v1/graphql'
 
 export type SocialCardTokenId = 'T-SpaceX' | 'T-Kalshi'
 
@@ -36,7 +37,7 @@ export type SocialCardStats = {
   handle: string
 }
 
-// Mocked — real numbers aren't wired up yet.
+// Valuation headline text is currently static per token.
 const VALUATION_BY_TOKEN: Record<SocialCardTokenId, string> = {
   'T-Kalshi': '$2B',
   'T-SpaceX': '$800B',
@@ -54,32 +55,169 @@ function truncateWallet(wallet: string): string {
   return `${wallet.slice(0, 4)}…${wallet.slice(-4)}`
 }
 
-async function resolveHandle(env: AppEnvVars, wallet: string): Promise<string> {
+function normalizeTwitterHandle(value: string | null | undefined): string | null {
+  if (!value) return null
+  const cleaned = value.trim().replace(/^@+/, '')
+  if (!cleaned) return null
+  return /^[A-Za-z0-9_]{1,15}$/.test(cleaned) ? cleaned : null
+}
+
+async function findParentWallet(env: AppEnvVars, wallet: string): Promise<string | null> {
+  try {
+    const row = await env.DB
+      .prepare('SELECT parent_wallet FROM wallet_links WHERE child_wallet = ? LIMIT 1')
+      .bind(wallet)
+      .first<{ parent_wallet: string }>()
+    return row?.parent_wallet ?? null
+  } catch {
+    // Best-effort only; local DB may not have this table yet.
+    return null
+  }
+}
+
+async function listChildWallets(env: AppEnvVars, wallet: string): Promise<string[]> {
+  try {
+    const { results } = await env.DB
+      .prepare('SELECT child_wallet FROM wallet_links WHERE parent_wallet = ?')
+      .bind(wallet)
+      .all<{ child_wallet: string }>()
+    return (results ?? []).map((r) => r.child_wallet)
+  } catch {
+    // Best-effort only; local DB may not have this table yet.
+    return []
+  }
+}
+
+async function findTwitterHandleInLinkedAccounts(env: AppEnvVars, wallet: string): Promise<string | null> {
   try {
     const row = await env.DB
       .prepare('SELECT twitter_handle FROM user_twitter_accounts WHERE wallet_address = ? LIMIT 1')
       .bind(wallet)
       .first<{ twitter_handle: string }>()
-    if (row?.twitter_handle) return `@${row.twitter_handle}`
-  } catch (err) {
-    console.error('Failed to resolve twitter handle for social card', err)
+    return normalizeTwitterHandle(row?.twitter_handle)
+  } catch {
+    // Best-effort only; local DB may not have this table yet.
+    return null
   }
-  return `@${truncateWallet(wallet)}`
+}
+
+async function findTwitterHandleInWhitelist(env: AppEnvVars, wallet: string): Promise<string | null> {
+  try {
+    const row = await env.DB
+      .prepare(
+        `SELECT twitter_handle
+         FROM presale_whitelist_applications
+         WHERE wallet_address = ? AND twitter_handle IS NOT NULL AND twitter_handle != ''
+         LIMIT 1`,
+      )
+      .bind(wallet)
+      .first<{ twitter_handle: string }>()
+    return normalizeTwitterHandle(row?.twitter_handle)
+  } catch {
+    // Best-effort only; local DB may not have this table yet.
+    return null
+  }
+}
+
+async function findTwitterHandleInSocialPostChecks(
+  env: AppEnvVars,
+  wallet: string,
+  tokenId: SocialCardTokenId,
+): Promise<string | null> {
+  try {
+    const byToken = await env.DB
+      .prepare(
+        `SELECT twitter_handle
+         FROM social_post_checks
+         WHERE wallet_address = ? AND token_id = ? AND twitter_handle != ''
+         ORDER BY checked_at DESC
+         LIMIT 1`,
+      )
+      .bind(wallet, tokenId)
+      .first<{ twitter_handle: string }>()
+    const exact = normalizeTwitterHandle(byToken?.twitter_handle)
+    if (exact) return exact
+
+    const latest = await env.DB
+      .prepare(
+        `SELECT twitter_handle
+         FROM social_post_checks
+         WHERE wallet_address = ? AND twitter_handle != ''
+         ORDER BY checked_at DESC
+         LIMIT 1`,
+      )
+      .bind(wallet)
+      .first<{ twitter_handle: string }>()
+    return normalizeTwitterHandle(latest?.twitter_handle)
+  } catch {
+    // Best-effort only; local DB may not have this table yet.
+    return null
+  }
+}
+
+async function resolveHandle(
+  env: AppEnvVars,
+  wallet: string,
+  tokenId: SocialCardTokenId,
+  preferredHandle?: string | null,
+): Promise<string> {
+  const fromRequest = normalizeTwitterHandle(preferredHandle)
+  if (fromRequest) return `@${fromRequest}`
+
+  const parentWallet = await findParentWallet(env, wallet)
+  const family = parentWallet
+    ? [wallet, parentWallet]
+    : [wallet, ...(await listChildWallets(env, wallet))]
+  const candidates = Array.from(new Set(family))
+
+  for (const candidate of candidates) {
+    const handle = await findTwitterHandleInLinkedAccounts(env, candidate)
+    if (handle) return `@${handle}`
+  }
+
+  for (const candidate of candidates) {
+    const handle = await findTwitterHandleInWhitelist(env, candidate)
+    if (handle) return `@${handle}`
+  }
+
+  for (const candidate of candidates) {
+    const handle = await findTwitterHandleInSocialPostChecks(env, candidate, tokenId)
+    if (handle) return `@${handle}`
+  }
+
+  const fallbackWallet = parentWallet ?? wallet
+  return `@${truncateWallet(fallbackWallet)}`
+}
+
+async function resolveStatsOwnerWallet(env: AppEnvVars, wallet: string): Promise<string | null> {
+  try {
+    const row = await env.DB
+      .prepare('SELECT parent_wallet FROM wallet_links WHERE child_wallet = ? LIMIT 1')
+      .bind(wallet)
+      .first<{ parent_wallet: string }>()
+    return row?.parent_wallet ?? null
+  } catch {
+    return null
+  }
 }
 
 const STATS_QUERY = `
-  query GetSocialCardStats($senders: [String!]!, $mint: String!) {
-    facts_meteora_token_swap_events(
-      where: { sender: { _in: $senders }, mint_x: { _eq: $mint } }
-      order_by: { block_time: asc }
+  query GetSocialCardStats($accounts: [String!]!, $mint: String!) {
+    public_marts_wallet_token_pnl(
+      where: { account: { _in: $accounts }, token: { _eq: $mint } }
     ) {
-      type
-      amount_x
-      amount_y
-      block_time
+      account
+      total_usdc_cost
+      total_pnl_usdc
+      total_amount_purchased
+      first_purchase_block_time
     }
-    public_marts_token_details(where: { token: { _eq: $mint } }, limit: 1) {
-      price
+    public_marts_wallet_pnl_summary(
+      where: { account: { _in: $accounts } }
+    ) {
+      account
+      total_cost_usdc
+      first_purchase_block_time
     }
   }
 `
@@ -89,13 +227,18 @@ const STATS_QUERY = `
 type HasuraNumeric = string | number | null | undefined
 
 type StatsQueryResponse = {
-  facts_meteora_token_swap_events: Array<{
-    type: string
-    amount_x: HasuraNumeric
-    amount_y: HasuraNumeric
-    block_time: number
+  public_marts_wallet_token_pnl: Array<{
+    account: string
+    total_usdc_cost: HasuraNumeric
+    total_pnl_usdc: HasuraNumeric
+    total_amount_purchased: HasuraNumeric
+    first_purchase_block_time: HasuraNumeric
   }>
-  public_marts_token_details: Array<{ price: HasuraNumeric }>
+  public_marts_wallet_pnl_summary: Array<{
+    account: string
+    total_cost_usdc: HasuraNumeric
+    first_purchase_block_time: HasuraNumeric
+  }>
 }
 
 const DASH = '—'
@@ -118,6 +261,13 @@ function hasura18ToNumber(raw: HasuraNumeric): number {
   return Number(cents) / 100
 }
 
+function parseUnixSeconds(raw: HasuraNumeric): number | null {
+  if (raw === null || raw === undefined) return null
+  const n = typeof raw === 'number' ? raw : Number(raw)
+  if (!Number.isFinite(n) || n <= 0) return null
+  return Math.floor(n)
+}
+
 function formatUsd(value: number): string {
   return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
@@ -134,43 +284,43 @@ function formatHeld(days: number): string {
   return `${months}mo`
 }
 
+function emptyStats(valuation: string, handle: string, volumeUsd = 0): SocialCardStats {
+  return {
+    entry: DASH,
+    gain: DASH,
+    held: DASH,
+    volumeUsd,
+    variant: pickVariant(volumeUsd),
+    valuation,
+    handle,
+  }
+}
+
 export async function getSocialCardStats(
   env: AppEnvVars,
   wallet: string,
   tokenId: SocialCardTokenId,
+  preferredHandle?: string | null,
 ): Promise<SocialCardStats> {
   // If this wallet is linked as a child, its position rolls up to the parent.
-  // Returning its own stats here would let a child wallet render a card for
-  // swaps that are already attributed to the parent.
+  // Use the parent as the owner so child links render the same aggregate stats.
   const valuation = VALUATION_BY_TOKEN[tokenId]
-  const handle = await resolveHandle(env, wallet)
-
-  try {
-    const linkedAs = await env.DB
-      .prepare('SELECT 1 AS found FROM wallet_links WHERE child_wallet = ? LIMIT 1')
-      .bind(wallet)
-      .first<{ found: number }>()
-    if (linkedAs) {
-      return { entry: DASH, gain: DASH, held: DASH, volumeUsd: 0, variant: 'a', valuation, handle }
-    }
-  } catch (err) {
-    console.error('Failed to check wallet_links child status for social card stats', err)
-    return { entry: DASH, gain: DASH, held: DASH, volumeUsd: 0, variant: 'a', valuation, handle }
-  }
+  const handle = await resolveHandle(env, wallet, tokenId, preferredHandle)
+  const statsOwner = (await resolveStatsOwnerWallet(env, wallet)) ?? wallet
 
   // Include child wallets in the query so linked wallets contribute to the position.
   let children: string[] = []
   try {
     const { results } = await env.DB
       .prepare('SELECT child_wallet FROM wallet_links WHERE parent_wallet = ?')
-      .bind(wallet)
+      .bind(statsOwner)
       .all<{ child_wallet: string }>()
     children = (results ?? []).map((r) => r.child_wallet)
   } catch (err) {
     console.error('Failed to read wallet_links for social card stats', err)
   }
 
-  const senders = [wallet, ...children]
+  const accounts = Array.from(new Set([statsOwner, ...children]))
   const mint = resolveTokenMint(env, tokenId)
 
   let data: StatsQueryResponse
@@ -178,49 +328,80 @@ export async function getSocialCardStats(
     data = await graphqlRequest<StatsQueryResponse>(
       resolveGraphQLEndpoint(env),
       STATS_QUERY,
-      { senders, mint },
+      { accounts, mint },
     )
   } catch (err) {
-    console.error('Failed to fetch social card stats from GraphQL', err)
-    return { entry: DASH, gain: DASH, held: DASH }
+    const appEnv = (env.APP_ENV ?? 'development').toLowerCase()
+    if (appEnv === 'production') {
+      console.error('Failed to fetch social card stats from GraphQL', err)
+      return emptyStats(valuation, handle)
+    }
+
+    const mainnetMint = TOKEN_MINTS[tokenId].mainnet
+    if (mainnetMint.startsWith('TODO_')) {
+      console.error('Mainnet mint missing for social card fallback', { tokenId, mainnetMint })
+      return emptyStats(valuation, handle)
+    }
+
+    try {
+      data = await graphqlRequest<StatsQueryResponse>(
+        MAINNET_GRAPHQL_ENDPOINT,
+        STATS_QUERY,
+        { accounts, mint: mainnetMint },
+      )
+    } catch (fallbackErr) {
+      console.error('Failed to fetch social card stats from fallback mainnet GraphQL', fallbackErr)
+      return emptyStats(valuation, handle)
+    }
   }
 
-  const buys = data.facts_meteora_token_swap_events.filter((e) => e.type === 'swap-y-for-x')
-  if (buys.length === 0) {
-    return { entry: DASH, gain: DASH, held: DASH, volumeUsd: 0, variant: 'a', valuation, handle }
+  const tokenRows = data.public_marts_wallet_token_pnl ?? []
+  const walletRows = data.public_marts_wallet_pnl_summary ?? []
+
+  let totalTokenCostUsd = 0
+  let totalTokenPnlUsd = 0
+  let totalPurchasedAmount = 0
+  let firstPurchaseTime: number | null = null
+
+  for (const row of tokenRows) {
+    totalTokenCostUsd += hasura18ToNumber(row.total_usdc_cost)
+    totalTokenPnlUsd += hasura18ToNumber(row.total_pnl_usdc)
+    totalPurchasedAmount += hasura18ToNumber(row.total_amount_purchased)
+    const ts = parseUnixSeconds(row.first_purchase_block_time)
+    if (ts && (firstPurchaseTime === null || ts < firstPurchaseTime)) {
+      firstPurchaseTime = ts
+    }
   }
 
-  // Both amount_x and amount_y are Hasura numeric(.., 18). The 18-decimal scale
-  // cancels in the ratio, so VWAP = sum(amount_y) / sum(amount_x) gives the
-  // true USD-per-token price.
-  let sumUsd = 0
-  let sumTokens = 0
-  for (const buy of buys) {
-    sumUsd += hasura18ToNumber(buy.amount_y)
-    sumTokens += hasura18ToNumber(buy.amount_x)
+  // Use wallet summary for background variant selection even if token row is absent.
+  let totalWalletCostUsd = 0
+  for (const row of walletRows) {
+    totalWalletCostUsd += hasura18ToNumber(row.total_cost_usdc)
+    const ts = parseUnixSeconds(row.first_purchase_block_time)
+    if (ts && (firstPurchaseTime === null || ts < firstPurchaseTime)) {
+      firstPurchaseTime = ts
+    }
   }
 
-  if (sumTokens <= 0) {
-    return { entry: DASH, gain: DASH, held: DASH, volumeUsd: 0, variant: 'a', valuation, handle }
+  const variantBaseUsd = totalWalletCostUsd > 0 ? totalWalletCostUsd : totalTokenCostUsd
+  if (totalTokenCostUsd <= 0 || totalPurchasedAmount <= 0) {
+    return emptyStats(valuation, handle, variantBaseUsd)
   }
 
-  const entryPrice = sumUsd / sumTokens
-  const currentPrice = hasura18ToNumber(data.public_marts_token_details[0]?.price ?? null)
+  const entryPrice = totalTokenCostUsd / totalPurchasedAmount
+  const gainPct = (totalTokenPnlUsd / totalTokenCostUsd) * 100
 
-  const gainPct = entryPrice > 0 && currentPrice > 0
-    ? ((currentPrice - entryPrice) / entryPrice) * 100
+  const heldSeconds = firstPurchaseTime
+    ? Math.max(0, Math.floor(Date.now() / 1000) - firstPurchaseTime)
     : 0
-
-  const firstBuyTime = buys[0].block_time
-  const heldSeconds = Math.max(0, Math.floor(Date.now() / 1000) - firstBuyTime)
   const heldDays = heldSeconds / 86400
 
   return {
     entry: formatUsd(entryPrice),
-    gain: currentPrice > 0 ? formatPct(gainPct) : DASH,
-    held: formatHeld(heldDays),
-    volumeUsd: sumUsd,
-    variant: pickVariant(sumUsd),
+    gain: formatPct(gainPct),
+    held: firstPurchaseTime ? formatHeld(heldDays) : DASH,
+    volumeUsd: variantBaseUsd,
+    variant: pickVariant(variantBaseUsd),
     valuation,
     handle,
   }
