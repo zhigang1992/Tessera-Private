@@ -2,9 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { getAuthToken, useDynamicContext, useSocialAccounts } from '@dynamic-labs/sdk-react-core'
 import { ProviderEnum } from '@dynamic-labs/sdk-api-core'
-import { Copy, HelpCircle, Loader2, Twitter } from 'lucide-react'
+import { CheckCircle2, Copy, HelpCircle, Info, Loader2, Twitter } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
 import { useWallet } from '@/hooks/use-wallet'
 import { resolveTokenIdFromParam, getAppToken } from '@/config'
 import { useHeader } from '@/contexts/header-context'
@@ -94,7 +93,7 @@ export default function EligibilityPage() {
             Eligibility Check
           </h1>
           <p className="font-normal text-[16px] text-[#666] dark:text-[#999]">
-            You qualify if you meet any one of the following:
+            You qualify for Pre-Sale 2 access if you meet any one of the following:
           </p>
         </div>
         <button
@@ -104,6 +103,23 @@ export default function EligibilityPage() {
         >
           Back to Auction
         </button>
+      </div>
+
+      <div className="rounded-[12px] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.01)] bg-[#efefef] dark:bg-[#18181a] px-5 py-3.5">
+        <div className="flex gap-3 items-start">
+          <Info className="size-5 shrink-0 mt-0.5 text-[#0ea5e9]" />
+          <div className="flex flex-col gap-1">
+            <p className="font-semibold text-[14px] text-black dark:text-[#d2d2d2]">
+              Pre-Sale 1 Selection Notice
+            </p>
+            <p className="font-normal text-[13px] leading-relaxed text-[#666] dark:text-[#999]">
+              Tessera will manually select 40 contributors from the Pre-Sale 2 eligible pool for
+              exclusive access to Pre-Sale 1. Selection focuses on meaningful community engagement,
+              social activity, and long-term support. Please check back later to see if your address
+              has been whitelisted for Pre-Sale 1.
+            </p>
+          </div>
+        </div>
       </div>
 
       {!sdkHasLoaded ? (
@@ -261,13 +277,13 @@ function EligibilityContent({
         : '#d4183d'
       : '#999'
 
+  const presale1Whitelisted = qualifiedOnRecord && existing?.presale1Selected === true
+
   const statusText = qualifiedOnRecord
-    ? existing?.presale1Selected
-      ? "You're selected for Pre-Sale 1."
-      : "You're on the whitelist candidate list."
+    ? "You're Eligible for Pre-Sale 2"
     : hasChecked
       ? isEligible
-        ? "You're Eligible — checking you in…"
+        ? "You're Eligible for Pre-Sale 2"
         : "You're not Eligible Yet!"
       : null
 
@@ -278,10 +294,10 @@ function EligibilityContent({
   const verifyLabel = isAuthenticating
     ? 'Signing in…'
     : isRunning
-      ? 'Checking…'
+      ? 'Verifying…'
       : hasChecked
-        ? 'Re-check Eligibility'
-        : 'Check Eligibility'
+        ? 'Re-verify Status'
+        : 'Verify Status'
 
   return (
     <>
@@ -295,8 +311,16 @@ function EligibilityContent({
                   Current Status
                 </span>
               </div>
+              {presale1Whitelisted ? (
+                <>
+                  <h2 className="font-bold text-[18px] text-[#06a800]">
+                    You're Whitelisted for Pre-Sale 1
+                  </h2>
+                  <div className="w-full h-px bg-[rgba(17,17,17,0.1)] dark:bg-[rgba(210,210,210,0.1)] my-1" />
+                </>
+              ) : null}
               {statusText ? (
-                <h2 className="font-bold text-[20px]" style={{ color: statusColor }}>
+                <h2 className="font-bold text-[18px]" style={{ color: statusColor }}>
                   {statusText}
                 </h2>
               ) : null}
@@ -330,7 +354,54 @@ function EligibilityContent({
             </div>
           </div>
 
-          <div className="p-6 rounded-[16px] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#1a1a1b] shadow-sm">
+          {socialCardSupported ? (
+            <div className="p-6 rounded-[16px] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#1a1a1b] shadow-sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex gap-4 items-start flex-1">
+                  <div className="shrink-0 mt-1">
+                    {post.status === 'pass' ? (
+                      <CheckCircle2 className="size-6 text-[#06a800]" />
+                    ) : (
+                      <Twitter className="size-6 text-[#999]" />
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1 flex-1">
+                    <h5 className="font-semibold text-[15px] text-black dark:text-[#d2d2d2]">
+                      {post.status === 'pass' ? 'Social card posted' : 'Post social card (optional)'}
+                    </h5>
+                    <p className="font-normal text-[14px] text-[#666] dark:text-[#999]">
+                      Post a Tessera social card from your X account.
+                    </p>
+                    {post.status === 'pass' && post.tweetUrl ? (
+                      <a
+                        href={post.tweetUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[14px] text-[#06a800] underline"
+                      >
+                        View your post
+                      </a>
+                    ) : post.status === 'error' ? (
+                      <p className="text-[14px] text-red-600">{post.error}</p>
+                    ) : !twitterLinked ? (
+                      <p className="text-[14px] text-[#666] dark:text-[#999]">Connect X first.</p>
+                    ) : null}
+                  </div>
+                </div>
+                {twitterLinked && post.status !== 'pass' ? (
+                  <button
+                    type="button"
+                    onClick={handlePostSocialCard}
+                    className="shrink-0 px-4 py-2 rounded-[6px] font-medium text-[14px] transition-colors flex items-center gap-2 bg-[#111] text-white hover:bg-[#333] dark:bg-[#D2FB95] dark:text-black dark:hover:bg-[#AAD36D]"
+                  >
+                    Post Card
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="p-5 rounded-[12px] border border-[#AAD36D40] dark:border-[#D2FB9520] bg-[#EEFFD3] dark:bg-[#D2FB9508]">
             <div className="flex gap-4 items-start">
               <HelpCircle className="size-6 shrink-0 text-[#AAD36D]" />
               <div className="flex flex-col gap-2">
@@ -349,7 +420,7 @@ function EligibilityContent({
         <div className="lg:col-span-8 flex flex-col gap-5">
           <div className="p-[30px] rounded-[16px] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#1a1a1b] shadow-sm flex flex-col gap-5">
             <h3 className="font-semibold text-[20px] text-black dark:text-[#d2d2d2]">
-              Qualify with any ONE of the following
+              Qualification Options
             </h3>
 
             <div className="flex flex-col gap-3">
@@ -408,9 +479,8 @@ function EligibilityContent({
                   }
                   action={
                     volume.status === 'fail' ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
+                      <button
+                        type="button"
                         onClick={() =>
                           window.open(
                             `/wallet-link?parent=${encodeURIComponent(walletAddress)}`,
@@ -418,9 +488,10 @@ function EligibilityContent({
                             'noopener',
                           )
                         }
+                        className="shrink-0 px-4 py-2 rounded-[6px] font-medium text-[14px] transition-colors flex items-center gap-2 bg-[#111] text-white hover:bg-[#333] dark:bg-[#D2FB95] dark:text-black dark:hover:bg-[#AAD36D]"
                       >
                         Link another wallet
-                      </Button>
+                      </button>
                     ) : null
                   }
                 />
@@ -434,62 +505,25 @@ function EligibilityContent({
                   }
                   action={
                     !twitter ? (
-                      <Button size="sm" onClick={handleConnectTwitter} disabled={isLinkingTwitter}>
+                      <button
+                        type="button"
+                        onClick={handleConnectTwitter}
+                        disabled={isLinkingTwitter}
+                        className="shrink-0 px-4 py-2 rounded-[6px] font-medium text-[14px] transition-colors flex items-center gap-2 bg-[#111] text-white hover:bg-[#333] dark:bg-[#D2FB95] dark:text-black dark:hover:bg-[#AAD36D] disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
                         {isLinkingTwitter ? (
-                          <Loader2 className="size-4 animate-spin mr-2" />
+                          <Loader2 className="size-4 animate-spin" />
                         ) : (
-                          <Twitter className="size-4 mr-2" />
+                          <Twitter className="size-4" />
                         )}
                         Connect X
-                      </Button>
+                      </button>
                     ) : null
                   }
                 />
               </RequirementOption>
             </div>
           </div>
-
-          {socialCardSupported ? (
-            <div className="p-[30px] rounded-[16px] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#1a1a1b] shadow-sm flex flex-col gap-4">
-              <div>
-                <h3 className="font-semibold text-[20px] text-black dark:text-[#d2d2d2]">
-                  Optional — boost your profile
-                </h3>
-                <p className="text-[14px] text-[#666] dark:text-[#999] mt-1">
-                  Not required for eligibility. Posting helps us spread the word.
-                </p>
-              </div>
-
-              <CriterionRow
-                title={post.status === 'pass' ? 'Social card posted' : 'Post social card'}
-                description="Post a Tessera social card from your X account."
-                status={post.status === 'idle' ? 'idle' : post.status}
-                additionalInfo={
-                  post.status === 'pass' && post.tweetUrl ? (
-                    <a
-                      href={post.tweetUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#06a800] underline"
-                    >
-                      View your post
-                    </a>
-                  ) : post.status === 'error' ? (
-                    <span className="text-red-600">{post.error}</span>
-                  ) : !twitterLinked ? (
-                    <>Connect X first (see Option 3 above).</>
-                  ) : null
-                }
-                action={
-                  twitterLinked && post.status !== 'pass' ? (
-                    <Button size="sm" onClick={handlePostSocialCard}>
-                      Post social card
-                    </Button>
-                  ) : null
-                }
-              />
-            </div>
-          ) : null}
         </div>
       </div>
     </>
