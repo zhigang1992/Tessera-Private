@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router'
+import { clsx } from 'clsx'
 import { useAuctionPresaleVaultConfigs, useAuctionToken, useAuctionTokenId } from '../../context'
 import type { AuctionPhaseSummaryMap } from '@/hooks/use-auction-phase-summaries'
 import { formatBigNumber, type BigNumberValue } from '@/lib/bignumber'
@@ -63,21 +64,23 @@ export function AuctionPhaseNav({ activeTab, onTabChange, summaries }: AuctionPh
                 onTabChange(tab.id)
               }
             }}
-            className={`relative w-full sm:flex-1 sm:min-w-[160px] rounded-lg px-[18px] py-[10px] flex flex-col gap-2 items-start text-left transition-all border-2 cursor-pointer ${
+            className={clsx(
+              'relative w-full sm:flex-1 sm:min-w-[160px] rounded-lg px-[18px] py-[10px] flex flex-col gap-2 items-start text-left transition-all border-2 cursor-pointer',
               isActive
                 ? 'bg-[#d2fb95] border-[#111] text-black'
-                : 'bg-[#f6f6f6] dark:bg-white/[0.03] border-transparent text-black dark:text-[#d2d2d2] hover:bg-[#ececec] dark:hover:bg-white/[0.05]'
-            }`}
+                : 'bg-[#f6f6f6] dark:bg-white/[0.03] border-transparent text-black dark:text-[#d2d2d2] hover:bg-[#ececec] dark:hover:bg-white/[0.05]',
+            )}
           >
             <div className="flex items-center justify-between w-full">
               <span className="text-sm font-bold leading-[21px]">{tab.label}</span>
               {duration && (
                 <span
-                  className={`text-[10px] font-mono leading-[15px] px-2 py-1 rounded-full ${
+                  className={clsx(
+                    'text-[10px] font-mono leading-[15px] px-2 py-1 rounded-full',
                     isActive
                       ? 'bg-black/10 text-black'
-                      : 'bg-black/[0.05] dark:bg-white/10 text-black dark:text-[#d2d2d2]'
-                  }`}
+                      : 'bg-black/[0.05] dark:bg-white/10 text-black dark:text-[#d2d2d2]',
+                  )}
                 >
                   {duration}
                 </span>
@@ -85,10 +88,17 @@ export function AuctionPhaseNav({ activeTab, onTabChange, summaries }: AuctionPh
             </div>
             {allocation && (
               <>
-                <div className={`h-px w-full ${isActive ? 'bg-black/20' : 'bg-black/20 dark:bg-white/10'}`} />
+                <div className={clsx('h-px w-full', isActive ? 'bg-black/20' : 'bg-black/20 dark:bg-white/10')} />
                 <div className="flex items-center justify-between w-full">
-                  <span className={`text-sm ${isActive ? 'text-[#666]' : 'text-[#666] dark:text-[#999]'}`}>Allocation</span>
-                  <span className="text-sm font-semibold leading-6">{allocation}</span>
+                  <span
+                    className={clsx(
+                      'text-sm font-medium leading-[15px] tracking-[0.6172px]',
+                      isActive ? 'text-[#666]' : 'text-[#666] dark:text-[#999]',
+                    )}
+                  >
+                    Allocation
+                  </span>
+                  <span className="text-sm font-mono font-semibold leading-6">{allocation}</span>
                 </div>
               </>
             )}
