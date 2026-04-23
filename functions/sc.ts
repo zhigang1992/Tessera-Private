@@ -48,8 +48,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request }) => {
     <meta property="og:description" content="${SEO.description}" />
     <meta property="og:image" content="${imageUrl}" />
     <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="932" />
-    <meta property="og:image:height" content="1248" />
+    <meta property="og:image:width" content="1361" />
+    <meta property="og:image:height" content="766" />
     <meta property="og:site_name" content="${SEO.siteName}" />
     <meta property="og:locale" content="en_US" />
 

@@ -30,6 +30,41 @@ export type SocialCardStats = {
   entry: string
   gain: string
   held: string
+  volumeUsd: number
+  variant: 'a' | 'b' | 'c'
+  valuation: string
+  handle: string
+}
+
+// Mocked — real numbers aren't wired up yet.
+const VALUATION_BY_TOKEN: Record<SocialCardTokenId, string> = {
+  'T-Kalshi': '$2B',
+  'T-SpaceX': '$800B',
+}
+
+// Deterministic per user: same volume → same variant, so the X preview card
+// doesn't shuffle between posts.
+function pickVariant(volumeUsd: number): 'a' | 'b' | 'c' {
+  const bucket = Math.abs(Math.floor(volumeUsd)) % 3
+  return (['a', 'b', 'c'] as const)[bucket]
+}
+
+function truncateWallet(wallet: string): string {
+  if (wallet.length <= 10) return wallet
+  return `${wallet.slice(0, 4)}…${wallet.slice(-4)}`
+}
+
+async function resolveHandle(env: AppEnvVars, wallet: string): Promise<string> {
+  try {
+    const row = await env.DB
+      .prepare('SELECT twitter_handle FROM user_twitter_accounts WHERE wallet_address = ? LIMIT 1')
+      .bind(wallet)
+      .first<{ twitter_handle: string }>()
+    if (row?.twitter_handle) return `@${row.twitter_handle}`
+  } catch (err) {
+    console.error('Failed to resolve twitter handle for social card', err)
+  }
+  return `@${truncateWallet(wallet)}`
 }
 
 const STATS_QUERY = `
@@ -107,17 +142,20 @@ export async function getSocialCardStats(
   // If this wallet is linked as a child, its position rolls up to the parent.
   // Returning its own stats here would let a child wallet render a card for
   // swaps that are already attributed to the parent.
+  const valuation = VALUATION_BY_TOKEN[tokenId]
+  const handle = await resolveHandle(env, wallet)
+
   try {
     const linkedAs = await env.DB
       .prepare('SELECT 1 AS found FROM wallet_links WHERE child_wallet = ? LIMIT 1')
       .bind(wallet)
       .first<{ found: number }>()
     if (linkedAs) {
-      return { entry: DASH, gain: DASH, held: DASH }
+      return { entry: DASH, gain: DASH, held: DASH, volumeUsd: 0, variant: 'a', valuation, handle }
     }
   } catch (err) {
     console.error('Failed to check wallet_links child status for social card stats', err)
-    return { entry: DASH, gain: DASH, held: DASH }
+    return { entry: DASH, gain: DASH, held: DASH, volumeUsd: 0, variant: 'a', valuation, handle }
   }
 
   // Include child wallets in the query so linked wallets contribute to the position.
@@ -149,7 +187,7 @@ export async function getSocialCardStats(
 
   const buys = data.facts_meteora_token_swap_events.filter((e) => e.type === 'swap-y-for-x')
   if (buys.length === 0) {
-    return { entry: DASH, gain: DASH, held: DASH }
+    return { entry: DASH, gain: DASH, held: DASH, volumeUsd: 0, variant: 'a', valuation, handle }
   }
 
   // Both amount_x and amount_y are Hasura numeric(.., 18). The 18-decimal scale
@@ -163,7 +201,7 @@ export async function getSocialCardStats(
   }
 
   if (sumTokens <= 0) {
-    return { entry: DASH, gain: DASH, held: DASH }
+    return { entry: DASH, gain: DASH, held: DASH, volumeUsd: 0, variant: 'a', valuation, handle }
   }
 
   const entryPrice = sumUsd / sumTokens
@@ -181,5 +219,9 @@ export async function getSocialCardStats(
     entry: formatUsd(entryPrice),
     gain: currentPrice > 0 ? formatPct(gainPct) : DASH,
     held: formatHeld(heldDays),
+    volumeUsd: sumUsd,
+    variant: pickVariant(sumUsd),
+    valuation,
+    handle,
   }
 }
