@@ -349,7 +349,7 @@ function EligibilityContent({
 
           <div className="p-6 rounded-[16px] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#1a1a1b] shadow-sm">
             <div className="flex gap-4 items-start">
-              <HelpCircle className="size-6 shrink-0 text-[#6c8b40] dark:text-[#AAD36D]" />
+              <HelpCircle className="size-6 shrink-0 text-[#AAD36D]" />
               <div className="flex flex-col gap-2">
                 <p className="font-medium text-[15px] text-[#6c8b40] dark:text-[#AAD36D]">
                   Why do I need to be eligible?
