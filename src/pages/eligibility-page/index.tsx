@@ -10,6 +10,7 @@ import { useHeader } from '@/contexts/header-context'
 import { useReferralAuth } from '@/features/referral/hooks/use-referral-auth'
 import { syncTwitterToBackend } from '@/lib/twitter-sync'
 import { isSocialCardTokenId } from '@/lib/social-card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { CriterionRow } from './components/criterion-row'
 import { RequirementOption, type OptionStatus } from './components/requirement-option'
 import {
@@ -19,7 +20,11 @@ import {
   PRESALE_SNAPSHOT_DATE,
   type CheckStatus,
 } from './hooks/use-eligibility-checks'
-import { shareSocialCardOnTwitter } from './utils/share'
+import {
+  buildApprovedEligibilityPostContent,
+  shareApprovedEligibilityOnTwitter,
+  shareSocialCardOnTwitter,
+} from './utils/share'
 import {
   fetchWhitelistApplication,
   qualifyWhitelist,
@@ -169,6 +174,7 @@ function EligibilityContent({
     useEligibilityChecks()
 
   const [existing, setExisting] = useState<WhitelistApplication | null>(null)
+  const [isEligibilityTweetModalOpen, setIsEligibilityTweetModalOpen] = useState(false)
 
   // Hydrate existing application (if any) so returning users see their state
   // without having to re-run Check Eligibility.
@@ -212,6 +218,7 @@ function EligibilityContent({
       const result = await qualifyWhitelist(tokenId)
       if (result.kind === 'qualified') {
         setExisting(result.application)
+        setIsEligibilityTweetModalOpen(true)
       }
     } catch (err) {
       const message =
@@ -244,6 +251,25 @@ function EligibilityContent({
     if (!tokenId || !isSocialCardTokenId(tokenId)) return
     shareSocialCardOnTwitter(walletAddress, tokenDisplayName, twitterHandle)
   }, [tokenId, walletAddress, tokenDisplayName, twitterHandle])
+
+  const eligibilityTweetContent = useMemo(
+    () => buildApprovedEligibilityPostContent(tokenDisplayName, twitterHandle),
+    [tokenDisplayName, twitterHandle],
+  )
+
+  const handlePostEligibilityTweet = useCallback(() => {
+    shareApprovedEligibilityOnTwitter(tokenDisplayName, twitterHandle)
+    setIsEligibilityTweetModalOpen(false)
+  }, [tokenDisplayName, twitterHandle])
+
+  const handleCopyEligibilityTweet = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(eligibilityTweetContent)
+      toast.success('Copied. Paste it into X.')
+    } catch {
+      toast.error('Failed to copy')
+    }
+  }, [eligibilityTweetContent])
 
   const handleCopyAddress = async () => {
     try {
@@ -523,6 +549,48 @@ function EligibilityContent({
           </div>
         </div>
       </div>
+
+      <Dialog open={isEligibilityTweetModalOpen} onOpenChange={setIsEligibilityTweetModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="text-left">
+            <DialogTitle>You&apos;re eligible. Post on X next.</DialogTitle>
+            <DialogDescription>
+              Eligibility check passed. Copy the content below and paste it into X to post. This is
+              a separate post from the social card.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="rounded-lg border border-[rgba(17,17,17,0.15)] bg-[rgba(17,17,17,0.03)] dark:border-[rgba(210,210,210,0.1)] dark:bg-[rgba(210,210,210,0.04)] p-3 text-sm text-[#666] dark:text-[#999] break-all whitespace-pre-wrap">
+            {eligibilityTweetContent}
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setIsEligibilityTweetModalOpen(false)}
+              className="px-4 py-2 rounded-[6px] font-medium text-[14px] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] hover:bg-[rgba(17,17,17,0.05)] dark:hover:bg-[rgba(210,210,210,0.08)]"
+            >
+              Skip
+            </button>
+            <button
+              type="button"
+              onClick={handleCopyEligibilityTweet}
+              className="px-4 py-2 rounded-[6px] font-medium text-[14px] transition-colors flex items-center gap-2 border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] hover:bg-[rgba(17,17,17,0.05)] dark:hover:bg-[rgba(210,210,210,0.08)]"
+            >
+              <Copy className="size-4" />
+              Copy
+            </button>
+            <button
+              type="button"
+              onClick={handlePostEligibilityTweet}
+              className="px-4 py-2 rounded-[6px] font-medium text-[14px] transition-colors flex items-center gap-2 bg-[#111] text-white hover:bg-[#333] dark:bg-[#D2FB95] dark:text-black dark:hover:bg-[#AAD36D]"
+            >
+              <Twitter className="size-4" />
+              Post on X
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
