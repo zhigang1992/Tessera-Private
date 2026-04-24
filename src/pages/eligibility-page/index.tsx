@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { getAuthToken, useDynamicContext, useSocialAccounts } from '@dynamic-labs/sdk-react-core'
+import {
+  DynamicWidget,
+  getAuthToken,
+  useDynamicContext,
+  useSocialAccounts,
+} from '@dynamic-labs/sdk-react-core'
 import { ProviderEnum } from '@dynamic-labs/sdk-api-core'
 import { CheckCircle2, Copy, HelpCircle, Info, Loader2, Twitter } from 'lucide-react'
 import { toast } from 'sonner'
@@ -64,7 +69,7 @@ function describeQualifiedVia(via: QualifiedVia): string {
 export default function EligibilityPage() {
   const params = useParams<{ auctionId?: string }>()
   const navigate = useNavigate()
-  const { user, sdkHasLoaded } = useDynamicContext()
+  const { user } = useDynamicContext()
   const { publicKey, connected } = useWallet()
   const { setBackButton } = useHeader()
 
@@ -122,13 +127,18 @@ export default function EligibilityPage() {
         </div>
       </div>
 
-      {!sdkHasLoaded ? (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" /> Loading…
-        </div>
-      ) : !user || !walletAddress ? (
-        <div className="rounded-[16px] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#1a1a1b] p-6 text-sm text-[#666] dark:text-[#999] shadow-sm">
-          Connect your wallet from the header to check eligibility.
+      {!walletAddress ? (
+        <div className="rounded-[16px] border border-[rgba(17,17,17,0.15)] dark:border-[rgba(210,210,210,0.1)] bg-white dark:bg-[#1a1a1b] p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <p className="text-sm text-[#666] dark:text-[#999]">
+            {user ? 'Finishing wallet setup…' : 'Connect your wallet to check eligibility.'}
+          </p>
+          {user ? (
+            <Loader2 className="size-5 animate-spin text-[#666] dark:text-[#999]" />
+          ) : (
+            <div className="shrink-0">
+              <DynamicWidget innerButtonComponent={<>Connect Wallet</>} />
+            </div>
+          )}
         </div>
       ) : (
         <EligibilityContent
