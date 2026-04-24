@@ -165,7 +165,7 @@ function EligibilityContent({
   const socialCardSupported = isSocialCardTokenId(tokenId)
 
   const { isAuthenticated, isAuthenticating, authenticate } = useReferralAuth()
-  const { volume, snapshot, solana, twitter: twitterState, post, isRunning, run } =
+  const { volume, snapshot, solana, twitter: twitterState, post, isRunning, run, hydrate } =
     useEligibilityChecks()
 
   const [existing, setExisting] = useState<WhitelistApplication | null>(null)
@@ -177,7 +177,12 @@ function EligibilityContent({
     fetchWhitelistApplication(walletAddress)
       .then((app) => {
         if (cancelled) return
-        setExisting(app.qualified ? app : null)
+        if (app.qualified) {
+          setExisting(app)
+          hydrate(app)
+        } else {
+          setExisting(null)
+        }
       })
       .catch(() => {
         /* Transient fetch failure shouldn't block the check flow. */
@@ -185,7 +190,7 @@ function EligibilityContent({
     return () => {
       cancelled = true
     }
-  }, [walletAddress])
+  }, [walletAddress, hydrate])
 
   const handleRun = useCallback(async () => {
     if (!isAuthenticated) {

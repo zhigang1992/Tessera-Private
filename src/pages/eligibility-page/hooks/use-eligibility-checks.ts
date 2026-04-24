@@ -7,6 +7,7 @@ import {
   LIFETIME_VOLUME_THRESHOLD_USD,
   SNAPSHOT_VOLUME_THRESHOLD_USD,
   SocialPostError,
+  type WhitelistApplication,
 } from '../api'
 
 export {
@@ -158,5 +159,43 @@ export function useEligibilityChecks() {
     setIsRunning(false)
   }, [])
 
-  return { volume, snapshot, solana, twitter, post, isRunning, run }
+  // Populate state from a previously persisted whitelist application so the
+  // qualification panel reflects stored eligibility on mount, without the
+  // user having to re-run the checks.
+  const hydrate = useCallback((app: WhitelistApplication) => {
+    if (app.tradingVolumeUsd != null) {
+      setVolume({
+        status: app.tradingVolumeUsd >= LIFETIME_VOLUME_THRESHOLD_USD ? 'pass' : 'fail',
+        volumeUsd: app.tradingVolumeUsd,
+        linkedWalletCount: 0,
+        error: null,
+      })
+    }
+    if (app.snapshotVolumeUsd != null) {
+      setSnapshot({
+        status: app.snapshotVolumeUsd >= SNAPSHOT_VOLUME_THRESHOLD_USD ? 'pass' : 'fail',
+        volumeUsd: app.snapshotVolumeUsd,
+        error: null,
+      })
+    }
+    if (app.solanaMobileEligible != null) {
+      setSolana({
+        status: app.solanaMobileEligible ? 'pass' : 'fail',
+        error: null,
+      })
+    }
+    setTwitter({
+      status: app.twitterConnected ? 'pass' : 'fail',
+      handle: app.twitterHandle ?? null,
+    })
+    if (app.socialPostFound) {
+      setPost({
+        status: 'pass',
+        tweetUrl: app.socialPostTweetUrl ?? null,
+        error: null,
+      })
+    }
+  }, [])
+
+  return { volume, snapshot, solana, twitter, post, isRunning, run, hydrate }
 }
