@@ -242,8 +242,8 @@ function EligibilityContent({
 
   const handlePostSocialCard = useCallback(() => {
     if (!tokenId || !isSocialCardTokenId(tokenId)) return
-    shareSocialCardOnTwitter(walletAddress, tokenId, tokenDisplayName)
-  }, [tokenId, walletAddress, tokenDisplayName])
+    shareSocialCardOnTwitter(walletAddress, tokenDisplayName, twitterHandle)
+  }, [tokenId, walletAddress, tokenDisplayName, twitterHandle])
 
   const handleCopyAddress = async () => {
     try {

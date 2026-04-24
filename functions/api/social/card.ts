@@ -3,9 +3,7 @@ import type { D1Database, KVNamespace, PagesFunction, R2Bucket } from '@cloudfla
 import { parseWalletAddress } from '../../lib/wallet-link'
 import {
   getSocialCardStats,
-  isSocialCardTokenId,
   type SocialCardStats,
-  type SocialCardTokenId,
 } from '../../lib/social-card-stats'
 
 type Env = {
@@ -14,7 +12,6 @@ type Env = {
   REFERRAL_IMAGES: R2Bucket
   CLOUDFLARE_ACCOUNT_ID: string
   CLOUDFLARE_API_TOKEN: string
-  APP_ENV?: string
 }
 
 interface BrowserRenderingResponse {
@@ -23,20 +20,29 @@ interface BrowserRenderingResponse {
   errors?: Array<{ message: string }>
 }
 
-const CARD_WIDTH = 932
-const CARD_HEIGHT = 1248
-const BACKGROUND_URL = 'https://r2.tessera.fun/social_card_bg.png'
-const LOGO_URL = 'https://r2.tessera.fun/TerreraLogo.png'
+function normalizeCacheHandle(value: string | null): string | null {
+  if (!value) return null
+  const cleaned = value.trim().replace(/^@+/, '').toLowerCase()
+  if (!cleaned) return null
+  return /^[a-z0-9_]{1,15}$/.test(cleaned) ? cleaned : null
+}
 
-function generateSocialCardHTML(
-  tokenId: SocialCardTokenId,
-  stats: SocialCardStats,
-): string {
+const CARD_WIDTH = 1361
+const CARD_HEIGHT = 766
+
+function bgUrl(variant: 'a' | 'b' | 'c'): string {
+  return `https://r2.tessera.fun/horizontal_card_${variant}.png`
+}
+
+// Overlay positions are in 1361×766 card space. Title, "AT", Tessera logo,
+// and the ENTRY/GAIN/HELD labels are all baked into the bg image — we only
+// paint the dynamic bits on top.
+function generateSocialCardHTML(stats: SocialCardStats): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Tessera ${tokenId}</title>
+<title>Tessera share card</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -50,118 +56,52 @@ function generateSocialCardHTML(
   .bg {
     position: absolute; inset: 0;
     width: 100%; height: 100%;
-    object-fit: cover;
+    /* bg files differ by a few px; stretch so the baked-in text lands at
+       the same 1361×766 coords across every variant. */
+    object-fit: fill;
     z-index: 0;
   }
-  .top-bar {
+  .valuation {
     position: absolute;
-    left: 48px; right: 48px; top: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    left: 164px; top: 328px;
+    font-size: 64px; font-weight: 500; line-height: 1;
+    letter-spacing: -0.02em;
+    color: #AAD36D;
     z-index: 2;
   }
-  .logo {
-    height: 52px;
-    width: auto;
-    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
-  }
-  .token-badge {
-    padding: 10px 20px;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    border-radius: 999px;
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    backdrop-filter: blur(8px);
-    text-transform: uppercase;
-  }
-  .bottom-scrim {
+  .handle {
     position: absolute;
-    left: 0; right: 0; bottom: 0;
-    height: 52%;
-    background: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0) 0%,
-      rgba(0, 0, 0, 0.55) 55%,
-      rgba(0, 0, 0, 0.85) 100%
-    );
-    z-index: 1;
+    left: 56px; top: 458px;
+    font-size: 48px; font-weight: 500; line-height: 1;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+    z-index: 2;
   }
   .stats {
     position: absolute;
-    left: 48px; right: 48px;
-    bottom: 72px;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 24px;
+    left: 60px; top: 615px; width: 584px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
     z-index: 2;
-  }
-  .stat {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .stat-label {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    opacity: 0.72;
   }
   .stat-value {
-    font-size: 56px;
-    font-weight: 800;
-    line-height: 1;
+    text-align: center;
+    font-size: 44px; font-weight: 800; line-height: 1;
     letter-spacing: -0.02em;
-  }
-  .stat-value.gain-positive { color: #3ddc84; }
-  .stat-value.gain-negative { color: #ff5c5c; }
-  .footer {
-    position: absolute;
-    left: 48px; right: 48px; bottom: 32px;
-    font-size: 18px;
-    font-weight: 500;
-    opacity: 0.65;
-    letter-spacing: 0.04em;
-    z-index: 2;
+    color: #ffffff;
   }
 </style>
 </head>
 <body>
-  <img src="${escapeHtml(BACKGROUND_URL)}" alt="" class="bg">
-  <div class="bottom-scrim"></div>
-
-  <div class="top-bar">
-    <img src="${escapeHtml(LOGO_URL)}" alt="Tessera" class="logo">
-    <div class="token-badge">${escapeHtml(tokenId)}</div>
-  </div>
-
+  <img src="${escapeHtml(bgUrl(stats.variant))}" alt="" class="bg">
+  <div class="valuation">${escapeHtml(stats.valuation)}</div>
+  <div class="handle">${escapeHtml(stats.handle)}</div>
   <div class="stats">
-    <div class="stat">
-      <div class="stat-label">Entry</div>
-      <div class="stat-value">${escapeHtml(stats.entry)}</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Gain</div>
-      <div class="stat-value ${gainClass(stats.gain)}">${escapeHtml(stats.gain)}</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Held</div>
-      <div class="stat-value">${escapeHtml(stats.held)}</div>
-    </div>
+    <div class="stat-value">${escapeHtml(stats.entry)}</div>
+    <div class="stat-value">${escapeHtml(stats.gain)}</div>
+    <div class="stat-value">${escapeHtml(stats.held)}</div>
   </div>
-
-  <div class="footer">tessera.fun — private equity, on-chain, no KYC</div>
 </body>
 </html>`
-}
-
-function gainClass(gain: string): string {
-  if (gain.startsWith('+')) return 'gain-positive'
-  if (gain.startsWith('-')) return 'gain-negative'
-  return ''
 }
 
 function escapeHtml(value: string): string {
@@ -176,7 +116,7 @@ function escapeHtml(value: string): string {
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const url = new URL(request.url)
   const walletParam = url.searchParams.get('wallet')
-  const tokenIdParam = url.searchParams.get('tokenId')
+  const handleParam = url.searchParams.get('handle')
   const refresh = url.searchParams.get('refresh') === '1'
 
   let wallet: string
@@ -186,12 +126,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     return Response.json({ error: 'Invalid wallet', detail: (err as Error).message }, { status: 400 })
   }
 
-  if (!tokenIdParam || !isSocialCardTokenId(tokenIdParam)) {
-    return Response.json({ error: 'Invalid or missing tokenId' }, { status: 400 })
-  }
-  const tokenId: SocialCardTokenId = tokenIdParam
-
-  const cacheKey = `social-card-${wallet}-${tokenId}.png`
+  const cacheHandle = normalizeCacheHandle(handleParam)
+  const cacheKey = cacheHandle
+    ? `social-card-${wallet}-${cacheHandle}.png`
+    : `social-card-${wallet}.png`
 
   if (!refresh) {
     const existing = await env.REFERRAL_IMAGES.get(cacheKey)
@@ -210,8 +148,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     return Response.json({ error: 'Server configuration error' }, { status: 500 })
   }
 
-  const stats = await getSocialCardStats(env, wallet, tokenId)
-  const html = generateSocialCardHTML(tokenId, stats)
+  const stats = await getSocialCardStats(env, wallet, handleParam)
+  const html = generateSocialCardHTML(stats)
 
   const renderUrl = `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/browser-rendering/snapshot`
 

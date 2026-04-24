@@ -1,7 +1,6 @@
 import type { PagesFunction } from '@cloudflare/workers-types'
 
 import { parseWalletAddress } from './lib/wallet-link'
-import { isSocialCardTokenId } from './lib/social-card-stats'
 
 type Env = Record<string, never>
 
@@ -11,10 +10,12 @@ const SEO = {
   siteName: 'Tessera',
 }
 
+const LANDING_PATH = '/auction/T-SpaceX/eligibility'
+
 export const onRequestGet: PagesFunction<Env> = async ({ request }) => {
   const url = new URL(request.url)
   const walletParam = url.searchParams.get('wallet')
-  const tokenIdParam = url.searchParams.get('tokenId')
+  const handleParam = url.searchParams.get('handle')
 
   let wallet: string
   try {
@@ -23,13 +24,13 @@ export const onRequestGet: PagesFunction<Env> = async ({ request }) => {
     return new Response('Invalid or missing wallet', { status: 400 })
   }
 
-  if (!tokenIdParam || !isSocialCardTokenId(tokenIdParam)) {
-    return new Response('Invalid or missing tokenId', { status: 400 })
-  }
-
   const origin = url.origin
-  const imageUrl = `${origin}/api/social/card?wallet=${encodeURIComponent(wallet)}&tokenId=${encodeURIComponent(tokenIdParam)}`
-  const redirectUrl = `${origin}/auction/${encodeURIComponent(tokenIdParam)}/eligibility`
+  const imageParams = new URLSearchParams({ wallet })
+  if (handleParam) {
+    imageParams.set('handle', handleParam)
+  }
+  const imageUrl = `${origin}/api/social/card?${imageParams.toString()}`
+  const redirectUrl = `${origin}${LANDING_PATH}`
 
   const html = `<!doctype html>
 <html lang="en">
@@ -48,8 +49,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request }) => {
     <meta property="og:description" content="${SEO.description}" />
     <meta property="og:image" content="${imageUrl}" />
     <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="932" />
-    <meta property="og:image:height" content="1248" />
+    <meta property="og:image:width" content="1361" />
+    <meta property="og:image:height" content="766" />
     <meta property="og:site_name" content="${SEO.siteName}" />
     <meta property="og:locale" content="en_US" />
 
