@@ -31,12 +31,10 @@ const CARD_WIDTH = 1361
 const CARD_HEIGHT = 766
 
 function bgUrl(variant: 'a' | 'b' | 'c'): string {
-  return `https://r2.tessera.fun/horizontal_card_${variant}.png`
+  return `https://r2.tessera.fun/horizontal_card/horizontal_card_${variant}.png`
 }
 
-// Overlay positions are in 1361×766 card space. Title, "AT", Tessera logo,
-// and the ENTRY/GAIN/HELD labels are all baked into the bg image — we only
-// paint the dynamic bits on top.
+// Overlay positions are in 1361×766 card space.
 function generateSocialCardHTML(stats: SocialCardStats): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -51,41 +49,87 @@ function generateSocialCardHTML(stats: SocialCardStats): string {
     position: relative;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     overflow: hidden;
+    background: #000000;
     color: #ffffff;
   }
   .bg {
     position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    /* bg files differ by a few px; stretch so the baked-in text lands at
-       the same 1361×766 coords across every variant. */
-    object-fit: fill;
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
     z-index: 0;
+  }
+  .exposure {
+    position: absolute;
+    left: 56px;
+    top: 126px;
+    font-size: 76px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+    z-index: 2;
+  }
+  .asset {
+    position: absolute;
+    left: 56px;
+    top: 196px;
+    font-size: 126px;
+    font-weight: 700;
+    line-height: 0.92;
+    letter-spacing: -0.03em;
+    color: #ffffff;
+    z-index: 2;
+  }
+  .at {
+    position: absolute;
+    left: 56px;
+    top: 338px;
+    font-size: 74px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+    z-index: 2;
   }
   .valuation {
     position: absolute;
-    left: 164px; top: 328px;
-    font-size: 64px; font-weight: 500; line-height: 1;
+    left: 170px; top: 338px;
+    font-size: 74px; font-weight: 500; line-height: 1;
     letter-spacing: -0.02em;
     color: #AAD36D;
     z-index: 2;
   }
   .handle {
     position: absolute;
-    left: 56px; top: 458px;
-    font-size: 48px; font-weight: 500; line-height: 1;
+    left: 56px; top: 464px;
+    font-size: 60px; font-weight: 500; line-height: 1;
     letter-spacing: -0.01em;
     color: #ffffff;
     z-index: 2;
   }
+  .stat-labels {
+    position: absolute;
+    left: 46px; top: 584px; width: 584px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    z-index: 2;
+  }
+  .stat-label {
+    text-align: center;
+    font-size: 30px; font-weight: 500; line-height: 1;
+    letter-spacing: -0.01em;
+    color: #C7F488;
+  }
   .stats {
     position: absolute;
-    left: 60px; top: 615px; width: 584px;
+    left: 46px; top: 640px; width: 584px;
     display: grid; grid-template-columns: 1fr 1fr 1fr;
     z-index: 2;
   }
   .stat-value {
     text-align: center;
-    font-size: 44px; font-weight: 800; line-height: 1;
+    font-size: 46px; font-weight: 700; line-height: 1;
     letter-spacing: -0.02em;
     color: #ffffff;
   }
@@ -93,8 +137,16 @@ function generateSocialCardHTML(stats: SocialCardStats): string {
 </head>
 <body>
   <img src="${escapeHtml(bgUrl(stats.variant))}" alt="" class="bg">
+  <div class="exposure">EXPOSURE TO</div>
+  <div class="asset">SPACEX</div>
+  <div class="at">AT</div>
   <div class="valuation">${escapeHtml(stats.valuation)}</div>
   <div class="handle">${escapeHtml(stats.handle)}</div>
+  <div class="stat-labels">
+    <div class="stat-label">ENTRY</div>
+    <div class="stat-label">GAIN</div>
+    <div class="stat-label">HELD</div>
+  </div>
   <div class="stats">
     <div class="stat-value">${escapeHtml(stats.entry)}</div>
     <div class="stat-value">${escapeHtml(stats.gain)}</div>
