@@ -1,31 +1,16 @@
 import type { D1Database } from '@cloudflare/workers-types'
 
-import { graphqlRequest, resolveGraphQLEndpoint } from './graphql'
+import { graphqlRequest } from './graphql'
 
-type AppEnvVars = { DB: D1Database; APP_ENV?: string }
+type AppEnvVars = { DB: D1Database }
 
+// The card always describes SpaceX stats on mainnet, regardless of which
+// auction page the share was initiated from.
 const MAINNET_GRAPHQL_ENDPOINT = 'https://tracker-gql.tessera.fun/v1/graphql'
+const SPACEX_MAINNET_MINT = 'TSPXcLV76s6V2zDiZQ18kBfcbnjaE2ZzNT3ga2Pd99v'
+const VALUATION = '$800B'
 const DASH = '—'
 const TWITTER_HANDLE_REGEX = /^[A-Za-z0-9_]{1,15}$/
-
-export type SocialCardTokenId = 'T-SpaceX' | 'T-Kalshi'
-
-const TOKEN_MINTS: Record<SocialCardTokenId, { devnet: string; mainnet: string }> = {
-  'T-SpaceX': {
-    devnet: '767VPk2vEyV8ujBQBJNsxewzdQZCna3sBpx2sfc7KcRj',
-    mainnet: 'TSPXcLV76s6V2zDiZQ18kBfcbnjaE2ZzNT3ga2Pd99v',
-  },
-  'T-Kalshi': {
-    devnet: 'ARYx1wGLzm9QrRXeMQ11kDNxvtvUk4VDqBg3uCXx8BG5',
-    mainnet: 'TODO_KALSHI_MAINNET_MINT',
-  },
-}
-
-// Valuation headline text is currently static per token.
-const VALUATION_BY_TOKEN: Record<SocialCardTokenId, string> = {
-  'T-Kalshi': '$2B',
-  'T-SpaceX': '$800B',
-}
 
 const STATS_QUERY = `
   query GetSocialCardStats($accounts: [String!]!, $mint: String!) {
@@ -91,15 +76,6 @@ type AggregatedPnl = {
   firstPurchaseTime: number | null
 }
 
-export function resolveTokenMint(env: { APP_ENV?: string }, tokenId: SocialCardTokenId): string {
-  const appEnv = (env.APP_ENV ?? 'development').toLowerCase()
-  return appEnv === 'production' ? TOKEN_MINTS[tokenId].mainnet : TOKEN_MINTS[tokenId].devnet
-}
-
-export function isSocialCardTokenId(value: string): value is SocialCardTokenId {
-  return value === 'T-SpaceX' || value === 'T-Kalshi'
-}
-
 // Deterministic per user: same volume -> same variant, so the X preview card
 // doesn't shuffle between posts.
 function pickVariant(volumeUsd: number): 'a' | 'b' | 'c' {
@@ -123,21 +99,14 @@ function normalizeTwitterHandle(value: string | null | undefined): string | null
   return TWITTER_HANDLE_REGEX.test(cleaned) ? cleaned : null
 }
 
-// Hasura numeric values carry an 18-decimal scale. Accept either fixed-scale
-// strings ("1500000000000000000000", "1500.000000000000000000") or JSON numbers
-// and return a plain USD-scale float.
+// Hasura numeric values carry an 18-decimal scale. Accept JSON strings or
+// numbers (including scientific-notation numbers produced when the raw value
+// exceeds Number.MAX_SAFE_INTEGER) and return a plain USD-scale float.
 function hasura18ToNumber(raw: HasuraNumeric): number {
   if (raw === null || raw === undefined) return 0
-  const asString = typeof raw === 'number' ? raw.toString() : raw
-  const cleaned = asString.split('.')[0]
-  let asBigInt: bigint
-  try {
-    asBigInt = BigInt(cleaned)
-  } catch {
-    return 0
-  }
-  const cents = asBigInt / 10n ** 16n
-  return Number(cents) / 100
+  const n = typeof raw === 'number' ? raw : Number(raw)
+  if (!Number.isFinite(n)) return 0
+  return n / 1e18
 }
 
 function parseUnixSeconds(raw: HasuraNumeric): number | null {
@@ -162,14 +131,14 @@ function formatHeld(days: number): string {
   return `${Math.floor(days / 30)}mo`
 }
 
-function emptyStats(valuation: string, handle: string, volumeUsd = 0): SocialCardStats {
+function emptyStats(handle: string, volumeUsd = 0): SocialCardStats {
   return {
     entry: DASH,
     gain: DASH,
     held: DASH,
     volumeUsd,
     variant: pickVariant(volumeUsd),
-    valuation,
+    valuation: VALUATION,
     handle,
   }
 }
@@ -177,7 +146,7 @@ function emptyStats(valuation: string, handle: string, volumeUsd = 0): SocialCar
 async function queryTwitterHandle(
   env: AppEnvVars,
   sql: string,
-  bindings: Array<string | SocialCardTokenId>,
+  bindings: string[],
 ): Promise<string | null> {
   try {
     const row = await env.DB
@@ -231,7 +200,6 @@ async function resolveWalletFamily(env: AppEnvVars, wallet: string): Promise<Wal
 
 async function resolveHandleFromSources(
   env: AppEnvVars,
-  tokenId: SocialCardTokenId,
   preferredHandle: string | null | undefined,
   candidates: string[],
   fallbackWallet: string,
@@ -244,13 +212,6 @@ async function resolveHandleFromSources(
     SELECT twitter_handle
     FROM presale_whitelist_applications
     WHERE wallet_address = ? AND twitter_handle IS NOT NULL AND twitter_handle != ''
-    LIMIT 1
-  `
-  const socialPostByTokenQuery = `
-    SELECT twitter_handle
-    FROM social_post_checks
-    WHERE wallet_address = ? AND token_id = ? AND twitter_handle != ''
-    ORDER BY checked_at DESC
     LIMIT 1
   `
   const socialPostLatestQuery = `
@@ -272,50 +233,25 @@ async function resolveHandleFromSources(
   }
 
   for (const wallet of candidates) {
-    const byToken = await queryTwitterHandle(env, socialPostByTokenQuery, [wallet, tokenId])
-    if (byToken) return `@${byToken}`
-    const latest = await queryTwitterHandle(env, socialPostLatestQuery, [wallet])
-    if (latest) return `@${latest}`
+    const handle = await queryTwitterHandle(env, socialPostLatestQuery, [wallet])
+    if (handle) return `@${handle}`
   }
 
   return `@${truncateWallet(fallbackWallet)}`
 }
 
 async function fetchStatsData(
-  env: AppEnvVars,
-  tokenId: SocialCardTokenId,
   accounts: string[],
-  mint: string,
 ): Promise<StatsQueryResponse | null> {
   try {
     return await graphqlRequest<StatsQueryResponse>(
-      resolveGraphQLEndpoint(env),
+      MAINNET_GRAPHQL_ENDPOINT,
       STATS_QUERY,
-      { accounts, mint },
+      { accounts, mint: SPACEX_MAINNET_MINT },
     )
   } catch (err) {
-    const appEnv = (env.APP_ENV ?? 'development').toLowerCase()
-    if (appEnv === 'production') {
-      console.error('Failed to fetch social card stats from GraphQL', err)
-      return null
-    }
-
-    const mainnetMint = TOKEN_MINTS[tokenId].mainnet
-    if (mainnetMint.startsWith('TODO_')) {
-      console.error('Mainnet mint missing for social card fallback', { tokenId, mainnetMint })
-      return null
-    }
-
-    try {
-      return await graphqlRequest<StatsQueryResponse>(
-        MAINNET_GRAPHQL_ENDPOINT,
-        STATS_QUERY,
-        { accounts, mint: mainnetMint },
-      )
-    } catch (fallbackErr) {
-      console.error('Failed to fetch social card stats from fallback mainnet GraphQL', fallbackErr)
-      return null
-    }
+    console.error('Failed to fetch social card stats from mainnet GraphQL', err)
+    return null
   }
 }
 
@@ -356,22 +292,18 @@ function aggregatePnl(data: StatsQueryResponse): AggregatedPnl {
 export async function getSocialCardStats(
   env: AppEnvVars,
   wallet: string,
-  tokenId: SocialCardTokenId,
   preferredHandle?: string | null,
 ): Promise<SocialCardStats> {
-  const valuation = VALUATION_BY_TOKEN[tokenId]
   const family = await resolveWalletFamily(env, wallet)
   const handle = await resolveHandleFromSources(
     env,
-    tokenId,
     preferredHandle,
     family.handleCandidates,
     family.ownerWallet,
   )
 
-  const mint = resolveTokenMint(env, tokenId)
-  const data = await fetchStatsData(env, tokenId, family.statsAccounts, mint)
-  if (!data) return emptyStats(valuation, handle)
+  const data = await fetchStatsData(family.statsAccounts)
+  if (!data) return emptyStats(handle)
 
   const aggregates = aggregatePnl(data)
   const variantBaseUsd = aggregates.totalWalletCostUsd > 0
@@ -379,7 +311,7 @@ export async function getSocialCardStats(
     : aggregates.totalTokenCostUsd
 
   if (aggregates.totalTokenCostUsd <= 0 || aggregates.totalPurchasedAmount <= 0) {
-    return emptyStats(valuation, handle, variantBaseUsd)
+    return emptyStats(handle, variantBaseUsd)
   }
 
   const entryPrice = aggregates.totalTokenCostUsd / aggregates.totalPurchasedAmount
@@ -394,7 +326,7 @@ export async function getSocialCardStats(
     held: aggregates.firstPurchaseTime === null ? DASH : formatHeld(heldDays),
     volumeUsd: variantBaseUsd,
     variant: pickVariant(variantBaseUsd),
-    valuation,
+    valuation: VALUATION,
     handle,
   }
 }

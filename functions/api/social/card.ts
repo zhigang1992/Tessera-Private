@@ -3,9 +3,7 @@ import type { D1Database, KVNamespace, PagesFunction, R2Bucket } from '@cloudfla
 import { parseWalletAddress } from '../../lib/wallet-link'
 import {
   getSocialCardStats,
-  isSocialCardTokenId,
   type SocialCardStats,
-  type SocialCardTokenId,
 } from '../../lib/social-card-stats'
 
 type Env = {
@@ -14,7 +12,6 @@ type Env = {
   REFERRAL_IMAGES: R2Bucket
   CLOUDFLARE_ACCOUNT_ID: string
   CLOUDFLARE_API_TOKEN: string
-  APP_ENV?: string
 }
 
 interface BrowserRenderingResponse {
@@ -119,7 +116,6 @@ function escapeHtml(value: string): string {
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const url = new URL(request.url)
   const walletParam = url.searchParams.get('wallet')
-  const tokenIdParam = url.searchParams.get('tokenId')
   const handleParam = url.searchParams.get('handle')
   const refresh = url.searchParams.get('refresh') === '1'
 
@@ -130,15 +126,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     return Response.json({ error: 'Invalid wallet', detail: (err as Error).message }, { status: 400 })
   }
 
-  if (!tokenIdParam || !isSocialCardTokenId(tokenIdParam)) {
-    return Response.json({ error: 'Invalid or missing tokenId' }, { status: 400 })
-  }
-  const tokenId: SocialCardTokenId = tokenIdParam
-
   const cacheHandle = normalizeCacheHandle(handleParam)
   const cacheKey = cacheHandle
-    ? `social-card-${wallet}-${tokenId}-${cacheHandle}.png`
-    : `social-card-${wallet}-${tokenId}.png`
+    ? `social-card-${wallet}-${cacheHandle}.png`
+    : `social-card-${wallet}.png`
 
   if (!refresh) {
     const existing = await env.REFERRAL_IMAGES.get(cacheKey)
@@ -157,7 +148,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     return Response.json({ error: 'Server configuration error' }, { status: 500 })
   }
 
-  const stats = await getSocialCardStats(env, wallet, tokenId, handleParam)
+  const stats = await getSocialCardStats(env, wallet, handleParam)
   const html = generateSocialCardHTML(stats)
 
   const renderUrl = `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/browser-rendering/snapshot`

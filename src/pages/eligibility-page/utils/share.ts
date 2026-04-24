@@ -2,25 +2,17 @@ import { buildSocialCardShareText, isSocialCardTokenId, type SocialCardTokenId }
 
 export { isSocialCardTokenId, type SocialCardTokenId }
 
-export function getSocialCardShareLink(
-  wallet: string,
-  tokenId: SocialCardTokenId,
-  twitterHandle?: string | null,
-): string {
+export function getSocialCardShareLink(wallet: string, twitterHandle?: string | null): string {
   if (typeof window === 'undefined') return ''
-  const params = new URLSearchParams({ wallet, tokenId })
+  const params = new URLSearchParams({ wallet })
   if (twitterHandle) {
     params.set('handle', twitterHandle)
   }
   return `${window.location.origin}/sc?${params.toString()}`
 }
 
-export function getSocialCardImageUrl(
-  wallet: string,
-  tokenId: SocialCardTokenId,
-  twitterHandle?: string | null,
-): string {
-  const params = new URLSearchParams({ wallet, tokenId })
+export function getSocialCardImageUrl(wallet: string, twitterHandle?: string | null): string {
+  const params = new URLSearchParams({ wallet })
   if (twitterHandle) {
     params.set('handle', twitterHandle)
   }
@@ -29,11 +21,10 @@ export function getSocialCardImageUrl(
 
 export function shareSocialCardOnTwitter(
   wallet: string,
-  tokenId: SocialCardTokenId,
   tokenName: string,
   twitterHandle?: string | null,
 ): void {
-  const shareLink = getSocialCardShareLink(wallet, tokenId, twitterHandle)
+  const shareLink = getSocialCardShareLink(wallet, twitterHandle)
   if (!shareLink) return
   const text = buildSocialCardShareText(tokenName)
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareLink)}`

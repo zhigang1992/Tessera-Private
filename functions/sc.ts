@@ -1,7 +1,6 @@
 import type { PagesFunction } from '@cloudflare/workers-types'
 
 import { parseWalletAddress } from './lib/wallet-link'
-import { isSocialCardTokenId } from './lib/social-card-stats'
 
 type Env = Record<string, never>
 
@@ -11,10 +10,11 @@ const SEO = {
   siteName: 'Tessera',
 }
 
+const LANDING_PATH = '/auction/T-SpaceX/eligibility'
+
 export const onRequestGet: PagesFunction<Env> = async ({ request }) => {
   const url = new URL(request.url)
   const walletParam = url.searchParams.get('wallet')
-  const tokenIdParam = url.searchParams.get('tokenId')
   const handleParam = url.searchParams.get('handle')
 
   let wallet: string
@@ -24,20 +24,13 @@ export const onRequestGet: PagesFunction<Env> = async ({ request }) => {
     return new Response('Invalid or missing wallet', { status: 400 })
   }
 
-  if (!tokenIdParam || !isSocialCardTokenId(tokenIdParam)) {
-    return new Response('Invalid or missing tokenId', { status: 400 })
-  }
-
   const origin = url.origin
-  const imageParams = new URLSearchParams({
-    wallet,
-    tokenId: tokenIdParam,
-  })
+  const imageParams = new URLSearchParams({ wallet })
   if (handleParam) {
     imageParams.set('handle', handleParam)
   }
   const imageUrl = `${origin}/api/social/card?${imageParams.toString()}`
-  const redirectUrl = `${origin}/auction/${encodeURIComponent(tokenIdParam)}/eligibility`
+  const redirectUrl = `${origin}${LANDING_PATH}`
 
   const html = `<!doctype html>
 <html lang="en">
